@@ -1,0 +1,39 @@
+shell = "zsh"
+
+[plugins]
+
+[plugins.zsh-completions]
+github = "zsh-users/zsh-completions"
+
+# compinit を fzf-tab より前に実行する
+[plugins.compinit]
+inline = 'autoload -Uz compinit && compinit'
+
+[plugins.zsh-autosuggestions]
+github = "zsh-users/zsh-autosuggestions"
+
+[plugins.fzf-tab]
+github = "Aloxaf/fzf-tab"
+
+# fzf-tab UI カスタマイズ（tmux なし）
+[plugins.fzf-tab-config]
+inline = '''
+zstyle ':fzf-tab:*' fzf-command fzf
+zstyle ':fzf-tab:*' fzf-flags \
+    --height=40% \
+    --layout=reverse \
+    --border=rounded \
+    --border-label=" 補完 " \
+    --no-info \
+    --pointer="▶" \
+    --marker="●" \
+    --color=fg:#c0caf5,bg:#1a1b26,hl:#ff9e64 \
+    --color=fg+:#c0caf5,bg+:#33467c,hl+:#ff9e64 \
+    --color=pointer:#9ece6a,marker:#9ece6a,border:#565f89,label:#7aa2f7
+# グループのスイッチキー
+zstyle ':fzf-tab:*' switch-group "<" ">"
+# グループヘッダーを表示
+zstyle ':fzf-tab:*' show-group brief
+# パディング
+zstyle ':fzf-tab:*' fzf-pad 4
+'''
