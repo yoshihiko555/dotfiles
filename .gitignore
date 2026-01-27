@@ -11,3 +11,6 @@ __pycache__/
 .vscode/
 *.log
 .cache/
+
+# Codex auto-generated system skills
+codex/.codex/skills/.system/
