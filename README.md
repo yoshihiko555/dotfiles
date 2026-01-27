@@ -27,6 +27,12 @@
 │       ├── AGENTS.md
 │       └── config.toml
 │
+├── shared/                 # 共通データ
+│   └── skills/             # Codex/Claude 共通スキルの実体
+│       ├── common/
+│       ├── codex-only/
+│       └── claude-only/
+│
 ├── Makefile
 └── README.md
 ```
@@ -123,3 +129,8 @@ make link-git  # ※ Makefile に git を追加する必要あり
 
 ホームディレクトリの設定ファイルは、dotfiles ディレクトリへのリンクになります。
 dotfiles 内のファイルを編集すると、実際の設定に反映されます。
+
+### Skills の一元管理
+
+- スキル本体は `shared/skills/` に集約
+- `claude/.claude/skills` と `codex/.codex/skills` は相対シンボリックリンクで参照

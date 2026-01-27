@@ -13,4 +13,8 @@ __pycache__/
 .cache/
 
 # Codex auto-generated system skills
-codex/.codex/skills/.system/
+codex/.codex/skills/.system
+shared/skills/codex-only/.system/
+
+# Local backups
+backup/
