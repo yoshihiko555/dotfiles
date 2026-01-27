@@ -1,0 +1,44 @@
+# ~/.codex/config.toml
+
+# デフォルトで使うモデル
+model = "gpt-5.2-codex"
+
+# 推論の深さ（medium: バランス型 / high: より時間をかける）
+model_reasoning_effort = "high"
+
+# コマンド実行時の確認ポリシー
+# - "untrusted": コマンド実行前に基本的に確認する
+# - "on-request": 必要なときだけ確認
+approval_policy = "untrusted"
+
+# サンドボックスレベル
+# - "workspace-write": 作業ディレクトリ内は書き込みOK、外は制限
+sandbox_mode = "workspace-write"
+
+# 通知の設定
+notify = ["bash", "/Users/yoshihiko/.codex/codex_message.sh"]
+
+trusted_projects = [
+  "/Users/yoshihiko/Dropbox/04_Development/07_Learno/01_Code/dev",
+]
+
+[features]
+# モデルが Web 検索を要求できるようにする（必要に応じて）
+web_search_request = true
+# apply_patch ベースの柔軟な編集ツール（ベータ）
+apply_patch_freeform = true
+
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp"]
+
+[mcp_servers.notion]
+command = "npx"
+args    =  ["-y", "mcp-remote", "https://mcp.notion.com/mcp"]
+
+[notice]
+hide_full_access_warning = true
+
+[notice.model_migrations]
+"gpt-5.1-codex-max" = "gpt-5.2-codex"
+"gpt-5.2" = "gpt-5.2-codex"

@@ -6,14 +6,29 @@
 
 ```
 .dotfiles/
-├── README.md
-├── config/
+├── shell/                  # シェル設定（→ ~）
+│   ├── .zshrc
+│   └── .zprofile
+│
+├── config/                 # XDG_CONFIG_HOME 系（→ ~）
 │   └── .config/
-│       └── mise/           # mise (ランタイムバージョン管理)
-│           └── config.toml
-└── zsh/
-    ├── .zshrc              # zsh設定
-    └── .zprofile           # ログインシェル設定
+│       ├── wezterm/        # ターミナル
+│       ├── starship/       # プロンプト
+│       ├── mise/           # ランタイム管理
+│       └── sheldon/        # zsh プラグイン
+│
+├── claude/                 # Claude CLI（→ ~）
+│   └── .claude/
+│       ├── CLAUDE.md
+│       └── settings.json
+│
+├── codex/                  # Codex CLI（→ ~）
+│   └── .codex/
+│       ├── AGENTS.md
+│       └── config.toml
+│
+├── Makefile
+└── README.md
 ```
 
 ## 必要なツール
@@ -33,11 +48,24 @@ git clone https://github.com/YOUR_USERNAME/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
 # 全パッケージをリンク
-stow -vt ~ config zsh
+make
 
 # 個別にリンクする場合
-stow -vt ~ zsh      # zsh設定のみ
-stow -vt ~ config   # .config配下のみ
+make link-shell     # シェル設定のみ
+make link-config    # .config 配下のみ
+make link-claude    # Claude CLI のみ
+make link-codex     # Codex CLI のみ
+```
+
+## Makefile コマンド
+
+```bash
+make              # 全パッケージをリンク
+make link         # 全パッケージをリンク
+make link-<pkg>   # 特定パッケージをリンク
+make unlink       # 全パッケージのリンクを解除
+make unlink-<pkg> # 特定パッケージのリンクを解除
+make help         # ヘルプ表示
 ```
 
 ## Stow の使い方
@@ -70,22 +98,28 @@ stow -Rvt ~ <パッケージ名>
 
 ### パッケージ追加の例
 
-新しい設定を追加する場合：
-
 ```bash
-# 例: starship の設定を追加
-mkdir -p config/.config/starship
-mv ~/.config/starship/starship.toml config/.config/starship/
-stow -vt ~ config
+# .config 系ツールを追加
+mkdir -p config/.config/neovim
+mv ~/.config/neovim config/.config/neovim/
+make link-config
+
+# ホーム直下の設定を追加（新パッケージ）
+mkdir -p git
+mv ~/.gitconfig git/
+make link-git  # ※ Makefile に git を追加する必要あり
 ```
 
 ## シンボリックリンクの仕組み
 
 ```
-~/.zshrc        → .dotfiles/zsh/.zshrc
-~/.zprofile     → .dotfiles/zsh/.zprofile
-~/.config/mise  → .dotfiles/config/.config/mise
+~/.zshrc           → .dotfiles/shell/.zshrc
+~/.zprofile        → .dotfiles/shell/.zprofile
+~/.config/wezterm  → .dotfiles/config/.config/wezterm
+~/.config/starship → .dotfiles/config/.config/starship
+~/.claude          → .dotfiles/claude/.claude
+~/.codex           → .dotfiles/codex/.codex
 ```
 
-ホームディレクトリの設定ファイルは、dotfilesディレクトリへのリンクになっています。
-dotfiles内のファイルを編集すると、実際の設定に反映されます。
+ホームディレクトリの設定ファイルは、dotfiles ディレクトリへのリンクになります。
+dotfiles 内のファイルを編集すると、実際の設定に反映されます。

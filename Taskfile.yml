@@ -1,0 +1,134 @@
+# Taskfile.yml
+# 日常的なタスク管理用。初回セットアップは Makefile (make bootstrap) を使用。
+version: "3"
+
+vars:
+  STOW_FLAGS: -v -t ~
+
+tasks:
+  # ====================
+  # デフォルト & ヘルプ
+  # ====================
+  default:
+    desc: 利用可能なタスク一覧を表示
+    cmds:
+      - task --list
+
+  # ====================
+  # リンク管理
+  # ====================
+  link:
+    desc: 全パッケージをリンク
+    cmds:
+      - task: link-shell
+      - task: link-config
+      - task: link-claude
+      - task: link-codex
+
+  link-shell:
+    desc: シェル設定をリンク (.zshrc, .zprofile)
+    cmds:
+      - stow {{.STOW_FLAGS}} shell
+
+  link-config:
+    desc: .config 配下をリンク (wezterm, starship, mise, sheldon)
+    cmds:
+      - stow {{.STOW_FLAGS}} config
+
+  link-claude:
+    desc: Claude CLI をリンク
+    cmds:
+      - stow {{.STOW_FLAGS}} claude
+
+  link-codex:
+    desc: Codex CLI をリンク
+    cmds:
+      - stow {{.STOW_FLAGS}} codex
+
+  # ====================
+  # リンク解除
+  # ====================
+  unlink:
+    desc: 全パッケージのリンクを解除
+    cmds:
+      - task: unlink-shell
+      - task: unlink-config
+      - task: unlink-claude
+      - task: unlink-codex
+
+  unlink-shell:
+    desc: シェル設定のリンクを解除
+    cmds:
+      - stow -D {{.STOW_FLAGS}} shell
+
+  unlink-config:
+    desc: .config 配下のリンクを解除
+    cmds:
+      - stow -D {{.STOW_FLAGS}} config
+
+  unlink-claude:
+    desc: Claude CLI のリンクを解除
+    cmds:
+      - stow -D {{.STOW_FLAGS}} claude
+
+  unlink-codex:
+    desc: Codex CLI のリンクを解除
+    cmds:
+      - stow -D {{.STOW_FLAGS}} codex
+
+  # ====================
+  # 再リンク (restow)
+  # ====================
+  restow:
+    desc: 全パッケージを再リンク（削除してから作成）
+    cmds:
+      - stow -R {{.STOW_FLAGS}} shell config claude codex
+
+  restow-shell:
+    desc: シェル設定を再リンク
+    cmds:
+      - stow -R {{.STOW_FLAGS}} shell
+
+  restow-config:
+    desc: .config 配下を再リンク
+    cmds:
+      - stow -R {{.STOW_FLAGS}} config
+
+  restow-claude:
+    desc: Claude CLI を再リンク
+    cmds:
+      - stow -R {{.STOW_FLAGS}} claude
+
+  restow-codex:
+    desc: Codex CLI を再リンク
+    cmds:
+      - stow -R {{.STOW_FLAGS}} codex
+
+  # ====================
+  # ユーティリティ
+  # ====================
+  status:
+    desc: 現在のシンボリックリンク状態を確認
+    cmds:
+      - |
+        echo "📁 Shell:"
+        ls -la ~/.zshrc ~/.zprofile 2>/dev/null || echo "  (not linked)"
+        echo ""
+        echo "📁 Config:"
+        ls -la ~/.config/wezterm ~/.config/starship ~/.config/mise ~/.config/sheldon 2>/dev/null || echo "  (not linked)"
+        echo ""
+        echo "📁 Claude:"
+        ls -la ~/.claude 2>/dev/null || echo "  (not linked)"
+        echo ""
+        echo "📁 Codex:"
+        ls -la ~/.codex 2>/dev/null || echo "  (not linked)"
+
+  brew:
+    desc: Homebrew パッケージをインストール
+    cmds:
+      - brew bundle --file={{.ROOT_DIR}}/Brewfile
+
+  edit:
+    desc: dotfiles を VS Code で開く
+    cmds:
+      - code ~/.dotfiles

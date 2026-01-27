@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(npm run dev)",
+      "Bash(npm run build)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(sudo:*)",
+      "Read(.env)"
+    ]
+  },
+  "language": "日本語",
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/yoshihiko/.claude/claude_message.sh 'Claude task completed'"
+          }
+        ]
+      }
+    ]
+  }
+}
