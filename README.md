@@ -6,6 +6,8 @@
 
 ```
 .dotfiles/
+├── backup/                 # 生成物の退避
+├── Brewfile                # Homebrew パッケージ定義
 ├── shell/                  # シェル設定（→ ~）
 │   ├── .zshrc
 │   └── .zprofile
@@ -34,12 +36,16 @@
 │       └── claude-only/
 │
 ├── Makefile
+├── Taskfile.yml
+├── scripts/
 └── README.md
 ```
 
 ## 必要なツール
 
 - [GNU Stow](https://www.gnu.org/software/stow/) - シンボリックリンク管理
+- [go-task](https://taskfile.dev/) - 日常タスク実行用
+- Homebrew（任意） - 依存ツールの導入や Brewfile の適用に使用
 
 ```bash
 # macOS
@@ -53,25 +59,42 @@ brew install stow
 git clone https://github.com/YOUR_USERNAME/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
-# 全パッケージをリンク
-make
+# 初回セットアップ（依存インストール + リンク）
+make bootstrap
 
-# 個別にリンクする場合
-make link-shell     # シェル設定のみ
-make link-config    # .config 配下のみ
-make link-claude    # Claude CLI のみ
-make link-codex     # Codex CLI のみ
+# 以降は task を使用
+task --list
+task link           # 全パッケージをリンク
+task link-shell     # シェル設定のみ
+task link-config    # .config 配下のみ
+task link-claude    # Claude CLI のみ
+task link-codex     # Codex CLI のみ
 ```
 
-## Makefile コマンド
+## Makefile コマンド（初回セットアップ用）
 
 ```bash
-make              # 全パッケージをリンク
-make link         # 全パッケージをリンク
-make link-<pkg>   # 特定パッケージをリンク
-make unlink       # 全パッケージのリンクを解除
-make unlink-<pkg> # 特定パッケージのリンクを解除
-make help         # ヘルプ表示
+make bootstrap     # 依存ツールをインストールして全パッケージをリンク
+make install-deps  # 依存ツール (stow, go-task) をインストール
+make link          # 全パッケージをリンク
+make help          # ヘルプ表示
+```
+
+## Taskfile コマンド（日常運用）
+
+```bash
+task --list        # タスク一覧
+task link          # 全パッケージをリンク
+task link-shell    # シェル設定のみ
+task link-config   # .config 配下のみ
+task link-claude   # Claude CLI のみ
+task link-codex    # Codex CLI のみ
+task unlink        # 全パッケージのリンクを解除
+task restow        # 全パッケージを再リンク
+task sync-skills   # shared/skills のリンクを更新
+task status        # 現在のリンク状態を確認
+task brew          # Homebrew パッケージを適用
+task edit          # VS Code で開く
 ```
 
 ## Stow の使い方
@@ -113,7 +136,8 @@ make link-config
 # ホーム直下の設定を追加（新パッケージ）
 mkdir -p git
 mv ~/.gitconfig git/
-make link-git  # ※ Makefile に git を追加する必要あり
+stow -vt ~ git
+# 必要なら Taskfile.yml に link-git を追加
 ```
 
 ## シンボリックリンクの仕組み
@@ -134,3 +158,4 @@ dotfiles 内のファイルを編集すると、実際の設定に反映され�
 
 - スキル本体は `shared/skills/` に集約
 - `claude/.claude/skills` と `codex/.codex/skills` は相対シンボリックリンクで参照
+- リンク更新は `task sync-skills` で実行
