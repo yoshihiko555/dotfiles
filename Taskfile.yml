@@ -178,6 +178,7 @@ tasks:
   brew:
     desc: Homebrew パッケージをインストール
     cmds:
+      - bash {{.ROOT_DIR}}/scripts/install-brew.sh
       - brew bundle --file={{.ROOT_DIR}}/Brewfile
 
   edit:
