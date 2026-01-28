@@ -1,0 +1,54 @@
+# 1) テーマ名は「正確な名前」にする（スペース/大小文字が重要）
+# 使えるテーマは `ghostty +list-themes` で確認できます
+theme = TokyoNight Moon
+
+# 2) WezTerm相当の “背景だけ透過” と “すりガラス”
+background-blur = 20
+
+# 3) TUIが背景色を塗ると透過が効かない問題を避ける（WezTerm寄りの見え方になる）
+background-opacity-cells = true
+background-image="background.jpg"
+background-image-fit= cover
+background-image-opacity=0.2
+alpha-blending = linear-corrected
+
+font-family = "JetBrainsMono Nerd Font Mono"
+font-size = 16
+font-thicken=true
+window-colorspace = srgb
+
+# ウィンドウ状態の保存
+window-save-state = never
+window-position-x=0
+window-position-y=0
+window-padding-x = 10
+window-padding-balance = true
+maximize=true
+
+# カーソル
+cursor-opacity = 0.7
+cursor-style = block
+cursor-style-blink=false
+shell-integration-features = no-cursor
+# スクロールバック行数（大量出力に対応）
+scrollback-limit = 100000
+
+
+# タイピング中にマウスカーソルを隠す
+mouse-hide-while-typing = true
+
+resize-overlay = never
+quit-after-last-window-closed = true
+macos-titlebar-style = hidden
+window-new-tab-position=current
+
+# スプリット操作
+keybind = cmd+d=new_split:right
+keybind = cmd+shift+d=new_split:down
+keybind = cmd+w=close_surface
+
+# スプリット間移動（Mac風）
+keybind = ctrl+cmd+h=goto_split:left
+keybind = ctrl+cmd+n=goto_split:bottom
+keybind = ctrl+cmd+p=goto_split:top
+keybind = ctrl+cmd+f=goto_split:right
