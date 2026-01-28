@@ -1,11 +1,13 @@
 # ~/.codex/config.toml
 
+# ---- 基本設定 ----
 # デフォルトで使うモデル
 model = "gpt-5.2-codex"
 
 # 推論の深さ（medium: バランス型 / high: より時間をかける）
 model_reasoning_effort = "high"
 
+# ---- 実行ポリシー ----
 # コマンド実行時の確認ポリシー
 # - "untrusted": コマンド実行前に基本的に確認する
 # - "on-request": 必要なときだけ確認
@@ -15,9 +17,15 @@ approval_policy = "untrusted"
 # - "workspace-write": 作業ディレクトリ内は書き込みOK、外は制限
 sandbox_mode = "workspace-write"
 
-# 通知の設定
-notify = ["bash", "/Users/yoshihiko/.codex/codex_message.sh"]
+# ---- 通知 ----
+# 通知の設定（$HOME 展開のため bash -lc 経由で実行）
+notify = ["bash", "-lc", "$HOME/.codex/codex_message.sh \"$0\""]
 
+# ---- 警告表示 ----
+# 開発中機能の警告を抑制
+suppress_unstable_features_warning = true
+
+# ---- 信頼済みプロジェクト ----
 trusted_projects = [
   "/Users/yoshihiko/Dropbox/04_Development/07_Learno/01_Code/dev",
 ]

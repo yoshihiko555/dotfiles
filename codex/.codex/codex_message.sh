@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# JSONから最後のエージェント発言を抽出
-LAST_MESSAGE=$(echo "$1" | jq -r '.["last-assistant-message"] // "Codex task completed"')
+# Codex 完了時に通知を送信するスクリプト（共通スクリプト呼び出し）
+# notify から渡される payload を共通通知へ渡す
 
-# osascriptで通知表示
-osascript -e "display notification \"$LAST_MESSAGE\" with title \"Codex\""
+# dotfiles の設置先は環境差分があるため $HOME ベースで解決
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
+SHARED_NOTIFY="${DOTFILES_DIR}/shared/notify_message.sh"
 
-# 通知音を再生
-afplay /System/Library/Sounds/Glass.aiff &
+"$SHARED_NOTIFY" "Codex" "Codex task completed" "$1"

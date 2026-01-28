@@ -12,7 +12,6 @@
       "Read(.env)"
     ]
   },
-  "language": "日本語",
   "hooks": {
     "Stop": [
       {
@@ -20,10 +19,39 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/yoshihiko/.claude/claude_message.sh 'Claude task completed'"
+            "command": "$HOME/.claude/claude_message.sh stop"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/claude_message.sh notification"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/claude_message.sh failure"
           }
         ]
       }
     ]
-  }
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "Notion@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true
+  },
+  "language": "日本語"
 }
