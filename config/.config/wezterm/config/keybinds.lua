@@ -46,6 +46,11 @@ local clear_screen_save_scrollback = wezterm.action_callback(function(window, pa
   pane:send_text('\x0c')
 end)
 
+-- スクロールバックとビューポートを消去
+local clear_scrollback_and_viewport = wezterm.action_callback(function(window, pane)
+  window:perform_action(act.ClearScrollback 'ScrollbackAndViewport', pane)
+end)
+
 return {
   -- デフォルトのキーバインド無効化
   disable_default_key_bindings = true,
@@ -139,7 +144,7 @@ return {
     ---------------------------------------------------------------------------
     { key = 'PageUp', mods = 'SHIFT', action = act.ScrollByPage(-1) },
     { key = 'PageDown', mods = 'SHIFT', action = act.ScrollByPage(1) },
-    { key = 'k', mods = 'SUPER', action = act.ClearScrollback 'ScrollbackOnly' },
+    { key = 'k', mods = 'SUPER', action = clear_scrollback_and_viewport },
     -- Ctrl+L: 画面クリア（スクロールバックに内容を保存）
     { key = 'l', mods = 'CTRL', action = clear_screen_save_scrollback },
 
