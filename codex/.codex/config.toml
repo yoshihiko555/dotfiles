@@ -35,6 +35,8 @@ trusted_projects = [
 web_search_request = true
 # apply_patch ベースの柔軟な編集ツール（ベータ）
 apply_patch_freeform = true
+# プランモードが使えるやつ
+collaboration_modes = true
 
 [mcp_servers.context7]
 command = "npx"

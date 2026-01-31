@@ -72,6 +72,76 @@
 "AI events {next_month} {year}"
 ```
 
+## 6. バイラル/トレンドAIプロジェクト検索
+
+オープンソースやコミュニティで話題になったプロジェクトを収集する。
+
+### 6.1 GitHub Trending検索
+
+```
+# 一般検索（GitHub Trendingは直接取得不可のため、記事経由）
+"GitHub trending AI {month} {year}"
+"fastest growing GitHub AI project {month} {year}"
+"viral AI open source {month} {year}"
+
+# 例（2026年1月の場合）
+"GitHub trending AI January 2026"
+"viral open source AI agent 2026"
+```
+
+### 6.2 Hacker News / Reddit検索
+
+```
+# Hacker Newsで話題のAIプロジェクト
+"Hacker News AI {month} {year}"
+"Show HN AI {year}"
+
+# Reddit r/MachineLearning, r/LocalLLaMA等
+"Reddit AI trending {month} {year}"
+```
+
+### 6.3 テックメディアのまとめ記事検索
+
+```
+# TechCrunch、The Verge等のまとめ記事
+"best AI tools {month} {year}"
+"AI tools trending {month} {year}"
+"most popular AI projects {month} {year}"
+```
+
+### 6.4 注目すべきキーワード/プロジェクト名
+
+月ごとにバズったプロジェクト名が出てきたら、追加検索する。
+
+```
+# プロジェクト名が判明したら
+"{project_name} AI {year}"
+"{project_name} GitHub viral"
+```
+
+### 6.5 オープンソースAIエージェント/ツール検索
+
+```
+"open source AI agent {month} {year}"
+"self-hosted AI assistant {year}"
+"local LLM tools {month} {year}"
+```
+
+## 7. クロスチェック用の総合検索
+
+特定企業に限定しない広範な検索で漏れを防ぐ。
+
+```
+# 月間AI総合ニュース
+"AI news {month} {year}"
+"AI industry news {month} {year}"
+"biggest AI news {month} {year}"
+
+# AI業界動向まとめ
+"AI monthly recap {month} {year}"
+"AI highlights {month} {year}"
+```
+
 ## 検索時の注意
 
 - X（Twitter）のURLは直接取得できない（PERMISSIONS_ERROR）

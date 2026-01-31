@@ -1,7 +1,7 @@
 ---
 name: ai-monthly-report
 description: |
-  AI業界の月次レポートを自動生成する。対象はOpenAI、Anthropic、Google、Microsoftの4社。
+  AI業界の月次レポートを自動生成する。対象はOpenAI、Anthropic、Google、Microsoftの4社に加え、オープンソース/コミュニティで話題のプロジェクトも含む。
 
   使用タイミング：
   - 「AI月次レポートを作成して」「今月のAIニュースをまとめて」等の依頼
@@ -14,7 +14,7 @@ metadata:
 # ai-monthly-report
 
 ## 目的
-AI業界（OpenAI、Anthropic、Google、Microsoft）の月次動向をWeb検索ベースで収集し、Markdownレポートとして出力する。
+AI業界（OpenAI、Anthropic、Google、Microsoft + オープンソース/コミュニティ）の月次動向をWeb検索ベースで収集し、Markdownレポートとして出力する。
 
 ## 基本ルール
 - 情報ソースはWeb検索ベース（X投稿も検索経由で取得）
@@ -22,15 +22,16 @@ AI業界（OpenAI、Anthropic、Google、Microsoft）の月次動向をWeb検索
 - 読者向け: 自分用メモ → チーム共有へ展開
 - 出力形式: Markdown（さっと読める要約形式）
 
-## 対象企業
+## 対象
 1. **OpenAI** - ChatGPT、GPT系モデル、Codex CLI
 2. **Anthropic** - Claude、Claude Code
 3. **Google** - Gemini、Gemini CLI
 4. **Microsoft** - Copilot、Azure OpenAI
+5. **オープンソース / コミュニティ** - GitHub Trending、バイラルAIプロジェクト、ローカルLLMツール等
 
 ## レポート構成
 1. **今月のハイライト** - 3〜5項目のトップニュース
-2. **主要AIニュース・発表** - 企業別の時系列表
+2. **主要AIニュース・発表** - 企業別の時系列表（4社 + オープンソース/コミュニティ）
 3. **今月のリリースノート要点** - モデル別の技術的変更点
 4. **今月のバズ・トレンド** - バズったX投稿（表形式）+ 詳細解説
 5. **今月の数字** - 市場シェア、ユーザー数等の統計
@@ -45,10 +46,12 @@ AI業界（OpenAI、Anthropic、Google、Microsoft）の月次動向をWeb検索
 
 ### Step 2: 情報収集（Web検索）
 `references/search-patterns.md` のパターンに従って検索:
-1. 企業別ニュース検索
+1. 企業別ニュース検索（OpenAI、Anthropic、Google、Microsoft）
 2. リリースノート・changelog検索
 3. バズ投稿検索
 4. 統計・数字検索
+5. **バイラル/トレンドAIプロジェクト検索**（GitHub Trending、Hacker News等）
+6. **クロスチェック用の総合検索**（月間AI総合ニュースで漏れを確認）
 
 ### Step 3: レポート生成
 `assets/report-template.md` をベースに、収集情報を埋め込む
@@ -61,6 +64,12 @@ AI業界（OpenAI、Anthropic、Google、Microsoft）の月次動向をWeb検索
 - X（Twitter）のURLは直接取得不可だが、検索経由でニュース記事化された情報は取得可能
 - バイラルツイートは主要メディアが記事化するため詳細取得可能
 - 複数ソースを組み合わせると漏れが少ない
+
+### バイラルトピックの追跡
+- **GitHub Trending検索**: 「GitHub trending AI {month} {year}」で話題のプロジェクトを発見
+- **プロジェクト名が判明したら追加検索**: 名称変更や最新動向を確認
+- **Hacker News / Reddit経由**: 開発者コミュニティで話題のツールを発見
+- **総合検索で漏れ確認**: 「biggest AI news {month} {year}」等で4社以外のニュースを確認
 
 ## リリースノート収集の観点
 | カテゴリ | 収集すべき情報 |
