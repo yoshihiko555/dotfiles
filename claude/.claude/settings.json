@@ -1,4 +1,11 @@
 {
+  "env": {
+    "CLAUDE_CODE_SHELL": "bash"
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
+  },
   "permissions": {
     "allow": [
       "Bash(ls:*)",
