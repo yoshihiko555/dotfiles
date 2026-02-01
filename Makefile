@@ -35,4 +35,5 @@ link:
 	stow -v -t ~ config
 	stow -v -t ~ claude
 	stow -v -t ~ codex
+	stow -v -t ~ gemini
 	@echo "✅ リンク作成完了"
