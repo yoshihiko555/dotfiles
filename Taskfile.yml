@@ -184,4 +184,4 @@ tasks:
   edit:
     desc: dotfiles を VS Code で開く
     cmds:
-      - code ~/.dotfiles
+      - code {{.ROOT_DIR}}

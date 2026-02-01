@@ -163,8 +163,8 @@ wezterm/
 ## 🔧 インストール
 
 ```bash
-# シンボリックリンクを作成
-ln -sf ~/.dotfiles/config/.config/wezterm ~/.config/wezterm
+# シンボリックリンクを作成（stow 推奨）
+# stow -vt ~ config
 
 # または dotfiles 管理ツールを使用
 ```

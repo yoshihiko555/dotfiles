@@ -1,6 +1,6 @@
 # Homebrew Bundle Brewfile
 # 使い方:
-#   brew bundle --file=~/.dotfiles/Brewfile
+#   brew bundle --file=~/ghq/github.com/yoshihiko555/dotfiles/Brewfile
 #
 # 補足:
 #   - cask は GUI アプリ

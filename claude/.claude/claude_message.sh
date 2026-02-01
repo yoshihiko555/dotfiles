@@ -7,7 +7,7 @@ EVENT="${1:-stop}"
 PAYLOAD="$(cat)"
 
 # dotfiles の設置先は環境差分があるため $HOME ベースで解決
-DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/ghq/github.com/yoshihiko555/dotfiles}"
 SHARED_NOTIFY="${DOTFILES_DIR}/shared/notify_message.sh"
 
 # 失敗フラグを /tmp に保存（セッション単位）

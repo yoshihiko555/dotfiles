@@ -5,7 +5,7 @@
 ## 構成
 
 ```
-.dotfiles/
+dotfiles/
 ├── backup/                 # 生成物の退避
 ├── Brewfile                # Homebrew パッケージ定義
 ├── shell/                  # シェル設定（→ ~）
@@ -55,9 +55,9 @@ brew install stow
 ## セットアップ
 
 ```bash
-# リポジトリをクローン
-git clone https://github.com/YOUR_USERNAME/dotfiles.git ~/.dotfiles
-cd ~/.dotfiles
+# リポジトリをクローン（ghq 推奨）
+ghq get https://github.com/YOUR_USERNAME/dotfiles.git
+cd ~/ghq/github.com/YOUR_USERNAME/dotfiles
 
 # 初回セットアップ（依存インストール + リンク）
 make bootstrap
@@ -143,12 +143,12 @@ stow -vt ~ git
 ## シンボリックリンクの仕組み
 
 ```
-~/.zshrc           → .dotfiles/shell/.zshrc
-~/.zprofile        → .dotfiles/shell/.zprofile
-~/.config/wezterm  → .dotfiles/config/.config/wezterm
-~/.config/starship → .dotfiles/config/.config/starship
-~/.claude          → .dotfiles/claude/.claude
-~/.codex           → .dotfiles/codex/.codex
+~/.zshrc           → dotfiles/shell/.zshrc
+~/.zprofile        → dotfiles/shell/.zprofile
+~/.config/wezterm  → dotfiles/config/.config/wezterm
+~/.config/starship → dotfiles/config/.config/starship
+~/.claude          → dotfiles/claude/.claude
+~/.codex           → dotfiles/codex/.codex
 ```
 
 ホームディレクトリの設定ファイルは、dotfiles ディレクトリへのリンクになります。
