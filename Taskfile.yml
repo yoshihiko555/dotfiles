@@ -185,3 +185,19 @@ tasks:
     desc: dotfiles を VS Code で開く
     cmds:
       - code {{.ROOT_DIR}}
+
+  mcp-init:
+    desc: カレントディレクトリに .mcp.json をコピー
+    cmds:
+      - |
+        if [ -f .mcp.json ]; then
+          echo "⚠️  .mcp.json already exists. Use 'task mcp-show' to view template."
+        else
+          cp {{.ROOT_DIR}}/shared/mcp.template.json .mcp.json
+          echo "✅ .mcp.json created. Edit as needed."
+        fi
+
+  mcp-show:
+    desc: MCP テンプレートの内容を表示
+    cmds:
+      - cat {{.ROOT_DIR}}/shared/mcp.template.json
