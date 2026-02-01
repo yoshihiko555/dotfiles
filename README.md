@@ -12,26 +12,38 @@ dotfiles/
 │
 ├── config/                 # XDG_CONFIG_HOME 系（→ ~）
 │   └── .config/
-│       ├── wezterm/        # ターミナル
+│       ├── wezterm/        # ターミナル (WezTerm)
+│       ├── ghostty/        # ターミナル (Ghostty)
 │       ├── starship/       # プロンプト
 │       ├── mise/           # ランタイム管理
-│       └── sheldon/        # zsh プラグイン
+│       ├── sheldon/        # zsh プラグイン
+│       ├── karabiner/      # キーリマッピング
+│       ├── opencode/       # OpenCode CLI
+│       └── git/            # git 設定 (global ignore 等)
 │
 ├── claude/                 # Claude CLI（→ ~）
 │   └── .claude/
 │       ├── CLAUDE.md
-│       └── settings.json
+│       ├── settings.json
+│       └── skills/         # → shared/skills へのリンク
 │
 ├── codex/                  # Codex CLI（→ ~）
 │   └── .codex/
 │       ├── AGENTS.md
-│       └── config.toml
+│       ├── config.toml
+│       ├── prompts/        # カスタムプロンプト
+│       └── skills/         # → shared/skills へのリンク
+│
+├── gemini/                 # Gemini CLI（→ ~）
+│   └── .gemini/
+│       └── settings.json
 │
 ├── shared/                 # 共通データ
+│   ├── mcp.template.json   # MCP 設定テンプレート
+│   ├── notify_message.sh   # 通知スクリプト
 │   └── skills/             # Codex/Claude 共通スキルの実体
-│       ├── common/
-│       ├── codex-only/
-│       └── claude-only/
+│       ├── common/         # 共通スキル
+│       └── codex-only/     # Codex 専用スキル
 │
 ├── Makefile
 ├── Brewfile                # Homebrew パッケージ定義
@@ -94,6 +106,8 @@ task sync-skills   # shared/skills のリンクを更新
 task status        # 現在のリンク状態を確認
 task brew          # Homebrew パッケージを適用
 task edit          # VS Code で開く
+task mcp-init      # カレントディレクトリに .mcp.json をコピー
+task mcp-show      # MCP テンプレートの内容を表示
 ```
 
 ## Stow の使い方
@@ -142,12 +156,19 @@ stow -vt ~ git
 ## シンボリックリンクの仕組み
 
 ```
-~/.zshrc           → dotfiles/shell/.zshrc
-~/.zprofile        → dotfiles/shell/.zprofile
-~/.config/wezterm  → dotfiles/config/.config/wezterm
-~/.config/starship → dotfiles/config/.config/starship
-~/.claude          → dotfiles/claude/.claude
-~/.codex           → dotfiles/codex/.codex
+~/.zshrc             → dotfiles/shell/.zshrc
+~/.zprofile          → dotfiles/shell/.zprofile
+~/.config/wezterm    → dotfiles/config/.config/wezterm
+~/.config/ghostty    → dotfiles/config/.config/ghostty
+~/.config/starship   → dotfiles/config/.config/starship
+~/.config/mise       → dotfiles/config/.config/mise
+~/.config/sheldon    → dotfiles/config/.config/sheldon
+~/.config/karabiner  → dotfiles/config/.config/karabiner
+~/.config/opencode   → dotfiles/config/.config/opencode
+~/.config/git        → dotfiles/config/.config/git
+~/.claude            → dotfiles/claude/.claude
+~/.codex             → dotfiles/codex/.codex
+~/.gemini            → dotfiles/gemini/.gemini
 ```
 
 ホームディレクトリの設定ファイルは、dotfiles ディレクトリへのリンクになります。
