@@ -3,7 +3,7 @@
 version: "3"
 
 vars:
-  STOW_FLAGS: -v -t ~
+  STOW_FLAGS: -v -t ~ --ignore='\.DS_Store$'
 
 tasks:
   # ====================

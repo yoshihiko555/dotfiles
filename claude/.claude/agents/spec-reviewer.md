@@ -1,0 +1,1 @@
+/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra/agents/spec-reviewer.md

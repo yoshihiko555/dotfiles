@@ -67,7 +67,6 @@
   },
   "language": "日本語",
   "sandbox": {
-    "enabled": true,
-    "autoAllowBashIfSandboxed": true
+    "enabled": false
   }
 }
