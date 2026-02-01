@@ -105,6 +105,48 @@ port() {
   lsof -i :"$1"
 }
 
+# ghq + fzf でリポジトリに移動
+repo() {
+  local selected
+  selected=$(ghq list | fzf --preview 'ls -la "$(ghq root)/{}"')
+  [[ -n "$selected" ]] && cd "$(ghq root)/$selected"
+}
+
+# fzf + コマンド履歴検索
+fh() {
+  local selected
+  selected=$(history -n 1 | fzf --tac --no-sort)
+  [[ -n "$selected" ]] && print -z "$selected"
+}
+
+# fzf + git ブランチ切り替え
+fb() {
+  local branch
+  branch=$(git branch -a | sed 's/^..//' | sed 's|remotes/origin/||' | sort -u | fzf)
+  [[ -n "$branch" ]] && git switch "$branch" 2>/dev/null || git switch -c "$branch"
+}
+
+# fzf + プロセスキル
+fkill() {
+  local pid
+  pid=$(ps aux | sed 1d | fzf -m | awk '{print $2}')
+  [[ -n "$pid" ]] && echo "$pid" | xargs kill -9
+}
+
+# fzf + ファイル検索して nvim で開く
+fe() {
+  local file
+  file=$(find . -type f 2>/dev/null | fzf --preview 'head -100 {}')
+  [[ -n "$file" ]] && nvim "$file"
+}
+
+# fzf + docker コンテナに入る
+dex() {
+  local cid
+  cid=$(docker ps --format '{{.ID}}\t{{.Names}}\t{{.Image}}' | fzf | awk '{print $1}')
+  [[ -n "$cid" ]] && docker exec -it "$cid" /bin/sh
+}
+
 # --------------------------------------------
 # 9. Local Config (machine-specific)
 # --------------------------------------------
