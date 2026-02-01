@@ -3,12 +3,9 @@
     "CLAUDE_CODE_SHELL": "bash"
   },
   "permissions": {
-    "additionalDirectories": [
-      "//tmp/claude-501",
-      "//private/tmp/claude-501"
-    ],
     "allow": [
       "Read",
+      "Search",
       "Glob",
       "Grep",
       "Bash(ls:*)",
@@ -20,6 +17,10 @@
       "Bash(rm -rf:*)",
       "Bash(sudo:*)",
       "Read(.env)"
+    ],
+    "additionalDirectories": [
+      "//tmp/claude-501",
+      "//private/tmp/claude-501"
     ]
   },
   "hooks": {
@@ -61,7 +62,6 @@
     "frontend-design@claude-plugins-official": true,
     "context7@claude-plugins-official": true,
     "Notion@claude-plugins-official": true,
-    "commit-commands@claude-plugins-official": true,
     "gopls-lsp@claude-plugins-official": true,
     "code-simplifier@claude-plugins-official": true
   },
