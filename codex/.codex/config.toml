@@ -7,6 +7,9 @@ model = "gpt-5.2-codex"
 # 推論の深さ（medium: バランス型 / high: より時間をかける）
 model_reasoning_effort = "high"
 
+# Web 検索の動作（"live" / "cached" / "disabled"）
+web_search = "live"
+
 # ---- 実行ポリシー ----
 # コマンド実行時の確認ポリシー
 # - "untrusted": コマンド実行前に基本的に確認する
@@ -31,8 +34,6 @@ trusted_projects = [
 ]
 
 [features]
-# モデルが Web 検索を要求できるようにする（必要に応じて）
-web_search_request = true
 # apply_patch ベースの柔軟な編集ツール（ベータ）
 apply_patch_freeform = true
 # プランモードが使えるやつ

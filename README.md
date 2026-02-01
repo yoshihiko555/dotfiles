@@ -6,8 +6,6 @@
 
 ```
 dotfiles/
-├── backup/                 # 生成物の退避
-├── Brewfile                # Homebrew パッケージ定義
 ├── shell/                  # シェル設定（→ ~）
 │   ├── .zshrc
 │   └── .zprofile
@@ -36,6 +34,7 @@ dotfiles/
 │       └── claude-only/
 │
 ├── Makefile
+├── Brewfile                # Homebrew パッケージ定義
 ├── Taskfile.yml
 ├── scripts/
 └── README.md
