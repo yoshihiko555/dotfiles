@@ -46,24 +46,30 @@ local function get_project_name(pane)
   return pane.title
 end
 
+-- コマンド名を表示するCLIツールのリスト
+-- これらのツールは専用タブとして認識しやすくするためコマンド名を表示
+local cli_tools_show_command = {
+  "lazygit", "lg",           -- Git TUI
+  "htop", "btop", "top",     -- プロセスモニター
+  "lazydocker",              -- Docker TUI
+  "k9s",                     -- Kubernetes TUI
+  "ncdu", "dust",            -- ディスク使用量
+  "ranger", "lf", "yazi",    -- ファイルマネージャー
+  "tmux",                    -- ターミナルマルチプレクサ
+}
+
 -- タブタイトルを取得する関数
 local function get_tab_title(pane)
   local process_name = get_process_name(pane)
 
-  -- シェル以外のプロセスが実行中の場合はプロセス名を表示
-  local shell_names = { "zsh", "bash", "fish", "sh", "pwsh", "powershell" }
-  for _, shell in ipairs(shell_names) do
-    if process_name == shell then
-      -- シェルの場合はプロジェクト名を表示
-      return get_project_name(pane)
+  -- CLIツールリストに含まれる場合はコマンド名を表示
+  for _, tool in ipairs(cli_tools_show_command) do
+    if process_name == tool then
+      return process_name
     end
   end
 
-  -- シェル以外のプロセス（vim, node, make等）はプロセス名を表示
-  if process_name ~= "" then
-    return process_name
-  end
-
+  -- それ以外（シェル、エディタ、claude、codex等）はプロジェクト名を表示
   return get_project_name(pane)
 end
 
