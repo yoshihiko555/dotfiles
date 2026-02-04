@@ -25,7 +25,7 @@ setopt APPEND_HISTORY       # 履歴を追記
 # --------------------------------------------
 # 3. Tool Initialization
 # --------------------------------------------
-eval "$(mise activate zsh)"
+# mise は .zshenv で activate 済み
 eval "$(zoxide init zsh)"
 eval "$(sheldon source)"
 
