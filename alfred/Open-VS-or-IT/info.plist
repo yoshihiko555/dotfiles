@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string></string>
+	<key>category</key>
+	<string>Tools</string>
+	<key>connections</key>
+	<dict>
+		<key>23509D67-8963-4D48-8814-7EB53BD0C0AB</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>E4089D94-7C93-4588-B4D3-635AAD78219B</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>C526CEA9-5428-41C9-B7D3-CB66AEAA548D</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>23509D67-8963-4D48-8814-7EB53BD0C0AB</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>D673ADA9-89D1-41AD-B884-0BDDF5670882</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>155FF75A-D1F8-4A36-B963-39BA542EA2C7</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string></string>
+	<key>description</key>
+	<string>お気に入りのフォルダをVSCodeもしくはiTermで開くワークフロー</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Open VS or IT</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>externaltriggerid</key>
+				<string>choose_mode</string>
+				<key>passinputasargument</key>
+				<true/>
+				<key>passvariables</key>
+				<true/>
+				<key>workflowbundleid</key>
+				<string>self</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.callexternaltrigger</string>
+			<key>uid</key>
+			<string>155FF75A-D1F8-4A36-B963-39BA542EA2C7</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>68</integer>
+				<key>keyword</key>
+				<string>fav</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string></string>
+				<key>script</key>
+				<string>#!/usr/bin/env python3
+import json, os, sys
+
+query = (sys.argv[1] if len(sys.argv) &gt; 1 else "").strip()
+
+wf_data = os.getenv("alfred_workflow_data") or os.getcwd()
+os.makedirs(wf_data, exist_ok=True)
+conf = os.path.join(wf_data, "favorites.json")
+
+items = []
+
+try:
+    with open(conf, "r", encoding="utf-8") as f:
+        favs = json.load(f)
+except Exception as e:
+    print(json.dumps({"items": [{
+        "title": "favorites.json が読めません",
+        "subtitle": f"{conf} | {e}",
+        "valid": False
+    }]}, ensure_ascii=False))
+    raise SystemExit
+
+def hit(x, s):
+    if not s:
+        return True
+    s = s.lower()
+    blob = " ".join([x.get("id",""), x.get("name",""), x.get("path",""), x.get("keywords","")]).lower()
+    return s in blob
+
+for x in favs:
+    if not hit(x, query):
+        continue
+    items.append({
+        "title": x.get("name", x.get("id","(no id)")),
+        "subtitle": x.get("path",""),
+        "arg": x.get("path","")
+    })
+
+print(json.dumps({"items": items}, ensure_ascii=False))</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string></string>
+				<key>title</key>
+				<string>お気に入り検索を行う</string>
+				<key>type</key>
+				<integer>9</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>D673ADA9-89D1-41AD-B884-0BDDF5670882</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>#!/bin/zsh
+set -euo pipefail
+
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+mode="${mode:-${1:-vs}}"
+dir="${dir:-}"
+
+if [[ -z "$dir" ]]; then
+  osascript -e 'display notification "dirが渡ってきていません" with title "Open VS or IT"'
+  exit 1
+fi
+
+if [[ "$mode" == "vs" ]]; then
+  open -a "Visual Studio Code" "$dir"
+  exit 0
+fi
+
+if [[ "$mode" == "wez" ]]; then
+  if ! command -v wezterm &gt;/dev/null 2&gt;&amp;1; then
+    osascript -e 'display notification "wezterm コマンドが見つかりません (PATH を確認してください)" with title "Open VS or Wez"'
+    exit 1
+  fi
+
+  if [[ ! -d "$dir" ]]; then
+    osascript -e 'display notification "指定された dir が存在しません" with title "Open VS or Wez"'
+    exit 1
+  fi
+
+  # 絶対パス化
+  dir="$(cd "$dir" &amp;&amp; pwd -P)"
+
+  # WezTerm.app 名（nightly だと環境によって名称が違うので吸収）
+  wez_app="WezTerm"
+  if [[ -d "/Applications/WezTerm Nightly.app" ]]; then
+    wez_app="WezTerm Nightly"
+  elif [[ -d "/Applications/WezTerm.app" ]]; then
+    wez_app="WezTerm"
+  fi
+
+  # 3分割タブを作成する関数
+  # ┌──────┬──────┐
+  # │      │  2   │
+  # │  1   ├──────┤
+  # │      │  3   │
+  # └──────┴──────┘
+  create_3_pane_tab() {
+    local target_dir="$1"
+    local pane_id right_pane_id
+
+    # 新しいタブを作成（pane_idを取得）
+    pane_id="$(wezterm cli spawn --cwd "$target_dir" 2&gt;/dev/null)" || return 1
+
+    # 右側に分割（50%）
+    right_pane_id="$(wezterm cli split-pane --right --percent 50 --cwd "$target_dir" --pane-id "$pane_id" 2&gt;/dev/null)" || true
+
+    # 右側ペインを下に分割（50%）
+    if [[ -n "$right_pane_id" ]]; then
+      wezterm cli split-pane --bottom --percent 50 --cwd "$target_dir" --pane-id "$right_pane_id" 2&gt;/dev/null || true
+    fi
+
+    # 左ペインをアクティブ化
+    wezterm cli activate-pane --pane-id "$pane_id" 2&gt;/dev/null || true
+
+    # タブタイトル設定
+    wezterm cli set-tab-title --pane-id "$pane_id" "$(basename "$target_dir")" 2&gt;/dev/null || true
+
+    return 0
+  }
+
+  # WezTermが起動済みかチェック（CLI接続で判定）
+  if wezterm cli list &amp;&gt;/dev/null; then
+    # 起動済み：3分割タブを作成
+    create_3_pane_tab "$dir"
+    open -a "$wez_app" 2&gt;/dev/null || true
+    exit 0
+  fi
+
+  # 未起動：WezTermを起動して待機
+  open -a "$wez_app"
+
+  # CLI接続可能になるまで待機（最大5秒）
+  for i in {1..50}; do
+    if wezterm cli list &amp;&gt;/dev/null; then
+      break
+    fi
+    sleep 0.1
+  done
+
+  # 起動後、少し待ってから3分割タブを作成
+  sleep 0.3
+
+  # 初期タブのpane_idを取得
+  initial_pane_id="$(wezterm cli list --format json 2&gt;/dev/null | /usr/bin/python3 -c "import sys, json; data = json.load(sys.stdin); print(data[0]['pane_id'] if data else '')" 2&gt;/dev/null)" || true
+
+  if [[ -n "$initial_pane_id" ]]; then
+    # 新しい3分割タブを作成
+    create_3_pane_tab "$dir"
+
+    # 初期の空タブを閉じる
+    wezterm cli kill-pane --pane-id "$initial_pane_id" 2&gt;/dev/null || true
+  else
+    # フォールバック：新しい3分割タブを作成
+    create_3_pane_tab "$dir"
+  fi
+
+  open -a "$wez_app" 2&gt;/dev/null || true
+  exit 0
+fi</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>11</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>E4089D94-7C93-4588-B4D3-635AAD78219B</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string></string>
+				<key>script</key>
+				<string>#!/usr/bin/env python3
+import json, sys
+
+target = (sys.argv[1] if len(sys.argv) &gt; 1 else "").strip()
+
+if not target:
+    print(json.dumps({"items":[{"title":"選択フォルダが取得できません（引数が空です）","valid":False}]}, ensure_ascii=False))
+    raise SystemExit
+
+items = [
+    {"title":"vs で開く（VSCode）", "subtitle":target, "arg":"vs",
+     "variables":{"mode":"vs", "dir":target}},
+    {"title":"wez で開く（Wezterm）",  "subtitle":target, "arg":"wez",
+     "variables":{"mode":"wez", "dir":target}},
+]
+
+print(json.dumps({"items": items}, ensure_ascii=False))</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string></string>
+				<key>title</key>
+				<string></string>
+				<key>type</key>
+				<integer>9</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>23509D67-8963-4D48-8814-7EB53BD0C0AB</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>availableviaurlhandler</key>
+				<false/>
+				<key>triggerid</key>
+				<string>choose_mode</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>C526CEA9-5428-41C9-B7D3-CB66AEAA548D</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string></string>
+	<key>uidata</key>
+	<dict>
+		<key>155FF75A-D1F8-4A36-B963-39BA542EA2C7</key>
+		<dict>
+			<key>xpos</key>
+			<real>540</real>
+			<key>ypos</key>
+			<real>450</real>
+		</dict>
+		<key>23509D67-8963-4D48-8814-7EB53BD0C0AB</key>
+		<dict>
+			<key>xpos</key>
+			<real>375</real>
+			<key>ypos</key>
+			<real>610</real>
+		</dict>
+		<key>C526CEA9-5428-41C9-B7D3-CB66AEAA548D</key>
+		<dict>
+			<key>xpos</key>
+			<real>175</real>
+			<key>ypos</key>
+			<real>610</real>
+		</dict>
+		<key>D673ADA9-89D1-41AD-B884-0BDDF5670882</key>
+		<dict>
+			<key>xpos</key>
+			<real>175</real>
+			<key>ypos</key>
+			<real>450</real>
+		</dict>
+		<key>E4089D94-7C93-4588-B4D3-635AAD78219B</key>
+		<dict>
+			<key>xpos</key>
+			<real>545</real>
+			<key>ypos</key>
+			<real>610</real>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array/>
+	<key>version</key>
+	<string></string>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>

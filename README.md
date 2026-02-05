@@ -45,6 +45,9 @@ dotfiles/
 │       ├── common/         # 共通スキル
 │       └── codex-only/     # Codex 専用スキル
 │
+├── alfred/                 # Alfred ワークフロー（→ ~/Dropbox/...へリンク）
+│   └── Open-VS-or-IT/      # お気に入りフォルダを開くワークフロー
+│
 ├── Makefile
 ├── Brewfile                # Homebrew パッケージ定義
 ├── Taskfile.yml
@@ -169,6 +172,7 @@ stow -vt ~ git
 ~/.claude            → dotfiles/claude/.claude
 ~/.codex             → dotfiles/codex/.codex
 ~/.gemini            → dotfiles/gemini/.gemini
+~/Dropbox/.../workflows/user.workflow.C9692AD7-... → dotfiles/alfred/Open-VS-or-IT
 ```
 
 ホームディレクトリの設定ファイルは、dotfiles ディレクトリへのリンクになります。
@@ -179,3 +183,29 @@ dotfiles 内のファイルを編集すると、実際の設定に反映され�
 - スキル本体は `shared/skills/` に集約
 - `claude/.claude/skills` と `codex/.codex/skills` は相対シンボリックリンクで参照
 - リンク更新は `task sync-skills` で実行
+
+## Alfred ワークフロー
+
+stowでシンボリックリンクを作成して管理。
+
+```bash
+task link-alfred   # ワークフローをリンク
+task unlink-alfred # リンク解除
+```
+
+### WezTerm Open
+
+Alfredから指定ディレクトリをWezTermで3分割ペインレイアウトで開く。
+
+**キーワード:** `wez`
+
+```
+3分割レイアウト:
+┌──────┬──────┐
+│      │  2   │
+│  1   ├──────┤
+│      │  3   │
+└──────┴──────┘
+```
+
+詳細は [alfred/README.md](alfred/README.md) を参照。
