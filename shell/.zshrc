@@ -81,6 +81,12 @@ alias conin='docker container exec -it'
 alias wails='go run github.com/wailsapp/wails/v2/cmd/wails@latest'
 alias wails3='go run github.com/wailsapp/wails/v3/cmd/wails3@latest'
 
+# Claude CLI
+alias cc='claude'
+
+# Codex CLI
+alias cx='codex'
+
 # よく使うコマンド短縮
 alias c='clear'
 alias h='history'
