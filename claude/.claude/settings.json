@@ -8,14 +8,23 @@
       "Search",
       "Glob",
       "Grep",
-      "Bash(ls:*)",
-      "Bash(cat:*)",
-      "Bash(npm run dev)",
-      "Bash(npm run build)"
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(git *)",
+      "Bash(find *)",
+      "Bash(wc *)"
     ],
     "deny": [
-      "Bash(rm -rf:*)",
-      "Bash(sudo:*)",
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(sudo *)",
+      "Bash(*> .env*)",
+      "Bash(*>> .env*)",
+      "Bash(*credentials*)",
+      "Bash(*secret*)",
+      "Bash(*password*)",
       "Read(.env)"
     ],
     "additionalDirectories": [
