@@ -12,6 +12,12 @@ inline = 'autoload -Uz compinit && compinit'
 [plugins.zsh-autosuggestions]
 github = "zsh-users/zsh-autosuggestions"
 
+# zsh-autosuggestions のスタイル設定（背景なし）
+[plugins.autosuggestions-config]
+inline = '''
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#7aa2f7'
+'''
+
 [plugins.fzf-tab]
 github = "Aloxaf/fzf-tab"
 
