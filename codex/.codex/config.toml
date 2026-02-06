@@ -2,7 +2,7 @@
 
 # ---- 基本設定 ----
 # デフォルトで使うモデル
-model = "gpt-5.2-codex"
+model = "gpt-5.3-codex"
 
 # 推論の深さ（medium: バランス型 / high: より時間をかける）
 model_reasoning_effort = "high"
