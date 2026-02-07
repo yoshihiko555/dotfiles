@@ -93,9 +93,23 @@ alias h='history'
 alias v='nvim'
 alias code='code .'
 
+# Digital Garden
+DG_ROOT=~/ghq/github.com/yoshihiko555/digital-garden
+alias trend="open -a Dia \$DG_ROOT/content/daily/\$(date +%Y%m%d)-trend.md"
+alias daily="mdbrowse \$DG_ROOT/content/daily/"
+alias weekly="mdbrowse \$DG_ROOT/content/clippings/weekly/"
+
 # --------------------------------------------
 # 8. Functions
 # --------------------------------------------
+# fzf でMarkdownを選んでブラウザで開く
+mdbrowse() {
+  local dir="${1:-.}"
+  local file
+  file=$(find "$dir" -name "*.md" -type f | sort -r | fzf --preview 'head -40 {}')
+  [[ -n "$file" ]] && open -a "Dia" "$file"
+}
+
 # ディレクトリ作成してcd
 mkcd() {
   mkdir -p "$1" && cd "$1"
