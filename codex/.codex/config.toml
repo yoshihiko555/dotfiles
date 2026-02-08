@@ -5,7 +5,7 @@
 model = "gpt-5.3-codex"
 
 # 推論の深さ（medium: バランス型 / high: より時間をかける）
-model_reasoning_effort = "high"
+model_reasoning_effort = "xhigh"
 
 # Web 検索の動作（"live" / "cached" / "disabled"）
 web_search = "live"
