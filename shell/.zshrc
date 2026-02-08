@@ -106,6 +106,56 @@ alias weekly="mdbrowse \$DG_ROOT/content/clippings/weekly/"
 # --------------------------------------------
 # 8. Functions
 # --------------------------------------------
+# カスタムコマンド一覧を表示
+cheat() {
+  cat <<'HELP'
+── General ─────────────────────────────────
+  ll        ls -lah
+  la        ls -A
+  ..        cd ..  /  ...  cd ../..  /  ....  cd ../../..
+  mkdir     mkdir -p (自動で親ディレクトリ作成)
+  rm/cp/mv  確認付き (-i)
+
+── Git ─────────────────────────────────────
+  g         git
+  gs        git status       ga   git add
+  gc        git commit       gp   git push
+  gl        git log (10件)   gd   git diff
+  gb        git branch       gco  git checkout
+  gsw       git switch       lg   lazygit
+
+── Docker ──────────────────────────────────
+  d         docker           dc   docker compose
+  dps       docker ps        dpsa docker ps -a
+  conin     docker exec -it
+
+── Dev ─────────────────────────────────────
+  v         nvim             c    clear
+  h         history          t    tmux
+  cc        claude           cx   codex
+  code      code .
+
+── Digital Garden ──────────────────────────
+  trend     今日のトレンドメモを開く
+  daily     daily ノート一覧
+  weekly    weekly クリッピング一覧
+
+── Functions (fzf) ─────────────────────────
+  repo      ghq リポジトリに移動
+  fe        ファイル検索 → nvim で開く
+  fh        コマンド履歴検索
+  fb        git ブランチ切り替え
+  fkill     プロセスを選んで kill
+  dex       docker コンテナに入る
+  mdopen    Markdown を選んで Dia で開く
+
+── Functions (util) ────────────────────────
+  mkcd DIR  ディレクトリ作成して cd
+  port NUM  ポート使用プロセス確認
+  cheat     このヘルプを表示
+HELP
+}
+
 # fzf でMarkdownを選んでブラウザで開く
 mdopen() {
   local dir="${1:-.}"
