@@ -26,6 +26,7 @@ tasks:
       - task: link-config
       - task: link-claude
       - task: link-codex
+      - task: link-tmux
       - task: link-alfred
 
   link-shell:
@@ -47,6 +48,11 @@ tasks:
     desc: Codex CLI をリンク
     cmds:
       - stow {{.STOW_FLAGS}} codex
+
+  link-tmux:
+    desc: tmux 設定をリンク (.tmux.conf)
+    cmds:
+      - stow {{.STOW_FLAGS}} tmux
 
   link-alfred:
     desc: Alfred ワークフローをリンク
@@ -73,6 +79,7 @@ tasks:
       - task: unlink-config
       - task: unlink-claude
       - task: unlink-codex
+      - task: unlink-tmux
       - task: unlink-alfred
 
   unlink-shell:
@@ -95,6 +102,11 @@ tasks:
     cmds:
       - stow -D {{.STOW_FLAGS}} codex
 
+  unlink-tmux:
+    desc: tmux 設定のリンクを解除
+    cmds:
+      - stow -D {{.STOW_FLAGS}} tmux
+
   unlink-alfred:
     desc: Alfred ワークフローのリンクを解除
     cmds:
@@ -113,7 +125,7 @@ tasks:
   restow:
     desc: 全パッケージを再リンク（削除してから作成）
     cmds:
-      - stow -R {{.STOW_FLAGS}} shell config claude codex
+      - stow -R {{.STOW_FLAGS}} shell config claude codex tmux
       - task: unlink-alfred
       - task: link-alfred
 
@@ -136,6 +148,11 @@ tasks:
     desc: Codex CLI を再リンク
     cmds:
       - stow -R {{.STOW_FLAGS}} codex
+
+  restow-tmux:
+    desc: tmux 設定を再リンク
+    cmds:
+      - stow -R {{.STOW_FLAGS}} tmux
 
   restow-alfred:
     desc: Alfred ワークフローを再リンク
@@ -214,6 +231,9 @@ tasks:
         echo "📁 Codex:"
         ls -la ~/.codex 2>/dev/null || echo "  (not linked)"
         echo ""
+        echo "📁 Tmux:"
+        ls -la ~/.tmux.conf 2>/dev/null || echo "  (not linked)"
+        echo ""
         echo "📁 Alfred:"
         ls -la ~/Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.C9692AD7-2800-42B7-8F97-8F8CCD1CC88E 2>/dev/null || echo "  (not linked)"
 
@@ -243,3 +263,13 @@ tasks:
     desc: MCP テンプレートの内容を表示
     cmds:
       - cat {{.ROOT_DIR}}/shared/mcp.template.json
+
+  clean-claude:
+    desc: Claude Code のデバッグログをクリーンアップ
+    cmds:
+      - bash {{.ROOT_DIR}}/scripts/clean-claude.sh
+
+  clean-claude-dry:
+    desc: Claude Code デバッグログ クリーンアップの dry-run
+    cmds:
+      - bash {{.ROOT_DIR}}/scripts/clean-claude.sh --dry-run
