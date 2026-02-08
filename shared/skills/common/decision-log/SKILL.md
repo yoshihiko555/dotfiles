@@ -18,12 +18,18 @@ metadata:
 - 事実の捏造はしない（リンクや決定理由が不明なら確認）
 
 ## 変数（プロジェクトごとに読み替え）
-- `{ADR_DIR}`: ADRディレクトリ（例: `docs/08_adr`）
-- `{DECISIONS_PATH}`: 意思決定ログ（例: `{ADR_DIR}/DECISIONS.md`）
-- `{ADR_PREFIX}`: ADRファイル名プレフィックス（例: `ADR`）
-- `{DATE}` / `{DATE_NOSEP}` / `{NEXT_ID}` / `{TITLE}`
-- `{ADR_TEMPLATE_DIR}`: プロジェクト内のテンプレ参照先
-- `{ADR_TEMPLATE_SOURCE}`: 個人テンプレ保管場所（例: `/Users/yoshihiko/Dropbox/04_Development/81_Templates/03_ADR`）
+
+| 変数 | 必須 | 取得方法 | 例 |
+|------|------|---------|-----|
+| `{ADR_DIR}` | 必須 | プロジェクト構成から特定 | `docs/08_adr` |
+| `{DECISIONS_PATH}` | 必須 | `{ADR_DIR}/DECISIONS.md` | `docs/08_adr/DECISIONS.md` |
+| `{ADR_PREFIX}` | 必須 | 既存ADRファイル名から推定 | `ADR` |
+| `{DATE}` | 自動 | 実行日（YYYY-MM-DD） | `2026-02-08` |
+| `{DATE_NOSEP}` | 自動 | 実行日（YYYYMMDD） | `20260208` |
+| `{NEXT_ID}` | 自動 | DECISIONS.md の最終連番 +1 | `005` |
+| `{TITLE}` | 必須 | ユーザー指定またはコミット内容から要約 | `API認証方式の選定` |
+| `{ADR_TEMPLATE_DIR}` | 任意 | プロジェクト内のテンプレ配置先 | `docs/templates` |
+| `{ADR_TEMPLATE_SOURCE}` | 任意 | 個人テンプレ保管場所（フォールバック） | `~/Dropbox/.../03_ADR` |
 
 ## 実行フロー（コミット直前）
 1. コミット対象の差分と、直前のやり取り（方針決定までの議論）を整理する
@@ -36,20 +42,14 @@ metadata:
 
 ## 既存ADRがある場合の作成プロンプト（汎用）
 ```
-あなたはリポジトリのADR運用担当です。
-次の方針に従って、ADRとDECISIONS.md更新を行ってください。
+以下の変数でADRとDECISIONS.mdを作成してください。
+手順は「実行フロー」、制約は「基本ルール」に従うこと。
 
 - ADRディレクトリ: {ADR_DIR}
 - DECISIONS.md: {DECISIONS_PATH}
-- 既存ADRの最新ファイルを参照し、見出し構成・文体・項目を合わせる
-- ファイル名は {ADR_PREFIX}-{DATE_NOSEP}-{NEXT_ID}.md
-- 決定日は {DATE}
-- タイトルは「{TITLE}」
-- ADR本文に、背景/問題/選択肢/決定/影響/実装・運用メモ/宿題/検証 を含める
-- DECISIONS.md の ADR 一覧に1行追記（既存形式に合わせる）
-- コミットメッセージは日本語で、ADR作成が分かる内容にする
-- このスレッドのやり取りと、コミット対象の差分を踏まえて決定内容を要約する
-- 不明点があれば、最小限の確認質問のみを先に行う
+- ファイル名: {ADR_PREFIX}-{DATE_NOSEP}-{NEXT_ID}.md
+- 決定日: {DATE}
+- タイトル: {TITLE}
 ```
 
 ## 既存ADRがない場合の運用
@@ -65,3 +65,10 @@ metadata:
 - `docs: ADR {ADR_PREFIX}-{DATE_NOSEP}-{NEXT_ID} を追加`
 - `docs: 意思決定ログに {TITLE} を追加`
 - `feat: 実装差分の内容についての説明`
+
+## 検証チェックリスト
+- [ ] ADRファイルが `{ADR_DIR}/{ADR_PREFIX}-{DATE_NOSEP}-{NEXT_ID}.md` として存在する
+- [ ] ADR本文に必須項目（背景/問題/選択肢/決定/影響）がすべて含まれている
+- [ ] 既存ADRの見出し構成・語調と整合している
+- [ ] `{DECISIONS_PATH}` に正しい連番で1行追記されている
+- [ ] コミットに実装差分・ADRファイル・DECISIONS.md がすべて含まれている
