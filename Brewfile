@@ -26,6 +26,7 @@ brew "opencode"
 brew "sheldon"
 brew "starship"
 brew "stow"
+brew "tmux"
 brew "tree"
 brew "zoxide"
 

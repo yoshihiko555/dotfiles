@@ -87,6 +87,10 @@ alias cc='claude'
 # Codex CLI
 alias cx='codex'
 
+# tmux（AUTO_CD でディレクトリに移動するのを防ぐ）
+alias tmux='command tmux'
+alias t='command tmux'
+
 # よく使うコマンド短縮
 alias c='clear'
 alias h='history'
