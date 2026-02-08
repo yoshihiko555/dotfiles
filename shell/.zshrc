@@ -101,8 +101,8 @@ alias code='code .'
 # Digital Garden
 DG_ROOT=~/ghq/github.com/yoshihiko555/digital-garden
 alias trend="open -a Dia \$DG_ROOT/content/daily/\$(date +%Y%m%d)-trend.md"
-alias daily="mdbrowse \$DG_ROOT/content/daily/"
-alias weekly="mdbrowse \$DG_ROOT/content/clippings/weekly/"
+alias daily="mdopen \$DG_ROOT/content/daily/"
+alias weekly="mdopen \$DG_ROOT/content/clippings/weekly/"
 
 # --------------------------------------------
 # 8. Functions
