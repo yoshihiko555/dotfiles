@@ -107,7 +107,7 @@ alias weekly="mdbrowse \$DG_ROOT/content/clippings/weekly/"
 # 8. Functions
 # --------------------------------------------
 # fzf でMarkdownを選んでブラウザで開く
-mdbrowse() {
+mdopen() {
   local dir="${1:-.}"
   local file
   file=$(find "$dir" -name "*.md" -type f | sort -r | fzf --preview 'head -40 {}')
