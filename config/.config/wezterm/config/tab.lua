@@ -55,7 +55,6 @@ local cli_tools_show_command = {
   "k9s",                     -- Kubernetes TUI
   "ncdu", "dust",            -- ディスク使用量
   "ranger", "lf", "yazi",    -- ファイルマネージャー
-  "tmux",                    -- ターミナルマルチプレクサ
 }
 
 -- タブタイトルを取得する関数
