@@ -55,6 +55,17 @@
         ]
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/claude_message.sh success"
+          }
+        ]
+      }
+    ],
     "PostToolUseFailure": [
       {
         "matcher": "",

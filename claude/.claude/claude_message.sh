@@ -23,6 +23,10 @@ STATE_KEY="$(printf '%s' "$SESSION_KEY" | cksum | awk '{print $1}')"
 STATE_FILE="${STATE_DIR}/claude_hook_state_${STATE_KEY}"
 
 case "$EVENT" in
+  # 成功時はフラグをリセット
+  success|post_tool_use)
+    rm -f "$STATE_FILE"
+    ;;
   # 失敗時はフラグを立てる
   failure|post_tool_use_failure)
     echo "1" >"$STATE_FILE"
