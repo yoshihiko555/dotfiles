@@ -21,12 +21,11 @@ ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#7aa2f7'
 [plugins.fzf-tab]
 github = "Aloxaf/fzf-tab"
 
-# fzf-tab UI カスタマイズ（tmux なし）
+# fzf-tab UI カスタマイズ（tmux popup）
 [plugins.fzf-tab-config]
 inline = '''
-zstyle ':fzf-tab:*' fzf-command fzf
+zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
 zstyle ':fzf-tab:*' fzf-flags \
-    --height=40% \
     --layout=reverse \
     --border=rounded \
     --border-label=" 補完 " \
@@ -36,6 +35,8 @@ zstyle ':fzf-tab:*' fzf-flags \
     --color=fg:#c0caf5,bg:#1a1b26,hl:#ff9e64 \
     --color=fg+:#c0caf5,bg+:#33467c,hl+:#ff9e64 \
     --color=pointer:#9ece6a,marker:#9ece6a,border:#565f89,label:#7aa2f7
+# tmux popup のサイズ
+zstyle ':fzf-tab:*' popup-min-size 80 12
 # グループのスイッチキー
 zstyle ':fzf-tab:*' switch-group "<" ">"
 # グループヘッダーを表示
