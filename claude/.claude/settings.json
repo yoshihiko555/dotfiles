@@ -90,5 +90,9 @@
   "language": "日本語",
   "sandbox": {
     "enabled": false
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "$HOME/.claude/statusline-command.sh"
   }
 }
