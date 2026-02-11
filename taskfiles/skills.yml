@@ -5,7 +5,7 @@ tasks:
   # Skills 同期
   # ====================
   sync-skills:
-    desc: shared/skills をもとに Codex/Claude のスキルリンクを更新
+    desc: skills を追加・変更した後に Codex/Claude のスキルリンクを同期
     cmds:
       - |
         set -eu

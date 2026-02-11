@@ -18,6 +18,6 @@ includes:
 
 tasks:
   default:
-    desc: 利用可能なタスク一覧を表示
+    desc: どのタスクを使うか迷ったときに一覧を表示
     cmds:
       - task --list

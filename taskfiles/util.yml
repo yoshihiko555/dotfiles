@@ -5,7 +5,7 @@ tasks:
   # ユーティリティ
   # ====================
   status:
-    desc: 現在のシンボリックリンク状態を確認
+    desc: リンク適用後やトラブル時に現在のシンボリックリンク状態を確認
     cmds:
       - |
         echo "📁 Shell:"
@@ -27,18 +27,18 @@ tasks:
         ls -la ~/Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.C9692AD7-2800-42B7-8F97-8F8CCD1CC88E 2>/dev/null || echo "  (not linked)"
 
   brew:
-    desc: Homebrew パッケージをインストール
+    desc: 新しい Mac の初期構築時に Homebrew パッケージをインストール
     cmds:
       - bash {{.ROOT_DIR}}/scripts/install-brew.sh
       - brew bundle --file={{.ROOT_DIR}}/Brewfile
 
   edit:
-    desc: dotfiles を VS Code で開く
+    desc: dotfiles を編集したいときに VS Code で開く
     cmds:
       - code {{.ROOT_DIR}}
 
   mcp-init:
-    desc: カレントディレクトリに .mcp.json をコピー
+    desc: 新規プロジェクトで .mcp.json が未作成のときにテンプレートをコピー
     cmds:
       - |
         if [ -f .mcp.json ]; then
@@ -49,16 +49,16 @@ tasks:
         fi
 
   mcp-show:
-    desc: MCP テンプレートの内容を表示
+    desc: mcp-init の前に MCP テンプレート内容を確認
     cmds:
       - cat {{.ROOT_DIR}}/shared/mcp.template.json
 
   clean-claude:
-    desc: Claude Code のデバッグログをクリーンアップ
+    desc: Claude Code のログ容量を減らしたいときにデバッグログを削除
     cmds:
       - bash {{.ROOT_DIR}}/scripts/clean-claude.sh
 
   clean-claude-dry:
-    desc: Claude Code デバッグログ クリーンアップの dry-run
+    desc: clean-claude 実行前に削除対象だけ確認する dry-run
     cmds:
       - bash {{.ROOT_DIR}}/scripts/clean-claude.sh --dry-run
