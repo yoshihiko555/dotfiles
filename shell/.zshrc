@@ -88,6 +88,9 @@ alias cc-dg='claude --dangerously-skip-permissions'
 # Codex CLI
 alias cx='codex'
 
+# Gemini CLI
+alias gm='gemini'
+
 # tmux（AUTO_CD でディレクトリに移動するのを防ぐ）
 alias tmux='command tmux'
 alias t='command tmux'
@@ -134,6 +137,7 @@ cheat() {
   v         nvim             c    clear
   h         history          t    tmux
   cc        claude           cx   codex
+  gm        gemini
   code      code .
 
 ── Digital Garden ──────────────────────────

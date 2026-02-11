@@ -13,6 +13,7 @@ tasks:
       - task: link-config
       - task: link-claude
       - task: link-codex
+      - task: link-gemini
       - task: link-tmux
       - task: link-alfred
 
@@ -35,6 +36,11 @@ tasks:
     desc: Codex 設定を反映したいときに ~/.codex をリンク
     cmds:
       - stow {{.STOW_FLAGS}} codex
+
+  link-gemini:
+    desc: Gemini 設定を反映したいときに ~/.gemini をリンク
+    cmds:
+      - stow {{.STOW_FLAGS}} gemini
 
   link-tmux:
     desc: tmux 設定を反映したいときに .tmux.conf をリンク
@@ -66,6 +72,7 @@ tasks:
       - task: unlink-config
       - task: unlink-claude
       - task: unlink-codex
+      - task: unlink-gemini
       - task: unlink-tmux
       - task: unlink-alfred
 
@@ -88,6 +95,11 @@ tasks:
     desc: Codex 設定リンクのみ外したいときに解除
     cmds:
       - stow -D {{.STOW_FLAGS}} codex
+
+  unlink-gemini:
+    desc: Gemini 設定リンクのみ外したいときに解除
+    cmds:
+      - stow -D {{.STOW_FLAGS}} gemini
 
   unlink-tmux:
     desc: tmux 設定リンクのみ外したいときに解除
@@ -112,7 +124,7 @@ tasks:
   restow:
     desc: 設定変更後に全パッケージを最新化したいときに再リンク
     cmds:
-      - stow -R {{.STOW_FLAGS}} shell config claude codex tmux
+      - stow -R {{.STOW_FLAGS}} shell config claude codex gemini tmux
       - task: unlink-alfred
       - task: link-alfred
 
@@ -135,6 +147,11 @@ tasks:
     desc: Codex 設定だけ最新化したいときに再リンク
     cmds:
       - stow -R {{.STOW_FLAGS}} codex
+
+  restow-gemini:
+    desc: Gemini 設定だけ最新化したいときに再リンク
+    cmds:
+      - stow -R {{.STOW_FLAGS}} gemini
 
   restow-tmux:
     desc: tmux 設定だけ最新化したいときに再リンク
