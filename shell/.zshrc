@@ -94,6 +94,10 @@ alias gm='gemini'
 # tmux（AUTO_CD でディレクトリに移動するのを防ぐ）
 alias tmux='command tmux'
 alias t='command tmux'
+alias ta='command tmux attach-session'
+alias tl='command tmux list-sessions'
+alias td='command tmux detach-client'
+alias tn='command tmux new-session'
 
 # よく使うコマンド短縮
 alias c='clear'
@@ -144,6 +148,16 @@ cheat() {
   trend     今日のトレンドメモを開く
   daily     daily ノート一覧
   weekly    weekly クリッピング一覧
+
+── Tmux ────────────────────────────────────
+  t         tmux               ta   attach
+  tl        list-sessions      td   detach
+  tn        new-session
+  tss       fzf でセッション切り替え
+  tk        fzf でセッション kill
+  tp        ghq プロジェクトでセッション作成
+  -s NAME   セッション名を付けて作成  (tn -s work)
+  -t NAME   対象セッションを指定      (ta -t work)
 
 ── Functions (fzf) ─────────────────────────
   repo      ghq リポジトリに移動
@@ -245,6 +259,65 @@ HELP
       return 1
       ;;
   esac
+}
+
+# fzf + tmux セッション切り替え/作成
+tss() {
+  if ! command tmux list-sessions &>/dev/null; then
+    command tmux new-session
+    return
+  fi
+  local session
+  session=$(command tmux list-sessions -F '#{session_name}: #{session_windows} windows (#{session_attached} attached)' \
+    | fzf --header='Switch session (Ctrl-C to cancel)' \
+    | cut -d: -f1)
+  if [[ -n "$session" ]]; then
+    if [[ -n "$TMUX" ]]; then
+      command tmux switch-client -t "$session"
+    else
+      command tmux attach-session -t "$session"
+    fi
+  fi
+}
+
+# fzf + tmux セッションを選んで kill
+tk() {
+  local sessions
+  sessions=$(command tmux list-sessions -F '#{session_name}: #{session_windows} windows' 2>/dev/null)
+  if [[ -z "$sessions" ]]; then
+    echo "No tmux sessions."
+    return 1
+  fi
+  local selected
+  selected=$(echo "$sessions" | fzf -m --header='Kill session (Tab for multi-select)' | cut -d: -f1)
+  if [[ -n "$selected" ]]; then
+    echo "$selected" | while read -r s; do
+      command tmux kill-session -t "$s" && echo "Killed: $s"
+    done
+  fi
+}
+
+# プロジェクトディレクトリで tmux セッション作成
+tp() {
+  local selected name
+  selected=$(ghq list | fzf --preview 'ls -la "$(ghq root)/{}"' --header='Create tmux session for project')
+  if [[ -n "$selected" ]]; then
+    name=$(basename "$selected")
+    local dir="$(ghq root)/$selected"
+    if command tmux has-session -t "=$name" 2>/dev/null; then
+      if [[ -n "$TMUX" ]]; then
+        command tmux switch-client -t "=$name"
+      else
+        command tmux attach-session -t "=$name"
+      fi
+    else
+      if [[ -n "$TMUX" ]]; then
+        command tmux new-session -d -s "$name" -c "$dir" && command tmux switch-client -t "=$name"
+      else
+        command tmux new-session -s "$name" -c "$dir"
+      fi
+    fi
+  fi
 }
 
 # ghq + fzf でリポジトリに移動
