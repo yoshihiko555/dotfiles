@@ -35,6 +35,9 @@ personality = "pragmatic"
 # 現行形式: [projects."/absolute/path"] + trust_level = "trusted" | "untrusted"
 # BEGIN managed-trust-projects
 # trust add/rm で自動更新
+[projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-valification"]
+trust_level = "trusted"
+
 [projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles"]
 trust_level = "trusted"
 
