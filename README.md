@@ -51,7 +51,7 @@ dotfiles/
 │   │   ├── common/
 │   │   ├── claude-only/
 │   │   └── codex-only/
-│   ├── mcp.template.json   # MCP 設定テンプレート
+│   ├── mcp.template.json   # MCP 設定テンプレート（最小構成）
 │   ├── notify_message.sh   # 通知スクリプト
 │   └── skills/             # Codex/Claude 共通スキルの実体
 │       ├── common/         # 共通スキル
@@ -134,14 +134,45 @@ task sync-skills   # shared/skills のリンクを更新
 task status        # 現在のリンク状態を確認
 task brew          # Homebrew パッケージを適用
 task edit          # VS Code で開く
-task mcp-init      # カレントディレクトリに .mcp.json をコピー
-task mcp-show      # MCP テンプレートの内容を表示
+task mcp-init      # 最小構成の .mcp.json をコピー
+task mcp-show      # 最小構成テンプレートの内容を表示
 task clean-claude-dry # Claude デバッグログ削除の dry-run
 task clean-claude  # Claude デバッグログを削除
 task codex-trust-audit # Codex trust 設定を監査
 ```
 
 - `task link` は `alfred` を含み、`gemini` は含みません。
+
+## MCP 運用方針（デフォルト無効）
+
+- Codex (`codex/.codex/config.toml`) の `context7` / `notion` は `enabled = false` をデフォルトにしています。
+- プロジェクトの `.mcp.json` は `task mcp-init` で空の `mcpServers`（通常作業向け）を作成し、必要なMCPだけ追記してください。
+- Codex で一時的に有効化する場合は実行時オーバーライドを使います。
+
+```bash
+# Context7 だけ有効化
+codex -c mcp_servers.context7.enabled=true
+
+# Notion だけ有効化
+codex -c mcp_servers.notion.enabled=true
+
+# 2つとも有効化
+codex -c mcp_servers.context7.enabled=true -c mcp_servers.notion.enabled=true
+```
+
+- Claude Code 側は `--scope project` を基本にし、個人限定用途は `--scope local` / `--scope user` を使い分けてください。
+- Claude Code プラグイン (`claude/.claude/settings.json`) もデフォルト無効です。必要時のみ有効化してください。
+
+```bash
+# Claude: プロジェクト限定でプラグインを有効化
+claude plugin enable context7@claude-plugins-official --scope project
+claude plugin enable Notion@claude-plugins-official --scope project
+
+# Claude: 一括無効化（最小構成に戻す）
+claude plugin disable --all --scope user
+claude plugin disable --all --scope project
+claude plugin disable --all --scope local
+```
 
 ## Stow の使い方
 

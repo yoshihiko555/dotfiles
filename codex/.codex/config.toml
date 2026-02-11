@@ -48,13 +48,23 @@ apply_patch_freeform = true
 # プランモードが使えるやつ
 collaboration_modes = true
 
+# ---- MCP 方針 ----
+# デフォルトは無効化し、必要なセッション/プロジェクトだけ有効化する。
+# 例:
+#   codex -c mcp_servers.context7.enabled=true
+#   codex -c mcp_servers.notion.enabled=true
+#   codex -c mcp_servers.context7.enabled=true -c mcp_servers.notion.enabled=true
 [mcp_servers.context7]
 command = "npx"
 args = ["-y", "@upstash/context7-mcp"]
+enabled = false
+# 最小権限: Context7 は必要なツールだけ許可
+enabled_tools = ["resolve-library-id", "query-docs"]
 
 [mcp_servers.notion]
 command = "npx"
 args    =  ["-y", "mcp-remote", "https://mcp.notion.com/mcp"]
+enabled = false
 
 [notice]
 hide_full_access_warning = true

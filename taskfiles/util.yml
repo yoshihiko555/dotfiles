@@ -38,18 +38,18 @@ tasks:
       - code {{.ROOT_DIR}}
 
   mcp-init:
-    desc: 新規プロジェクトで .mcp.json が未作成のときにテンプレートをコピー
+    desc: 新規プロジェクト向けに最小構成の .mcp.json を作成（MCP なし）
     cmds:
       - |
         if [ -f .mcp.json ]; then
           echo "⚠️  .mcp.json already exists. Use 'task mcp-show' to view template."
         else
           cp {{.ROOT_DIR}}/shared/mcp.template.json .mcp.json
-          echo "✅ .mcp.json created. Edit as needed."
+          echo "✅ .mcp.json (minimal) created. Edit as needed."
         fi
 
   mcp-show:
-    desc: mcp-init の前に MCP テンプレート内容を確認
+    desc: mcp-init 用（最小構成）MCP テンプレート内容を確認
     cmds:
       - cat {{.ROOT_DIR}}/shared/mcp.template.json
 
