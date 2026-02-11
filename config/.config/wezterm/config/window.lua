@@ -26,7 +26,7 @@ config.window_frame = {
 }
 
 -- イベントハンドラ
--- 起動時にサブモニター（DELL G2422HS）で3ペイン分割＋最大化
+-- 起動時にメインモニターで3ペイン分割＋最大化
 wezterm.on("gui-startup", function(cmd)
     -- cmd(SpawnCommand) を尊重して初期ウィンドウを作る
     -- これで `wezterm start --cwd ...` の cwd/args が反映される
@@ -42,7 +42,7 @@ wezterm.on("gui-startup", function(cmd)
       "osascript", "-e", [[
         tell application "System Events"
           tell process "WezTerm"
-            set position of window 1 to {3840, 0}
+            set position of window 1 to {0, 0}
           end tell
         end tell
       ]]
