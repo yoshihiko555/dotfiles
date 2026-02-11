@@ -33,14 +33,15 @@ personality = "pragmatic"
 
 # ---- 信頼済みプロジェクト ----
 # 現行形式: [projects."/absolute/path"] + trust_level = "trusted" | "untrusted"
-
 # BEGIN managed-trust-projects
 # trust add/rm で自動更新
 [projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles"]
 trust_level = "trusted"
 
-# END managed-trust-projects
+[projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/learno/dev"]
+trust_level = "trusted"
 
+# END managed-trust-projects
 
 [features]
 # apply_patch ベースの柔軟な編集ツール（ベータ）

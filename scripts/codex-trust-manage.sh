@@ -164,14 +164,19 @@ insert_managed_block() {
     /^personality[[:space:]]*=/ {
       seen_personality = 1
     }
+    /^# 現行形式:[[:space:]]*\[projects\."/ {
+      seen_trust_format = 1
+    }
     /^# ---- 信頼済みプロジェクト ----$/ {
       seen_trust_header = 1
     }
     END {
-      if (seen_personality == 1) {
-        print "personality"
+      if (seen_trust_format == 1) {
+        print "trust_format"
       } else if (seen_trust_header == 1) {
         print "trust_header"
+      } else if (seen_personality == 1) {
+        print "personality"
       } else {
         print "append"
       }
@@ -187,12 +192,13 @@ insert_managed_block() {
     }
     {
       print
-      if (inserted == 0 && mode == "personality" && $0 ~ /^personality[[:space:]]*=/) {
-        print ""
+      if (inserted == 0 && mode == "trust_format" && $0 ~ /^# 現行形式:[[:space:]]*\[projects\."/) {
         emit_managed()
         inserted = 1
       } else if (inserted == 0 && mode == "trust_header" && $0 ~ /^# ---- 信頼済みプロジェクト ----$/) {
-        print ""
+        emit_managed()
+        inserted = 1
+      } else if (inserted == 0 && mode == "personality" && $0 ~ /^personality[[:space:]]*=/) {
         emit_managed()
         inserted = 1
       }
