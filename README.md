@@ -138,6 +138,7 @@ task mcp-init      # カレントディレクトリに .mcp.json をコピー
 task mcp-show      # MCP テンプレートの内容を表示
 task clean-claude-dry # Claude デバッグログ削除の dry-run
 task clean-claude  # Claude デバッグログを削除
+task codex-trust-audit # Codex trust 設定を監査
 ```
 
 - `task link` は `alfred` を含み、`gemini` は含みません。

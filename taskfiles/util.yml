@@ -62,3 +62,8 @@ tasks:
     desc: clean-claude 実行前に削除対象だけ確認する dry-run
     cmds:
       - bash {{.ROOT_DIR}}/scripts/clean-claude.sh --dry-run
+
+  codex-trust-audit:
+    desc: Codex の信頼済みプロジェクト設定を棚卸しして stale 設定を検知
+    cmds:
+      - bash {{.ROOT_DIR}}/scripts/codex-trust-audit.sh

@@ -29,8 +29,16 @@ notify = ["bash", "-lc", "$HOME/.codex/codex_message.sh \"$0\""]
 suppress_unstable_features_warning = true
 
 # ---- 信頼済みプロジェクト ----
-trusted_projects = []
+# 現行形式: [projects."/absolute/path"] + trust_level = "trusted" | "untrusted"
 personality = "pragmatic"
+
+# BEGIN managed-trust-projects
+# trust add/rm で自動更新
+[projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles"]
+trust_level = "trusted"
+
+# END managed-trust-projects
+
 
 [features]
 # apply_patch ベースの柔軟な編集ツール（ベータ）
