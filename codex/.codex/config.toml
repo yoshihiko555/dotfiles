@@ -28,9 +28,11 @@ notify = ["bash", "-lc", "$HOME/.codex/codex_message.sh \"$0\""]
 # 開発中機能の警告を抑制
 suppress_unstable_features_warning = true
 
+# ---- 出力トーン ----
+personality = "pragmatic"
+
 # ---- 信頼済みプロジェクト ----
 # 現行形式: [projects."/absolute/path"] + trust_level = "trusted" | "untrusted"
-personality = "pragmatic"
 
 # BEGIN managed-trust-projects
 # trust add/rm で自動更新
