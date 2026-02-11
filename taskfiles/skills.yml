@@ -1,0 +1,54 @@
+version: "3"
+
+tasks:
+  # ====================
+  # Skills 同期
+  # ====================
+  sync-skills:
+    desc: shared/skills をもとに Codex/Claude のスキルリンクを更新
+    cmds:
+      - |
+        set -eu
+        root="{{.ROOT_DIR}}"
+        common="$root/shared/skills/common"
+        codex_only="$root/shared/skills/codex-only"
+        claude_only="$root/shared/skills/claude-only"
+        codex_target="$root/codex/.codex/skills"
+        claude_target="$root/claude/.claude/skills"
+
+        mkdir -p "$codex_target" "$claude_target"
+
+        cleanup_links() {
+          target_dir="$1"
+          rel_prefix="$2"
+          if [ -d "$target_dir" ]; then
+            find "$target_dir" -maxdepth 1 -type l -print | while read -r link; do
+              link_target="$(readlink "$link")"
+              case "$link_target" in
+                "$rel_prefix"/*) rm -f "$link" ;;
+              esac
+            done
+          fi
+        }
+
+        link_dir() {
+          src_dir="$1"
+          target_dir="$2"
+          rel_prefix="$3"
+          if [ -d "$src_dir" ]; then
+            find "$src_dir" -mindepth 1 -maxdepth 1 \( -type d -o -type l \) -print | while read -r path; do
+              name="$(basename "$path")"
+              ln -snf "$rel_prefix/$name" "$target_dir/$name"
+            done
+          fi
+        }
+
+        cleanup_links "$codex_target" "../../../shared/skills/common"
+        cleanup_links "$codex_target" "../../../shared/skills/codex-only"
+        cleanup_links "$claude_target" "../../../shared/skills/common"
+        cleanup_links "$claude_target" "../../../shared/skills/claude-only"
+
+        link_dir "$common" "$codex_target" "../../../shared/skills/common"
+        link_dir "$common" "$claude_target" "../../../shared/skills/common"
+        link_dir "$codex_only" "$codex_target" "../../../shared/skills/codex-only"
+        link_dir "$claude_only" "$claude_target" "../../../shared/skills/claude-only"

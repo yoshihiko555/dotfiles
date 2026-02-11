@@ -1,0 +1,64 @@
+version: "3"
+
+tasks:
+  # ====================
+  # ユーティリティ
+  # ====================
+  status:
+    desc: 現在のシンボリックリンク状態を確認
+    cmds:
+      - |
+        echo "📁 Shell:"
+        ls -la ~/.zshrc ~/.zprofile 2>/dev/null || echo "  (not linked)"
+        echo ""
+        echo "📁 Config:"
+        ls -la ~/.config/wezterm ~/.config/starship ~/.config/mise ~/.config/sheldon 2>/dev/null || echo "  (not linked)"
+        echo ""
+        echo "📁 Claude:"
+        ls -la ~/.claude 2>/dev/null || echo "  (not linked)"
+        echo ""
+        echo "📁 Codex:"
+        ls -la ~/.codex 2>/dev/null || echo "  (not linked)"
+        echo ""
+        echo "📁 Tmux:"
+        ls -la ~/.tmux.conf 2>/dev/null || echo "  (not linked)"
+        echo ""
+        echo "📁 Alfred:"
+        ls -la ~/Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.C9692AD7-2800-42B7-8F97-8F8CCD1CC88E 2>/dev/null || echo "  (not linked)"
+
+  brew:
+    desc: Homebrew パッケージをインストール
+    cmds:
+      - bash {{.ROOT_DIR}}/scripts/install-brew.sh
+      - brew bundle --file={{.ROOT_DIR}}/Brewfile
+
+  edit:
+    desc: dotfiles を VS Code で開く
+    cmds:
+      - code {{.ROOT_DIR}}
+
+  mcp-init:
+    desc: カレントディレクトリに .mcp.json をコピー
+    cmds:
+      - |
+        if [ -f .mcp.json ]; then
+          echo "⚠️  .mcp.json already exists. Use 'task mcp-show' to view template."
+        else
+          cp {{.ROOT_DIR}}/shared/mcp.template.json .mcp.json
+          echo "✅ .mcp.json created. Edit as needed."
+        fi
+
+  mcp-show:
+    desc: MCP テンプレートの内容を表示
+    cmds:
+      - cat {{.ROOT_DIR}}/shared/mcp.template.json
+
+  clean-claude:
+    desc: Claude Code のデバッグログをクリーンアップ
+    cmds:
+      - bash {{.ROOT_DIR}}/scripts/clean-claude.sh
+
+  clean-claude-dry:
+    desc: Claude Code デバッグログ クリーンアップの dry-run
+    cmds:
+      - bash {{.ROOT_DIR}}/scripts/clean-claude.sh --dry-run

@@ -63,7 +63,11 @@ dotfiles/
 │
 ├── Makefile
 ├── Brewfile                # Homebrew パッケージ定義
-├── Taskfile.yml
+├── Taskfile.yml            # エントリポイント（taskfiles/ を読み込む）
+├── taskfiles/
+│   ├── link.yml
+│   ├── skills.yml
+│   └── util.yml
 ├── scripts/
 │   ├── install-brew.sh
 │   └── clean-claude.sh
@@ -178,7 +182,7 @@ task link-config
 mkdir -p git
 mv ~/.gitconfig git/
 stow -vt ~ git
-# 必要なら Taskfile.yml に link-*/unlink-* タスクを追加
+# 必要なら taskfiles/link.yml に link-*/unlink-* タスクを追加
 ```
 
 ## シンボリックリンクの仕組み
