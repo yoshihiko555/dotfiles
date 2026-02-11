@@ -14,7 +14,8 @@ web_search = "live"
 # コマンド実行時の確認ポリシー
 # - "untrusted": コマンド実行前に基本的に確認する
 # - "on-request": 必要なときだけ確認
-approval_policy = "untrusted"
+# - "on-failure": 失敗時に確認
+approval_policy = "on-request"
 
 # サンドボックスレベル
 # - "workspace-write": 作業ディレクトリ内は書き込みOK、外は制限
