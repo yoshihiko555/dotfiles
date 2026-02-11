@@ -18,6 +18,7 @@ duration_ms=$(echo "$input" | jq -r '.cost.total_duration_ms // 0')
 context_pct=$(echo "$input" | jq -r '.context_window.used_percentage // empty' 2>/dev/null | cut -d. -f1)
 lines_added=$(echo "$input" | jq -r '.cost.total_lines_added // 0')
 lines_removed=$(echo "$input" | jq -r '.cost.total_lines_removed // 0')
+claude_pid=$PPID
 
 if ! [[ "$context_pct" =~ ^[0-9]+$ ]]; then
   context_pct="--"
@@ -73,3 +74,6 @@ printf "  \033[33m%s\033[0m" "$cost_fmt"
 printf "  ${ctx_color}%s\033[0m" "$context_label"
 printf "  \033[32m+%s\033[0m \033[31m-%s\033[0m" "$lines_added" "$lines_removed"
 printf "  \033[2m%s\033[0m" "$duration_fmt"
+if [ -n "$claude_pid" ]; then
+  printf "  \033[36mPID:%s\033[0m" "$claude_pid"
+fi
