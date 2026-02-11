@@ -25,6 +25,10 @@ dotfiles/
 │   └── .claude/
 │       ├── CLAUDE.md
 │       ├── settings.json
+│       ├── agents/         # エージェント定義
+│       ├── hooks/          # フック
+│       ├── rules/          # ルール
+│       ├── templates/      # テンプレート
 │       └── skills/         # → shared/skills へのリンク
 │
 ├── codex/                  # Codex CLI（→ ~）
@@ -32,17 +36,26 @@ dotfiles/
 │       ├── AGENTS.md
 │       ├── config.toml
 │       ├── prompts/        # カスタムプロンプト
-│       └── skills/         # → shared/skills へのリンク
+│       ├── skills/         # → shared/skills へのリンク
+│       └── codex_message.sh
 │
 ├── gemini/                 # Gemini CLI（→ ~）
 │   └── .gemini/
 │       └── settings.json
 │
+├── tmux/                   # tmux 設定（→ ~）
+│   └── .tmux.conf
+│
 ├── shared/                 # 共通データ
+│   ├── commands/           # Claude/Codex 用コマンド定義
+│   │   ├── common/
+│   │   ├── claude-only/
+│   │   └── codex-only/
 │   ├── mcp.template.json   # MCP 設定テンプレート
 │   ├── notify_message.sh   # 通知スクリプト
 │   └── skills/             # Codex/Claude 共通スキルの実体
 │       ├── common/         # 共通スキル
+│       ├── claude-only/    # Claude 専用スキル
 │       └── codex-only/     # Codex 専用スキル
 │
 ├── alfred/                 # Alfred ワークフロー（→ ~/Dropbox/...へリンク）
@@ -52,6 +65,8 @@ dotfiles/
 ├── Brewfile                # Homebrew パッケージ定義
 ├── Taskfile.yml
 ├── scripts/
+│   ├── install-brew.sh
+│   └── clean-claude.sh
 └── README.md
 ```
 
@@ -63,15 +78,15 @@ dotfiles/
 
 ```bash
 # macOS
-brew install stow
+brew install stow go-task
 ```
 
 ## セットアップ
 
 ```bash
 # リポジトリをクローン（ghq 推奨）
-ghq get https://github.com/YOUR_USERNAME/dotfiles.git
-cd ~/ghq/github.com/YOUR_USERNAME/dotfiles
+ghq get https://github.com/yoshihiko555/dotfiles.git
+cd ~/ghq/github.com/yoshihiko555/dotfiles
 
 # 初回セットアップ（依存インストール + リンク）
 make bootstrap
@@ -83,6 +98,8 @@ task link-shell     # シェル設定のみ
 task link-config    # .config 配下のみ
 task link-claude    # Claude CLI のみ
 task link-codex     # Codex CLI のみ
+task link-tmux      # tmux のみ
+task link-alfred    # Alfred ワークフローのみ
 ```
 
 ## Makefile コマンド（初回セットアップ用）
@@ -90,19 +107,23 @@ task link-codex     # Codex CLI のみ
 ```bash
 make bootstrap     # 依存ツールをインストールして全パッケージをリンク
 make install-deps  # 依存ツール (stow, go-task) をインストール
-make link          # 全パッケージをリンク
+make link          # shell/config/claude/codex/gemini/tmux をリンク
 make help          # ヘルプ表示
 ```
+
+- `make link` は `gemini` を含み、`alfred` は含みません。
 
 ## Taskfile コマンド（日常運用）
 
 ```bash
 task --list        # タスク一覧
 task link          # 全パッケージをリンク
+task link-alfred   # Alfred ワークフローのみ
 task link-shell    # シェル設定のみ
 task link-config   # .config 配下のみ
 task link-claude   # Claude CLI のみ
 task link-codex    # Codex CLI のみ
+task link-tmux     # tmux のみ
 task unlink        # 全パッケージのリンクを解除
 task restow        # 全パッケージを再リンク
 task sync-skills   # shared/skills のリンクを更新
@@ -111,7 +132,11 @@ task brew          # Homebrew パッケージを適用
 task edit          # VS Code で開く
 task mcp-init      # カレントディレクトリに .mcp.json をコピー
 task mcp-show      # MCP テンプレートの内容を表示
+task clean-claude-dry # Claude デバッグログ削除の dry-run
+task clean-claude  # Claude デバッグログを削除
 ```
+
+- `task link` は `alfred` を含み、`gemini` は含みません。
 
 ## Stow の使い方
 
@@ -147,13 +172,13 @@ stow -Rvt ~ <パッケージ名>
 # .config 系ツールを追加
 mkdir -p config/.config/neovim
 mv ~/.config/neovim config/.config/neovim/
-make link-config
+task link-config
 
 # ホーム直下の設定を追加（新パッケージ）
 mkdir -p git
 mv ~/.gitconfig git/
 stow -vt ~ git
-# 必要なら Taskfile.yml に link-git を追加
+# 必要なら Taskfile.yml に link-*/unlink-* タスクを追加
 ```
 
 ## シンボリックリンクの仕組み
@@ -172,6 +197,7 @@ stow -vt ~ git
 ~/.claude            → dotfiles/claude/.claude
 ~/.codex             → dotfiles/codex/.codex
 ~/.gemini            → dotfiles/gemini/.gemini
+~/.tmux.conf         → dotfiles/tmux/.tmux.conf
 ~/Dropbox/.../workflows/user.workflow.C9692AD7-... → dotfiles/alfred/Open-VS-or-IT
 ```
 
@@ -186,7 +212,7 @@ dotfiles 内のファイルを編集すると、実際の設定に反映され�
 
 ## Alfred ワークフロー
 
-stowでシンボリックリンクを作成して管理。
+専用 task でシンボリックリンクを作成して管理。
 
 ```bash
 task link-alfred   # ワークフローをリンク
