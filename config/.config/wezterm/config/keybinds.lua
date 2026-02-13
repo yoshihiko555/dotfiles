@@ -33,11 +33,11 @@ end)
 -- ワークスペース初期化アクション（Leader + i）
 -- 前提: 8ペインタブで pane 1 が目的のディレクトリに cd 済み
 -- ┌───────┬───────┬───────┬───────┐
--- │claude │claude │ tmux  │ tmux  │
--- │  (1)  │  (2)  │cc1(3) │cc2(4) │
+-- │claude │claude │ codex │gemini │
+-- │  (1)  │  (2)  │  (3)  │  (4)  │
 -- ├───────┼───────┼───────┼───────┤
--- │codex  │gemini │shell  │shell  │
--- │  (5)  │  (6)  │  (7)  │  (8)  │
+-- │ tmux  │ tmux  │shell  │shell  │
+-- │cc1(5) │cc2(6) │  (7)  │  (8)  │
 -- └───────┴───────┴───────┴───────┘
 local init_workspace = wezterm.action_callback(function(window, pane)
   local tab = pane:tab()
@@ -79,27 +79,27 @@ local init_workspace = wezterm.action_callback(function(window, pane)
   panes_info[1].pane:send_text("echo $$ > /tmp/wez-cc1.pid && claude\n")
   panes_info[2].pane:send_text("echo $$ > /tmp/wez-cc2.pid && claude\n")
 
-  -- pane 3: pane 1 の Claude Code に紐づく tmux セッション（PID 監視用）
-  panes_info[3].pane:send_text(
+  -- pane 3: Codex
+  panes_info[3].pane:send_text("codex\n")
+
+  -- pane 4: Gemini
+  panes_info[4].pane:send_text("gemini\n")
+
+  -- pane 5: pane 1 の Claude Code に紐づく tmux セッション（PID 監視用）
+  panes_info[5].pane:send_text(
     "sleep 1 && command tmux kill-session -t " .. sq(project .. "-cc1") .. " 2>/dev/null; "
     .. "export CLAUDE_SHELL_PID=$(cat /tmp/wez-cc1.pid 2>/dev/null) && "
     .. "command tmux new-session -s " .. sq(project .. "-cc1")
     .. " -c " .. sq(cwd) .. "\n"
   )
 
-  -- pane 4: pane 2 の Claude Code に紐づく tmux セッション（PID 監視用）
-  panes_info[4].pane:send_text(
+  -- pane 6: pane 2 の Claude Code に紐づく tmux セッション（PID 監視用）
+  panes_info[6].pane:send_text(
     "sleep 1 && command tmux kill-session -t " .. sq(project .. "-cc2") .. " 2>/dev/null; "
     .. "export CLAUDE_SHELL_PID=$(cat /tmp/wez-cc2.pid 2>/dev/null) && "
     .. "command tmux new-session -s " .. sq(project .. "-cc2")
     .. " -c " .. sq(cwd) .. "\n"
   )
-
-  -- pane 5: Codex
-  panes_info[5].pane:send_text("codex\n")
-
-  -- pane 6: Gemini
-  panes_info[6].pane:send_text("gemini\n")
 
   -- pane 7, 8: そのまま（cd 済み）
 
