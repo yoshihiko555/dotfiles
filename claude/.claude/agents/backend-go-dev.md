@@ -1,1 +1,0 @@
-/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra/agents/backend-go-dev.md

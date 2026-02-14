@@ -1,1 +1,0 @@
-/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra/hooks/check-codex-after-plan.py
