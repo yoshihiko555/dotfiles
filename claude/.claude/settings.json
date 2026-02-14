@@ -1,6 +1,7 @@
 {
   "env": {
-    "CLAUDE_CODE_SHELL": "bash"
+    "CLAUDE_CODE_SHELL": "bash",
+    "AI_ORCHESTRA_DIR": "/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra"
   },
   "permissions": {
     "allow": [
@@ -78,6 +79,10 @@
       }
     ]
   },
+  "statusLine": {
+    "type": "command",
+    "command": "$HOME/.claude/statusline-command.sh"
+  },
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": false,
     "context7@claude-plugins-official": false,
@@ -91,8 +96,5 @@
   "sandbox": {
     "enabled": false
   },
-  "statusLine": {
-    "type": "command",
-    "command": "$HOME/.claude/statusline-command.sh"
-  }
+  "skipDangerousModePermissionPrompt": true
 }
