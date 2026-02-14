@@ -111,6 +111,10 @@ alias trend="open -a Dia \$DG_ROOT/content/daily/\$(date +%Y%m%d)-trend.md"
 alias daily="mdopen \$DG_ROOT/content/daily/"
 alias weekly="mdopen \$DG_ROOT/content/clippings/weekly/"
 
+# Ai Orchestra
+OCHE_ROOT=~/ghq/github.com/yoshihiko555/ai-orchestra
+alias oche="python \$OCHE_ROOT/scripts/orchestra-manager.py"
+
 # --------------------------------------------
 # 8. Functions
 # --------------------------------------------
