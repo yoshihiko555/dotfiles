@@ -15,7 +15,9 @@
       "Bash(tail *)",
       "Bash(git *)",
       "Bash(find *)",
-      "Bash(wc *)"
+      "Bash(wc *)",
+      "Bash(codex *)",
+      "Bash(gemini *)"
     ],
     "deny": [
       "Bash(rm -rf /)",
@@ -94,7 +96,10 @@
   },
   "language": "日本語",
   "sandbox": {
-    "enabled": false
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "excludedCommands": ["docker", "docker-compose", "codex", "gemini"],
+    "allowUnsandboxedCommands": true
   },
   "skipDangerousModePermissionPrompt": true
 }
