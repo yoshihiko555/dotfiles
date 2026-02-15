@@ -1,0 +1,12 @@
+[
+  { "id": "learno", "name": "learno", "path": "/Users/yoshihiko/ghq/github.com/yoshihiko555/learno/dev", "keywords": "learno" },
+  { "id": "gas", "name": "gas", "path": "/Users/yoshihiko/ghq/github.com/yoshihiko555/google-apps-scripts", "keywords": "gas" },
+  { "id": "ddn", "name": "ddn", "path": "/Users/yoshihiko/ghq/07_Anvil/04_ddn/02_code/01_doc_mng_app_sample", "keywords": "ddn" },
+  { "id": "tech", "name": "tech", "path": "/Users/yoshihiko/ghq/github.com/yoshihiko555/tech-site", "keywords": "tech" },
+  { "id": "nodge", "name": "nodge", "path": "/Users/yoshihiko/ghq/github.com/yoshihiko555/Nudge", "keywords": "nodge" },
+  { "id": "csts", "name": "csts", "path": "/Users/yoshihiko/ghq/github.com/yoshihiko555/current-status", "keywords": "csts" },
+  { "id": "dg", "name": "dg", "path": "/Users/yoshihiko/ghq/github.com/yoshihiko555/digital-garden", "keywords": "dg" },
+  { "id": "dot", "name": "dot", "path": "/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles", "keywords": "dot" },
+  { "id": "oche", "name": "oche", "path": "/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra", "keywords": "oche" },
+  { "id": "takt", "name": "takt", "path": "/Users/yoshihiko/ghq/github.com/yoshihiko555/takt", "keywords": "takt" }
+]
