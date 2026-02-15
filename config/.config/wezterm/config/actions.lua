@@ -76,9 +76,9 @@ M.init_workspace = wezterm.action_callback(function(window, pane)
     panes_info[i].pane:send_text("cd " .. sq(cwd) .. "\n")
   end
 
-  -- pane 1, 2: Shell PID を保存して Claude Code 起動
-  panes_info[1].pane:send_text("echo $$ > /tmp/wez-cc1.pid && claude\n")
-  panes_info[2].pane:send_text("echo $$ > /tmp/wez-cc2.pid && claude\n")
+  -- pane 1, 2: サブシェルの PID を保存し exec で claude に置換（PID = claude プロセス PID）
+  panes_info[1].pane:send_text("sh -c 'echo $$ > /tmp/wez-cc1.pid; exec claude'\n")
+  panes_info[2].pane:send_text("sh -c 'echo $$ > /tmp/wez-cc2.pid; exec claude'\n")
 
   -- pane 3: Codex
   panes_info[3].pane:send_text("codex\n")
@@ -86,20 +86,20 @@ M.init_workspace = wezterm.action_callback(function(window, pane)
   -- pane 4: Gemini
   panes_info[4].pane:send_text("gemini\n")
 
-  -- pane 5: pane 1 の Claude Code に紐づく tmux セッション（PID 監視用）
+  -- pane 5: pane 1 の Claude Code が作成する tmux セッションに自動アタッチ
   panes_info[5].pane:send_text(
-    "sleep 1 && command tmux kill-session -t " .. sq(project .. "-cc1") .. " 2>/dev/null; "
-    .. "export CLAUDE_SHELL_PID=$(cat /tmp/wez-cc1.pid 2>/dev/null) && "
-    .. "command tmux new-session -s " .. sq(project .. "-cc1")
-    .. " -c " .. sq(cwd) .. "\n"
+    "sleep 1 && CC_PID=$(cat /tmp/wez-cc1.pid 2>/dev/null) && "
+    .. "SN=\"claude-" .. project .. "-${CC_PID}\" && "
+    .. "until command tmux has-session -t \"$SN\" 2>/dev/null; do sleep 2; done && "
+    .. "command tmux attach-session -t \"$SN\"\n"
   )
 
-  -- pane 6: pane 2 の Claude Code に紐づく tmux セッション（PID 監視用）
+  -- pane 6: pane 2 の Claude Code が作成する tmux セッションに自動アタッチ
   panes_info[6].pane:send_text(
-    "sleep 1 && command tmux kill-session -t " .. sq(project .. "-cc2") .. " 2>/dev/null; "
-    .. "export CLAUDE_SHELL_PID=$(cat /tmp/wez-cc2.pid 2>/dev/null) && "
-    .. "command tmux new-session -s " .. sq(project .. "-cc2")
-    .. " -c " .. sq(cwd) .. "\n"
+    "sleep 1 && CC_PID=$(cat /tmp/wez-cc2.pid 2>/dev/null) && "
+    .. "SN=\"claude-" .. project .. "-${CC_PID}\" && "
+    .. "until command tmux has-session -t \"$SN\" 2>/dev/null; do sleep 2; done && "
+    .. "command tmux attach-session -t \"$SN\"\n"
   )
 
   -- pane 7, 8: そのまま（cd 済み）
