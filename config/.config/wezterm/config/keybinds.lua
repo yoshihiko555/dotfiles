@@ -16,15 +16,15 @@ local spawn_tab_with_8_panes = wezterm.action_callback(function(window, pane)
   -- 上下に2分割
   local bottom_pane = first_pane:split({ direction = "Bottom", size = 0.5 })
 
-  -- 上段を4列に分割
-  local top_col234 = first_pane:split({ direction = "Right", size = 0.75 })
-  local top_col34 = top_col234:split({ direction = "Right", size = 2 / 3 })
-  top_col34:split({ direction = "Right", size = 0.5 })
+  -- 上段を4列に分割（二分木方式: 常に0.5で分割し丸め誤差を最小化）
+  local top_right_half = first_pane:split({ direction = "Right", size = 0.5 })
+  first_pane:split({ direction = "Right", size = 0.5 })
+  top_right_half:split({ direction = "Right", size = 0.5 })
 
   -- 下段を4列に分割
-  local bottom_col234 = bottom_pane:split({ direction = "Right", size = 0.75 })
-  local bottom_col34 = bottom_col234:split({ direction = "Right", size = 2 / 3 })
-  bottom_col34:split({ direction = "Right", size = 0.5 })
+  local bottom_right_half = bottom_pane:split({ direction = "Right", size = 0.5 })
+  bottom_pane:split({ direction = "Right", size = 0.5 })
+  bottom_right_half:split({ direction = "Right", size = 0.5 })
 
   -- 左上ペインにフォーカス
   first_pane:activate()
