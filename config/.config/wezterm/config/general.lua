@@ -17,6 +17,13 @@ return {
     tab_bar = {
       inactive_tab_edge = "none",
     },
+    split = "#c0c8e0",
+  },
+
+  -- 非アクティブペインを少し暗くして区別しやすくする
+  inactive_pane_hsb = {
+    saturation = 0.8,
+    brightness = 0.6,
   },
 
   -- スクロールバック行数
