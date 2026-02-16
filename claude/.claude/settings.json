@@ -98,7 +98,7 @@
   "sandbox": {
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
-    "excludedCommands": ["docker", "docker-compose", "codex", "gemini"],
+    "excludedCommands": ["docker", "docker-compose", "codex", "gemini", "gh"],
     "allowUnsandboxedCommands": true
   },
   "skipDangerousModePermissionPrompt": true
