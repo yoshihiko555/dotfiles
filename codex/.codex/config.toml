@@ -36,6 +36,9 @@ personality = "pragmatic"
 # 現行形式: [projects."/absolute/path"] + trust_level = "trusted" | "untrusted"
 # BEGIN managed-trust-projects
 # trust add/rm で自動更新
+[projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra"]
+trust_level = "trusted"
+
 [projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-valification"]
 trust_level = "trusted"
 
@@ -77,6 +80,7 @@ hide_full_access_warning = true
 [notice.model_migrations]
 "gpt-5.1-codex-max" = "gpt-5.2-codex"
 "gpt-5.2" = "gpt-5.2-codex"
+"gpt-5.2-codex" = "gpt-5.3-codex"
 
 [tui]
 status_line = ["model-name", "project-root", "git-branch", "context-remaining", "context-used", "five-hour-limit"]
