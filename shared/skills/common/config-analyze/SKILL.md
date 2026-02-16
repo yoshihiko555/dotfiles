@@ -1,7 +1,7 @@
 ---
 name: config-analyze
 description: |
-  Claude Code設定ファイル（Skill/Agent/CLAUDE.md/Rule）を解析し、
+  Claude Code設定ファイル（Skill/Agent/CLAUDE.md/AGENTS.md/Rule）を解析し、
   日本語ドキュメントと改善提案を生成する。
 argument-hint: "<path/to/config-file>"
 allowed-tools: Read, Write, Glob, Grep
@@ -28,7 +28,7 @@ IF file has YAML frontmatter:
   IF frontmatter contains `name` AND (`allowed-tools` OR `description` with skill-like content) → Skill
   IF frontmatter contains `name` AND `tools` AND `model` → Agent
 ELSE (no frontmatter):
-  IF filename is "CLAUDE.md" → CLAUDE.md
+  IF filename is "CLAUDE.md" OR "AGENTS.md" → CLAUDE.md
   ELSE → Rule
 ```
 
@@ -66,7 +66,7 @@ Compare the file's structure against the recommended structure for its type:
 | Output Format | Output structure and templates |
 | Principles | Coding standards and decision criteria |
 
-### CLAUDE.md (3 sections)
+### CLAUDE.md / AGENTS.md (3 sections)
 
 | Section | Purpose |
 |---------|---------|
@@ -109,7 +109,7 @@ All content MUST be in Japanese.
 
 | 項目 | 内容 |
 |------|------|
-| 種別 | {Skill / Agent / CLAUDE.md / Rule} |
+| 種別 | {Skill / Agent / CLAUDE.md / AGENTS.md / Rule} |
 | 名前 | {name from frontmatter or filename} |
 | ファイルパス | {absolute path} |
 | 概要 | {1-2 sentence summary in Japanese} |
@@ -185,7 +185,7 @@ Insert the appropriate section based on file type:
 - 出力フォーマット: {output format description}
 ```
 
-**For CLAUDE.md — add "セクション構成":**
+**For CLAUDE.md / AGENTS.md — add "セクション構成":**
 ```markdown
 ## セクション構成
 
@@ -218,7 +218,7 @@ Output a brief Japanese summary to the conversation:
 ```
 📄 {filename} の解析が完了しました。
 
-種別: {type}
+種別: {type} (Skill / Agent / CLAUDE.md / AGENTS.md / Rule)
 構造充足率: {N}/{total} セクション
 高優先度の課題: {count}件
 中優先度の課題: {count}件
