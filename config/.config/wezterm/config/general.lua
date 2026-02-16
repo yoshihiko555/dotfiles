@@ -20,10 +20,10 @@ return {
     split = "#c0c8e0",
   },
 
-  -- 非アクティブペインを少し暗くして区別しやすくする
+  -- 非アクティブペインを暗くしてアクティブペインを際立たせる
   inactive_pane_hsb = {
-    saturation = 0.8,
-    brightness = 0.6,
+    saturation = 0.5,
+    brightness = 0.3,
   },
 
   -- スクロールバック行数
