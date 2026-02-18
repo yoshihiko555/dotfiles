@@ -13,7 +13,7 @@ metadata:
 
 ## 基本ルール
 - 既存ADRがある場合は **最新ADRの構成・見出し・語調に合わせる**
-- 既存ADRがない場合は **プロジェクトに配置済みのテンプレートMarkdown** を参照する
+- 既存ADRがない場合は **本スキルの `references/` 内テンプレート** を参照する
 - 不明点は **最小限の確認質問**に留める
 - 事実の捏造はしない（リンクや決定理由が不明なら確認）
 
@@ -28,17 +28,15 @@ metadata:
 | `{DATE_NOSEP}` | 自動 | 実行日（YYYYMMDD） | `20260208` |
 | `{NEXT_ID}` | 自動 | DECISIONS.md の最終連番 +1 | `005` |
 | `{TITLE}` | 必須 | ユーザー指定またはコミット内容から要約 | `API認証方式の選定` |
-| `{ADR_TEMPLATE_DIR}` | 任意 | プロジェクト内のテンプレ配置先 | `docs/templates` |
-| `{ADR_TEMPLATE_SOURCE}` | 任意 | 個人テンプレ保管場所（フォールバック） | `~/Dropbox/.../03_ADR` |
 
 ## 実行フロー（コミット直前）
-1. コミット対象の差分と、直前のやり取り（方針決定までの議論）を整理する
-2. `{ADR_DIR}` 内の最新ADRを確認し、構成・見出し・語調を合わせる
-3. `{DECISIONS_PATH}` を確認し、次の連番 `{NEXT_ID}` を決める
-4. 新規ADRを作成: `{ADR_DIR}/{ADR_PREFIX}-{DATE_NOSEP}-{NEXT_ID}.md`
-5. `DECISIONS.md` の ADR 一覧に1行追記（既存形式に合わせる）
-6. 内容を見直し、必要なら修正
-7. Git で **実装差分 + ADRファイル + DECISIONS.md** をまとめてコミット
+1. コミット対象の差分（`Bash: git diff --cached`）と、直前のやり取りを整理する
+2. `{ADR_DIR}` 内の最新ADRを確認し（`Glob` + `Read`）、構成・見出し・語調を合わせる
+3. `{DECISIONS_PATH}` を確認し（`Read`）、次の連番 `{NEXT_ID}` を決める
+4. 新規ADRを作成（`Write`）: `{ADR_DIR}/{ADR_PREFIX}-{DATE_NOSEP}-{NEXT_ID}.md`
+5. `DECISIONS.md` の ADR 一覧に1行追記（`Edit`）
+6. 内容を見直し、必要なら修正（`Read` + `Edit`）
+7. Git で実装差分 + ADRファイル + DECISIONS.md をまとめてコミット（`Bash: git add && git commit`）
 
 ## 既存ADRがある場合の作成プロンプト（汎用）
 ```
@@ -53,8 +51,7 @@ metadata:
 ```
 
 ## 既存ADRがない場合の運用
-- プロジェクト内に配置済みのテンプレートを参照してADRを作成する
-- テンプレートが見当たらなければ、配置先を確認する（{ADR_TEMPLATE_DIR} / {ADR_TEMPLATE_SOURCE}）
+- 本スキルの `references/ADR.md` と `references/DECISIONS.md` をテンプレートとして使用する
 
 ## DECISIONS.md 追記フォーマット（例）
 ```
