@@ -304,7 +304,7 @@ tk() {
 # プロジェクトディレクトリで tmux セッション作成
 tp() {
   local selected name
-  selected=$(ghq list | fzf --preview 'ls -la "$(ghq root)/{}"' --header='Create tmux session for project')
+  selected=$(ghq list | fzf --delimiter=/ --with-nth=2.. --preview 'ls -la "$(ghq root)/{}"' --header='Create tmux session for project')
   if [[ -n "$selected" ]]; then
     name=$(basename "$selected")
     local dir="$(ghq root)/$selected"
@@ -327,7 +327,7 @@ tp() {
 # ghq + fzf でリポジトリに移動
 repo() {
   local selected
-  selected=$(ghq list | fzf --preview 'ls -la "$(ghq root)/{}"')
+  selected=$(ghq list | fzf --delimiter=/ --with-nth=2.. --preview 'ls -la "$(ghq root)/{}"')
   [[ -n "$selected" ]] && cd "$(ghq root)/$selected"
 }
 
