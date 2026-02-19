@@ -17,7 +17,8 @@
       "Bash(find *)",
       "Bash(wc *)",
       "Bash(codex *)",
-      "Bash(gemini *)"
+      "Bash(gemini *)",
+      "mcp__pencil"
     ],
     "deny": [
       "Bash(rm -rf /)",
@@ -92,13 +93,19 @@
     "gopls-lsp@claude-plugins-official": false,
     "code-simplifier@claude-plugins-official": false,
     "playwright@claude-plugins-official": false,
-    "claude-mem@thedotmack": false
+    "claude-mem@thedotmack": true
   },
   "language": "日本語",
   "sandbox": {
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
-    "excludedCommands": ["docker", "docker-compose", "codex", "gemini", "gh"],
+    "excludedCommands": [
+      "docker",
+      "docker-compose",
+      "codex",
+      "gemini",
+      "gh"
+    ],
     "allowUnsandboxedCommands": true
   },
   "skipDangerousModePermissionPrompt": true
