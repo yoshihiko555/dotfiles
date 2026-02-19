@@ -55,6 +55,7 @@ trust_level = "trusted"
 apply_patch_freeform = true
 # プランモードが使えるやつ
 collaboration_modes = true
+multi_agent = true
 
 # ---- MCP 方針 ----
 # デフォルトは無効化し、必要なセッション/プロジェクトだけ有効化する。
