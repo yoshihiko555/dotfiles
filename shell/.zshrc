@@ -106,9 +106,11 @@ HELP
 # fzf でMarkdownを選んでブラウザで開く
 mdopen() {
   local dir="${1:-.}"
+  dir="${dir%/}"
   local file
-  file=$(find "$dir" -name "*.md" -type f | sort -r | fzf --preview 'head -40 {}')
-  [[ -n "$file" ]] && open -a "Dia" "$file"
+  file=$(find "$dir" -name "*.md" -type f | sed "s|^${dir}/||" | sort -r \
+    | fzf --preview "head -40 ${dir}/{}")
+  [[ -n "$file" ]] && open -a "Dia" "$dir/$file"
 }
 
 # ディレクトリ作成してcd
