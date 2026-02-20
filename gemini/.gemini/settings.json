@@ -13,5 +13,30 @@
       ],
       "env": {}
     }
+  },
+  "ui": {
+    "theme": "TokyoNightMoon",
+    "customThemes": {
+      "TokyoNightMoon": {
+        "name": "TokyoNightMoon",
+        "type": "custom",
+        "Background": "#222436",
+        "Foreground": "#c8d3f5",
+        "Comment": "#636da6",
+        "AccentPurple": "#c099ff",
+        "AccentBlue": "#82aaff",
+        "AccentCyan": "#86e1fc",
+        "AccentGreen": "#c3e88d",
+        "AccentYellow": "#ffc777",
+        "AccentRed": "#ff757f",
+        "Gray": "#9A9C9F",
+        "LightBlue": "#b4f9f8",
+        "GradientColors": [
+          "#82aaff",
+          "#c099ff",
+          "#ff757f"
+        ]
+      }
+    }
   }
 }
