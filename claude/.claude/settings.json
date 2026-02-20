@@ -99,14 +99,14 @@
   "sandbox": {
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
+    "allowUnsandboxedCommands": true,
     "excludedCommands": [
       "docker",
       "docker-compose",
       "codex",
       "gemini",
       "gh"
-    ],
-    "allowUnsandboxedCommands": true
+    ]
   },
-  "skipDangerousModePermissionPrompt": true
+  "model": "sonnet"
 }
