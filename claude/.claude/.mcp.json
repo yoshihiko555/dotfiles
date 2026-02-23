@@ -4,5 +4,16 @@
       "command": "npx",
       "args": ["@drawio/mcp"]
     }
+  },
+  "cocoindex-code": {
+    "type": "stdio",
+    "command": "uvx",
+    "args": [
+      "--prerelease=explicit",
+      "--with",
+      "cocoindex>=1.0.0a16",
+      "cocoindex-code@latest"
+    ],
+    "env": {}
   }
 }
