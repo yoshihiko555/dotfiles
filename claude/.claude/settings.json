@@ -107,6 +107,5 @@
       "gemini",
       "gh"
     ]
-  },
-  "model": "sonnet"
+  }
 }
