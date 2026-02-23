@@ -1,5 +1,24 @@
+local wezterm = require("wezterm")
+local act = wezterm.action
+
 -- 基本設定
 return {
+  -- URLをCtrl+Clickでのみ開く（誤クリック防止）
+  mouse_bindings = {
+    -- 通常クリックでURLを開かないようにする
+    {
+      event = { Up = { streak = 1, button = "Left" } },
+      mods = "NONE",
+      action = act.CompleteSelection("ClipboardAndPrimarySelection"),
+    },
+    -- Cmd+ClickでURLを開く (macOS)
+    {
+      event = { Up = { streak = 1, button = "Left" } },
+      mods = "SUPER",
+      action = act.OpenLinkAtMouseCursor,
+    },
+  },
+
   -- 設定ファイルの自動リロード
   automatically_reload_config = true,
 
