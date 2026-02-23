@@ -98,6 +98,7 @@ cheat() {
 ── Functions (util) ────────────────────────
   mkcd DIR  ディレクトリ作成して cd
   port NUM  ポート使用プロセス確認
+  cc_interrupt ... 中断証跡を記録/確認 (start|end|open|last)
   trust ... Codex trust を add/rm/list/audit
   cheat     このヘルプを表示
 HELP
@@ -107,10 +108,32 @@ HELP
 mdopen() {
   local dir="${1:-.}"
   dir="${dir%/}"
-  local file
-  file=$(find "$dir" -name "*.md" -type f | sed "s|^${dir}/||" | sort -r \
-    | fzf --preview "head -40 ${dir}/{}")
-  [[ -n "$file" ]] && open -a "Dia" "$dir/$file"
+  local file target rc
+
+  if [[ ! -d "$dir" ]]; then
+    echo "ディレクトリが見つかりません: $dir"
+    return 1
+  fi
+
+  file=$(cd "$dir" && find . -name "*.md" -type f | sed 's|^\./||' | sort -r \
+    | fzf --preview 'head -40 -- {}')
+  rc=$?
+  [[ $rc -ne 0 ]] && return "$rc"
+  [[ -z "$file" ]] && return 0
+
+  target="$dir/$file"
+  if command -v open >/dev/null 2>&1; then
+    if open -Ra "Dia" >/dev/null 2>&1; then
+      open -a "Dia" "$target"
+    else
+      open "$target"
+    fi
+  elif command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "$target" >/dev/null 2>&1
+  else
+    echo "open/xdg-open が見つかりません: $target"
+    return 1
+  fi
 }
 
 # ディレクトリ作成してcd
@@ -280,7 +303,7 @@ fkill() {
 # fzf + ファイル検索して nvim で開く
 fe() {
   local file
-  file=$(find . -type f 2>/dev/null | fzf --preview 'head -100 {}')
+  file=$(find . -type f 2>/dev/null | fzf --preview 'head -100 -- {}')
   [[ -n "$file" ]] && nvim "$file"
 }
 
@@ -306,3 +329,165 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 . "$HOME/.local/bin/env"
 
 alias claude-mem='bun "/Users/yoshihiko/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs"'
+
+
+# ---- Claude Code interruption evidence logger (zshrc) ----
+# 対話シェルだけで定義したい場合（推奨）
+[[ -o interactive ]] || return
+
+export CC_EVIDENCE_DIR="${HOME}/claude_code_evidence"
+export CC_EVIDENCE_STATE="${CC_EVIDENCE_DIR}/_state.json"
+export CC_EVIDENCE_LOG="${CC_EVIDENCE_DIR}/incidents.jsonl"
+
+_cc_now_iso() { date "+%Y-%m-%dT%H:%M:%S%z"; }
+_cc_now_id()  { date "+%Y%m%d-%H%M%S"; }
+
+_cc_take_usage_screenshot() {
+  local out="$1"
+  mkdir -p "${CC_EVIDENCE_DIR}"
+
+  echo "Claude Codeで /usage を表示した状態にして Enter → 次にウィンドウをクリックして撮影します"
+  read -r _
+
+  if command -v screencapture >/dev/null 2>&1; then
+    # -w: クリックしたウィンドウを撮影（macOS）
+    screencapture -w "${out}"
+  else
+    echo "ERROR: screencapture が見つかりません（macOS以外では別実装が必要）"
+    return 1
+  fi
+  echo "Saved: ${out}"
+}
+
+_cc_state_read() {
+  /usr/bin/python3 - <<'PY' "${CC_EVIDENCE_STATE}"
+import json, sys, os
+p=sys.argv[1]
+if not os.path.exists(p):
+  print("{}")
+  raise SystemExit(0)
+print(open(p, encoding="utf-8").read())
+PY
+}
+
+_cc_state_write() {
+  local json="$1"
+  /usr/bin/python3 - <<'PY' "${CC_EVIDENCE_STATE}" "${json}"
+import sys, os
+p=sys.argv[1]; data=sys.argv[2]
+os.makedirs(os.path.dirname(p), exist_ok=True)
+with open(p, "w", encoding="utf-8") as f:
+  f.write(data)
+PY
+}
+
+_cc_log_append() {
+  local json="$1"
+  mkdir -p "${CC_EVIDENCE_DIR}"
+  print -r -- "${json}" >> "${CC_EVIDENCE_LOG}"
+}
+
+_cc_minutes_diff() {
+  local start="$1" end="$2"
+  /usr/bin/python3 - <<'PY' "${start}" "${end}"
+from datetime import datetime
+import sys
+fmt="%Y-%m-%dT%H:%M:%S%z"
+s=datetime.strptime(sys.argv[1], fmt)
+e=datetime.strptime(sys.argv[2], fmt)
+mins=(e-s).total_seconds()/60
+print(round(mins, 1))
+PY
+}
+
+cc_interrupt() {
+  local mode="${1:-help}"
+  mkdir -p "${CC_EVIDENCE_DIR}"
+
+  case "${mode}" in
+    start)
+      local id="$(_cc_now_id)"
+      local ts="$(_cc_now_iso)"
+      local ss="${CC_EVIDENCE_DIR}/${id}_usage_start.png"
+
+      _cc_take_usage_screenshot "${ss}" || return 1
+
+      _cc_log_append "$(/usr/bin/python3 - <<PY
+import json
+print(json.dumps({
+  "id": "${id}",
+  "event": "start",
+  "ts": "${ts}",
+  "usage_screenshot": "${ss}",
+}, ensure_ascii=False))
+PY
+)"
+      _cc_state_write "$(/usr/bin/python3 - <<PY
+import json
+print(json.dumps({
+  "id": "${id}",
+  "start_ts": "${ts}",
+  "start_screenshot": "${ss}"
+}, ensure_ascii=False))
+PY
+)"
+      echo "START logged: id=${id} ts=${ts}"
+      ;;
+
+    end)
+      local ts="$(_cc_now_iso)"
+      local state="$(_cc_state_read)"
+      local id start_ts
+      id="$(print -r -- "${state}" | /usr/bin/python3 -c 'import json,sys; print(json.loads(sys.stdin.read() or "{}").get("id",""))')"
+      start_ts="$(print -r -- "${state}" | /usr/bin/python3 -c 'import json,sys; print(json.loads(sys.stdin.read() or "{}").get("start_ts",""))')"
+
+      if [[ -z "${id}" || -z "${start_ts}" ]]; then
+        echo "WARN: start の状態が見つからないため end 単体で記録します（start忘れの可能性）"
+        id="$(_cc_now_id)"
+        start_ts="${ts}"
+      fi
+
+      local ss="${CC_EVIDENCE_DIR}/${id}_usage_end.png"
+      _cc_take_usage_screenshot "${ss}" || return 1
+
+      local duration_min="$(_cc_minutes_diff "${start_ts}" "${ts}")"
+
+      _cc_log_append "$(/usr/bin/python3 - <<PY
+import json
+print(json.dumps({
+  "id": "${id}",
+  "event": "end",
+  "ts": "${ts}",
+  "usage_screenshot": "${ss}",
+  "duration_min": float("${duration_min}")
+}, ensure_ascii=False))
+PY
+)"
+      rm -f "${CC_EVIDENCE_STATE}" 2>/dev/null || true
+      echo "END logged: id=${id} ts=${ts} duration_min=${duration_min}"
+      ;;
+
+    open)
+      # 証跡フォルダを開く（macOS）
+      command -v open >/dev/null 2>&1 && open "${CC_EVIDENCE_DIR}"
+      echo "${CC_EVIDENCE_DIR}"
+      ;;
+
+    last)
+      tail -n 5 "${CC_EVIDENCE_LOG}" 2>/dev/null || echo "No log yet: ${CC_EVIDENCE_LOG}"
+      ;;
+
+    help|*)
+      cat <<'EOF'
+Usage:
+  cc_interrupt start   # /usageスクショ(開始) + 開始時刻を記録
+  cc_interrupt end     # /usageスクショ(復旧) + 復旧時刻 + 中断時間を記録
+  cc_interrupt open    # 証跡フォルダを開く
+  cc_interrupt last    # 直近ログ表示
+Logs:
+  $CC_EVIDENCE_LOG
+EOF
+      ;;
+  esac
+}
+# ---- end ----
