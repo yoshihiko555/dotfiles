@@ -82,4 +82,4 @@ alias weekly="mdopen \$DG_ROOT/content/clippings/weekly/"
 
 # Ai Orchestra
 OCHE_ROOT=~/ghq/github.com/yoshihiko555/ai-orchestra
-alias oche="python \$OCHE_ROOT/scripts/orchestra-manager.py"
+alias orche="python \$OCHE_ROOT/scripts/orchestra-manager.py"
