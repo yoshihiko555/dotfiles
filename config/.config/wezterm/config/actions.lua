@@ -46,6 +46,7 @@ M.init_workspace = wezterm.action_callback(function(window, pane)
 
   if #panes_info < 8 then
     wezterm.log_warn("init_workspace: 8ペインが必要です (現在: " .. #panes_info .. ")")
+    window:toast_notification("init_workspace", "8ペインが必要です (現在: " .. #panes_info .. ")", nil, 3000)
     return
   end
 
@@ -63,6 +64,23 @@ M.init_workspace = wezterm.action_callback(function(window, pane)
   end
   local cwd = (cwd_url.file_path or ""):gsub("/$", "")
   if cwd == "" then return end
+
+  -- GHQ リポジトリ配下でのみ実行を許可
+  local ghq_root = wezterm.home_dir .. "/ghq/"
+  if cwd:sub(1, #ghq_root) ~= ghq_root then
+    wezterm.log_warn("init_workspace: GHQ 配下ではありません: " .. cwd)
+    window:toast_notification("init_workspace", "GHQ リポジトリ配下でのみ実行できます\ncwd: " .. cwd, nil, 4000)
+    return
+  end
+
+  -- TUI プロセスが実行中のペインがないかチェック（二重起動防止）
+  for i = 1, 8 do
+    if panes_info[i].pane:is_alt_screen_active() then
+      wezterm.log_warn("init_workspace: ペイン " .. i .. " でプロセスが実行中です")
+      window:toast_notification("init_workspace", "ペイン " .. i .. " でプロセスが実行中です\n先に終了してください", nil, 4000)
+      return
+    end
+  end
 
   local project = (cwd:match("([^/]+)$") or "project"):gsub("[%.:]", "-")
 
