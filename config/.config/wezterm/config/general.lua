@@ -42,7 +42,7 @@ return {
   -- 非アクティブペインを暗くしてアクティブペインを際立たせる
   inactive_pane_hsb = {
     saturation = 0.8,
-    brightness = 0.6,
+    brightness = 0.5,
   },
 
   -- スクロールバック行数
