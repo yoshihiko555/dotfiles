@@ -24,13 +24,8 @@ if ! [[ "$context_pct" =~ ^[0-9]+$ ]]; then
   context_pct="--"
 fi
 
-# Short directory (last 3 components, ~ for home)
-short_dir="${cwd/#$HOME/\~}"
-short_dir=$(echo "$short_dir" | awk -F'/' '{
-  n = NF
-  if (n <= 3) print $0
-  else { printf "…/"; for (i=n-2;i<=n;i++) { printf "%s",$i; if(i<n) printf "/" } }
-}')
+# Short directory (project name only = last component)
+short_dir=$(basename "$cwd")
 
 # Git branch
 git_branch=""
