@@ -76,6 +76,10 @@ command = "uvx"
 args = ["--prerelease=explicit", "--with", "cocoindex>=1.0.0a16", "cocoindex-code@latest"]
 enabled = false
 
+[mcp_servers.pencil]
+command = "/Applications/Pencil.app/Contents/Resources/app.asar.unpacked/out/mcp-server-darwin-arm64"
+args = [ "--app", "desktop" ]
+
 [notice]
 hide_full_access_warning = true
 
