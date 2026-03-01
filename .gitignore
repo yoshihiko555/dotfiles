@@ -21,3 +21,6 @@ backup/
 
 # Karabiner auto backups
 config/.config/karabiner/automatic_backups/
+
+# Git worktrees
+.worktrees/
