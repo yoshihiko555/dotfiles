@@ -1,0 +1,2 @@
+-- General keymaps (non-LSP)
+-- LSP keymaps are managed in core/lsp.lua via LspAttach autocmd
