@@ -25,19 +25,19 @@ Vim操作の習熟と並行して、フェーズごとにプラグインを追�
 Vim操作を覚える段階。見た目を整えてモチベーションを維持しつつ、
 ファイル移動・検索の基本操作を身につける。
 
-| プラグイン | 用途 | 優先度 |
-|-----------|------|--------|
-| カラースキーム（候補: tokyonight, catppuccin, kanagawa） | 見た目の基盤 | 必須 |
-| nvim-treesitter | シンタックスハイライト強化 | 必須 |
-| telescope.nvim | ファジーファインダー（ファイル検索・grep・LSP連携） | 必須 |
-| lualine.nvim | ステータスライン | 必須 |
-| which-key.nvim | キーマップをリアルタイム表示（学習補助） | 推奨 |
-| neo-tree.nvim or oil.nvim | ファイルエクスプローラー | 推奨 |
-| nvim-web-devicons | ファイルアイコン表示 | 推奨 |
+| プラグイン | 用途 | 状態 |
+|-----------|------|------|
+| tokyonight.nvim (moon) | カラースキーム（WezTermと統一） | 導入済み |
+| nvim-treesitter (main branch) | シンタックスハイライト強化 | 導入済み |
+| fzf-lua | ファジーファインダー（ファイル検索・grep・LSP連携） | 導入済み |
+| lualine.nvim | ステータスライン | 導入済み |
+| which-key.nvim | キーマップをリアルタイム表示（学習補助） | 導入済み |
+| neo-tree.nvim | ファイルエクスプローラー | 導入済み |
+| nvim-web-devicons | ファイルアイコン表示 | 導入済み（依存として） |
 
 ### 検証ポイント
-- [ ] カラースキームが各言語で見やすいか
-- [ ] telescope でファイル検索・grepが快適か
+- [x] カラースキームが各言語で見やすいか
+- [ ] fzf-lua でファイル検索・grepが快適か
 - [ ] which-key でキーマップを覚えやすいか
 
 ---
@@ -144,7 +144,7 @@ IDE級の最終ピース。ブレークポイント・ステップ実行をNeovi
    lua/plugins/
    ├── colorscheme.lua
    ├── treesitter.lua
-   ├── telescope.lua
+   ├── fzf-lua.lua
    └── ...
    ```
 4. 問題があれば`enabled = false`で一時無効化して切り分け
@@ -152,8 +152,8 @@ IDE級の最終ピース。ブレークポイント・ステップ実行をNeovi
 ## 現在の進捗
 
 - [x] Phase 0: 基盤構築（lazy.nvim導入・モジュール分割・組み込みLSP設定）
-- [ ] Phase 1: 見た目 & ナビゲーション ← **現在地**
-- [ ] Phase 2: 編集効率
+- [x] Phase 1: 見た目 & ナビゲーション（tokyonight / treesitter / fzf-lua / lualine / which-key / neo-tree）
+- [ ] Phase 2: 編集効率 ← **次のフェーズ**
 - [ ] Phase 3: Git連携
 - [ ] Phase 4: LSP強化 & コード品質
 - [ ] Phase 5: デバッグ & テスト
