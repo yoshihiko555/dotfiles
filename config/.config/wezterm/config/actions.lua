@@ -32,7 +32,15 @@ M.spawn_tab_with_8_panes = wezterm.action_callback(function(window, pane)
 end)
 
 -- ワークスペース初期化アクション（Leader + i）
--- 前提: 8ペインタブで pane 1 が目的のディレクトリに cd 済み
+-- 前提: pane 1 が目的のディレクトリに cd 済み
+-- 3ペイン時:
+-- ┌────────┬────────┐
+-- │ nvim   │ claude │
+-- │  (1)   ├────────┤
+-- │        │ free   │
+-- │        │  (3)   │
+-- └────────┴────────┘
+-- 8ペイン時:
 -- ┌───────┬───────┬───────┬───────┐
 -- │claude │claude │ codex │gemini │
 -- │  (1)  │  (2)  │  (3)  │  (4)  │
@@ -44,9 +52,15 @@ M.init_workspace = wezterm.action_callback(function(window, pane)
   local tab = pane:tab()
   local panes_info = tab:panes_with_info()
 
-  if #panes_info < 8 then
-    wezterm.log_warn("init_workspace: 8ペインが必要です (現在: " .. #panes_info .. ")")
-    window:toast_notification("init_workspace", "8ペインが必要です (現在: " .. #panes_info .. ")", nil, 3000)
+  local pane_count = #panes_info
+  local layout = nil
+  if pane_count == 3 then
+    layout = "3pane"
+  elseif pane_count >= 8 then
+    layout = "8pane"
+  else
+    wezterm.log_warn("init_workspace: 3または8ペインが必要です (現在: " .. pane_count .. ")")
+    window:toast_notification("init_workspace", "3または8ペインが必要です (現在: " .. pane_count .. ")", nil, 3000)
     return
   end
 
@@ -73,8 +87,15 @@ M.init_workspace = wezterm.action_callback(function(window, pane)
     return
   end
 
+  -- シェル引数のクォート
+  local function sq(s)
+    return "'" .. s:gsub("'", "'\\''") .. "'"
+  end
+
+  local max_panes = (layout == "3pane") and 3 or 8
+
   -- TUI プロセスが実行中のペインがないかチェック（二重起動防止）
-  for i = 1, 8 do
+  for i = 1, max_panes do
     if panes_info[i].pane:is_alt_screen_active() then
       wezterm.log_warn("init_workspace: ペイン " .. i .. " でプロセスが実行中です")
       window:toast_notification("init_workspace", "ペイン " .. i .. " でプロセスが実行中です\n先に終了してください", nil, 4000)
@@ -82,17 +103,26 @@ M.init_workspace = wezterm.action_callback(function(window, pane)
     end
   end
 
-  local project = (cwd:match("([^/]+)$") or "project"):gsub("[%.:]", "-")
-
-  -- シェル引数のクォート
-  local function sq(s)
-    return "'" .. s:gsub("'", "'\\''") .. "'"
-  end
-
-  -- pane 2-8: pane 1 のディレクトリへ移動
-  for i = 2, 8 do
+  -- pane 2-*: pane 1 のディレクトリへ移動
+  for i = 2, max_panes do
     panes_info[i].pane:send_text("cd " .. sq(cwd) .. "\n")
   end
+
+  if layout == "3pane" then
+    -- pane 1: Neovim
+    panes_info[1].pane:send_text("nvim\n")
+
+    -- pane 2: Claude Code
+    panes_info[2].pane:send_text("claude\n")
+
+    -- pane 3: Free（cd のみ）
+
+    -- pane 1 にフォーカス
+    panes_info[1].pane:activate()
+    return
+  end
+
+  local project = (cwd:match("([^/]+)$") or "project"):gsub("[%.:]", "-")
 
   -- pane 1, 2: サブシェルの PID を保存し exec で claude に置換（PID = claude プロセス PID）
   panes_info[1].pane:send_text("sh -c 'echo $$ > /tmp/wez-cc1.pid; exec claude'\n")

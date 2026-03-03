@@ -53,7 +53,7 @@ return {
     ---------------------------------------------------------------------------
     -- 8分割タブ
     { key = '8', mods = 'LEADER', action = actions.spawn_tab_with_8_panes },
-    -- ワークスペース初期化（8ペインタブで pane 1 の cwd を基準に各ツール起動）
+    -- ワークスペース初期化（3/8ペイン対応。pane 1 の cwd を基準に各ツール起動）
     { key = 'i', mods = 'LEADER', action = actions.init_workspace },
     -- 分割
     { key = 'd', mods = 'LEADER', action = act.SplitVertical{ domain = 'CurrentPaneDomain' } },
