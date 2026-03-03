@@ -9,6 +9,10 @@ notification.setup()
 local tab = require("config/tab")
 tab.setup()
 
+-- ステータスバー設定の初期化
+local statusbar = require("config/statusbar")
+statusbar.setup()
+
 -- 外部設定ファイルをマージ
 function merge_config(config, new_config)
   for k, v in pairs(new_config) do

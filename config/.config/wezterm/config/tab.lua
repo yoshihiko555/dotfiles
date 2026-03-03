@@ -13,7 +13,7 @@ M.config = {
   -- タブの最大幅
   tab_max_width = 32,
   -- タブが1つの時もタブバーを表示(お好みで true: 非表示 / false: 表示)
-  hide_tab_bar_if_only_one_tab = true,
+  hide_tab_bar_if_only_one_tab = false,
 }
 
 -- 長い文字列を末尾n文字に省略する関数
@@ -96,8 +96,8 @@ function M.setup()
     local title = get_tab_title(tab.active_pane)
     title = truncate_left(title, max_width - 6)  -- 短縮表示
 
-    -- イトル形式
-    local formatted_title = "   " .. title .. "   "
+    -- タイトル形式
+    local formatted_title = "  " .. title .. "  "
 
     return {
       { Background = { Color = edge_background } },

@@ -24,6 +24,8 @@ config.background = {
 config.window_frame = {
   inactive_titlebar_bg = "none",
   active_titlebar_bg = "none",
+  font = wezterm.font("UDEV Gothic 35NFLG", { weight = "Bold" }),
+  font_size = 14,
 }
 
 -- イベントハンドラ

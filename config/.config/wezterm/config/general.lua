@@ -26,7 +26,7 @@ return {
   window_close_confirmation = "AlwaysPrompt",
 
   -- タブバー設定
-  hide_tab_bar_if_only_one_tab = true,
+  hide_tab_bar_if_only_one_tab = false,
   show_new_tab_button_in_tab_bar = false,
   show_close_tab_button_in_tabs = false,
 
