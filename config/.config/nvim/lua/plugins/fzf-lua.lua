@@ -1,6 +1,7 @@
 return {
   "ibhagwan/fzf-lua",
   dependencies = { "nvim-tree/nvim-web-devicons" },
+  cmd = { "FzfLua" },
   keys = {
     { "<leader>ff", "<cmd>FzfLua files<cr>", desc = "Find Files" },
     { "<leader>fg", "<cmd>FzfLua live_grep<cr>", desc = "Find by Grep" },
