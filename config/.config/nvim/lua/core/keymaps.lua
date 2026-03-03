@@ -7,6 +7,7 @@ end
 
 -- 検索ハイライトをすぐ消して視認性を保つ
 map("n", "<Esc>", "<cmd>nohlsearch<cr>", "Clear search highlight")
+map("i", "jj", "<Esc>", "Exit insert mode")
 
 -- ウィンドウ移動
 map("n", "<C-h>", "<C-w>h", "Window left")
