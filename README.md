@@ -19,6 +19,7 @@ dotfiles/
 │       ├── sheldon/        # zsh プラグイン
 │       ├── karabiner/      # キーリマッピング
 │       ├── opencode/       # OpenCode CLI
+│       ├── nvim/           # エディタ (Neovim)
 │       └── git/            # git 設定 (global ignore 等)
 │
 ├── claude/                 # Claude CLI（→ ~）
@@ -143,6 +144,29 @@ task codex-trust-audit # Codex trust 設定を監査
 
 - `task link` は `alfred` を含み、`gemini` は含みません。
 
+## Neovim LSP（TypeScript / Go / Python）
+
+- `config/.config/nvim/init.lua` と `config/.config/nvim/lua/lsp.lua` で最小構成の LSP を有効化
+- 対象サーバー: `gopls` / `pyright-langserver` / `typescript-language-server`
+- 前提: `Brewfile` に定義された `gopls`, `pyright`, `typescript`, `typescript-language-server` をインストール済み
+
+```bash
+task link-config   # ~/.config/nvim を含む .config 配下をリンク
+```
+
+主なキーマップ:
+
+- `gd` 定義へジャンプ
+- `gD` 宣言へジャンプ
+- `gr` 参照一覧
+- `gi` 実装へジャンプ
+- `K` ホバー
+- `<leader>rn` リネーム
+- `<leader>ca` コードアクション
+- `[d` / `]d` 診断の前後移動
+
+補完は挿入モードで `Ctrl-x Ctrl-o`（omnifunc）を使用。
+
 ## MCP 運用方針（デフォルト無効）
 
 - Codex (`codex/.codex/config.toml`) の `context7` / `notion` は `enabled = false` をデフォルトにしています。
@@ -206,8 +230,8 @@ stow -Rvt ~ <パッケージ名>
 
 ```bash
 # .config 系ツールを追加
-mkdir -p config/.config/neovim
-mv ~/.config/neovim config/.config/neovim/
+mkdir -p config/.config/nvim
+mv ~/.config/nvim config/.config/nvim/
 task link-config
 
 # ホーム直下の設定を追加（新パッケージ）
@@ -229,6 +253,7 @@ stow -vt ~ git
 ~/.config/sheldon    → dotfiles/config/.config/sheldon
 ~/.config/karabiner  → dotfiles/config/.config/karabiner
 ~/.config/opencode   → dotfiles/config/.config/opencode
+~/.config/nvim       → dotfiles/config/.config/nvim
 ~/.config/git        → dotfiles/config/.config/git
 ~/.claude            → dotfiles/claude/.claude
 ~/.codex             → dotfiles/codex/.codex
