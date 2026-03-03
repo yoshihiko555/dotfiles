@@ -72,6 +72,7 @@ alias tn='command tmux new-session'
 alias c='clear'
 alias h='history'
 alias v='nvim'
+alias vd='NVIM_APPNAME=nvim-dev nvim'
 alias code='code .'
 
 # Digital Garden
