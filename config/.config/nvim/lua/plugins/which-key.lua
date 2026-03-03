@@ -8,6 +8,7 @@ return {
       { "<leader>f", group = "Find" },
       { "<leader>g", group = "Git" },
       { "<leader>b", group = "Buffer" },
+      { "<leader>x", group = "Quickfix" },
       { "<leader>w", proxy = "<c-w>", group = "Window" },
     },
   },
