@@ -95,7 +95,8 @@
     "playwright@claude-plugins-official": false,
     "gopls-lsp@claude-plugins-official": false,
     "typescript-lsp@claude-plugins-official": false,
-    "pyright-lsp@claude-plugins-official": false
+    "pyright-lsp@claude-plugins-official": false,
+    "skill-creator@claude-plugins-official": true
   },
   "language": "日本語",
   "sandbox": {
