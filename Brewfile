@@ -42,6 +42,8 @@ cask "easydict"
 cask "font-udev-gothic-nf"
 cask "nudge"
 cask "wezterm@nightly"
+cask "zed"
+cask "orbstack"
 
 # cask（既存アプリは一旦保留）
 # cask "1password"
