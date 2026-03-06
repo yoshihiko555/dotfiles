@@ -53,6 +53,7 @@ alias wails3='go run github.com/wailsapp/wails/v3/cmd/wails3@latest'
 # Claude CLI
 alias cc='claude'
 alias cc-dg='claude --dangerously-skip-permissions'
+alias cc-r='claude --resume'
 
 # Codex CLI
 alias cx='codex'
