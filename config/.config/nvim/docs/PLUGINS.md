@@ -29,6 +29,7 @@
 | [cmp_luasnip](https://github.com/saadparwaiz1/cmp_luasnip) | `plugins/cmp.lua`（依存） | LuaSnip 補完ソース | LuaSnip のスニペットを nvim-cmp の補完候補に表示 |
 | [nvim-autopairs](https://github.com/windwp/nvim-autopairs) | `plugins/autopairs.lua` | 括弧・引用符の自動ペア | `(` `"` `{` 等の入力時に自動で閉じる。nvim-cmp と連携し補完確定時もペアを閉じる |
 | [Comment.nvim](https://github.com/numToStr/Comment.nvim) | `plugins/comment.lua` | コメントトグル（gcc / gc） | 行・範囲・ブロックコメントを素早く切り替え。treesitter で言語ごとのコメント記号を自動判定 |
+| [nvim-surround](https://github.com/kylechui/nvim-surround) | `plugins/surround.lua` | 囲み文字の操作（ys / ds / cs） | 括弧・引用符・タグの追加・変更・削除を素早く行う |
 
 ## その他
 
