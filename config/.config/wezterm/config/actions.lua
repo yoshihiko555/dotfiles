@@ -211,7 +211,7 @@ M.show_cheatsheet = wezterm.action_callback(function(window, pane)
   local cheat_pane = pane:split({
     direction = 'Right',
     size = 0.4,
-    args = { 'glow', '-p', cheatsheet },
+    args = { '/opt/homebrew/bin/glow', '-p', cheatsheet },
   })
   cheat_pane:activate()
 end)
