@@ -205,4 +205,15 @@ M.clear_scrollback_and_viewport = wezterm.action_callback(function(window, pane)
   window:perform_action(act.ClearScrollback 'ScrollbackAndViewport', pane)
 end)
 
+-- チートシート表示（右ペインに glow で表示、q で閉じる）
+M.show_cheatsheet = wezterm.action_callback(function(window, pane)
+  local cheatsheet = wezterm.home_dir .. '/.config/nvim/docs/CHEATSHEET.md'
+  local cheat_pane = pane:split({
+    direction = 'Right',
+    size = 0.4,
+    args = { 'glow', '-p', cheatsheet },
+  })
+  cheat_pane:activate()
+end)
+
 return M

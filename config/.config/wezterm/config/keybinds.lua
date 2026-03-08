@@ -70,6 +70,8 @@ return {
     { key = 'L', mods = 'LEADER|SHIFT', action = act.AdjustPaneSize{ 'Right', 5 } },
     -- ペイン操作モード (連続操作)
     { key = 'p', mods = 'LEADER', action = act.ActivateKeyTable{ name = 'pane_mode', one_shot = false } },
+    -- チートシート表示
+    { key = 'c', mods = 'LEADER', action = actions.show_cheatsheet },
 
     ---------------------------------------------------------------------------
     -- コピー・ペースト
