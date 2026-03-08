@@ -49,6 +49,12 @@ local servers = {
   },
 }
 
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+local ok, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
+if ok then
+  capabilities = vim.tbl_deep_extend("force", capabilities, cmp_nvim_lsp.default_capabilities())
+end
+
 local start_group = vim.api.nvim_create_augroup("user-lsp-start", { clear = true })
 for name, server in pairs(servers) do
   vim.api.nvim_create_autocmd("FileType", {
@@ -64,6 +70,7 @@ for name, server in pairs(servers) do
         cmd = server.cmd,
         root_dir = find_root(args.buf, server.root_markers),
         init_options = server.init_options,
+        capabilities = capabilities,
         single_file_support = true,
       }, {
         bufnr = args.buf,

@@ -17,7 +17,7 @@ return {
       "python",
       "lua", "luadoc",
       -- 設定ファイル系
-      "json", "jsonc", "yaml", "toml",
+      "json", "yaml", "toml",
       "markdown", "markdown_inline",
       "html", "css",
       "bash",

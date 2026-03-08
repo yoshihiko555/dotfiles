@@ -7,6 +7,8 @@
 ```
 docs/
 ├── README.md              # このファイル
+├── PLUGINS.md             # プラグイン一覧（用途・導入理由）
+├── CHEATSHEET.md          # キーバインド・操作チートシート
 ├── research/              # プラグインのリサーチ・検証メモ
 │   └── TEMPLATE.md        # リサーチメモのテンプレート
 └── adr/                   # 意思決定ログ（ADR: Architecture Decision Records）
