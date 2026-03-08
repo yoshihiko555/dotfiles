@@ -7,8 +7,29 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
-  "icon_theme": "Zed (Default)",
+  "notification_panel": {
+    "button": false
+  },
+  "git_panel": {
+    "dock": "left",
+    "sort_by_path": false,
+    "status_style": "icon"
+  },
+  "project_panel": {
+    "bold_folder_labels": true,
+    "indent_size": 10.0,
+    "hide_gitignore": false,
+    "default_width": 280.0,
+    "git_status": true
+  },
+  "agent": {
+    "button": true,
+    "favorite_models": [],
+    "model_parameters": []
+  },
+  "icon_theme": "Material Icon Theme",
   "collaboration_panel": {
+    "button": false,
     "dock": "left"
   },
   "vim_mode": true,
@@ -21,5 +42,5 @@
   "base_keymap": "VSCode",
   "ui_font_size": 16,
   "buffer_font_size": 14.0,
-  "theme": "Ayu Mirage",
+  "theme": "Tokyo Night Moon",
 }
