@@ -62,13 +62,13 @@ fi
 # Build output
 printf "\033[2m%s\033[0m" "$short_dir"
 if [ -n "$git_branch" ]; then
-  printf " \033[2m %s\033[0m" "$git_branch"
+  printf " \033[2m%s\033[0m" "$git_branch"
 fi
-printf "  \033[2m%s\033[0m" "$model_name"
-printf "  \033[33m%s\033[0m" "$cost_fmt"
-printf "  ${ctx_color}%s\033[0m" "$context_label"
-printf "  \033[32m+%s\033[0m \033[31m-%s\033[0m" "$lines_added" "$lines_removed"
-printf "  \033[2m%s\033[0m" "$duration_fmt"
+printf " \033[2m%s\033[0m" "$model_name"
+printf " \033[33m%s\033[0m" "$cost_fmt"
+printf " ${ctx_color}%s\033[0m" "$context_label"
+printf " \033[32m+%s\033[0m\033[31m-%s\033[0m" "$lines_added" "$lines_removed"
+printf " \033[2m%s\033[0m" "$duration_fmt"
 if [ -n "$claude_pid" ]; then
-  printf "  \033[36mPID:%s\033[0m" "$claude_pid"
+  printf " \033[36mPID:%s\033[0m" "$claude_pid"
 fi
