@@ -190,6 +190,11 @@ if [[ "$mode" == "vs" ]]; then
   exit 0
 fi
 
+if [[ "$mode" == "zed" ]]; then
+  open -a "Zed" "$dir"
+  exit 0
+fi
+
 if [[ "$mode" == "wez" ]]; then
   if ! command -v wezterm &gt;/dev/null 2&gt;&amp;1; then
     osascript -e 'display notification "wezterm コマンドが見つかりません (PATH を確認してください)" with title "Open VS or Wez"'
@@ -333,6 +338,8 @@ if not target:
 items = [
     {"title":"vs で開く（VSCode）", "subtitle":target, "arg":"vs",
      "variables":{"mode":"vs", "dir":target}},
+    {"title":"zed で開く（Zed）", "subtitle":target, "arg":"zed",
+     "variables":{"mode":"zed", "dir":target}},
     {"title":"wez で開く（Wezterm）",  "subtitle":target, "arg":"wez",
      "variables":{"mode":"wez", "dir":target}},
 ]
