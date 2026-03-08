@@ -75,6 +75,7 @@ alias h='history'
 alias v='nvim'
 alias vd='NVIM_APPNAME=nvim-dev nvim'
 alias code='code .'
+alias zed='zed .'
 
 # Digital Garden
 DG_ROOT=~/ghq/github.com/yoshihiko555/digital-garden
