@@ -14,6 +14,7 @@
   "markdown-preview.nvim": { "branch": "main", "commit": "858391a1d01dc0daa5233184b4600e1cc0d8d9fc" },
   "neo-tree.nvim": { "branch": "v3.x", "commit": "9d6826582a3e8c84787bd7355df22a2812a1ad59" },
   "nui.nvim": { "branch": "main", "commit": "de740991c12411b663994b2860f1a4fd0937c130" },
+  "nvim-autopairs": { "branch": "master", "commit": "59bce2eef357189c3305e25bc6dd2d138c1683f5" },
   "nvim-cmp": { "branch": "main", "commit": "da88697d7f45d16852c6b2769dc52387d1ddc45f" },
   "nvim-treesitter": { "branch": "main", "commit": "6bc51d020a5e06b7e20ea82dbc47196d3d3027c7" },
   "nvim-web-devicons": { "branch": "master", "commit": "737cf6c657898d0c697311d79d361288a1343d50" },
