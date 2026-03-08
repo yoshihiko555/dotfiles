@@ -30,6 +30,7 @@
 | [nvim-autopairs](https://github.com/windwp/nvim-autopairs) | `plugins/autopairs.lua` | 括弧・引用符の自動ペア | `(` `"` `{` 等の入力時に自動で閉じる。nvim-cmp と連携し補完確定時もペアを閉じる |
 | [Comment.nvim](https://github.com/numToStr/Comment.nvim) | `plugins/comment.lua` | コメントトグル（gcc / gc） | 行・範囲・ブロックコメントを素早く切り替え。treesitter で言語ごとのコメント記号を自動判定 |
 | [nvim-surround](https://github.com/kylechui/nvim-surround) | `plugins/surround.lua` | 囲み文字の操作（ys / ds / cs） | 括弧・引用符・タグの追加・変更・削除を素早く行う |
+| [indent-blankline.nvim](https://github.com/lukas-reineke/indent-blankline.nvim) | `plugins/indent-blankline.lua` | インデントガイド表示 | インデントの縦線でネスト構造を可視化。現在スコープを水色で強調 |
 
 ## その他
 
