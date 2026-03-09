@@ -27,6 +27,7 @@ setopt APPEND_HISTORY       # 履歴を追記
 # --------------------------------------------
 # mise は .zshenv で activate 済み
 eval "$(zoxide init zsh)"
+eval "$(git gtr init zsh)"
 eval "$(sheldon source)"
 
 # Starship prompt

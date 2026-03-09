@@ -1,0 +1,10 @@
+[init]
+	defaultBranch = main
+[pull]
+	rebase = false
+[core]
+	autocrlf = input
+[gtr "worktrees"]
+	dir = .worktrees
+[gtr "editor"]
+	default = zed
