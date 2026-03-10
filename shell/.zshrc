@@ -26,9 +26,10 @@ setopt APPEND_HISTORY       # 履歴を追記
 # 3. Tool Initialization
 # --------------------------------------------
 # mise は .zshenv で activate 済み
+# sheldon (compinit を含む) を先にロード
+eval "$(sheldon source)"
 eval "$(zoxide init zsh)"
 eval "$(git gtr init zsh)"
-eval "$(sheldon source)"
 
 # Starship prompt
 export STARSHIP_CONFIG=~/.config/starship/starship.toml
