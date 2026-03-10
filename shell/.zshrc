@@ -275,51 +275,28 @@ tp() {
 }
 
 # ghq + fzf でリポジトリに移動（.worktrees 配下も対象）
+# リスト生成は scripts/repo-list.sh に委譲（WezTerm InputSelector と共有）
 repo() {
-  if ! command -v ghq &>/dev/null; then echo "ghq が見つかりません" && return 1; fi
+  local script="$HOME/ghq/github.com/yoshihiko555/dotfiles/scripts/repo-list.sh"
+  if [[ ! -x "$script" ]]; then echo "repo-list.sh が見つかりません" && return 1; fi
   if ! command -v fzf &>/dev/null; then echo "fzf が見つかりません" && return 1; fi
 
-  local ghq_root selected
-  ghq_root="$(ghq root)"
-
+  local selected
   selected=$(
-    {
-      ghq list | while IFS= read -r line; do
-        printf '🌳 %s\n' "$line"
-      done
-      find "$ghq_root" -maxdepth 5 -type d -name ".worktrees" 2>/dev/null | while IFS= read -r wt_dir; do
-        local repo_rel="${wt_dir#$ghq_root/}"
-        repo_rel="${repo_rel%/.worktrees}"
-        for d in "$wt_dir"/*(N/); do
-          printf '🌿 %s:%s\n' "$repo_rel" "${d:t}"
-        done
-      done
-    } | fzf --ansi --preview '
-      line={}
-      icon="${line%% *}"
-      entry="${line#* }"
-      if [[ "$icon" == "🌳" ]]; then
-        ls -la "'"$ghq_root"'/$entry"
-      else
-        repo="${entry%%:*}"
-        wt="${entry##*:}"
-        ls -la "'"$ghq_root"'/$repo/.worktrees/$wt"
-      fi
+    "$script" | awk -F'\t' '{
+      if ($1 == "repo") printf "\xf0\x9f\x8c\xb3 %s\t%s\n", $2, $3
+      else printf "\xf0\x9f\x8c\xbf %s\t%s\n", $2, $3
+    }' | fzf --ansi --with-nth=1 --delimiter='\t' --preview '
+      path={2}
+      ls -la "$path"
     '
   )
 
   [[ -z "$selected" ]] && return
 
-  local icon="${selected%% *}"
-  local entry="${selected#* }"
-
-  if [[ "$icon" == "🌳" ]]; then
-    cd "$ghq_root/$entry"
-  else
-    local repo_path="${entry%%:*}"
-    local wt_name="${entry##*:}"
-    cd "$ghq_root/$repo_path/.worktrees/$wt_name"
-  fi
+  local path
+  path=$(echo "$selected" | cut -f2)
+  cd "$path"
 }
 
 # fzf + コマンド履歴検索
