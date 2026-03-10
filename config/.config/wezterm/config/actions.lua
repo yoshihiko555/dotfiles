@@ -62,6 +62,13 @@ local function shell_command_args(command)
   return { shell, '-lic', command }
 end
 
+local function interactive_shell_command()
+  local shell = os.getenv('SHELL') or '/bin/zsh'
+  -- 一時シェルを閉じたら外側の login shell を 0 で終了させ、
+  -- Ctrl+D 時にもペイン枠だけ残らないようにする
+  return shell_quote(shell) .. ' -i; exit 0'
+end
+
 local function command_exists(command)
   local shell = os.getenv('SHELL') or '/bin/zsh'
   local probe = shell .. ' -lic ' .. shell_quote('command -v ' .. command .. ' >/dev/null 2>&1')
@@ -82,29 +89,14 @@ local function open_overlay(command)
       cwd = get_pane_cwd(pane),
       args = shell_command_args(command),
     })
-    window:perform_action(act.TogglePaneZoomState, new_pane)
-  end)
-end
-
---- 一時シェル: タブ全体の下部にシェルを開く
---- exit/Ctrl+D でペイン自動消滅
-local function open_shell(size)
-  return wezterm.action_callback(function(_, pane)
-    local shell = os.getenv('SHELL') or '/bin/zsh'
-    pane:split({
-      direction = 'Bottom',
-      size = size,
-      top_level = true,
-      cwd = get_pane_cwd(pane),
-      args = { shell },
-    })
+    window:perform_action(act.SetPaneZoomState(true), new_pane)
   end)
 end
 
 M.overlay_lazygit = open_overlay('lazygit')
 M.overlay_yazi = open_overlay('yazi')
 M.overlay_claude = open_overlay('claude')
-M.open_bottom_shell = open_shell(0.4)
+M.open_bottom_shell = open_overlay(interactive_shell_command())
 
 -- =============================================================================
 -- ワークスペース（プロジェクト単位のタブグループ）
