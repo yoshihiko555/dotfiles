@@ -3,6 +3,58 @@ local act = wezterm.action
 
 local M = {}
 
+-- =============================================================================
+-- smart-splits.nvim 統合（Neovim ↔ WezTerm シームレスペイン移動）
+-- =============================================================================
+
+local direction_keys = { h = 'Left', j = 'Down', k = 'Up', l = 'Right' }
+
+--- Neovim が実行中かどうかを判定（smart-splits.nvim が設定するユーザー変数を参照）
+local function is_vim(pane)
+  return pane:get_user_vars().IS_NVIM == 'true'
+end
+
+--- smart-splits 対応のペイン移動/リサイズキーバインドを生成
+--- @param resize_or_move 'resize' | 'move'
+--- @param key string h/j/k/l
+function M.split_nav(resize_or_move, key)
+  return {
+    key = key,
+    mods = resize_or_move == 'resize' and 'META|SHIFT' or 'META',
+    action = wezterm.action_callback(function(win, pane)
+      if is_vim(pane) then
+        win:perform_action({
+          SendKey = { key = key, mods = resize_or_move == 'resize' and 'META|SHIFT' or 'META' },
+        }, pane)
+      else
+        if resize_or_move == 'resize' then
+          win:perform_action({ AdjustPaneSize = { direction_keys[key], 3 } }, pane)
+        else
+          win:perform_action({ ActivatePaneDirection = direction_keys[key] }, pane)
+        end
+      end
+    end),
+  }
+end
+
+-- =============================================================================
+-- overlay pane（split + zoom でフローティング相当）
+-- =============================================================================
+
+--- 指定コマンドを overlay pane（split + zoom）で起動
+--- コマンド終了時に自動的にペインが閉じて元のレイアウトに復帰
+local function open_overlay(command)
+  return wezterm.action_callback(function(win, pane)
+    local new_pane = pane:split { direction = 'Bottom', size = 0.1 }
+    new_pane:send_text(command .. '\n')
+    win:active_tab():set_zoomed(true)
+  end)
+end
+
+M.overlay_lazygit = open_overlay('lazygit')
+M.overlay_yazi = open_overlay('yazi')
+M.overlay_claude = open_overlay('claude')
+
 -- 新規タブを8分割（4x2グリッド）で開くアクション（ホームディレクトリから）
 M.spawn_tab_with_8_panes = wezterm.action_callback(function(window, pane)
   local tab, first_pane, _ = window:mux_window():spawn_tab({ cwd = wezterm.home_dir })

@@ -19,6 +19,9 @@ return {
     },
   },
 
+  -- Left Option を Alt として送信（Alt+H/J/K/L の smart-splits 統合に必要）
+  send_composed_key_when_left_alt_is_pressed = false,
+
   -- 設定ファイルの自動リロード
   automatically_reload_config = true,
 

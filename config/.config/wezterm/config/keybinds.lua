@@ -49,6 +49,20 @@ return {
     { key = 'DownArrow', mods = 'SHIFT|ALT|CTRL', action = act.AdjustPaneSize{ 'Down', 1 } },
 
     ---------------------------------------------------------------------------
+    -- ペイン移動 (Alt+h/j/k/l — smart-splits.nvim 統合)
+    -- Neovim 内では smart-splits にキーを委譲、それ以外は WezTerm ペイン移動
+    ---------------------------------------------------------------------------
+    actions.split_nav('move', 'h'),
+    actions.split_nav('move', 'j'),
+    actions.split_nav('move', 'k'),
+    actions.split_nav('move', 'l'),
+    -- Alt+Shift+h/j/k/l でリサイズ（smart-splits 統合）
+    actions.split_nav('resize', 'h'),
+    actions.split_nav('resize', 'j'),
+    actions.split_nav('resize', 'k'),
+    actions.split_nav('resize', 'l'),
+
+    ---------------------------------------------------------------------------
     -- ペイン操作 (Leader: Ctrl+q)
     ---------------------------------------------------------------------------
     -- 8分割タブ
@@ -70,6 +84,14 @@ return {
     { key = 'L', mods = 'LEADER|SHIFT', action = act.AdjustPaneSize{ 'Right', 5 } },
     -- ペイン操作モード (連続操作)
     { key = 'p', mods = 'LEADER', action = act.ActivateKeyTable{ name = 'pane_mode', one_shot = false } },
+    -- overlay pane（split + zoom でフローティング相当）
+    { key = 'g', mods = 'LEADER', action = actions.overlay_lazygit },
+    { key = 'y', mods = 'LEADER', action = actions.overlay_yazi },
+    { key = 'C', mods = 'LEADER|SHIFT', action = actions.overlay_claude },
+    -- 一時シェル（下部 40% split）
+    { key = 't', mods = 'LEADER', action = act.SplitPane {
+      direction = 'Down', size = { Percent = 40 },
+    } },
     -- チートシート表示
     { key = 'c', mods = 'LEADER', action = actions.show_cheatsheet },
 
@@ -129,18 +151,29 @@ return {
   key_tables = {
     -- ペイン操作モード (Leader + p で入る)
     pane_mode = {
+      -- 移動
       { key = 'h', mods = 'NONE', action = act.ActivatePaneDirection 'Left' },
       { key = 'j', mods = 'NONE', action = act.ActivatePaneDirection 'Down' },
       { key = 'k', mods = 'NONE', action = act.ActivatePaneDirection 'Up' },
       { key = 'l', mods = 'NONE', action = act.ActivatePaneDirection 'Right' },
+      -- リサイズ
       { key = 'H', mods = 'SHIFT', action = act.AdjustPaneSize{ 'Left', 5 } },
       { key = 'J', mods = 'SHIFT', action = act.AdjustPaneSize{ 'Down', 5 } },
       { key = 'K', mods = 'SHIFT', action = act.AdjustPaneSize{ 'Up', 5 } },
       { key = 'L', mods = 'SHIFT', action = act.AdjustPaneSize{ 'Right', 5 } },
+      -- 分割
       { key = 'd', mods = 'NONE', action = act.SplitVertical{ domain = 'CurrentPaneDomain' } },
       { key = '/', mods = 'NONE', action = act.SplitHorizontal{ domain = 'CurrentPaneDomain' } },
+      -- ペイン操作
       { key = 'x', mods = 'NONE', action = act.CloseCurrentPane{ confirm = true } },
       { key = 'z', mods = 'NONE', action = act.TogglePaneZoomState },
+      { key = 's', mods = 'NONE', action = act.PaneSelect{ mode = 'SwapWithActive' } },
+      { key = 'r', mods = 'NONE', action = act.RotatePanes 'Clockwise' },
+      { key = 'R', mods = 'SHIFT', action = act.RotatePanes 'CounterClockwise' },
+      -- overlay pane（フローティング相当）
+      { key = 'g', mods = 'NONE', action = actions.overlay_lazygit },
+      { key = 'y', mods = 'NONE', action = actions.overlay_yazi },
+      { key = 'C', mods = 'SHIFT', action = actions.overlay_claude },
       -- 数字キーでペイン直接移動
       { key = '1', mods = 'NONE', action = act.ActivatePaneByIndex(0) },
       { key = '2', mods = 'NONE', action = act.ActivatePaneByIndex(1) },
@@ -151,6 +184,7 @@ return {
       { key = '7', mods = 'NONE', action = act.ActivatePaneByIndex(6) },
       { key = '8', mods = 'NONE', action = act.ActivatePaneByIndex(7) },
       { key = '9', mods = 'NONE', action = act.ActivatePaneByIndex(8) },
+      -- 終了
       { key = 'Escape', mods = 'NONE', action = act.PopKeyTable },
       { key = 'Enter', mods = 'NONE', action = act.PopKeyTable },
       { key = 'q', mods = 'NONE', action = act.PopKeyTable },
