@@ -274,11 +274,52 @@ tp() {
   fi
 }
 
-# ghq + fzf でリポジトリに移動
+# ghq + fzf でリポジトリに移動（.worktrees 配下も対象）
 repo() {
-  local selected
-  selected=$(ghq list | fzf --delimiter=/ --with-nth=2.. --preview 'ls -la "$(ghq root)/{}"')
-  [[ -n "$selected" ]] && cd "$(ghq root)/$selected"
+  if ! command -v ghq &>/dev/null; then echo "ghq が見つかりません" && return 1; fi
+  if ! command -v fzf &>/dev/null; then echo "fzf が見つかりません" && return 1; fi
+
+  local ghq_root selected
+  ghq_root="$(ghq root)"
+
+  selected=$(
+    {
+      ghq list | while IFS= read -r line; do
+        printf '🌳 %s\n' "$line"
+      done
+      find "$ghq_root" -maxdepth 5 -type d -name ".worktrees" 2>/dev/null | while IFS= read -r wt_dir; do
+        local repo_rel="${wt_dir#$ghq_root/}"
+        repo_rel="${repo_rel%/.worktrees}"
+        for d in "$wt_dir"/*(N/); do
+          printf '🌿 %s:%s\n' "$repo_rel" "${d:t}"
+        done
+      done
+    } | fzf --ansi --preview '
+      line={}
+      icon="${line%% *}"
+      entry="${line#* }"
+      if [[ "$icon" == "🌳" ]]; then
+        ls -la "'"$ghq_root"'/$entry"
+      else
+        repo="${entry%%:*}"
+        wt="${entry##*:}"
+        ls -la "'"$ghq_root"'/$repo/.worktrees/$wt"
+      fi
+    '
+  )
+
+  [[ -z "$selected" ]] && return
+
+  local icon="${selected%% *}"
+  local entry="${selected#* }"
+
+  if [[ "$icon" == "🌳" ]]; then
+    cd "$ghq_root/$entry"
+  else
+    local repo_path="${entry%%:*}"
+    local wt_name="${entry##*:}"
+    cd "$ghq_root/$repo_path/.worktrees/$wt_name"
+  fi
 }
 
 # fzf + コマンド履歴検索
