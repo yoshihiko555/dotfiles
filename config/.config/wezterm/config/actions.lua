@@ -106,6 +106,161 @@ M.open_bottom_shell = wezterm.action_callback(function(_, pane)
   })
 end)
 
+-- =============================================================================
+-- ワークスペース（プロジェクト単位のタブグループ）
+-- =============================================================================
+
+local dotfiles_root = wezterm.home_dir .. '/ghq/github.com/yoshihiko555/dotfiles'
+local repo_list_script = dotfiles_root .. '/scripts/repo-list.sh'
+
+-- プロジェクトごとのレイアウト定義
+-- key: プロジェクト名（ワークスペース名と一致させる）
+-- value: レイアウトプリセット名
+local project_layouts = {
+  -- 例:
+  -- ['web-app'] = '3tab',
+  -- ['api-server'] = 'ide',
+}
+
+-- レイアウトプリセット
+-- 各関数は (mux_window, cwd) を受け取り、タブ・ペインを構築する
+-- 注: ワークスペース作成時に最初の1タブは自動で存在するため、それを活用する
+local layout_presets = {
+  -- デフォルト: 3ペイン1タブ（既存の Cmd+t と同じ）
+  -- ┌──────┬──────┐
+  -- │      │  2   │
+  -- │  1   ├──────┤
+  -- │      │  3   │
+  -- └──────┴──────┘
+  default = function(first_pane, mux_win, cwd)
+    local right = first_pane:split({ direction = 'Right', size = 0.5, cwd = cwd })
+    right:split({ direction = 'Bottom', size = 0.5, cwd = cwd })
+    first_pane:activate()
+  end,
+
+  -- 3タブ: Tab1 フル, Tab2 左右分割, Tab3 フル
+  -- Tab1:          Tab2:            Tab3:
+  -- ┌──────────┐  ┌─────┬─────┐  ┌──────────┐
+  -- │    1     │  │  1  │  2  │  │    1     │
+  -- └──────────┘  └─────┴─────┘  └──────────┘
+  ['3tab'] = function(first_pane, mux_win, cwd)
+    -- Tab 1 は first_pane（そのまま）
+    -- Tab 2: 左右分割
+    local tab2, pane2, _ = mux_win:spawn_tab({ cwd = cwd })
+    pane2:split({ direction = 'Right', size = 0.5, cwd = cwd })
+    -- Tab 3: フル
+    mux_win:spawn_tab({ cwd = cwd })
+    -- Tab 1 に戻る
+    first_pane:activate()
+  end,
+
+  -- IDE: Tab1 エディタ全画面, Tab2 エージェント左右, Tab3 フリー
+  -- Tab1:          Tab2:            Tab3:
+  -- ┌──────────┐  ┌─────┬─────┐  ┌──────────┐
+  -- │  editor  │  │agent│agent│  │   free   │
+  -- │          │  │  1  │  2  │  │          │
+  -- └──────────┘  └─────┴─────┘  └──────────┘
+  ide = function(first_pane, mux_win, cwd)
+    local tab2, pane2, _ = mux_win:spawn_tab({ cwd = cwd })
+    pane2:split({ direction = 'Right', size = 0.5, cwd = cwd })
+    mux_win:spawn_tab({ cwd = cwd })
+    first_pane:activate()
+  end,
+}
+
+--- ワークスペースが既に存在するか判定
+local function workspace_exists(name)
+  for _, ws in ipairs(wezterm.mux.get_workspace_names()) do
+    if ws == name then return true end
+  end
+  return false
+end
+
+--- パスからワークスペース名を生成
+--- repo: パスの最後のディレクトリ名
+--- worktree: "repo:branch" 形式
+local function path_to_workspace_name(label)
+  -- worktree の場合: "user/repo:branch" → "repo:branch"
+  if label:find(':') then
+    local repo_part, branch = label:match('.-/([^/]+):(.+)$')
+    if repo_part and branch then
+      return repo_part .. ':' .. branch
+    end
+  end
+  -- 通常のリポジトリ: "user/repo" → "repo"
+  return label:match('([^/]+)$') or label
+end
+
+--- repo-list.sh の出力を InputSelector の choices に変換
+local function build_project_choices()
+  local success, stdout, stderr = wezterm.run_child_process({ 'bash', repo_list_script })
+  if not success or not stdout then
+    wezterm.log_warn('repo-list.sh failed: ' .. (stderr or 'unknown error'))
+    return {}
+  end
+
+  local choices = {}
+  for line in stdout:gmatch('[^\n]+') do
+    local type_, label, path = line:match('^(%S+)\t([^\t]+)\t(.+)$')
+    if label and path then
+      local icon = (type_ == 'worktree') and ' ' or ' '
+      table.insert(choices, {
+        id = path,
+        label = icon .. label,
+      })
+    end
+  end
+  return choices
+end
+
+--- Leader+p: プロジェクトを fuzzy 選択してワークスペースを作成/切替
+M.select_project = wezterm.action_callback(function(window, pane)
+  local choices = build_project_choices()
+  if #choices == 0 then
+    window:toast_notification('workspace', 'プロジェクトが見つかりません', nil, 3000)
+    return
+  end
+
+  window:perform_action(act.InputSelector {
+    title = 'Open Project',
+    choices = choices,
+    fuzzy = true,
+    action = wezterm.action_callback(function(win, p, id, label)
+      if not id and not label then return end
+
+      local ws_name = path_to_workspace_name(label:gsub('^[^ ]+ ', ''))
+      local already_exists = workspace_exists(ws_name)
+
+      win:perform_action(act.SwitchToWorkspace {
+        name = ws_name,
+        spawn = { cwd = id },
+      }, p)
+
+      -- 新規ワークスペースの場合、レイアウトを構築
+      if not already_exists then
+        -- SwitchToWorkspace 完了後にレイアウトを適用
+        wezterm.time.call_after(0.3, function()
+          local mux_win = win:mux_window()
+          local tabs = mux_win:tabs()
+          if #tabs > 0 then
+            local first_pane = tabs[1]:active_pane()
+            local preset_name = project_layouts[ws_name] or 'default'
+            local builder = layout_presets[preset_name] or layout_presets.default
+            builder(first_pane, mux_win, id)
+          end
+        end)
+      end
+    end),
+  }, pane)
+end)
+
+--- Leader+s: 既存ワークスペース一覧から fuzzy 切替
+M.switch_workspace = act.ShowLauncherArgs { flags = 'FUZZY|WORKSPACES' }
+
+-- =============================================================================
+-- タブ・ペインレイアウト
+-- =============================================================================
+
 -- 新規タブを8分割（4x2グリッド）で開くアクション（ホームディレクトリから）
 M.spawn_tab_with_8_panes = wezterm.action_callback(function(window, pane)
   local tab, first_pane, _ = window:mux_window():spawn_tab({ cwd = wezterm.home_dir })

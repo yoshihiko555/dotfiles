@@ -83,7 +83,10 @@ return {
     { key = 'K', mods = 'LEADER|SHIFT', action = act.AdjustPaneSize{ 'Up', 5 } },
     { key = 'L', mods = 'LEADER|SHIFT', action = act.AdjustPaneSize{ 'Right', 5 } },
     -- ペイン操作モード (連続操作)
-    { key = 'p', mods = 'LEADER', action = act.ActivateKeyTable{ name = 'pane_mode', one_shot = false } },
+    { key = 'w', mods = 'LEADER', action = act.ActivateKeyTable{ name = 'pane_mode', one_shot = false } },
+    -- ワークスペース（プロジェクト単位のタブグループ）
+    { key = 'p', mods = 'LEADER', action = actions.select_project },
+    { key = 's', mods = 'LEADER', action = actions.switch_workspace },
     -- overlay pane（split + zoom でフローティング相当）
     { key = 'g', mods = 'LEADER', action = actions.overlay_lazygit },
     { key = 'y', mods = 'LEADER', action = actions.overlay_yazi },

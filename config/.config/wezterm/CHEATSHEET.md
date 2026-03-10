@@ -21,7 +21,7 @@ Leader: `Ctrl+Q` (2s timeout)
 | `Leader /`   | 水平分割                   |
 | `Leader h/j/k/l` | ペイン移動 (vim風)    |
 | `Leader H/J/K/L` | ペインリサイズ (vim風) |
-| `Leader p`   | ペイン操作モード (連続)    |
+| `Leader w`   | ペイン操作モード (連続)    |
 
 ### Overlay Pane (split + zoom)
 
@@ -34,13 +34,15 @@ Leader: `Ctrl+Q` (2s timeout)
 
 ### Workspace
 
-| Key          | Action                         |
-| ------------ | ------------------------------ |
-| `Leader 8`   | 8分割タブ (4x2 grid)          |
-| `Leader i`   | ワークスペース初期化           |
-| `Leader c`   | チートシート表示 (Neovim)      |
+| Key          | Action                               |
+| ------------ | ------------------------------------ |
+| `Leader p`   | プロジェクト選択 (fuzzy → WS作成/切替) |
+| `Leader s`   | ワークスペース切替 (fuzzy)            |
+| `Leader 8`   | 8分割タブ (4x2 grid)                |
+| `Leader i`   | ワークスペース初期化                  |
+| `Leader c`   | チートシート表示 (Neovim)             |
 
-## Pane Mode (`Leader p`)
+## Pane Mode (`Leader w`)
 
 | Key   | Action                      |
 | ----- | --------------------------- |

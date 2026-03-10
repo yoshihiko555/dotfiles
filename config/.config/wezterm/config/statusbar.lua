@@ -75,9 +75,17 @@ function M.setup()
     window:set_left_status(wezterm.format(left))
 
     -- ===================== 右ステータス =====================
-    -- [dark3: process | project ][blue: datetime ]
+    -- [teal: workspace ][dark3: process | project ][blue: datetime ]
 
     local right = {}
+
+    -- ワークスペース名（"default" 以外のとき表示）
+    if workspace ~= "default" then
+      table.insert(right, { Background = { Color = C.teal } })
+      table.insert(right, { Foreground = { Color = C.bg_dark } })
+      table.insert(right, { Attribute = { Intensity = "Bold" } })
+      table.insert(right, { Text = "  " .. workspace .. "  " })
+    end
 
     -- プロセス名 + プロジェクト名ブロック
     local mid_parts = {}
