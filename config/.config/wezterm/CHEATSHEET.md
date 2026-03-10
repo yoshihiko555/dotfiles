@@ -2,10 +2,13 @@
 
 Leader: `Ctrl+Q` (2s timeout)
 
-## Pane Navigation
+## Pane
 
 | Key              | Action                                   |
 | ---------------- | ---------------------------------------- |
+| `Cmd+d`          | 水平分割                                 |
+| `Cmd+Shift+d`    | 垂直分割                                 |
+| `Ctrl+z`         | ズーム切替                               |
 | `Alt+h/j/k/l`   | ペイン移動 (smart-splits.nvim 統合)      |
 | `Alt+Shift+H/J/K/L` | ペインリサイズ (smart-splits.nvim 統合) |
 | `Ctrl+Shift+矢印` | ペイン移動 (矢印キー)                  |
@@ -73,14 +76,6 @@ Leader: `Ctrl+Q` (2s timeout)
 | `Ctrl+Shift+Tab`       | 前のタブ             |
 | `Cmd+{` / `Cmd+}`      | タブ移動             |
 | `Ctrl+Shift+PageUp/Down` | タブ順序変更       |
-
-## Split
-
-| Key             | Action     |
-| --------------- | ---------- |
-| `Cmd+d`         | 水平分割   |
-| `Cmd+Shift+d`   | 垂直分割   |
-| `Ctrl+z`        | ズーム切替 |
 
 ## Copy / Search
 
