@@ -64,14 +64,18 @@ cheat() {
 ── Docker ──────────────────────────────────
   d         docker           dc   docker compose
   dps       docker ps        dpsa docker ps -a
-  conin     docker exec -it
+  conin     docker container exec -it
 
 ── Dev ─────────────────────────────────────
-  v         nvim             c    clear
-  h         history          t    tmux
-  cc        claude           cx   codex
+  v         nvim             vd   nvim-dev
+  c         clear            h    history
+  t         tmux             code code .
+  zed       zed .
+  cc        claude           cc-dg  権限スキップ
+  cc-r      claude resume    cx     codex
   gm        gemini
-  code      code .
+  wails     Wails v2         wails3 Wails v3
+  orche     ai-orchestra manager
 
 ── Digital Garden ──────────────────────────
   trend     今日のトレンドメモを開く
@@ -101,8 +105,8 @@ cheat() {
 ── Functions (util) ────────────────────────
   mkcd DIR  ディレクトリ作成して cd
   port NUM  ポート使用プロセス確認
-  cc_interrupt ... 中断証跡を記録/確認 (start|end|open|last)
-  trust ... Codex trust を add/rm/list/audit
+  cc_interrupt ... 中断証跡 (start|end|open|last|report)
+  trust ... Codex trust を add/rm/list/audit/where
   cheat     このヘルプを表示
 HELP
 }
