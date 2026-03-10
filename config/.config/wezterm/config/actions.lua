@@ -72,39 +72,39 @@ local function command_exists(command)
   return ok == true and code == 0
 end
 
---- 指定コマンドを overlay pane（split + zoom）で起動
---- コマンド終了時に自動的にペインが閉じて元のレイアウトに復帰
+--- overlay pane: split + zoom で全画面起動
+--- コマンド終了 → ペイン自動消滅 → レイアウト復帰
 local function open_overlay(command)
   return wezterm.action_callback(function(window, pane)
-    if not command_exists(command) then
-      window:toast_notification('overlay pane', command .. ' が見つかりません', nil, 3000)
-      return
-    end
-
-    local new_pane = activate_split(pane, {
+    local new_pane = pane:split({
       direction = 'Bottom',
-      size = 0.1,
-      top_level = true,
+      size = 0.5,
       cwd = get_pane_cwd(pane),
       args = shell_command_args(command),
     })
-    new_pane:tab():set_zoomed(true)
+    window:perform_action(act.TogglePaneZoomState, new_pane)
+  end)
+end
+
+--- 一時シェル: タブ全体の下部にシェルを開く
+--- exit/Ctrl+D でペイン自動消滅
+local function open_shell(size)
+  return wezterm.action_callback(function(_, pane)
+    local shell = os.getenv('SHELL') or '/bin/zsh'
+    pane:split({
+      direction = 'Bottom',
+      size = size,
+      top_level = true,
+      cwd = get_pane_cwd(pane),
+      args = { shell },
+    })
   end)
 end
 
 M.overlay_lazygit = open_overlay('lazygit')
 M.overlay_yazi = open_overlay('yazi')
 M.overlay_claude = open_overlay('claude')
-
--- 一時シェルをタブ全体の下 40% に開く
-M.open_bottom_shell = wezterm.action_callback(function(_, pane)
-  activate_split(pane, {
-    direction = 'Bottom',
-    size = 0.4,
-    top_level = true,
-    cwd = get_pane_cwd(pane),
-  })
-end)
+M.open_bottom_shell = open_shell(0.4)
 
 -- =============================================================================
 -- ワークスペース（プロジェクト単位のタブグループ）
@@ -193,23 +193,84 @@ end
 
 --- repo-list.sh の出力を InputSelector の choices に変換
 local function build_project_choices()
-  local success, stdout, stderr = wezterm.run_child_process({ 'bash', repo_list_script })
+  local success, stdout, stderr = wezterm.run_child_process({ 'bash', '-l', repo_list_script })
   if not success or not stdout then
     wezterm.log_warn('repo-list.sh failed: ' .. (stderr or 'unknown error'))
     return {}
   end
 
   local choices = {}
+  -- worktree を先に表示
+  local repos, worktrees = {}, {}
   for line in stdout:gmatch('[^\n]+') do
     local type_, label, path = line:match('^(%S+)\t([^\t]+)\t(.+)$')
     if label and path then
-      local icon = (type_ == 'worktree') and ' ' or ' '
+      if type_ == 'worktree' then
+        table.insert(worktrees, { label = label, path = path })
+      else
+        table.insert(repos, { label = label, path = path })
+      end
+    end
+  end
+
+  -- ── Worktrees（アクティブな作業ブランチ）
+  if #worktrees > 0 then
+    table.insert(choices, {
+      id = '',
+      label = wezterm.format {
+        { Foreground = { Color = '#f5a97f' } },
+        { Attribute = { Intensity = 'Bold' } },
+        { Text = wezterm.nerdfonts.cod_git_merge .. ' Worktrees' },
+        { Attribute = { Intensity = 'Normal' } },
+        { Foreground = { Color = '#494d64' } },
+        { Text = ' ' .. string.rep('─', 80) },
+      },
+    })
+    for _, wt in ipairs(worktrees) do
+      local repo, branch = wt.label:match('.-/([^/]+):(.+)$')
       table.insert(choices, {
-        id = path,
-        label = icon .. label,
+        id = wt.path,
+        label = wezterm.format {
+          { Text = '    ' },
+          { Foreground = { Color = '#cad3f5' } },
+          { Attribute = { Intensity = 'Bold' } },
+          { Text = branch or wt.label },
+          { Attribute = { Intensity = 'Normal' } },
+          { Foreground = { Color = '#6e738d' } },
+          { Text = '  ' .. (repo or '') },
+        },
       })
     end
   end
+
+  -- ── Repositories
+  if #repos > 0 then
+    table.insert(choices, {
+      id = '',
+      label = wezterm.format {
+        { Foreground = { Color = '#8bd5ca' } },
+        { Attribute = { Intensity = 'Bold' } },
+        { Text = wezterm.nerdfonts.oct_repo .. ' Repositories' },
+        { Attribute = { Intensity = 'Normal' } },
+        { Foreground = { Color = '#494d64' } },
+        { Text = ' ' .. string.rep('─', 80) },
+      },
+    })
+    for _, r in ipairs(repos) do
+      local repo = r.label:match('([^/]+)$') or r.label
+      table.insert(choices, {
+        id = r.path,
+        label = wezterm.format {
+          { Text = '    ' },
+          { Foreground = { Color = '#8bd5ca' } },
+          { Text = wezterm.nerdfonts.oct_repo .. ' ' },
+          { Foreground = { Color = '#cad3f5' } },
+          { Text = repo },
+        },
+      })
+    end
+  end
+
   return choices
 end
 
@@ -226,7 +287,7 @@ M.select_project = wezterm.action_callback(function(window, pane)
     choices = choices,
     fuzzy = true,
     action = wezterm.action_callback(function(win, p, id, label)
-      if not id and not label then return end
+      if not id or id == '' then return end
 
       local ws_name = path_to_workspace_name(label:gsub('^[^ ]+ ', ''))
       local already_exists = workspace_exists(ws_name)
@@ -239,10 +300,12 @@ M.select_project = wezterm.action_callback(function(window, pane)
       -- 新規ワークスペースの場合、レイアウトを構築
       if not already_exists then
         -- SwitchToWorkspace 完了後にレイアウトを適用
-        wezterm.time.call_after(0.3, function()
+        wezterm.time.call_after(0.5, function()
+          -- 切り替え先のワークスペースにいることを確認
           local mux_win = win:mux_window()
+          if mux_win:get_workspace() ~= ws_name then return end
           local tabs = mux_win:tabs()
-          if #tabs > 0 then
+          if #tabs > 0 and #tabs[1]:panes() == 1 then
             local first_pane = tabs[1]:active_pane()
             local preset_name = project_layouts[ws_name] or 'default'
             local builder = layout_presets[preset_name] or layout_presets.default
@@ -255,7 +318,95 @@ M.select_project = wezterm.action_callback(function(window, pane)
 end)
 
 --- Leader+s: 既存ワークスペース一覧から fuzzy 切替
-M.switch_workspace = act.ShowLauncherArgs { flags = 'FUZZY|WORKSPACES' }
+M.switch_workspace = wezterm.action_callback(function(window, pane)
+  local current = window:mux_window():get_workspace()
+  local workspaces = wezterm.mux.get_workspace_names()
+
+  if #workspaces <= 1 then
+    window:toast_notification('workspace', '他のワークスペースがありません', nil, 3000)
+    return
+  end
+
+  local choices = {}
+  for _, ws in ipairs(workspaces) do
+    local is_current = (ws == current)
+    local fmt = {}
+    if is_current then
+      table.insert(fmt, { Foreground = { Color = '#f5a97f' } })
+      table.insert(fmt, { Text = wezterm.nerdfonts.fa_circle .. ' ' })
+      table.insert(fmt, { Foreground = { Color = '#cad3f5' } })
+      table.insert(fmt, { Attribute = { Intensity = 'Bold' } })
+      table.insert(fmt, { Text = ws })
+      table.insert(fmt, { Attribute = { Intensity = 'Normal' } })
+      table.insert(fmt, { Foreground = { Color = '#6e738d' } })
+      table.insert(fmt, { Text = '  (current)' })
+    else
+      table.insert(fmt, { Foreground = { Color = '#8bd5ca' } })
+      table.insert(fmt, { Text = wezterm.nerdfonts.fa_circle_o .. ' ' })
+      table.insert(fmt, { Foreground = { Color = '#cad3f5' } })
+      table.insert(fmt, { Text = ws })
+    end
+    table.insert(choices, { id = ws, label = wezterm.format(fmt) })
+  end
+
+  window:perform_action(act.InputSelector {
+    title = 'Switch Workspace',
+    choices = choices,
+    fuzzy = true,
+    action = wezterm.action_callback(function(win, p, id, label)
+      if not id or id == '' then return end
+      win:perform_action(act.SwitchToWorkspace { name = id }, p)
+    end),
+  }, pane)
+end)
+
+--- Leader+S: ワークスペースを選択して削除（全タブ/ペインを閉じる）
+M.delete_workspace = wezterm.action_callback(function(window, pane)
+  local current = window:mux_window():get_workspace()
+  local workspaces = wezterm.mux.get_workspace_names()
+
+  -- 現在のワークスペース以外を候補にする
+  local choices = {}
+  for _, ws in ipairs(workspaces) do
+    if ws ~= current then
+      table.insert(choices, {
+        id = ws,
+        label = wezterm.format {
+          { Foreground = { Color = '#ed8796' } },
+          { Text = wezterm.nerdfonts.fa_trash .. ' ' },
+          { Foreground = { Color = '#cad3f5' } },
+          { Text = ws },
+        },
+      })
+    end
+  end
+
+  if #choices == 0 then
+    window:toast_notification('workspace', '削除できるワークスペースがありません', nil, 3000)
+    return
+  end
+
+  window:perform_action(act.InputSelector {
+    title = 'Delete Workspace',
+    choices = choices,
+    fuzzy = true,
+    action = wezterm.action_callback(function(win, p, id, label)
+      if not id or id == '' then return end
+      -- 対象ワークスペースの全ウィンドウ→全タブ→全ペインを閉じる
+      for _, mux_win in ipairs(wezterm.mux.all_windows()) do
+        if mux_win:get_workspace() == id then
+          for _, tab in ipairs(mux_win:tabs()) do
+            for _, tab_pane in ipairs(tab:panes()) do
+              tab_pane:activate()
+              win:perform_action(act.CloseCurrentPane { confirm = false }, tab_pane)
+            end
+          end
+        end
+      end
+      window:toast_notification('workspace', id .. ' を削除しました', nil, 2000)
+    end),
+  }, pane)
+end)
 
 -- =============================================================================
 -- タブ・ペインレイアウト

@@ -87,6 +87,7 @@ return {
     -- ワークスペース（プロジェクト単位のタブグループ）
     { key = 'p', mods = 'LEADER', action = actions.select_project },
     { key = 's', mods = 'LEADER', action = actions.switch_workspace },
+    { key = 'S', mods = 'LEADER|SHIFT', action = actions.delete_workspace },
     -- overlay pane（split + zoom でフローティング相当）
     { key = 'g', mods = 'LEADER', action = actions.overlay_lazygit },
     { key = 'y', mods = 'LEADER', action = actions.overlay_yazi },
