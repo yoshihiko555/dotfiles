@@ -89,9 +89,7 @@ return {
     { key = 'y', mods = 'LEADER', action = actions.overlay_yazi },
     { key = 'C', mods = 'LEADER|SHIFT', action = actions.overlay_claude },
     -- 一時シェル（下部 40% split）
-    { key = 't', mods = 'LEADER', action = act.SplitPane {
-      direction = 'Down', size = { Percent = 40 },
-    } },
+    { key = 't', mods = 'LEADER', action = actions.open_bottom_shell },
     -- チートシート表示
     { key = 'c', mods = 'LEADER', action = actions.show_cheatsheet },
 

@@ -41,19 +41,70 @@ end
 -- overlay pane（split + zoom でフローティング相当）
 -- =============================================================================
 
+local function get_pane_cwd(pane)
+  local cwd_url = pane:get_current_working_dir()
+  return cwd_url and cwd_url.file_path or nil
+end
+
+local function activate_split(pane, opts)
+  local new_pane = pane:split(opts)
+  new_pane:activate()
+  return new_pane
+end
+
+local function shell_quote(value)
+  return "'" .. value:gsub("'", "'\\''") .. "'"
+end
+
+local function shell_command_args(command)
+  local shell = os.getenv('SHELL') or '/bin/zsh'
+  -- login + interactive shell で起動し、PATH や alias を既存シェル設定に揃える
+  return { shell, '-lic', command }
+end
+
+local function command_exists(command)
+  local shell = os.getenv('SHELL') or '/bin/zsh'
+  local probe = shell .. ' -lic ' .. shell_quote('command -v ' .. command .. ' >/dev/null 2>&1')
+  local ok, _, code = os.execute(probe)
+  if type(ok) == 'number' then
+    return ok == 0
+  end
+  return ok == true and code == 0
+end
+
 --- 指定コマンドを overlay pane（split + zoom）で起動
 --- コマンド終了時に自動的にペインが閉じて元のレイアウトに復帰
 local function open_overlay(command)
-  return wezterm.action_callback(function(win, pane)
-    local new_pane = pane:split { direction = 'Bottom', size = 0.1 }
-    new_pane:send_text(command .. '\n')
-    win:active_tab():set_zoomed(true)
+  return wezterm.action_callback(function(window, pane)
+    if not command_exists(command) then
+      window:toast_notification('overlay pane', command .. ' が見つかりません', nil, 3000)
+      return
+    end
+
+    local new_pane = activate_split(pane, {
+      direction = 'Bottom',
+      size = 0.1,
+      top_level = true,
+      cwd = get_pane_cwd(pane),
+      args = shell_command_args(command),
+    })
+    new_pane:tab():set_zoomed(true)
   end)
 end
 
 M.overlay_lazygit = open_overlay('lazygit')
 M.overlay_yazi = open_overlay('yazi')
 M.overlay_claude = open_overlay('claude')
+
+-- 一時シェルをタブ全体の下 40% に開く
+M.open_bottom_shell = wezterm.action_callback(function(_, pane)
+  activate_split(pane, {
+    direction = 'Bottom',
+    size = 0.4,
+    top_level = true,
+    cwd = get_pane_cwd(pane),
+  })
+end)
 
 -- 新規タブを8分割（4x2グリッド）で開くアクション（ホームディレクトリから）
 M.spawn_tab_with_8_panes = wezterm.action_callback(function(window, pane)
