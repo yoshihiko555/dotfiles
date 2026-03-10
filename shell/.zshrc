@@ -287,16 +287,16 @@ repo() {
       if ($1 == "repo") printf "\xf0\x9f\x8c\xb3 %s\t%s\n", $2, $3
       else printf "\xf0\x9f\x8c\xbf %s\t%s\n", $2, $3
     }' | fzf --ansi --with-nth=1 --delimiter='\t' --preview '
-      path={2}
-      ls -la "$path"
+      repo_path={2}
+      ls -la "$repo_path"
     '
   )
 
   [[ -z "$selected" ]] && return
 
-  local path
-  path=$(echo "$selected" | cut -f2)
-  cd "$path"
+  local repo_path
+  repo_path=$(echo "$selected" | cut -f2)
+  cd "$repo_path"
 }
 
 # fzf + コマンド履歴検索
