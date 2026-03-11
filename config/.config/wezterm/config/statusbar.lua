@@ -51,13 +51,10 @@ end
 -- =============================================================================
 
 function M.setup()
-  wezterm.on("update-status", function(window, pane)
+  wezterm.on("update-status", function(window, _pane)
     local workspace = context.get_workspace_name(window)
     local key_table = window:active_key_table()
     local mode = MODE_STYLES[key_table]
-
-    local project = context.get_project_name(pane)
-    local process_name = context.get_process_name(pane)
     local datetime = wezterm.strftime("%m/%d %H:%M")
 
     -- ===================== 左ステータス =====================
@@ -77,7 +74,7 @@ function M.setup()
     window:set_left_status(wezterm.format(left))
 
     -- ===================== 右ステータス =====================
-    -- [bg_dark: workspace chip ][dark3: process | project ][blue: datetime ]
+    -- [dark3: workspace chip ][blue: datetime ]
 
     local right = {}
 
@@ -90,23 +87,6 @@ function M.setup()
       table.insert(right, { Text = "  " .. workspace_icon .. "" })
       table.insert(right, { Foreground = { Color = C.fg } })
       table.insert(right, { Text = "" .. workspace .. "  " })
-    end
-
-    -- プロセス名 + プロジェクト名ブロック
-    local mid_parts = {}
-    if process_name ~= "" then
-      table.insert(mid_parts, process_name)
-    end
-    if project ~= "" then
-      table.insert(mid_parts, project)
-    end
-
-    if #mid_parts > 0 then
-      push_gap(right)
-      table.insert(right, { Background = { Color = C.dark3 } })
-      table.insert(right, { Foreground = { Color = C.fg } })
-      table.insert(right, { Attribute = { Intensity = "Normal" } })
-      table.insert(right, { Text = "  " .. table.concat(mid_parts, "  |  ") .. "  " })
     end
 
     -- 日時ブロック（右端アクセント）
