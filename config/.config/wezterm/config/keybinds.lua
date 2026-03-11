@@ -143,7 +143,7 @@ return {
     ---------------------------------------------------------------------------
     { key = 'Enter', mods = 'SHIFT', action = act.SendString '\n' },
     { key = 'r', mods = 'SUPER', action = act.ReloadConfiguration },
-    { key = 'p', mods = 'SHIFT|CTRL', action = act.ActivateCommandPalette },
+    { key = 'p', mods = 'SUPER|SHIFT', action = act.ActivateCommandPalette },
     { key = 'l', mods = 'SHIFT|CTRL', action = act.ShowDebugOverlay },
   },
 

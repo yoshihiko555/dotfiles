@@ -111,7 +111,7 @@ Leader: `Ctrl+Q` (2s timeout)
 | `Cmd+n`          | 新規ウィンドウ       |
 | `Alt+Enter`      | フルスクリーン       |
 | `Cmd+r`          | 設定リロード         |
-| `Ctrl+Shift+p`   | コマンドパレット     |
+| `Cmd+Shift+p`    | コマンドパレット (workspace / overlay / utility) |
 | `Ctrl+Shift+l`   | デバッグオーバーレイ |
 | `Cmd+k`          | スクロールバッククリア |
 | `Ctrl+l`         | 画面クリア (履歴保持) |

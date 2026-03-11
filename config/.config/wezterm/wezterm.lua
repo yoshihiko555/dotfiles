@@ -13,6 +13,10 @@ tab.setup()
 local statusbar = require("config/statusbar")
 statusbar.setup()
 
+-- コマンドパレット拡張の初期化
+local command_palette = require("config/command_palette")
+command_palette.setup()
+
 -- 外部設定ファイルをマージ
 function merge_config(config, new_config)
   for k, v in pairs(new_config) do
