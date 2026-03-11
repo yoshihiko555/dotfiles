@@ -17,6 +17,10 @@ statusbar.setup()
 local command_palette = require("config/command_palette")
 command_palette.setup()
 
+-- Alfred 外部ワークスペース切替の初期化
+local actions = require("config/actions")
+actions.setup_alfred_watcher()
+
 -- 外部設定ファイルをマージ
 function merge_config(config, new_config)
   for k, v in pairs(new_config) do

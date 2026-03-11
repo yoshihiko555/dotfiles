@@ -542,6 +542,54 @@ M.init_workspace = wezterm.action_callback(function(window, pane)
   panes_info[1].pane:activate()
 end)
 
+-- =============================================================================
+-- Alfred 外部トリガー（ファイルベース IPC）
+-- /tmp/wezterm-alfred-workspace.json を検知して SwitchToWorkspace を実行
+-- =============================================================================
+
+local ALFRED_TRIGGER_PATH = '/tmp/wezterm-alfred-workspace.json'
+
+function M.setup_alfred_watcher()
+  wezterm.on('update-status', function(window, pane)
+    local file = io.open(ALFRED_TRIGGER_PATH, 'r')
+    if not file then return end
+
+    local content = file:read('*a')
+    file:close()
+    os.remove(ALFRED_TRIGGER_PATH)
+
+    if not content or content == '' then return end
+
+    local ok, data = pcall(wezterm.json_parse, content)
+    if not ok or type(data) ~= 'table' then return end
+
+    local ws_name = data.name
+    local cwd = data.cwd
+    if not ws_name or not cwd then return end
+
+    local already_exists = workspace_exists(ws_name)
+
+    window:perform_action(act.SwitchToWorkspace {
+      name = ws_name,
+      spawn = { cwd = cwd },
+    }, pane)
+
+    if not already_exists then
+      wezterm.time.call_after(0.5, function()
+        local mux_win = window:mux_window()
+        if mux_win:get_workspace() ~= ws_name then return end
+        local tabs = mux_win:tabs()
+        if #tabs > 0 and #tabs[1]:panes() == 1 then
+          local first_pane = tabs[1]:active_pane()
+          local preset_name = project_layouts[ws_name] or 'default'
+          local builder = layout_presets[preset_name] or layout_presets.default
+          builder(first_pane, mux_win, cwd)
+        end
+      end)
+    end
+  end)
+end
+
 -- 新規タブを3分割で開くアクション（ホームディレクトリから）
 M.spawn_tab_with_3_panes = wezterm.action_callback(function(window, pane)
   -- 新しいタブを作成（ホームディレクトリで開始）
