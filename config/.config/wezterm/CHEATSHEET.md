@@ -20,11 +20,9 @@ Leader: `Ctrl+Q` (2s timeout)
 
 | Key          | Action                     |
 | ------------ | -------------------------- |
-| `Leader d`   | 垂直分割                   |
-| `Leader /`   | QuickSelect (テキスト即コピー) |
 | `Leader h/j/k/l` | ペイン移動 (vim風)    |
 | `Leader H/J/K/L` | ペインリサイズ (vim風) |
-| `Leader w`   | ペイン操作モード (連続)    |
+| `Leader p`   | ペイン操作モード (連続)    |
 
 ### Overlay Pane (split + zoom)
 
@@ -32,27 +30,33 @@ Leader: `Ctrl+Q` (2s timeout)
 | ------------ | ---------------- |
 | `Leader g`   | lazygit          |
 | `Leader y`   | yazi             |
-| `Leader C`   | Claude Code      |
 | `Leader t`   | 一時シェル (40%) |
 
 ### Workspace
 
 | Key          | Action                               |
 | ------------ | ------------------------------------ |
-| `Leader p`   | プロジェクト選択 (fuzzy → WS作成/切替) |
-| `Leader s`   | ワークスペース切替 (fuzzy)            |
+| `Leader f`   | プロジェクト選択 (fuzzy → WS作成/切替) |
+| `Leader w`   | ワークスペース切替 (fuzzy)            |
+| `Leader W`   | ワークスペース削除                    |
 | `Leader 8`   | 8分割タブ (4x2 grid)                |
 | `Leader i`   | ワークスペース初期化                  |
 | `Leader c`   | チートシート表示 (Neovim)             |
 
-## Pane Mode (`Leader w`)
+### Search / Select
+
+| Key          | Action                               |
+| ------------ | ------------------------------------ |
+| `Leader /`   | QuickSelect (テキスト即コピー)        |
+
+## Pane Mode (`Leader p`)
 
 | Key   | Action                      |
 | ----- | --------------------------- |
 | `h/j/k/l` | ペイン移動             |
 | `H/J/K/L` | ペインリサイズ         |
-| `d`   | 垂直分割                    |
-| `/`   | QuickSelect                 |
+| `d`   | 水平分割                    |
+| `D`   | 垂直分割                    |
 | `x`   | ペインを閉じる              |
 | `z`   | ペインズーム                |
 | `s`   | ペイン入替 (swap)           |
@@ -60,7 +64,7 @@ Leader: `Ctrl+Q` (2s timeout)
 | `R`   | ペイン回転 (反時計回り)     |
 | `g`   | overlay: lazygit            |
 | `y`   | overlay: yazi               |
-| `C`   | overlay: Claude Code        |
+| `/`   | QuickSelect                 |
 | `1-9` | ペイン番号で直接移動        |
 | `q/Esc/Enter` | モード終了           |
 
