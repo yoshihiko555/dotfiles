@@ -21,7 +21,7 @@ Leader: `Ctrl+Q` (2s timeout)
 | Key          | Action                     |
 | ------------ | -------------------------- |
 | `Leader d`   | 垂直分割                   |
-| `Leader /`   | 水平分割                   |
+| `Leader /`   | QuickSelect (テキスト即コピー) |
 | `Leader h/j/k/l` | ペイン移動 (vim風)    |
 | `Leader H/J/K/L` | ペインリサイズ (vim風) |
 | `Leader w`   | ペイン操作モード (連続)    |
@@ -52,7 +52,7 @@ Leader: `Ctrl+Q` (2s timeout)
 | `h/j/k/l` | ペイン移動             |
 | `H/J/K/L` | ペインリサイズ         |
 | `d`   | 垂直分割                    |
-| `/`   | 水平分割                    |
+| `/`   | QuickSelect                 |
 | `x`   | ペインを閉じる              |
 | `z`   | ペインズーム                |
 | `s`   | ペイン入替 (swap)           |
@@ -83,7 +83,7 @@ Leader: `Ctrl+Q` (2s timeout)
 | ------------------ | ------------------ |
 | `Cmd+c` / `Cmd+v`  | コピー/ペースト   |
 | `Ctrl+Shift+x`     | Copy Mode (vim風)  |
-| `Ctrl+Shift+Space`  | QuickSelect       |
+| `Leader /`           | QuickSelect       |
 | `Cmd+f`            | 検索               |
 | `Ctrl+Shift+u`     | 文字選択 (絵文字等) |
 

@@ -71,7 +71,7 @@ return {
     { key = 'i', mods = 'LEADER', action = actions.init_workspace },
     -- 分割
     { key = 'd', mods = 'LEADER', action = act.SplitVertical{ domain = 'CurrentPaneDomain' } },
-    { key = '/', mods = 'LEADER', action = act.SplitHorizontal{ domain = 'CurrentPaneDomain' } },
+    { key = '/', mods = 'LEADER', action = act.QuickSelect },
     -- 移動 (vim風・単発)
     { key = 'h', mods = 'LEADER', action = act.ActivatePaneDirection 'Left' },
     { key = 'j', mods = 'LEADER', action = act.ActivatePaneDirection 'Down' },
@@ -165,7 +165,7 @@ return {
       { key = 'L', mods = 'SHIFT', action = act.AdjustPaneSize{ 'Right', 5 } },
       -- 分割
       { key = 'd', mods = 'NONE', action = act.SplitVertical{ domain = 'CurrentPaneDomain' } },
-      { key = '/', mods = 'NONE', action = act.SplitHorizontal{ domain = 'CurrentPaneDomain' } },
+      { key = '/', mods = 'NONE', action = act.QuickSelect },
       -- ペイン操作
       { key = 'x', mods = 'NONE', action = act.CloseCurrentPane{ confirm = true } },
       { key = 'z', mods = 'NONE', action = act.TogglePaneZoomState },
