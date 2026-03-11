@@ -20,21 +20,31 @@ local function try_call(method)
   return nil
 end
 
+local function normalize_match_key(label)
+  return tostring(label)
+    :gsub("^%s+", "")
+    :gsub("%s+$", "")
+    :gsub("^[^%w]+", "")
+    :lower()
+end
+
 -- CLI ごとの実体名や alias を UI 表示用の短いラベルへ寄せる。
 function M.normalize_process_label(label)
   if not label or label == "" then
     return ""
   end
 
-  if label == "lg" then
+  local match_key = normalize_match_key(label)
+
+  if match_key == "lg" then
     return "lazygit"
   end
 
-  if label:match("^codex") then
+  if match_key:match("^codex") then
     return "codex"
   end
 
-  if label:match("^claude") then
+  if match_key:match("^claude") then
     return "claude"
   end
 

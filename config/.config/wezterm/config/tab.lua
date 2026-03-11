@@ -37,6 +37,11 @@ local cli_tools_show_command = {
   "ranger", "lf", "yazi", -- ファイルマネージャー
 }
 
+local agent_tools_show_command = {
+  claude = true,
+  codex = true,
+}
+
 -- タブタイトルを取得する関数
 local function get_tab_title(pane)
   local process_name = context.get_process_name(pane)
@@ -46,6 +51,10 @@ local function get_tab_title(pane)
     if process_name == tool then
       return process_name
     end
+  end
+
+  if agent_tools_show_command[process_name] then
+    return process_name
   end
 
   -- それ以外（シェル、エディタ、claude、codex等）は pane.title を表示
