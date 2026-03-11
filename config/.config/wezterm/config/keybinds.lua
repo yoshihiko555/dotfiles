@@ -101,9 +101,8 @@ return {
     ---------------------------------------------------------------------------
     { key = 'f', mods = 'SUPER', action = act.Search 'CurrentSelectionOrEmptyString' },
     { key = 'x', mods = 'SHIFT|CTRL', action = act.ActivateCopyMode },
-    { key = 'phys:Space', mods = 'SHIFT|CTRL', action = act.QuickSelect },
     { key = 'u', mods = 'SHIFT|CTRL', action = act.CharSelect{ copy_on_select = true, copy_to = 'ClipboardAndPrimarySelection' } },
-    -- QuickSelect 
+    -- QuickSelect
     { key = '/', mods = 'LEADER', action = act.QuickSelect },
 
     ---------------------------------------------------------------------------

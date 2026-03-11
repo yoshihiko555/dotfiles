@@ -12,7 +12,6 @@ Leader: `Ctrl+Q` (2s timeout)
 | `Alt+h/j/k/l`   | ペイン移動 (smart-splits.nvim 統合)      |
 | `Alt+Shift+H/J/K/L` | ペインリサイズ (smart-splits.nvim 統合) |
 | `Ctrl+Shift+矢印` | ペイン移動 (矢印キー)                  |
-| `Ctrl+Shift+Alt+矢印` | ペインリサイズ (矢印キー)          |
 
 ## Leader Key (`Ctrl+Q`)
 
@@ -76,9 +75,6 @@ Leader: `Ctrl+Q` (2s timeout)
 | `Cmd+w`                | ペインを閉じる       |
 | `Cmd+Shift+w`          | タブを閉じる         |
 | `Cmd+1-9`              | タブ番号で移動       |
-| `Ctrl+Tab`             | 次のタブ             |
-| `Ctrl+Shift+Tab`       | 前のタブ             |
-| `Cmd+{` / `Cmd+}`      | タブ移動             |
 | `Ctrl+Shift+PageUp/Down` | タブ順序変更       |
 
 ## Copy / Search
@@ -87,7 +83,6 @@ Leader: `Ctrl+Q` (2s timeout)
 | ------------------ | ------------------ |
 | `Cmd+c` / `Cmd+v`  | コピー/ペースト   |
 | `Ctrl+Shift+x`     | Copy Mode (vim風)  |
-| `Leader /`           | QuickSelect       |
 | `Cmd+f`            | 検索               |
 | `Ctrl+Shift+u`     | 文字選択 (絵文字等) |
 
