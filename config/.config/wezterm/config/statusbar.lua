@@ -1,4 +1,5 @@
 local wezterm = require("wezterm")
+local context = require("config/context")
 
 local M = {}
 
@@ -30,18 +31,19 @@ local MODE_STYLES = {
 -- ヘルパー関数
 -- =============================================================================
 
-local function get_project_name(pane)
-  local cwd_uri = pane:get_current_working_dir()
-  if not cwd_uri then
-    return ""
+local function push_gap(parts)
+  if #parts == 0 then
+    return
   end
-  local cwd = cwd_uri.file_path or ""
-  return cwd:match("([^/]+)/?$") or ""
+  table.insert(parts, { Background = { Color = "none" } })
+  table.insert(parts, { Text = " " })
 end
 
-local function get_process(pane)
-  local name = pane:get_foreground_process_name() or ""
-  return name:match("([^/]+)$") or ""
+local function get_workspace_icon(workspace)
+  if workspace:find(":") then
+    return wezterm.nerdfonts.cod_git_merge
+  end
+  return wezterm.nerdfonts.oct_repo
 end
 
 -- =============================================================================
@@ -49,13 +51,10 @@ end
 -- =============================================================================
 
 function M.setup()
-  wezterm.on("update-status", function(window, pane)
-    local workspace = window:active_workspace()
+  wezterm.on("update-status", function(window, _pane)
+    local workspace = context.get_workspace_name(window)
     local key_table = window:active_key_table()
     local mode = MODE_STYLES[key_table]
-
-    local project = get_project_name(pane)
-    local process = get_process(pane)
     local datetime = wezterm.strftime("%m/%d %H:%M")
 
     -- ===================== 左ステータス =====================
@@ -75,39 +74,27 @@ function M.setup()
     window:set_left_status(wezterm.format(left))
 
     -- ===================== 右ステータス =====================
-    -- [teal: workspace ][dark3: process | project ][blue: datetime ]
+    -- [dark3: workspace chip ][blue: datetime ]
 
     local right = {}
 
     -- ワークスペース名（"default" 以外のとき表示）
     if workspace ~= "default" then
-      table.insert(right, { Background = { Color = C.teal } })
-      table.insert(right, { Foreground = { Color = C.bg_dark } })
+      local workspace_icon = get_workspace_icon(workspace)
+      table.insert(right, { Background = { Color = C.bg_dark } })
+      table.insert(right, { Foreground = { Color = C.teal } })
       table.insert(right, { Attribute = { Intensity = "Bold" } })
-      table.insert(right, { Text = "  " .. workspace .. "  " })
-    end
-
-    -- プロセス名 + プロジェクト名ブロック
-    local mid_parts = {}
-    if process ~= "" then
-      table.insert(mid_parts, process)
-    end
-    if project ~= "" then
-      table.insert(mid_parts, project)
-    end
-
-    if #mid_parts > 0 then
-      table.insert(right, { Background = { Color = C.dark3 } })
+      table.insert(right, { Text = "  " .. workspace_icon .. "" })
       table.insert(right, { Foreground = { Color = C.fg } })
-      table.insert(right, { Attribute = { Intensity = "Normal" } })
-      table.insert(right, { Text = "  " .. table.concat(mid_parts, "  |  ") .. "  " })
+      table.insert(right, { Text = "" .. workspace .. "  " })
     end
 
     -- 日時ブロック（右端アクセント）
+    push_gap(right)
     table.insert(right, { Background = { Color = C.blue } })
     table.insert(right, { Foreground = { Color = C.bg_dark } })
     table.insert(right, { Attribute = { Intensity = "Bold" } })
-    table.insert(right, { Text = "  " .. datetime .. "  " })
+    table.insert(right, { Text = "  " .. wezterm.nerdfonts.cod_calendar .. " " .. datetime .. "  " })
 
     window:set_right_status(wezterm.format(right))
   end)

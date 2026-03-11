@@ -1,5 +1,6 @@
 local wezterm = require 'wezterm'
 local act = wezterm.action
+local context = require('config/context')
 
 local M = {}
 
@@ -41,11 +42,6 @@ end
 -- overlay pane（split + zoom でフローティング相当）
 -- =============================================================================
 
-local function get_pane_cwd(pane)
-  local cwd_url = pane:get_current_working_dir()
-  return cwd_url and cwd_url.file_path or nil
-end
-
 local function activate_split(pane, opts)
   local new_pane = pane:split(opts)
   new_pane:activate()
@@ -86,7 +82,7 @@ local function open_overlay(command)
     local new_pane = pane:split({
       direction = 'Bottom',
       size = 0.5,
-      cwd = get_pane_cwd(pane),
+      cwd = context.get_cwd_path(pane),
       args = shell_command_args(command),
     })
     window:perform_action(act.SetPaneZoomState(true), new_pane)
@@ -166,21 +162,6 @@ local function workspace_exists(name)
     if ws == name then return true end
   end
   return false
-end
-
---- パスからワークスペース名を生成
---- repo: パスの最後のディレクトリ名
---- worktree: "repo:branch" 形式
-local function path_to_workspace_name(label)
-  -- worktree の場合: "user/repo:branch" → "repo:branch"
-  if label:find(':') then
-    local repo_part, branch = label:match('.-/([^/]+):(.+)$')
-    if repo_part and branch then
-      return repo_part .. ':' .. branch
-    end
-  end
-  -- 通常のリポジトリ: "user/repo" → "repo"
-  return label:match('([^/]+)$') or label
 end
 
 --- repo-list.sh の出力を InputSelector の choices に変換
@@ -281,7 +262,7 @@ M.select_project = wezterm.action_callback(function(window, pane)
     action = wezterm.action_callback(function(win, p, id, label)
       if not id or id == '' then return end
 
-      local ws_name = path_to_workspace_name(label:gsub('^[^ ]+ ', ''))
+      local ws_name = context.workspace_name_from_label(label:gsub('^[^ ]+ ', ''))
       local already_exists = workspace_exists(ws_name)
 
       win:perform_action(act.SwitchToWorkspace {
@@ -472,12 +453,12 @@ M.init_workspace = wezterm.action_callback(function(window, pane)
   end)
 
   -- pane 1 の cwd を取得
-  local cwd_url = panes_info[1].pane:get_current_working_dir()
-  if not cwd_url then
+  local cwd = context.get_cwd_path(panes_info[1].pane)
+  if not cwd then
     wezterm.log_warn("init_workspace: pane 1 の cwd を取得できません")
     return
   end
-  local cwd = (cwd_url.file_path or ""):gsub("/$", "")
+  cwd = cwd:gsub("/$", "")
   if cwd == "" then return end
 
   -- GHQ リポジトリ配下でのみ実行を許可
@@ -523,7 +504,11 @@ M.init_workspace = wezterm.action_callback(function(window, pane)
     return
   end
 
-  local project = (cwd:match("([^/]+)$") or "project"):gsub("[%.:]", "-")
+  local project = context.get_project_name_from_path(cwd)
+  if project == "" then
+    project = "project"
+  end
+  project = project:gsub("[%.:]", "-")
 
   -- pane 1, 2: サブシェルの PID を保存し exec で claude に置換（PID = claude プロセス PID）
   panes_info[1].pane:send_text("sh -c 'echo $$ > /tmp/wez-cc1.pid; exec claude'\n")
