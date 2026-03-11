@@ -51,7 +51,7 @@
 	<key>createdby</key>
 	<string></string>
 	<key>description</key>
-	<string>お気に入りのフォルダをVSCodeもしくはiTermで開くワークフロー</string>
+	<string>お気に入りのフォルダをVSCode・Zed・WezTermで開くワークフロー</string>
 	<key>disabled</key>
 	<false/>
 	<key>name</key>
@@ -197,7 +197,7 @@ fi
 
 if [[ "$mode" == "wez" ]]; then
   if ! command -v wezterm &gt;/dev/null 2&gt;&amp;1; then
-    osascript -e 'display notification "wezterm コマンドが見つかりません (PATH を確認してください)" with title "Open VS or Wez"'
+    osascript -e 'display notification "wezterm コマンドが見つかりません" with title "Open VS or Wez"'
     exit 1
   fi
 
@@ -206,83 +206,25 @@ if [[ "$mode" == "wez" ]]; then
     exit 1
   fi
 
-  # 絶対パス化
   dir="$(cd "$dir" &amp;&amp; pwd -P)"
+  ws_name="$(basename "$dir")"
 
-  # WezTerm.app 名（nightly だと環境によって名称が違うので吸収）
   wez_app="WezTerm"
   if [[ -d "/Applications/WezTerm Nightly.app" ]]; then
     wez_app="WezTerm Nightly"
-  elif [[ -d "/Applications/WezTerm.app" ]]; then
-    wez_app="WezTerm"
   fi
 
-  # 3分割タブを作成する関数
-  # ┌──────┬──────┐
-  # │      │  2   │
-  # │  1   ├──────┤
-  # │      │  3   │
-  # └──────┴──────┘
-  create_3_pane_tab() {
-    local target_dir="$1"
-    local pane_id right_pane_id
-
-    # 新しいタブを作成（pane_idを取得）
-    pane_id="$(wezterm cli spawn --cwd "$target_dir" 2&gt;/dev/null)" || return 1
-
-    # 右側に分割（50%）
-    right_pane_id="$(wezterm cli split-pane --right --percent 50 --cwd "$target_dir" --pane-id "$pane_id" 2&gt;/dev/null)" || true
-
-    # 右側ペインを下に分割（50%）
-    if [[ -n "$right_pane_id" ]]; then
-      wezterm cli split-pane --bottom --percent 50 --cwd "$target_dir" --pane-id "$right_pane_id" 2&gt;/dev/null || true
-    fi
-
-    # 左ペインをアクティブ化
-    wezterm cli activate-pane --pane-id "$pane_id" 2&gt;/dev/null || true
-
-    # タブタイトル設定
-    wezterm cli set-tab-title --pane-id "$pane_id" "$(basename "$target_dir")" 2&gt;/dev/null || true
-
-    return 0
-  }
-
-  # WezTermが起動済みかチェック（CLI接続で判定）
-  if wezterm cli list &amp;&gt;/dev/null; then
-    # 起動済み：3分割タブを作成
-    create_3_pane_tab "$dir"
-    open -a "$wez_app" 2&gt;/dev/null || true
-    exit 0
+  # WezTerm 未起動なら起動して待機
+  if ! wezterm cli list &amp;&gt;/dev/null; then
+    open -a "$wez_app"
+    for i in {1..50}; do
+      wezterm cli list &amp;&gt;/dev/null &amp;&amp; break
+      sleep 0.1
+    done
   fi
 
-  # 未起動：WezTermを起動して待機
-  open -a "$wez_app"
-
-  # CLI接続可能になるまで待機（最大5秒）
-  for i in {1..50}; do
-    if wezterm cli list &amp;&gt;/dev/null; then
-      break
-    fi
-    sleep 0.1
-  done
-
-  # 起動後、少し待ってから3分割タブを作成
-  sleep 0.3
-
-  # 初期タブのpane_idを取得
-  initial_pane_id="$(wezterm cli list --format json 2&gt;/dev/null | /usr/bin/python3 -c "import sys, json; data = json.load(sys.stdin); print(data[0]['pane_id'] if data else '')" 2&gt;/dev/null)" || true
-
-  if [[ -n "$initial_pane_id" ]]; then
-    # 新しい3分割タブを作成
-    create_3_pane_tab "$dir"
-
-    # 初期の空タブを閉じる
-    wezterm cli kill-pane --pane-id "$initial_pane_id" 2&gt;/dev/null || true
-  else
-    # フォールバック：新しい3分割タブを作成
-    create_3_pane_tab "$dir"
-  fi
-
+  # ワークスペースを作成して切替
+  wezterm cli spawn --workspace "$ws_name" --cwd "$dir" 2&gt;/dev/null || true
   open -a "$wez_app" 2&gt;/dev/null || true
   exit 0
 fi</string>
@@ -340,7 +282,7 @@ items = [
      "variables":{"mode":"vs", "dir":target}},
     {"title":"zed で開く（Zed）", "subtitle":target, "arg":"zed",
      "variables":{"mode":"zed", "dir":target}},
-    {"title":"wez で開く（Wezterm）",  "subtitle":target, "arg":"wez",
+    {"title":"wez で開く（WezTerm ワークスペース）",  "subtitle":target, "arg":"wez",
      "variables":{"mode":"wez", "dir":target}},
 ]
 
