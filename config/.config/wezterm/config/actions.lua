@@ -548,9 +548,25 @@ end)
 -- =============================================================================
 
 local ALFRED_TRIGGER_PATH = '/tmp/wezterm-alfred-workspace.json'
+local ALFRED_TRIGGER_MAX_AGE = 5 -- 秒: これより古いトリガーファイルは無視
 
 function M.setup_alfred_watcher()
   wezterm.on('update-status', function(window, pane)
+    local attr = wezterm.glob(ALFRED_TRIGGER_PATH)
+    if not attr or #attr == 0 then return end
+
+    -- ファイルの更新時刻が古すぎる場合は削除して無視（config reload 時の誤発火防止）
+    local ok_stat, stat = pcall(io.popen, 'stat -f %m ' .. ALFRED_TRIGGER_PATH)
+    if ok_stat and stat then
+      local mtime_str = stat:read('*a')
+      stat:close()
+      local mtime = tonumber(mtime_str)
+      if mtime and (os.time() - mtime) > ALFRED_TRIGGER_MAX_AGE then
+        os.remove(ALFRED_TRIGGER_PATH)
+        return
+      end
+    end
+
     local file = io.open(ALFRED_TRIGGER_PATH, 'r')
     if not file then return end
 

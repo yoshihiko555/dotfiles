@@ -196,13 +196,8 @@ if [[ "$mode" == "zed" ]]; then
 fi
 
 if [[ "$mode" == "wez" ]]; then
-  if ! command -v wezterm &gt;/dev/null 2&gt;&amp;1; then
-    osascript -e 'display notification "wezterm コマンドが見つかりません" with title "Open VS or Wez"'
-    exit 1
-  fi
-
   if [[ ! -d "$dir" ]]; then
-    osascript -e 'display notification "指定された dir が存在しません" with title "Open VS or Wez"'
+    osascript -e 'display notification "指定された dir が存在しません" with title "Open VS or IT"'
     exit 1
   fi
 
@@ -223,9 +218,9 @@ if [[ "$mode" == "wez" ]]; then
     done
   fi
 
-  # ワークスペースを作成して切替
-  wezterm cli spawn --workspace "$ws_name" --cwd "$dir" 2&gt;/dev/null || true
-  open -a "$wez_app" 2&gt;/dev/null || true
+  # トリガーファイルを書いて WezTerm 側で SwitchToWorkspace を実行させる
+  printf '{"name":"%s","cwd":"%s"}' "$ws_name" "$dir" &gt; /tmp/wezterm-alfred-workspace.json
+  open -a "$wez_app"
   exit 0
 fi</string>
 				<key>scriptargtype</key>
