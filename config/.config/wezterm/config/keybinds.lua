@@ -14,10 +14,7 @@ return {
     { key = 't', mods = 'SUPER', action = actions.spawn_tab_with_3_panes },
     { key = 'w', mods = 'SUPER', action = act.CloseCurrentPane{ confirm = true } },
     { key = 'w', mods = 'SUPER|SHIFT', action = act.CloseCurrentTab{ confirm = true } },
-    { key = 'Tab', mods = 'CTRL', action = act.ActivateTabRelative(1) },
-    { key = 'Tab', mods = 'SHIFT|CTRL', action = act.ActivateTabRelative(-1) },
-    { key = '{', mods = 'SUPER', action = act.ActivateTabRelative(-1) },
-    { key = '}', mods = 'SUPER', action = act.ActivateTabRelative(1) },
+
     -- タブ番号で直接移動 (Cmd + 1-9)
     { key = '1', mods = 'SUPER', action = act.ActivateTab(0) },
     { key = '2', mods = 'SUPER', action = act.ActivateTab(1) },
@@ -28,6 +25,7 @@ return {
     { key = '7', mods = 'SUPER', action = act.ActivateTab(6) },
     { key = '8', mods = 'SUPER', action = act.ActivateTab(7) },
     { key = '9', mods = 'SUPER', action = act.ActivateTab(-1) },
+
     -- タブ移動
     { key = 'PageUp', mods = 'SHIFT|CTRL', action = act.MoveTabRelative(-1) },
     { key = 'PageDown', mods = 'SHIFT|CTRL', action = act.MoveTabRelative(1) },
@@ -38,15 +36,12 @@ return {
     { key = 'd', mods = 'SUPER', action = act.SplitHorizontal{ domain = 'CurrentPaneDomain' } },
     { key = 'd', mods = 'SUPER|SHIFT', action = act.SplitVertical{ domain = 'CurrentPaneDomain' } },
     { key = 'z', mods = 'CTRL', action = act.TogglePaneZoomState },
+
     -- 矢印キーでペイン移動・サイズ調整
     { key = 'LeftArrow', mods = 'SHIFT|CTRL', action = act.ActivatePaneDirection 'Left' },
     { key = 'RightArrow', mods = 'SHIFT|CTRL', action = act.ActivatePaneDirection 'Right' },
     { key = 'UpArrow', mods = 'SHIFT|CTRL', action = act.ActivatePaneDirection 'Up' },
     { key = 'DownArrow', mods = 'SHIFT|CTRL', action = act.ActivatePaneDirection 'Down' },
-    { key = 'LeftArrow', mods = 'SHIFT|ALT|CTRL', action = act.AdjustPaneSize{ 'Left', 1 } },
-    { key = 'RightArrow', mods = 'SHIFT|ALT|CTRL', action = act.AdjustPaneSize{ 'Right', 1 } },
-    { key = 'UpArrow', mods = 'SHIFT|ALT|CTRL', action = act.AdjustPaneSize{ 'Up', 1 } },
-    { key = 'DownArrow', mods = 'SHIFT|ALT|CTRL', action = act.AdjustPaneSize{ 'Down', 1 } },
 
     ---------------------------------------------------------------------------
     -- ペイン移動 (Alt+h/j/k/l — smart-splits.nvim 統合)
@@ -69,10 +64,7 @@ return {
     { key = '8', mods = 'LEADER', action = actions.spawn_tab_with_8_panes },
     -- ワークスペース初期化（3/8ペイン対応。pane 1 の cwd を基準に各ツール起動）
     { key = 'i', mods = 'LEADER', action = actions.init_workspace },
-    -- 分割
-    { key = 'd', mods = 'LEADER', action = act.SplitVertical{ domain = 'CurrentPaneDomain' } },
-    { key = '/', mods = 'LEADER', action = act.SplitHorizontal{ domain = 'CurrentPaneDomain' } },
-    -- 移動 (vim風・単発)
+   -- 移動 (vim風・単発)
     { key = 'h', mods = 'LEADER', action = act.ActivatePaneDirection 'Left' },
     { key = 'j', mods = 'LEADER', action = act.ActivatePaneDirection 'Down' },
     { key = 'k', mods = 'LEADER', action = act.ActivatePaneDirection 'Up' },
@@ -83,16 +75,15 @@ return {
     { key = 'K', mods = 'LEADER|SHIFT', action = act.AdjustPaneSize{ 'Up', 5 } },
     { key = 'L', mods = 'LEADER|SHIFT', action = act.AdjustPaneSize{ 'Right', 5 } },
     -- ペイン操作モード (連続操作)
-    { key = 'w', mods = 'LEADER', action = act.ActivateKeyTable{ name = 'pane_mode', one_shot = false } },
+    { key = 'p', mods = 'LEADER', action = act.ActivateKeyTable{ name = 'pane_mode', one_shot = false } },
     -- ワークスペース（プロジェクト単位のタブグループ）
-    { key = 'p', mods = 'LEADER', action = actions.select_project },
-    { key = 's', mods = 'LEADER', action = actions.switch_workspace },
-    { key = 'S', mods = 'LEADER|SHIFT', action = actions.delete_workspace },
+    { key = 'f', mods = 'LEADER', action = actions.select_project },
+    { key = 'w', mods = 'LEADER', action = actions.switch_workspace },
+    { key = 'W', mods = 'LEADER|SHIFT', action = actions.delete_workspace },
     -- overlay pane（split + zoom でフローティング相当）
     { key = 'g', mods = 'LEADER', action = actions.overlay_lazygit },
     { key = 'y', mods = 'LEADER', action = actions.overlay_yazi },
-    { key = 'C', mods = 'LEADER|SHIFT', action = actions.overlay_claude },
-    -- 一時シェル（下部 40% split）
+    -- 一時シェル
     { key = 't', mods = 'LEADER', action = actions.open_bottom_shell },
     -- チートシート表示
     { key = 'c', mods = 'LEADER', action = actions.show_cheatsheet },
@@ -110,8 +101,9 @@ return {
     ---------------------------------------------------------------------------
     { key = 'f', mods = 'SUPER', action = act.Search 'CurrentSelectionOrEmptyString' },
     { key = 'x', mods = 'SHIFT|CTRL', action = act.ActivateCopyMode },
-    { key = 'phys:Space', mods = 'SHIFT|CTRL', action = act.QuickSelect },
     { key = 'u', mods = 'SHIFT|CTRL', action = act.CharSelect{ copy_on_select = true, copy_to = 'ClipboardAndPrimarySelection' } },
+    -- QuickSelect
+    { key = '/', mods = 'LEADER', action = act.QuickSelect },
 
     ---------------------------------------------------------------------------
     -- フォントサイズ
@@ -143,9 +135,9 @@ return {
     ---------------------------------------------------------------------------
     { key = 'Enter', mods = 'SHIFT', action = act.SendString '\n' },
     { key = 'r', mods = 'SUPER', action = act.ReloadConfiguration },
-    { key = 'p', mods = 'SHIFT|CTRL', action = act.ActivateCommandPalette },
+    { key = 'p', mods = 'SUPER|SHIFT', action = act.ActivateCommandPalette },
     { key = 'l', mods = 'SHIFT|CTRL', action = act.ShowDebugOverlay },
-  },
+   },
 
   ---------------------------------------------------------------------------
   -- Key Tables
@@ -164,8 +156,8 @@ return {
       { key = 'K', mods = 'SHIFT', action = act.AdjustPaneSize{ 'Up', 5 } },
       { key = 'L', mods = 'SHIFT', action = act.AdjustPaneSize{ 'Right', 5 } },
       -- 分割
-      { key = 'd', mods = 'NONE', action = act.SplitVertical{ domain = 'CurrentPaneDomain' } },
-      { key = '/', mods = 'NONE', action = act.SplitHorizontal{ domain = 'CurrentPaneDomain' } },
+      { key = 'd', mods = 'NONE', action = act.SplitHorizontal{ domain = 'CurrentPaneDomain' } },
+      { key = 'D', mods = 'SHIFT', action = act.SplitVertical{ domain = 'CurrentPaneDomain' } },
       -- ペイン操作
       { key = 'x', mods = 'NONE', action = act.CloseCurrentPane{ confirm = true } },
       { key = 'z', mods = 'NONE', action = act.TogglePaneZoomState },
@@ -175,7 +167,6 @@ return {
       -- overlay pane（フローティング相当）
       { key = 'g', mods = 'NONE', action = actions.overlay_lazygit },
       { key = 'y', mods = 'NONE', action = actions.overlay_yazi },
-      { key = 'C', mods = 'SHIFT', action = actions.overlay_claude },
       -- 数字キーでペイン直接移動
       { key = '1', mods = 'NONE', action = act.ActivatePaneByIndex(0) },
       { key = '2', mods = 'NONE', action = act.ActivatePaneByIndex(1) },
@@ -186,6 +177,8 @@ return {
       { key = '7', mods = 'NONE', action = act.ActivatePaneByIndex(6) },
       { key = '8', mods = 'NONE', action = act.ActivatePaneByIndex(7) },
       { key = '9', mods = 'NONE', action = act.ActivatePaneByIndex(8) },
+      -- QuickSelect
+      { key = '/', mods = 'NONE', action = act.QuickSelect },
       -- 終了
       { key = 'Escape', mods = 'NONE', action = act.PopKeyTable },
       { key = 'Enter', mods = 'NONE', action = act.PopKeyTable },

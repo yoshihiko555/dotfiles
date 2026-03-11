@@ -11,6 +11,7 @@ wezterm/
 ├── background.jpg       # 背景画像（別途配置）
 └── config/
     ├── actions.lua      # アクション定義（overlay pane, smart-splits, レイアウト等）
+    ├── command_palette.lua # コマンドパレット拡張
     ├── general.lua      # 基本設定（カラースキーム, マウス, Alt キー等）
     ├── font.lua         # フォント設定
     ├── window.lua       # ウィンドウ設定（背景, 起動時レイアウト）
@@ -38,8 +39,9 @@ wezterm/
 ### ペイン操作
 
 - **smart-splits.nvim 統合**: `Alt+h/j/k/l` で Neovim ↔ WezTerm シームレス移動
-- **pane_mode**: `Leader+p` で連続操作モード（移動/リサイズ/分割/swap/rotate）
+- **pane_mode**: `Leader+w` で連続操作モード（移動/リサイズ/分割/swap/rotate）
 - **overlay pane**: split + zoom でフローティング相当（lazygit, yazi, Claude Code）
+- **コマンドパレット拡張**: `Cmd+Shift+p` から workspace / overlay / utility 系のカスタム操作を実行
 
 ### レイアウト
 

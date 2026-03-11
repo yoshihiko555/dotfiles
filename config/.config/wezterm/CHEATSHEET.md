@@ -12,7 +12,6 @@ Leader: `Ctrl+Q` (2s timeout)
 | `Alt+h/j/k/l`   | ペイン移動 (smart-splits.nvim 統合)      |
 | `Alt+Shift+H/J/K/L` | ペインリサイズ (smart-splits.nvim 統合) |
 | `Ctrl+Shift+矢印` | ペイン移動 (矢印キー)                  |
-| `Ctrl+Shift+Alt+矢印` | ペインリサイズ (矢印キー)          |
 
 ## Leader Key (`Ctrl+Q`)
 
@@ -20,11 +19,9 @@ Leader: `Ctrl+Q` (2s timeout)
 
 | Key          | Action                     |
 | ------------ | -------------------------- |
-| `Leader d`   | 垂直分割                   |
-| `Leader /`   | 水平分割                   |
 | `Leader h/j/k/l` | ペイン移動 (vim風)    |
 | `Leader H/J/K/L` | ペインリサイズ (vim風) |
-| `Leader w`   | ペイン操作モード (連続)    |
+| `Leader p`   | ペイン操作モード (連続)    |
 
 ### Overlay Pane (split + zoom)
 
@@ -32,27 +29,33 @@ Leader: `Ctrl+Q` (2s timeout)
 | ------------ | ---------------- |
 | `Leader g`   | lazygit          |
 | `Leader y`   | yazi             |
-| `Leader C`   | Claude Code      |
 | `Leader t`   | 一時シェル (40%) |
 
 ### Workspace
 
 | Key          | Action                               |
 | ------------ | ------------------------------------ |
-| `Leader p`   | プロジェクト選択 (fuzzy → WS作成/切替) |
-| `Leader s`   | ワークスペース切替 (fuzzy)            |
+| `Leader f`   | プロジェクト選択 (fuzzy → WS作成/切替) |
+| `Leader w`   | ワークスペース切替 (fuzzy)            |
+| `Leader W`   | ワークスペース削除                    |
 | `Leader 8`   | 8分割タブ (4x2 grid)                |
 | `Leader i`   | ワークスペース初期化                  |
 | `Leader c`   | チートシート表示 (Neovim)             |
 
-## Pane Mode (`Leader w`)
+### Search / Select
+
+| Key          | Action                               |
+| ------------ | ------------------------------------ |
+| `Leader /`   | QuickSelect (テキスト即コピー)        |
+
+## Pane Mode (`Leader p`)
 
 | Key   | Action                      |
 | ----- | --------------------------- |
 | `h/j/k/l` | ペイン移動             |
 | `H/J/K/L` | ペインリサイズ         |
-| `d`   | 垂直分割                    |
-| `/`   | 水平分割                    |
+| `d`   | 水平分割                    |
+| `D`   | 垂直分割                    |
 | `x`   | ペインを閉じる              |
 | `z`   | ペインズーム                |
 | `s`   | ペイン入替 (swap)           |
@@ -60,7 +63,7 @@ Leader: `Ctrl+Q` (2s timeout)
 | `R`   | ペイン回転 (反時計回り)     |
 | `g`   | overlay: lazygit            |
 | `y`   | overlay: yazi               |
-| `C`   | overlay: Claude Code        |
+| `/`   | QuickSelect                 |
 | `1-9` | ペイン番号で直接移動        |
 | `q/Esc/Enter` | モード終了           |
 
@@ -72,9 +75,6 @@ Leader: `Ctrl+Q` (2s timeout)
 | `Cmd+w`                | ペインを閉じる       |
 | `Cmd+Shift+w`          | タブを閉じる         |
 | `Cmd+1-9`              | タブ番号で移動       |
-| `Ctrl+Tab`             | 次のタブ             |
-| `Ctrl+Shift+Tab`       | 前のタブ             |
-| `Cmd+{` / `Cmd+}`      | タブ移動             |
 | `Ctrl+Shift+PageUp/Down` | タブ順序変更       |
 
 ## Copy / Search
@@ -83,7 +83,6 @@ Leader: `Ctrl+Q` (2s timeout)
 | ------------------ | ------------------ |
 | `Cmd+c` / `Cmd+v`  | コピー/ペースト   |
 | `Ctrl+Shift+x`     | Copy Mode (vim風)  |
-| `Ctrl+Shift+Space`  | QuickSelect       |
 | `Cmd+f`            | 検索               |
 | `Ctrl+Shift+u`     | 文字選択 (絵文字等) |
 
@@ -111,7 +110,7 @@ Leader: `Ctrl+Q` (2s timeout)
 | `Cmd+n`          | 新規ウィンドウ       |
 | `Alt+Enter`      | フルスクリーン       |
 | `Cmd+r`          | 設定リロード         |
-| `Ctrl+Shift+p`   | コマンドパレット     |
+| `Cmd+Shift+p`    | コマンドパレット (workspace / overlay / utility) |
 | `Ctrl+Shift+l`   | デバッグオーバーレイ |
 | `Cmd+k`          | スクロールバッククリア |
 | `Ctrl+l`         | 画面クリア (履歴保持) |
