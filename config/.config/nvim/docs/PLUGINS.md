@@ -32,6 +32,13 @@
 | [nvim-surround](https://github.com/kylechui/nvim-surround) | `plugins/surround.lua` | 囲み文字の操作（ys / ds / cs） | 括弧・引用符・タグの追加・変更・削除を素早く行う |
 | [indent-blankline.nvim](https://github.com/lukas-reineke/indent-blankline.nvim) | `plugins/indent-blankline.lua` | インデントガイド表示 | インデントの縦線でネスト構造を可視化。現在スコープを水色で強調 |
 
+## Phase 3: Git連携
+
+| プラグイン | 設定ファイル | 用途 | 導入理由 |
+|-----------|-------------|------|---------|
+| [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) | `plugins/gitsigns.lua` | ガターサイン・hunk操作・inline blame・word diff | エディタ内でリアルタイムにGit差分を確認。hunk単位のステージ/リセットで細かいコミット操作が可能 |
+| [codediff.nvim](https://github.com/esmuellert/codediff.nvim) | `plugins/codediff.lua` | VSCode風diff viewer（サイドバイサイド・文字レベルハイライト） | PR前のdiff確認やファイル履歴の確認をNeovim内で完結。lazygitと役割分担 |
+
 ## その他
 
 | プラグイン | 設定ファイル | 用途 | 導入理由 |

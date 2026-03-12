@@ -12,3 +12,5 @@ Phase 1〜6 のプラグイン導入に関する意思決定ログ。
 | ADR-20260302-006 | ファイルエクスプローラーにneo-tree.nvimを採用 | accepted | 2026-03-02 | tokyonight統一 / Git連携内蔵 / VSCode親和性 | Navigation |
 | ADR-20260303-007 | バッファ内Markdownレンダリングにrender-markdown.nvimを採用 | accepted | 2026-03-03 | tokyonightネイティブ / LazyVim公式 / Anti-conceal | Markdown |
 | ADR-20260303-008 | Mermaid対応ブラウザプレビューにselimacerbas/markdown-preview.nvimを採用 | accepted | 2026-03-03 | npm不要 / Mermaid自動SVG / WezTerm互換 | Markdown |
+| ADR-20260313-009 | Gitガターサインにgitsigns.nvimを採用 | accepted | 2026-03-13 | 全部入り / 依存ゼロ / デファクト標準 | Git |
+| ADR-20260313-010 | Diff Viewerにcodediff.nvimを採用、lazygitとの役割分担 | accepted | 2026-03-13 | 文字レベルdiff / 活発メンテ / lazygit併用 | Git |
