@@ -89,6 +89,8 @@ return {
     -- overlay pane（split + zoom でフローティング相当）
     { key = 'g', mods = 'LEADER', action = actions.overlay_lazygit },
     { key = 'y', mods = 'LEADER', action = actions.overlay_yazi },
+    -- サブエージェント監視（tmux-monitor セッションに attach）
+    { key = 'a', mods = 'LEADER', action = actions.overlay_tmux_monitor },
     -- 一時シェル
     { key = 't', mods = 'LEADER', action = actions.open_bottom_shell },
     -- チートシート表示

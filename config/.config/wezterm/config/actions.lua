@@ -356,6 +356,74 @@ function M.setup_alfred_watcher()
   end)
 end
 
+-- =============================================================================
+-- サブエージェント監視（tmux セッションに overlay attach）
+-- ai-orchestra の tmux-monitor が作成する claude-* セッションを表示
+-- =============================================================================
+
+M.overlay_tmux_monitor = wezterm.action_callback(function(window, pane)
+  -- claude- で始まる tmux セッションを検索
+  local success, stdout = wezterm.run_child_process({
+    'tmux', 'list-sessions', '-F', '#{session_name}',
+  })
+  if not success or not stdout then
+    window:toast_notification('tmux-monitor', 'tmux セッションが見つかりません', nil, 3000)
+    return
+  end
+
+  local sessions = {}
+  for line in stdout:gmatch('[^\n]+') do
+    if line:match('^claude%-') then
+      table.insert(sessions, line)
+    end
+  end
+
+  if #sessions == 0 then
+    window:toast_notification('tmux-monitor', '監視セッションがありません', nil, 3000)
+    return
+  end
+
+  if #sessions == 1 then
+    -- セッションが1つなら直接 attach
+    local new_pane = pane:split({
+      direction = 'Bottom',
+      size = 0.5,
+      args = shell_command_args('tmux attach-session -t ' .. shell_quote(sessions[1])),
+    })
+    window:perform_action(act.SetPaneZoomState(true), new_pane)
+    return
+  end
+
+  -- 複数セッションがある場合は InputSelector で選択
+  local choices = {}
+  for _, s in ipairs(sessions) do
+    table.insert(choices, {
+      id = s,
+      label = wezterm.format {
+        { Foreground = { Color = '#c3e88d' } },
+        { Text = wezterm.nerdfonts.cod_terminal_tmux .. ' ' },
+        { Foreground = { Color = '#cad3f5' } },
+        { Text = s },
+      },
+    })
+  end
+
+  window:perform_action(act.InputSelector {
+    title = 'Attach to Monitor Session',
+    choices = choices,
+    fuzzy = true,
+    action = wezterm.action_callback(function(win, p, id)
+      if not id or id == '' then return end
+      local new_pane = p:split({
+        direction = 'Bottom',
+        size = 0.5,
+        args = shell_command_args('tmux attach-session -t ' .. shell_quote(id)),
+      })
+      win:perform_action(act.SetPaneZoomState(true), new_pane)
+    end),
+  }, pane)
+end)
+
 -- 画面クリア（スクロールバックに内容を保存）アクション
 M.clear_screen_save_scrollback = wezterm.action_callback(function(window, pane)
   -- vim等のTUIプログラム内では通常のCtrl+Lを送る
