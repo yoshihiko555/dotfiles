@@ -176,7 +176,7 @@ IDE級の最終ピース。ブレークポイント・ステップ実行をNeovi
 - [x] Phase 1: 見た目 & ナビゲーション（tokyonight / treesitter / fzf-lua / lualine / which-key / neo-tree）
 - [ ] Phase 1.5: 操作定着（PH2前） ← 並行して定着中
 - [x] Phase 2: 編集効率
-- [ ] Phase 3: Git連携
+- [x] Phase 3: Git連携
 - [ ] Phase 4: LSP強化 & コード品質
 - [ ] Phase 5: デバッグ & テスト
 - [ ] Phase 6: 仕上げ
