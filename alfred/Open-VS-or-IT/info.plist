@@ -106,42 +106,66 @@
 				<string></string>
 				<key>script</key>
 				<string>#!/usr/bin/env python3
-import json, os, sys
+import json, os, subprocess, sys
 
-query = (sys.argv[1] if len(sys.argv) &gt; 1 else "").strip()
+query = (sys.argv[1] if len(sys.argv) &gt; 1 else "").strip().lower()
 
 wf_data = os.getenv("alfred_workflow_data") or os.getcwd()
 os.makedirs(wf_data, exist_ok=True)
 conf = os.path.join(wf_data, "favorites.json")
 
-items = []
-
+# Load config (extras / overrides / excludes)
+cfg = {"extras": [], "overrides": {}, "excludes": []}
 try:
     with open(conf, "r", encoding="utf-8") as f:
-        favs = json.load(f)
-except Exception as e:
-    print(json.dumps({"items": [{
-        "title": "favorites.json が読めません",
-        "subtitle": f"{conf} | {e}",
-        "valid": False
-    }]}, ensure_ascii=False))
-    raise SystemExit
+        cfg.update(json.load(f))
+except FileNotFoundError:
+    pass
 
-def hit(x, s):
-    if not s:
-        return True
-    s = s.lower()
-    blob = " ".join([x.get("id",""), x.get("name",""), x.get("path",""), x.get("keywords","")]).lower()
-    return s in blob
+ghq = "/opt/homebrew/bin/ghq"
+try:
+    out = subprocess.check_output([ghq, "list", "--full-path"], text=True)
+    repos = [l for l in out.strip().splitlines() if l]
+except Exception:
+    repos = []
 
-for x in favs:
-    if not hit(x, query):
+ghq_root = ""
+try:
+    ghq_root = subprocess.check_output([ghq, "root"], text=True).strip()
+except Exception:
+    pass
+
+excludes = cfg.get("excludes", [])
+overrides = cfg.get("overrides", {})
+
+items = []
+
+for full_path in repos:
+    rel = full_path.replace(ghq_root + "/", "", 1) if ghq_root else full_path
+    # Remove host/owner prefix (e.g. github.com/yoshihiko555/) to get repo key
+    parts = rel.split("/")
+    repo_key = "/".join(parts[2:]) if len(parts) &gt; 2 else rel
+
+    if any(ex in repo_key for ex in excludes):
         continue
-    items.append({
-        "title": x.get("name", x.get("id","(no id)")),
-        "subtitle": x.get("path",""),
-        "arg": x.get("path","")
-    })
+
+    if repo_key in overrides:
+        name = overrides[repo_key].get("name", repo_key)
+    else:
+        name = repo_key
+
+    if query and query not in f"{name} {repo_key} {full_path}".lower():
+        continue
+
+    items.append({"title": name, "subtitle": full_path, "arg": full_path})
+
+# Append extras (non-ghq paths)
+for ex in cfg.get("extras", []):
+    name = ex.get("name", os.path.basename(ex.get("path", "")))
+    path = ex.get("path", "")
+    if query and query not in f"{name} {path}".lower():
+        continue
+    items.append({"title": name, "subtitle": path, "arg": path})
 
 print(json.dumps({"items": items}, ensure_ascii=False))</string>
 				<key>scriptargtype</key>
@@ -151,7 +175,7 @@ print(json.dumps({"items": items}, ensure_ascii=False))</string>
 				<key>subtext</key>
 				<string></string>
 				<key>title</key>
-				<string>お気に入り検索を行う</string>
+				<string>ghq リポジトリ検索</string>
 				<key>type</key>
 				<integer>9</integer>
 				<key>withspace</key>
@@ -325,37 +349,37 @@ print(json.dumps({"items": items}, ensure_ascii=False))</string>
 		<key>155FF75A-D1F8-4A36-B963-39BA542EA2C7</key>
 		<dict>
 			<key>xpos</key>
-			<real>540</real>
+			<integer>540</integer>
 			<key>ypos</key>
-			<real>450</real>
+			<integer>450</integer>
 		</dict>
 		<key>23509D67-8963-4D48-8814-7EB53BD0C0AB</key>
 		<dict>
 			<key>xpos</key>
-			<real>375</real>
+			<integer>375</integer>
 			<key>ypos</key>
-			<real>610</real>
+			<integer>610</integer>
 		</dict>
 		<key>C526CEA9-5428-41C9-B7D3-CB66AEAA548D</key>
 		<dict>
 			<key>xpos</key>
-			<real>175</real>
+			<integer>175</integer>
 			<key>ypos</key>
-			<real>610</real>
+			<integer>610</integer>
 		</dict>
 		<key>D673ADA9-89D1-41AD-B884-0BDDF5670882</key>
 		<dict>
 			<key>xpos</key>
-			<real>175</real>
+			<integer>175</integer>
 			<key>ypos</key>
-			<real>450</real>
+			<integer>450</integer>
 		</dict>
 		<key>E4089D94-7C93-4588-B4D3-635AAD78219B</key>
 		<dict>
 			<key>xpos</key>
-			<real>545</real>
+			<integer>545</integer>
 			<key>ypos</key>
-			<real>610</real>
+			<integer>610</integer>
 		</dict>
 	</dict>
 	<key>userconfigurationconfig</key>
