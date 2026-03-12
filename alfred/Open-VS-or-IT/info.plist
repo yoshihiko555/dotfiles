@@ -243,7 +243,7 @@ if [[ "$mode" == "wez" ]]; then
   fi
 
   # トリガーファイルを書いて WezTerm 側で SwitchToWorkspace を実行させる
-  printf '{"name":"%s","cwd":"%s"}' "$ws_name" "$dir" &gt; /tmp/wezterm-alfred-workspace.json
+  printf '{"name":"%s","cwd":"%s","timestamp":%d}' "$ws_name" "$dir" "$(date +%s)" &gt; /tmp/wezterm-alfred-workspace.json
   open -a "$wez_app"
   exit 0
 fi</string>
