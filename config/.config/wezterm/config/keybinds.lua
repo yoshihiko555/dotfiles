@@ -2,6 +2,7 @@ local wezterm = require 'wezterm'
 local act = wezterm.action
 local actions = require 'config/actions'
 local layouts = require 'config/layouts'
+local resurrect = require 'config/resurrect'
 
 return {
   -- デフォルトのキーバインド無効化
@@ -93,6 +94,9 @@ return {
     { key = 'a', mods = 'LEADER', action = actions.overlay_tmux_monitor },
     -- 一時シェル
     { key = 't', mods = 'LEADER', action = actions.open_bottom_shell },
+    -- ワークスペース復元（resurrect.wezterm）
+    { key = 'r', mods = 'LEADER', action = resurrect.restore_state },
+    { key = 'R', mods = 'LEADER|SHIFT', action = resurrect.delete_state },
     -- チートシート表示
     { key = 'c', mods = 'LEADER', action = actions.show_cheatsheet },
 

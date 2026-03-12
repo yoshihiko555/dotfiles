@@ -21,6 +21,10 @@ command_palette.setup()
 local actions = require("config/actions")
 actions.setup_alfred_watcher()
 
+-- ワークスペース永続化（resurrect.wezterm）
+local resurrect_config = require("config/resurrect")
+resurrect_config.setup()
+
 -- 外部設定ファイルをマージ
 function merge_config(config, new_config)
   for k, v in pairs(new_config) do
