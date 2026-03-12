@@ -31,6 +31,13 @@ Leader: `Ctrl+Q` (2s timeout)
 | `Leader y`   | yazi             |
 | `Leader t`   | 一時シェル (40%) |
 
+### Layout
+
+| Key          | Action                                              |
+| ------------ | --------------------------------------------------- |
+| `Leader 1`   | プロセス初期化 (ペイン数に応じて nvim/claude 等起動) |
+| `Leader 2~8` | 現在タブを N ペインに分割 (1ペイン時のみ)            |
+
 ### Workspace
 
 | Key          | Action                               |
@@ -38,8 +45,6 @@ Leader: `Ctrl+Q` (2s timeout)
 | `Leader f`   | プロジェクト選択 (fuzzy → WS作成/切替) |
 | `Leader w`   | ワークスペース切替 (fuzzy)            |
 | `Leader W`   | ワークスペース削除                    |
-| `Leader 8`   | 8分割タブ (4x2 grid)                |
-| `Leader i`   | ワークスペース初期化                  |
 | `Leader c`   | チートシート表示 (Neovim)             |
 
 ### Search / Select
@@ -71,7 +76,7 @@ Leader: `Ctrl+Q` (2s timeout)
 
 | Key                    | Action               |
 | ---------------------- | -------------------- |
-| `Cmd+t`                | 新規タブ (3ペイン)   |
+| `Cmd+t`                | 新規タブ (1ペイン)   |
 | `Cmd+w`                | ペインを閉じる       |
 | `Cmd+Shift+w`          | タブを閉じる         |
 | `Cmd+1-9`              | タブ番号で移動       |

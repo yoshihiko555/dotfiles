@@ -1,6 +1,7 @@
 local wezterm = require 'wezterm'
 local act = wezterm.action
 local actions = require 'config/actions'
+local layouts = require 'config/layouts'
 
 local M = {}
 
@@ -17,10 +18,10 @@ function M.setup()
       entry('Workspace: Open Project', actions.select_project),
       entry('Workspace: Switch Workspace', actions.switch_workspace),
       entry('Workspace: Delete Workspace', actions.delete_workspace),
-      entry('Workspace: Initialize Current Layout', actions.init_workspace),
-
-      entry('Tab: New 3-Pane Tab', actions.spawn_tab_with_3_panes),
-      entry('Tab: New 8-Pane Tab', actions.spawn_tab_with_8_panes),
+      entry('Layout: Initialize Panes', layouts.init_panes),
+      entry('Layout: Split to 2 Panes', layouts.split_to(2)),
+      entry('Layout: Split to 3 Panes', layouts.split_to(3)),
+      entry('Layout: Split to 4 Panes', layouts.split_to(4)),
 
       entry('Pane: Enter Pane Mode', act.ActivateKeyTable { name = 'pane_mode', one_shot = false }),
       entry('Overlay: Open Lazygit', actions.overlay_lazygit),

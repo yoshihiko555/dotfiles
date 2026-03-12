@@ -101,61 +101,6 @@ M.open_bottom_shell = open_overlay(interactive_shell_command())
 local dotfiles_root = wezterm.home_dir .. '/ghq/github.com/yoshihiko555/dotfiles'
 local repo_list_script = dotfiles_root .. '/scripts/repo-list.sh'
 
--- プロジェクトごとのレイアウト定義
--- key: プロジェクト名（ワークスペース名と一致させる）
--- value: レイアウトプリセット名
-local project_layouts = {
-  -- 例:
-  -- ['web-app'] = '3tab',
-  -- ['api-server'] = 'ide',
-}
-
--- レイアウトプリセット
--- 各関数は (mux_window, cwd) を受け取り、タブ・ペインを構築する
--- 注: ワークスペース作成時に最初の1タブは自動で存在するため、それを活用する
-local layout_presets = {
-  -- デフォルト: 3ペイン1タブ（既存の Cmd+t と同じ）
-  -- ┌──────┬──────┐
-  -- │      │  2   │
-  -- │  1   ├──────┤
-  -- │      │  3   │
-  -- └──────┴──────┘
-  default = function(first_pane, mux_win, cwd)
-    local right = first_pane:split({ direction = 'Right', size = 0.5, cwd = cwd })
-    right:split({ direction = 'Bottom', size = 0.5, cwd = cwd })
-    first_pane:activate()
-  end,
-
-  -- 3タブ: Tab1 フル, Tab2 左右分割, Tab3 フル
-  -- Tab1:          Tab2:            Tab3:
-  -- ┌──────────┐  ┌─────┬─────┐  ┌──────────┐
-  -- │    1     │  │  1  │  2  │  │    1     │
-  -- └──────────┘  └─────┴─────┘  └──────────┘
-  ['3tab'] = function(first_pane, mux_win, cwd)
-    -- Tab 1 は first_pane（そのまま）
-    -- Tab 2: 左右分割
-    local tab2, pane2, _ = mux_win:spawn_tab({ cwd = cwd })
-    pane2:split({ direction = 'Right', size = 0.5, cwd = cwd })
-    -- Tab 3: フル
-    mux_win:spawn_tab({ cwd = cwd })
-    -- Tab 1 に戻る
-    first_pane:activate()
-  end,
-
-  -- IDE: Tab1 エディタ全画面, Tab2 エージェント左右, Tab3 フリー
-  -- Tab1:          Tab2:            Tab3:
-  -- ┌──────────┐  ┌─────┬─────┐  ┌──────────┐
-  -- │  editor  │  │agent│agent│  │   free   │
-  -- │          │  │  1  │  2  │  │          │
-  -- └──────────┘  └─────┴─────┘  └──────────┘
-  ide = function(first_pane, mux_win, cwd)
-    local tab2, pane2, _ = mux_win:spawn_tab({ cwd = cwd })
-    pane2:split({ direction = 'Right', size = 0.5, cwd = cwd })
-    mux_win:spawn_tab({ cwd = cwd })
-    first_pane:activate()
-  end,
-}
-
 --- ワークスペースが既に存在するか判定
 local function workspace_exists(name)
   for _, ws in ipairs(wezterm.mux.get_workspace_names()) do
@@ -263,29 +208,11 @@ M.select_project = wezterm.action_callback(function(window, pane)
       if not id or id == '' then return end
 
       local ws_name = context.workspace_name_from_label(label:gsub('^[^ ]+ ', ''))
-      local already_exists = workspace_exists(ws_name)
 
       win:perform_action(act.SwitchToWorkspace {
         name = ws_name,
         spawn = { cwd = id },
       }, p)
-
-      -- 新規ワークスペースの場合、レイアウトを構築
-      if not already_exists then
-        -- SwitchToWorkspace 完了後にレイアウトを適用
-        wezterm.time.call_after(0.5, function()
-          -- 切り替え先のワークスペースにいることを確認
-          local mux_win = win:mux_window()
-          if mux_win:get_workspace() ~= ws_name then return end
-          local tabs = mux_win:tabs()
-          if #tabs > 0 and #tabs[1]:panes() == 1 then
-            local first_pane = tabs[1]:active_pane()
-            local preset_name = project_layouts[ws_name] or 'default'
-            local builder = layout_presets[preset_name] or layout_presets.default
-            builder(first_pane, mux_win, id)
-          end
-        end)
-      end
     end),
   }, pane)
 end)
@@ -382,167 +309,6 @@ M.delete_workspace = wezterm.action_callback(function(window, pane)
 end)
 
 -- =============================================================================
--- タブ・ペインレイアウト
--- =============================================================================
-
--- 新規タブを8分割（4x2グリッド）で開くアクション（ホームディレクトリから）
-M.spawn_tab_with_8_panes = wezterm.action_callback(function(window, pane)
-  local tab, first_pane, _ = window:mux_window():spawn_tab({ cwd = wezterm.home_dir })
-
-  -- パターン: 4x2 グリッド
-  -- ┌───┬───┬───┬───┐
-  -- │ 1 │ 2 │ 3 │ 4 │
-  -- ├───┼───┼───┼───┤
-  -- │ 5 │ 6 │ 7 │ 8 │
-  -- └───┴───┴───┴───┘
-
-  -- 上下に2分割
-  local bottom_pane = first_pane:split({ direction = "Bottom", size = 0.5 })
-
-  -- 上段を4列に分割（二分木方式: 常に0.5で分割し丸め誤差を最小化）
-  local top_right_half = first_pane:split({ direction = "Right", size = 0.5 })
-  first_pane:split({ direction = "Right", size = 0.5 })
-  top_right_half:split({ direction = "Right", size = 0.5 })
-
-  -- 下段を4列に分割
-  local bottom_right_half = bottom_pane:split({ direction = "Right", size = 0.5 })
-  bottom_pane:split({ direction = "Right", size = 0.5 })
-  bottom_right_half:split({ direction = "Right", size = 0.5 })
-
-  -- 左上ペインにフォーカス
-  first_pane:activate()
-end)
-
--- ワークスペース初期化アクション（Leader + i）
--- 前提: pane 1 が目的のディレクトリに cd 済み
--- 3ペイン時:
--- ┌────────┬────────┐
--- │ nvim   │ claude │
--- │  (1)   ├────────┤
--- │        │ free   │
--- │        │  (3)   │
--- └────────┴────────┘
--- 8ペイン時:
--- ┌───────┬───────┬───────┬───────┐
--- │claude │claude │ codex │gemini │
--- │  (1)  │  (2)  │  (3)  │  (4)  │
--- ├───────┼───────┼───────┼───────┤
--- │ tmux  │ tmux  │shell  │shell  │
--- │cc1(5) │cc2(6) │  (7)  │  (8)  │
--- └───────┴───────┴───────┴───────┘
-M.init_workspace = wezterm.action_callback(function(window, pane)
-  local tab = pane:tab()
-  local panes_info = tab:panes_with_info()
-
-  local pane_count = #panes_info
-  local layout = nil
-  if pane_count == 3 then
-    layout = "3pane"
-  elseif pane_count >= 8 then
-    layout = "8pane"
-  else
-    wezterm.log_warn("init_workspace: 3または8ペインが必要です (現在: " .. pane_count .. ")")
-    window:toast_notification("init_workspace", "3または8ペインが必要です (現在: " .. pane_count .. ")", nil, 3000)
-    return
-  end
-
-  -- ペインを位置順にソート（上→下、左→右）
-  table.sort(panes_info, function(a, b)
-    if a.top ~= b.top then return a.top < b.top end
-    return a.left < b.left
-  end)
-
-  -- pane 1 の cwd を取得
-  local cwd = context.get_cwd_path(panes_info[1].pane)
-  if not cwd then
-    wezterm.log_warn("init_workspace: pane 1 の cwd を取得できません")
-    return
-  end
-  cwd = cwd:gsub("/$", "")
-  if cwd == "" then return end
-
-  -- GHQ リポジトリ配下でのみ実行を許可
-  local ghq_root = wezterm.home_dir .. "/ghq/"
-  if cwd:sub(1, #ghq_root) ~= ghq_root then
-    wezterm.log_warn("init_workspace: GHQ 配下ではありません: " .. cwd)
-    window:toast_notification("init_workspace", "GHQ リポジトリ配下でのみ実行できます\ncwd: " .. cwd, nil, 4000)
-    return
-  end
-
-  -- シェル引数のクォート
-  local function sq(s)
-    return "'" .. s:gsub("'", "'\\''") .. "'"
-  end
-
-  local max_panes = (layout == "3pane") and 3 or 8
-
-  -- TUI プロセスが実行中のペインがないかチェック（二重起動防止）
-  for i = 1, max_panes do
-    if panes_info[i].pane:is_alt_screen_active() then
-      wezterm.log_warn("init_workspace: ペイン " .. i .. " でプロセスが実行中です")
-      window:toast_notification("init_workspace", "ペイン " .. i .. " でプロセスが実行中です\n先に終了してください", nil, 4000)
-      return
-    end
-  end
-
-  -- pane 2-*: pane 1 のディレクトリへ移動
-  for i = 2, max_panes do
-    panes_info[i].pane:send_text("cd " .. sq(cwd) .. "\n")
-  end
-
-  if layout == "3pane" then
-    -- pane 1: Neovim
-    panes_info[1].pane:send_text("nvim\n")
-
-    -- pane 2: Claude Code
-    panes_info[2].pane:send_text("claude\n")
-
-    -- pane 3: Free（cd のみ）
-
-    -- pane 1 にフォーカス
-    panes_info[1].pane:activate()
-    return
-  end
-
-  local project = context.get_project_name_from_path(cwd)
-  if project == "" then
-    project = "project"
-  end
-  project = project:gsub("[%.:]", "-")
-
-  -- pane 1, 2: サブシェルの PID を保存し exec で claude に置換（PID = claude プロセス PID）
-  panes_info[1].pane:send_text("sh -c 'echo $$ > /tmp/wez-cc1.pid; exec claude'\n")
-  panes_info[2].pane:send_text("sh -c 'echo $$ > /tmp/wez-cc2.pid; exec claude'\n")
-
-  -- pane 3: Codex
-  panes_info[3].pane:send_text("codex\n")
-
-  -- pane 4: Gemini
-  panes_info[4].pane:send_text("gemini\n")
-
-  -- pane 5: pane 1 の Claude Code が作成する tmux セッションに自動アタッチ
-  panes_info[5].pane:send_text(
-    "sleep 1 && CC_PID=$(cat /tmp/wez-cc1.pid 2>/dev/null) && "
-    .. "SN=\"claude-" .. project .. "-${CC_PID}\" && "
-    .. "until command tmux has-session -t \"$SN\" 2>/dev/null; do sleep 2; done && "
-    .. "command tmux attach-session -t \"$SN\"\n"
-  )
-
-  -- pane 6: pane 2 の Claude Code が作成する tmux セッションに自動アタッチ
-  panes_info[6].pane:send_text(
-    "sleep 1 && CC_PID=$(cat /tmp/wez-cc2.pid 2>/dev/null) && "
-    .. "SN=\"claude-" .. project .. "-${CC_PID}\" && "
-    .. "until command tmux has-session -t \"$SN\" 2>/dev/null; do sleep 2; done && "
-    .. "command tmux attach-session -t \"$SN\"\n"
-  )
-
-  -- pane 7, 8: そのまま（cd 済み）
-
-  -- pane 1 にフォーカス
-  panes_info[1].pane:activate()
-end)
-
--- =============================================================================
 -- Alfred 外部トリガー（ファイルベース IPC）
 -- /tmp/wezterm-alfred-workspace.json を検知して SwitchToWorkspace を実行
 -- =============================================================================
@@ -583,48 +349,12 @@ function M.setup_alfred_watcher()
     local cwd = data.cwd
     if not ws_name or not cwd then return end
 
-    local already_exists = workspace_exists(ws_name)
-
     window:perform_action(act.SwitchToWorkspace {
       name = ws_name,
       spawn = { cwd = cwd },
     }, pane)
-
-    if not already_exists then
-      wezterm.time.call_after(0.5, function()
-        local mux_win = window:mux_window()
-        if mux_win:get_workspace() ~= ws_name then return end
-        local tabs = mux_win:tabs()
-        if #tabs > 0 and #tabs[1]:panes() == 1 then
-          local first_pane = tabs[1]:active_pane()
-          local preset_name = project_layouts[ws_name] or 'default'
-          local builder = layout_presets[preset_name] or layout_presets.default
-          builder(first_pane, mux_win, cwd)
-        end
-      end)
-    end
   end)
 end
-
--- 新規タブを3分割で開くアクション（ホームディレクトリから）
-M.spawn_tab_with_3_panes = wezterm.action_callback(function(window, pane)
-  -- 新しいタブを作成（ホームディレクトリで開始）
-  local tab, first_pane, _ = window:mux_window():spawn_tab({ cwd = wezterm.home_dir })
-
-  -- パターン: 左1 + 右上下2
-  -- ┌──────┬──────┐
-  -- │      │  2   │
-  -- │  1   ├──────┤
-  -- │      │  3   │
-  -- └──────┴──────┘
-
-  -- 右側に縦分割（50%）
-  local right_pane = first_pane:split({ direction = "Right", size = 0.5 })
-  -- 右側ペインをさらに横分割（50%）→ 右上・右下に分かれる
-  right_pane:split({ direction = "Bottom", size = 0.5 })
-  -- 左ペインにフォーカス
-  first_pane:activate()
-end)
 
 -- 画面クリア（スクロールバックに内容を保存）アクション
 M.clear_screen_save_scrollback = wezterm.action_callback(function(window, pane)

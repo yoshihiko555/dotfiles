@@ -1,6 +1,7 @@
 local wezterm = require 'wezterm'
 local act = wezterm.action
 local actions = require 'config/actions'
+local layouts = require 'config/layouts'
 
 return {
   -- デフォルトのキーバインド無効化
@@ -11,7 +12,7 @@ return {
     ---------------------------------------------------------------------------
     -- タブ操作
     ---------------------------------------------------------------------------
-    { key = 't', mods = 'SUPER', action = actions.spawn_tab_with_3_panes },
+    { key = 't', mods = 'SUPER', action = act.SpawnTab 'CurrentPaneDomain' },
     { key = 'w', mods = 'SUPER', action = act.CloseCurrentPane{ confirm = true } },
     { key = 'w', mods = 'SUPER|SHIFT', action = act.CloseCurrentTab{ confirm = true } },
 
@@ -60,11 +61,16 @@ return {
     ---------------------------------------------------------------------------
     -- ペイン操作 (Leader: Ctrl+q)
     ---------------------------------------------------------------------------
-    -- 8分割タブ
-    { key = '8', mods = 'LEADER', action = actions.spawn_tab_with_8_panes },
-    -- ワークスペース初期化（3/8ペイン対応。pane 1 の cwd を基準に各ツール起動）
-    { key = 'i', mods = 'LEADER', action = actions.init_workspace },
-   -- 移動 (vim風・単発)
+    -- ペイン分割 (Leader+2~8: 現在タブを N ペインに分割)
+    { key = '2', mods = 'LEADER', action = layouts.split_to(2) },
+    { key = '3', mods = 'LEADER', action = layouts.split_to(3) },
+    { key = '4', mods = 'LEADER', action = layouts.split_to(4) },
+    { key = '5', mods = 'LEADER', action = layouts.split_to(5) },
+    { key = '6', mods = 'LEADER', action = layouts.split_to(6) },
+    { key = '7', mods = 'LEADER', action = layouts.split_to(7) },
+    { key = '8', mods = 'LEADER', action = layouts.split_to(8) },
+    { key = '0', mods = 'LEADER', action = layouts.init_panes },
+    -- 移動 (vim風・単発)
     { key = 'h', mods = 'LEADER', action = act.ActivatePaneDirection 'Left' },
     { key = 'j', mods = 'LEADER', action = act.ActivatePaneDirection 'Down' },
     { key = 'k', mods = 'LEADER', action = act.ActivatePaneDirection 'Up' },
