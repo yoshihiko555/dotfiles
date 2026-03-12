@@ -84,18 +84,20 @@ VSCodeの補完・スニペット体験に近づける。
 
 ## Phase 3: Git連携
 
-Claude Codeと並行してGit操作をCLI上で完結させる。
-diffの確認やblameの参照をNeovim内で行えるようにする。
+エディタ内での変更可視化に絞る。Git操作自体はlazygitに委ねる。
 
-| プラグイン | 用途 | 優先度 |
-|-----------|------|--------|
-| gitsigns.nvim | 行ごとの変更表示・hunkステージ・blame | 必須 |
-| diffview.nvim | diff/マージコンフリクトの視覚的確認 | 推奨 |
-| neogit or fugitive.vim | Git操作UI | 任意 |
+| プラグイン | 用途 | 優先度 | 状態 |
+|-----------|------|--------|------|
+| gitsigns.nvim | 行ごとの変更表示・hunkステージ・inline blame | 必須 | 導入済み |
+| codediff.nvim | diff viewer（サイドバイサイド・文字レベルハイライト） | 推奨 | 導入済み |
+
+> **方針**: neogit / fugitive は導入しない。
+> コミット・ブランチ操作等はすべてlazygitで行う。
 
 ### 検証ポイント
-- [ ] gitsignsのhunkナビゲーションが快適か
-- [ ] diffviewでPR前のレビューができるか
+- [ ] gitsignsのhunkナビゲーション（`]c`/`[c`）が快適か
+- [ ] inline blameの表示が邪魔にならないか
+- [ ] codediffでPR前のdiff確認が快適か
 
 ---
 
