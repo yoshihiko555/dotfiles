@@ -5,7 +5,7 @@
 model = "gpt-5.4"
 
 # 推論の深さ（medium: バランス型 / high: より時間をかける）
-model_reasoning_effort = "xhigh"
+model_reasoning_effort = "high"
 
 # Web 検索の動作（"live" / "cached" / "disabled"）
 web_search = "live"
@@ -88,6 +88,7 @@ hide_full_access_warning = true
 "gpt-5.1-codex-max" = "gpt-5.2-codex"
 "gpt-5.2" = "gpt-5.2-codex"
 "gpt-5.2-codex" = "gpt-5.3-codex"
+"gpt-5.3-codex" = "gpt-5.4"
 
 [tui]
 status_line = ["model-name", "project-root", "git-branch", "context-remaining", "context-used", "five-hour-limit"]
