@@ -43,6 +43,11 @@ source ~/.zsh/aliases.zsh
 # --------------------------------------------
 # 5. Functions
 # --------------------------------------------
+# lazygit は起動時だけ ~/.config を設定ディレクトリとして使う
+lazygit() {
+  XDG_CONFIG_HOME="$HOME/.config" command lazygit "$@"
+}
+
 # カスタムコマンド一覧を表示
 cheat() {
   cat <<'HELP'

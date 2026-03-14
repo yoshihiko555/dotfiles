@@ -2,6 +2,10 @@
 
 # Claude Codeのフック種別に応じて通知を分岐するスクリプト
 
+if [ "${CLAUDE_SKIP_NOTIFY_HOOKS:-0}" = "1" ]; then
+  exit 0
+fi
+
 EVENT="${1:-stop}"
 # フックの JSON を stdin から受け取る
 PAYLOAD="$(cat)"

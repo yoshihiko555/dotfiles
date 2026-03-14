@@ -18,6 +18,7 @@ dotfiles/
 │       ├── mise/           # ランタイム管理
 │       ├── sheldon/        # zsh プラグイン
 │       ├── karabiner/      # キーリマッピング
+│       ├── lazygit/        # Git TUI
 │       ├── opencode/       # OpenCode CLI
 │       ├── nvim/           # エディタ (Neovim)
 │       └── git/            # git 設定 (global ignore 等)

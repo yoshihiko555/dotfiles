@@ -21,10 +21,10 @@ customCommands:
 
       PROMPT_CONTENT="$(
         cat <<'EOF'
-      Generate ONLY a one-line Git commit message following Conventional Commits format (type(scope): description).
-      Types: feat, fix, docs, style, refactor, test, chore.
-      Base it strictly on the staged diff below.
-      Output ONLY the commit message, with no code fences or extra commentary.
+      以下の staged diff だけを根拠に、Conventional Commits 形式の1行コミットメッセージを日本語で生成してください。
+      形式: type(scope): 日本語の要約
+      type は feat, fix, docs, style, refactor, test, chore のいずれかを使ってください。
+      出力はコミットメッセージ本文のみ。コードフェンスや補足説明は禁止です。
 
       Staged diff:
       EOF

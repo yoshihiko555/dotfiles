@@ -4,6 +4,7 @@
 	rebase = false
 [core]
 	autocrlf = input
+	editor = nvim
 [gtr "worktrees"]
 	dir = .worktrees
 [gtr "editor"]
