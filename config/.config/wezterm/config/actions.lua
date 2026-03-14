@@ -359,7 +359,6 @@ local ALFRED_CHECK_INTERVAL = 1 -- 秒: io.open の頻度を抑制
 
 function M.setup_alfred_watcher()
   wezterm.on('update-status', function(window, pane)
-    -- スロットル: 前回チェックから ALFRED_CHECK_INTERVAL 秒以内はスキップ
     local now = os.time()
     if (now - alfred_last_check) < ALFRED_CHECK_INTERVAL then return end
     alfred_last_check = now
@@ -376,7 +375,6 @@ function M.setup_alfred_watcher()
     local ok, data = pcall(wezterm.json_parse, content)
     if not ok or type(data) ~= 'table' then return end
 
-    -- JSON 内の timestamp で鮮度判定（config reload 時の誤発火防止）
     local ts = tonumber(data.timestamp)
     if ts and (now - ts) > ALFRED_TRIGGER_MAX_AGE then return end
 
