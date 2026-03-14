@@ -11,6 +11,7 @@
     "button": false
   },
   "git_panel": {
+    "tree_view": true,
     "dock": "left",
     "sort_by_path": false,
     "status_style": "icon"
