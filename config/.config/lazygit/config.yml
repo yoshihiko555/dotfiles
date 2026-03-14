@@ -1,0 +1,8 @@
+customCommands:
+  - key: "<c-g>"
+    context: "files"
+    description: "Claude で Conventional Commits のメッセージを生成してコミット"
+    output: "terminal"
+    command: |
+      DOTFILES_DIR="${DOTFILES_DIR:-$HOME/ghq/github.com/yoshihiko555/dotfiles}"
+      "$DOTFILES_DIR/scripts/lazygit-claude-commit.sh"
