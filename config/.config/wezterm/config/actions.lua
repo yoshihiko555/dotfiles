@@ -109,6 +109,37 @@ local function workspace_exists(name)
   return false
 end
 
+--- 指定 workspace に属する pane id を列挙
+local function collect_workspace_pane_ids(name)
+  local pane_ids = {}
+
+  for _, mux_win in ipairs(wezterm.mux.all_windows()) do
+    if mux_win:get_workspace() == name then
+      for _, tab in ipairs(mux_win:tabs()) do
+        for _, tab_pane in ipairs(tab:panes()) do
+          table.insert(pane_ids, tab_pane:pane_id())
+        end
+      end
+    end
+  end
+
+  return pane_ids
+end
+
+--- pane id を直接指定して安全に終了
+local function kill_pane_by_id(pane_id)
+  local success, _, stderr = wezterm.run_child_process({
+    'wezterm', 'cli', 'kill-pane', '--pane-id', tostring(pane_id),
+  })
+
+  if success then
+    return true
+  end
+
+  wezterm.log_warn('failed to kill pane ' .. tostring(pane_id) .. ': ' .. (stderr or 'unknown error'))
+  return false
+end
+
 --- repo-list.sh の出力を InputSelector の choices に変換
 local function build_project_choices()
   local success, stdout, stderr = wezterm.run_child_process({ 'bash', '-l', repo_list_script })
@@ -292,18 +323,26 @@ M.delete_workspace = wezterm.action_callback(function(window, pane)
     fuzzy = true,
     action = wezterm.action_callback(function(win, p, id, label)
       if not id or id == '' then return end
-      -- 対象ワークスペースの全ウィンドウ→全タブ→全ペインを閉じる
-      for _, mux_win in ipairs(wezterm.mux.all_windows()) do
-        if mux_win:get_workspace() == id then
-          for _, tab in ipairs(mux_win:tabs()) do
-            for _, tab_pane in ipairs(tab:panes()) do
-              tab_pane:activate()
-              win:perform_action(act.CloseCurrentPane { confirm = false }, tab_pane)
-            end
-          end
+      local pane_ids = collect_workspace_pane_ids(id)
+
+      if #pane_ids == 0 then
+        win:toast_notification('workspace', id .. ' の pane が見つかりません', nil, 3000)
+        return
+      end
+
+      local failed = 0
+      for _, pane_id in ipairs(pane_ids) do
+        if not kill_pane_by_id(pane_id) then
+          failed = failed + 1
         end
       end
-      window:toast_notification('workspace', id .. ' を削除しました', nil, 2000)
+
+      if failed > 0 then
+        win:toast_notification('workspace', id .. ' の削除に一部失敗しました', nil, 3000)
+        return
+      end
+
+      win:toast_notification('workspace', id .. ' を削除しました', nil, 2000)
     end),
   }, pane)
 end)
