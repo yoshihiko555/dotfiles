@@ -99,6 +99,7 @@ return {
     { key = 'R', mods = 'LEADER|SHIFT', action = resurrect.delete_state },
     -- チートシート表示
     { key = 'c', mods = 'LEADER', action = actions.show_cheatsheet },
+    { key = 'C', mods = 'LEADER|SHIFT', action = actions.show_wezterm_cheatsheet },
 
     ---------------------------------------------------------------------------
     -- コピー・ペースト

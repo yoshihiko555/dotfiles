@@ -45,7 +45,8 @@ Leader: `Ctrl+Q` (2s timeout)
 | `Leader f`   | プロジェクト選択 (fuzzy → WS作成/切替) |
 | `Leader w`   | ワークスペース切替 (fuzzy)            |
 | `Leader W`   | ワークスペース削除                    |
-| `Leader c`   | チートシート表示 (Neovim)             |
+| `Leader c`   | Neovim チートシート表示               |
+| `Leader C`   | WezTerm チートシート表示              |
 
 ### Search / Select
 

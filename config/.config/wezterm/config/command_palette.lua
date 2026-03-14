@@ -29,7 +29,8 @@ function M.setup()
       entry('Overlay: Open Claude Code', actions.overlay_claude),
       entry('Overlay: Open Temporary Shell', actions.open_bottom_shell),
 
-      entry('Utility: Show Cheatsheet', actions.show_cheatsheet),
+      entry('Utility: Show Neovim Cheatsheet', actions.show_cheatsheet),
+      entry('Utility: Show WezTerm Cheatsheet', actions.show_wezterm_cheatsheet),
       entry('Utility: Clear Screen (Keep Scrollback)', actions.clear_screen_save_scrollback),
       entry('Utility: Clear Scrollback and Viewport', actions.clear_scrollback_and_viewport),
     }

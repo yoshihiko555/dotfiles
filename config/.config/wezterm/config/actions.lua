@@ -488,15 +488,27 @@ M.clear_scrollback_and_viewport = wezterm.action_callback(function(window, pane)
   window:perform_action(act.ClearScrollback 'ScrollbackAndViewport', pane)
 end)
 
--- チートシート表示（右ペインに glow で表示、q で閉じる）
-M.show_cheatsheet = wezterm.action_callback(function(window, pane)
-  local cheatsheet = wezterm.home_dir .. '/.config/nvim/docs/CHEATSHEET.md'
-  local cheat_pane = pane:split({
-    direction = 'Right',
-    size = 0.4,
-    args = { '/opt/homebrew/bin/glow', '-s', 'dracula', '-p', cheatsheet },
-  })
-  cheat_pane:activate()
-end)
+local function show_cheatsheet(cheatsheet)
+  return wezterm.action_callback(function(window, pane)
+    local args
+
+    if command_exists('glow') then
+      args = { '/opt/homebrew/bin/glow', '-s', 'dracula', '-p', cheatsheet }
+    else
+      args = shell_command_args('nvim -R ' .. shell_quote(cheatsheet))
+    end
+
+    local cheat_pane = pane:split({
+      direction = 'Right',
+      size = 0.4,
+      args = args,
+    })
+    cheat_pane:activate()
+  end)
+end
+
+-- チートシート表示（右ペインに glow / nvim で表示）
+M.show_cheatsheet = show_cheatsheet(wezterm.home_dir .. '/.config/nvim/docs/CHEATSHEET.md')
+M.show_wezterm_cheatsheet = show_cheatsheet(wezterm.home_dir .. '/.config/wezterm/CHEATSHEET.md')
 
 return M
