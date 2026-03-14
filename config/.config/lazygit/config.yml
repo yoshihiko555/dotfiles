@@ -4,5 +4,38 @@ customCommands:
     description: "Claude で Conventional Commits のメッセージを生成してコミット"
     output: "terminal"
     command: |
-      DOTFILES_DIR="${DOTFILES_DIR:-$HOME/ghq/github.com/yoshihiko555/dotfiles}"
-      "$DOTFILES_DIR/scripts/lazygit-claude-commit.sh"
+      if git diff --cached --quiet; then
+        echo "No staged changes to commit."
+        exit 1
+      fi
+
+      CLAUDE_BIN="${CLAUDE_BIN:-$(command -v claude || true)}"
+      if [ -z "$CLAUDE_BIN" ] && [ -x /opt/homebrew/bin/claude ]; then
+        CLAUDE_BIN=/opt/homebrew/bin/claude
+      fi
+
+      if [ -z "$CLAUDE_BIN" ] || [ ! -x "$CLAUDE_BIN" ]; then
+        echo "Claude CLI not found in PATH."
+        exit 1
+      fi
+
+      PROMPT_CONTENT="$(
+        cat <<'EOF'
+      Generate ONLY a one-line Git commit message following Conventional Commits format (type(scope): description).
+      Types: feat, fix, docs, style, refactor, test, chore.
+      Base it strictly on the staged diff below.
+      Output ONLY the commit message, with no code fences or extra commentary.
+
+      Staged diff:
+      EOF
+        git diff --cached
+      )"
+
+      MSG="$(CLAUDE_SKIP_NOTIFY_HOOKS=1 "$CLAUDE_BIN" --print --model haiku "$PROMPT_CONTENT")"
+
+      if [ -z "$MSG" ]; then
+        echo "Claude did not return a commit message."
+        exit 1
+      fi
+
+      git commit -e -m "$MSG"
