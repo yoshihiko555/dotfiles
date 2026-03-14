@@ -238,7 +238,8 @@ M.select_project = wezterm.action_callback(function(window, pane)
     action = wezterm.action_callback(function(win, p, id, label)
       if not id or id == '' then return end
 
-      local ws_name = context.workspace_name_from_label(label:gsub('^[^ ]+ ', ''))
+      local clean_label = label:gsub('\027%[[%d:;]*m', '')
+      local ws_name = context.workspace_name_from_label(clean_label:gsub('^%s+', ''):gsub('^[^ ]+ ', ''))
 
       win:perform_action(act.SwitchToWorkspace {
         name = ws_name,
