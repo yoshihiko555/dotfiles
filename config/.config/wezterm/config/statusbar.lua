@@ -22,6 +22,7 @@ local C = {
 }
 
 local MODE_STYLES = {
+  leader = { bg = C.cyan, label = "LEADER" },
   copy_mode = { bg = C.yellow, label = "COPY" },
   pane_mode = { bg = C.green, label = "PANE" },
   search_mode = { bg = C.purple, label = "SEARCH" },
@@ -80,7 +81,7 @@ local function build_right(workspace, datetime)
     table.insert(right, { Background = { Color = C.bg_dark } })
     table.insert(right, { Foreground = { Color = C.teal } })
     table.insert(right, { Attribute = { Intensity = "Bold" } })
-    table.insert(right, { Text = "  " .. workspace_icon .. "" })
+    table.insert(right, { Text = "  " .. workspace_icon .. "  " })
     table.insert(right, { Foreground = { Color = C.fg } })
     table.insert(right, { Text = "" .. workspace .. "  " })
   end
@@ -98,19 +99,22 @@ function M.setup()
   wezterm.on("update-status", function(window, _pane)
     local workspace = context.get_workspace_name(window)
     local key_table = window:active_key_table()
+    local leader = window:leader_is_active()
     local datetime = wezterm.strftime("%m/%d %H:%M")
 
     -- 入力が前回と同じならスキップ
     if workspace == cache.workspace
-      and key_table == cache.key_table
-      and datetime == cache.datetime
+        and key_table == cache.key_table
+        and leader == cache.leader
+        and datetime == cache.datetime
     then
       return
     end
 
     -- 変化した部分だけ再構築
-    if key_table ~= cache.key_table then
-      cache.left = build_left(MODE_STYLES[key_table])
+    if key_table ~= cache.key_table or leader ~= cache.leader then
+      local mode = MODE_STYLES[key_table] or (leader and MODE_STYLES.leader)
+      cache.left = build_left(mode)
     end
 
     if workspace ~= cache.workspace or datetime ~= cache.datetime then
@@ -119,6 +123,7 @@ function M.setup()
 
     cache.workspace = workspace
     cache.key_table = key_table
+    cache.leader = leader
     cache.datetime = datetime
 
     window:set_left_status(cache.left)
