@@ -177,8 +177,9 @@ local function build_project_choices()
     })
     for _, wt in ipairs(worktrees) do
       local repo, branch = wt.label:match('.-/([^/]+):(.+)$')
+      local ws_name = (repo and branch) and (repo .. ':' .. branch) or wt.label
       table.insert(choices, {
-        id = wt.path,
+        id = wt.path .. '\t' .. ws_name,
         label = wezterm.format {
           { Text = '    ' },
           { Foreground = { Color = '#cad3f5' } },
@@ -238,12 +239,17 @@ M.select_project = wezterm.action_callback(function(window, pane)
     action = wezterm.action_callback(function(win, p, id, label)
       if not id or id == '' then return end
 
-      local clean_label = label:gsub('\027%[[%d:;]*m', '')
-      local ws_name = context.workspace_name_from_label(clean_label:gsub('^%s+', ''):gsub('^[^ ]+ ', ''))
+      -- worktree の場合は id が "path\tws_name" 形式
+      local cwd, ws_name = id:match('^([^\t]+)\t(.+)$')
+      if not cwd then
+        -- 通常リポジトリ: id はパスのみ
+        cwd = id
+        ws_name = context.get_project_name_from_path(cwd)
+      end
 
       win:perform_action(act.SwitchToWorkspace {
         name = ws_name,
-        spawn = { cwd = id },
+        spawn = { cwd = cwd },
       }, p)
     end),
   }, pane)
@@ -262,10 +268,18 @@ M.switch_workspace = wezterm.action_callback(function(window, pane)
   local choices = {}
   for _, ws in ipairs(workspaces) do
     local is_current = (ws == current)
+    local is_worktree = ws:find(':') ~= nil
     local fmt = {}
     if is_current then
       table.insert(fmt, { Foreground = { Color = '#f5a97f' } })
       table.insert(fmt, { Text = wezterm.nerdfonts.fa_circle .. ' ' })
+      if is_worktree then
+        table.insert(fmt, { Foreground = { Color = '#f5a97f' } })
+        table.insert(fmt, { Text = wezterm.nerdfonts.cod_git_merge .. ' ' })
+      else
+        table.insert(fmt, { Foreground = { Color = '#8bd5ca' } })
+        table.insert(fmt, { Text = wezterm.nerdfonts.oct_repo .. ' ' })
+      end
       table.insert(fmt, { Foreground = { Color = '#cad3f5' } })
       table.insert(fmt, { Attribute = { Intensity = 'Bold' } })
       table.insert(fmt, { Text = ws })
@@ -273,8 +287,15 @@ M.switch_workspace = wezterm.action_callback(function(window, pane)
       table.insert(fmt, { Foreground = { Color = '#6e738d' } })
       table.insert(fmt, { Text = '  (current)' })
     else
-      table.insert(fmt, { Foreground = { Color = '#8bd5ca' } })
-      table.insert(fmt, { Text = wezterm.nerdfonts.fa_circle_o .. ' ' })
+      if is_worktree then
+        table.insert(fmt, { Foreground = { Color = '#f5a97f' } })
+        table.insert(fmt, { Text = wezterm.nerdfonts.fa_circle_o .. ' ' })
+        table.insert(fmt, { Text = wezterm.nerdfonts.cod_git_merge .. ' ' })
+      else
+        table.insert(fmt, { Foreground = { Color = '#8bd5ca' } })
+        table.insert(fmt, { Text = wezterm.nerdfonts.fa_circle_o .. ' ' })
+        table.insert(fmt, { Text = wezterm.nerdfonts.oct_repo .. ' ' })
+      end
       table.insert(fmt, { Foreground = { Color = '#cad3f5' } })
       table.insert(fmt, { Text = ws })
     end
