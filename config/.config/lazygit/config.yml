@@ -27,7 +27,7 @@ customCommands:
         git diff --cached
       )"
 
-      MSG="$("$GEMINI_BIN" -p "$PROMPT_CONTENT" 2>/dev/null)"
+      MSG="$("$GEMINI_BIN" -m gemini-2.5-flash -p "$PROMPT_CONTENT" 2>/dev/null)"
 
       if [ -z "$MSG" ]; then
         echo "Gemini did not return a commit message."
