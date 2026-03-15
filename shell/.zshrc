@@ -724,3 +724,6 @@ EOF
   esac
 }
 # ---- end ----
+
+# baton: AI セッション監視（バックグラウンド常駐）
+pgrep -f "baton --no-tui" > /dev/null 2>&1 || "$HOME/.local/bin/baton" --no-tui > /dev/null 2>&1 &

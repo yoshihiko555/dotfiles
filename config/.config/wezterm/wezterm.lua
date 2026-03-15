@@ -21,6 +21,9 @@ command_palette.setup()
 local actions = require("config/actions")
 actions.setup_alfred_watcher()
 
+-- baton ステータスバー連携
+local baton = require("config/baton-status")
+
 -- ワークスペース永続化（resurrect.wezterm）
 local resurrect_config = require("config/resurrect")
 resurrect_config.setup()
