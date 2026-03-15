@@ -31,7 +31,7 @@ customCommands:
         git diff --cached
       )"
 
-      MSG="$(CLAUDE_SKIP_NOTIFY_HOOKS=1 "$CLAUDE_BIN" --print --model haiku "$PROMPT_CONTENT")"
+      MSG="$(CLAUDE_SKIP_NOTIFY_HOOKS=1 "$CLAUDE_BIN" --print --no-conversation-history --model haiku "$PROMPT_CONTENT")"
 
       if [ -z "$MSG" ]; then
         echo "Claude did not return a commit message."
