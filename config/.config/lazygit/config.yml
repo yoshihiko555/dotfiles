@@ -1,7 +1,7 @@
 customCommands:
   - key: "<c-g>"
     context: "files"
-    description: "Claude で Conventional Commits のメッセージを生成してコミット"
+    description: "Gemini で Conventional Commits のメッセージを生成してコミット"
     output: "terminal"
     command: |
       if git diff --cached --quiet; then
@@ -9,13 +9,9 @@ customCommands:
         exit 1
       fi
 
-      CLAUDE_BIN="${CLAUDE_BIN:-$(command -v claude || true)}"
-      if [ -z "$CLAUDE_BIN" ] && [ -x /opt/homebrew/bin/claude ]; then
-        CLAUDE_BIN=/opt/homebrew/bin/claude
-      fi
-
-      if [ -z "$CLAUDE_BIN" ] || [ ! -x "$CLAUDE_BIN" ]; then
-        echo "Claude CLI not found in PATH."
+      GEMINI_BIN="${GEMINI_BIN:-$(command -v gemini || true)}"
+      if [ -z "$GEMINI_BIN" ] || [ ! -x "$GEMINI_BIN" ]; then
+        echo "Gemini CLI not found in PATH."
         exit 1
       fi
 
@@ -31,10 +27,10 @@ customCommands:
         git diff --cached
       )"
 
-      MSG="$(CLAUDE_SKIP_NOTIFY_HOOKS=1 "$CLAUDE_BIN" --print --no-conversation-history --model haiku "$PROMPT_CONTENT")"
+      MSG="$("$GEMINI_BIN" -p "$PROMPT_CONTENT" 2>/dev/null)"
 
       if [ -z "$MSG" ]; then
-        echo "Claude did not return a commit message."
+        echo "Gemini did not return a commit message."
         exit 1
       fi
 
