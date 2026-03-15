@@ -4,6 +4,8 @@ customCommands:
     description: "Gemini で Conventional Commits のメッセージを生成してコミット"
     output: "terminal"
     command: |
+      clear
+
       if git diff --cached --quiet; then
         echo "No staged changes to commit."
         exit 1
@@ -14,6 +16,19 @@ customCommands:
         echo "Gemini CLI not found in PATH."
         exit 1
       fi
+
+      echo ""
+      echo "  ╭─────────────────────────────────────────────╮"
+      echo "  │  Generating commit message with Gemini...   │"
+      echo "  ╰─────────────────────────────────────────────╯"
+      echo ""
+      echo "  Model : gemini-2.5-flash"
+      echo "  Staged: $(git diff --cached --stat | tail -1)"
+      echo ""
+      echo "  ── Usage ──────────────────────────────────────"
+      echo "  コミット中止: エディタで :cq または ggdG → :wq"
+      echo "  メッセージ編集: エディタで自由に書き換えてOK"
+      echo ""
 
       PROMPT_CONTENT="$(
         cat <<'EOF'
