@@ -31,13 +31,17 @@ config.window_frame = {
 -- イベントハンドラ
 -- 起動時にメインモニターで3ペイン分割＋最大化
 wezterm.on("gui-startup", function(cmd)
-  -- cmd(SpawnCommand) を尊重して初期ウィンドウを作る
-  -- これで `wezterm start --cwd ...` の cwd/args が反映される
+  -- 外部から引数付きで起動された場合はそちらを優先
   local spawn = cmd or {}
+  local has_args = cmd and cmd.args
 
-  -- 起動引数で渡された cwd をベースにする（無ければ home）
-  local base_cwd = spawn.cwd or wezterm.home_dir
-  spawn.cwd = base_cwd
+  if not has_args then
+    -- default ワークスペースで baton ダッシュボードを起動
+    spawn.workspace = 'default'
+    spawn.args = { '/bin/zsh', '-lic', 'baton' }
+  end
+
+  spawn.cwd = spawn.cwd or wezterm.home_dir
   local tab, pane, window = mux.spawn_window(spawn)
 
   -- AppleScript でウィンドウをサブモニターに移動
