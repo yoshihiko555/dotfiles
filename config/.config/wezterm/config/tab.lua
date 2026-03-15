@@ -57,8 +57,13 @@ local function get_tab_title(pane)
     return process_name
   end
 
-  -- それ以外（シェル、エディタ、claude、codex等）は pane.title を表示
-  return context.get_pane_title(pane)
+  -- それ以外（シェル、エディタ等）は pane.title を表示
+  -- pane.title が空の場合はプロセス名にフォールバック
+  local title = context.get_pane_title(pane)
+  if title == "" then
+    return process_name
+  end
+  return title
 end
 
 function M.setup()
