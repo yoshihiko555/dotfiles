@@ -24,8 +24,17 @@ actions.setup_alfred_watcher()
 -- baton ステータスバー連携
 local baton = require("config/baton-status")
 
--- default ワークスペースで baton ダッシュボードを自動起動
-config.default_prog = { '/bin/zsh', '-lic', 'baton' }
+-- default ワークスペースの初期ペインで baton ダッシュボードを起動
+wezterm.on('gui-startup', function(cmd)
+  local args = cmd and cmd.args or nil
+  -- 外部から引数付きで起動された場合はそちらを優先
+  if args then return end
+
+  local tab, pane, window = wezterm.mux.spawn_window {
+    workspace = 'default',
+    args = { '/bin/zsh', '-lic', 'baton' },
+  }
+end)
 
 -- ワークスペース永続化（resurrect.wezterm）
 local resurrect_config = require("config/resurrect")
