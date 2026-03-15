@@ -24,6 +24,9 @@ actions.setup_alfred_watcher()
 -- baton ステータスバー連携
 local baton = require("config/baton-status")
 
+-- default ワークスペースで baton ダッシュボードを自動起動
+config.default_prog = { '/bin/zsh', '-lic', 'baton' }
+
 -- ワークスペース永続化（resurrect.wezterm）
 local resurrect_config = require("config/resurrect")
 resurrect_config.setup()

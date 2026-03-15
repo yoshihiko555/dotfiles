@@ -90,6 +90,8 @@ return {
     -- overlay pane（split + zoom でフローティング相当）
     { key = 'g', mods = 'LEADER', action = actions.overlay_lazygit },
     { key = 'y', mods = 'LEADER', action = actions.overlay_yazi },
+    { key = 'b', mods = 'LEADER', action = act.SwitchToWorkspace { name = 'default' } },
+    { key = 'B', mods = 'LEADER|SHIFT', action = actions.overlay_baton },
     -- サブエージェント監視（tmux-monitor セッションに attach）
     { key = 'a', mods = 'LEADER', action = actions.overlay_tmux_monitor },
     -- 一時シェル

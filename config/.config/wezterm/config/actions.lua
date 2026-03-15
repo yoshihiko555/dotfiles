@@ -92,6 +92,7 @@ end
 M.overlay_lazygit = open_overlay('lazygit')
 M.overlay_yazi = open_overlay('yazi')
 M.overlay_claude = open_overlay('claude')
+M.overlay_baton = open_overlay('baton')
 M.open_bottom_shell = open_overlay(interactive_shell_command())
 
 -- =============================================================================
