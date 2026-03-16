@@ -137,6 +137,26 @@ Prefix+a (履歴)
 
 ---
 
+## セッション管理系 (Phase 2)
+
+### tmux-sessionizer
+
+GHQ リポジトリ + git worktree を fzf で選択し、tmux セッション作成/切替する。
+
+- `repo-list.sh` の TYPE でアイコンを分岐: `repo` → `○ 📦`, `worktree` → `● 🔀`
+- 現在のセッションに `(current)` マーカー付与
+- セッション名: worktree は `repo:branch`, repo は末尾ディレクトリ名 (`.` → `-`)
+- キーバインド: `Prefix + f`
+
+### tmux-kill-session
+
+fzf でセッション選択 → 削除。プレビューにウィンドウ一覧を表示。
+
+- 現在のセッションと `claude-*` は除外
+- キーバインド: `Prefix + W`
+
+---
+
 ## 補助スクリプト
 
 ### tmux-switch-session `<N>`
@@ -159,8 +179,6 @@ AI 監視セッションを popup で開く入口。
 
 | スクリプト | 概要 | Phase |
 |-----------|------|-------|
-| tmux-sessionizer | GHQ プロジェクト picker (fzf, repo/worktree アイコン付き) | 2 |
-| tmux-kill-session | セッション削除 (fzf) | 2 |
 | tmux-init-panes | ペイン数に応じて AI ツール自動起動 | 4 |
 | tmux-baton-status | baton ステータス取得 | 4 |
 | tmux-command-menu | コマンドパレット (fzf) | 5 |

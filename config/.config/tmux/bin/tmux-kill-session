@@ -1,0 +1,19 @@
+#!/bin/bash
+# tmux-kill-session — セッション削除 picker
+# WezTerm の delete_workspace (Leader+W) 相当
+# 現在のセッションと claude-* セッションは除外
+
+set -euo pipefail
+
+current=$(tmux display-message -p '#{session_name}')
+
+selected=$(tmux ls -F '#{session_name}' 2>/dev/null \
+  | grep -v "^${current}$" \
+  | grep -v '^claude-' \
+  | fzf --header "Kill session (current: $current)" \
+        --preview 'tmux list-windows -t {} -F "  #{window_index}: #{window_name} (#{pane_current_command})"')
+
+[ -z "$selected" ] && exit 0
+
+tmux kill-session -t "$selected"
+echo "Killed: $selected"

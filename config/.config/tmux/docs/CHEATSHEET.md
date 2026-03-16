@@ -44,7 +44,9 @@ Prefix: `Ctrl+T`
 
 | キー | 動作 |
 |------|------|
-| `Prefix + s` | セッション一覧を popup + fzf で表示 |
+| `Prefix + f` | プロジェクト picker (repo/worktree アイコン付き fzf) |
+| `Prefix + w` | セッション一覧から切替 (fzf) |
+| `Prefix + W` | セッション削除 (fzf) |
 | `Prefix + g` | lazygit popup (80x80%) |
 | `Prefix + t` | 一時シェル popup (80x80%) |
 | `Prefix + C` | Claude Code popup (90x90%) |
@@ -91,8 +93,6 @@ Prefix: `Ctrl+T`
 
 | キー (予定) | 動作 | Phase |
 |------------|------|-------|
-| `Prefix + f` | プロジェクト picker (tmux-sessionizer, repo/worktree アイコン付き) | 2 |
-| `Prefix + W` | セッション削除 (tmux-kill-session) | 2 |
 | `Prefix + F` | tmux-fingers (テキスト選択) | 3 |
 | `Prefix + b` | claude-squad | 4 |
 | `Prefix + Space` | コマンドパレット | 5 |

@@ -105,3 +105,13 @@
   - tmux-first で WezTerm のタブ/分割を完全に使わない運用にするなら `.zshrc` で OK
   - 併用するなら `gui-startup` が安全
   - tmux-continuum にはターミナルアプリ別の自動起動機能あり
+
+- **セッション作成の仕様策定**
+  - `default` セッションの役割が未定義
+    - 汎用作業用？ダッシュボード (baton 等) 用？一時的なシェル用？
+    - WezTerm の `gui-startup` が `tmux new-session -A -s default` で作成している
+  - sessionizer で作成するセッションの初期レイアウト
+    - Phase 4 の `tmux-init-panes` と関連 (ペイン数に応じて nvim/claude/codex を自動起動)
+  - セッション復元のポリシー
+    - Phase 3 の tmux-resurrect/continuum と関連
+    - どこまで自動復元するか (ウィンドウ構成のみ？プロセスも？)

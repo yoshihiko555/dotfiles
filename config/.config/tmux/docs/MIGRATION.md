@@ -16,7 +16,7 @@ WezTerm のワークスペース管理を tmux セッションに移行し、tmu
 |-------|------|------|------|
 | - | 基盤機能 (Prefix, smart-splits, pane_mode, popup, テーマ等) | **完了** | 移行前の tmux ブランチ資産 |
 | 1 | 設定ファイル分割 + Stow 対応 | **完了** | `config/.config/tmux/` に分割・移動済み |
-| 2 | プロジェクト管理の移行 | **未着手** | sessionizer, kill-session |
+| 2 | プロジェクト管理の移行 | **完了** | sessionizer (Prefix+f), kill-session (Prefix+W), セッション切替 (Prefix+w) |
 | 3 | プラグイン導入 (TPM) | **未着手** | resurrect, continuum, fingers, open |
 | 4 | AI セッション管理 (claude-squad 検証) | **未着手** | baton との比較 |
 | 5 | コマンドパレット + URL ハンドラ | **未着手** | command-menu, urlscan |
