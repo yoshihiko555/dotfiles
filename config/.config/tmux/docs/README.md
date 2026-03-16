@@ -1,6 +1,6 @@
 # tmux ドキュメント
 
-tmux-first 環境への移行に関するドキュメント群。
+tmux-first 環境の現行実装と移行計画に関するドキュメント群。
 
 ## 目次
 
@@ -10,6 +10,7 @@ tmux-first 環境への移行に関するドキュメント群。
 | [MIGRATION.md](./MIGRATION.md) | WezTerm → tmux 移行計画と進捗 |
 | [CHEATSHEET.md](./CHEATSHEET.md) | キーバインド一覧 |
 | [SCRIPTS.md](./SCRIPTS.md) | ヘルパースクリプト説明 |
+| [VERIFICATION.md](./VERIFICATION.md) | 現行設定の確認観点と既知の注意点 |
 | [decisions/](./decisions/) | ADR (Architecture Decision Records) |
 
 ## 関連リソース

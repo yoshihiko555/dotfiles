@@ -36,9 +36,8 @@ wezterm.on("gui-startup", function(cmd)
   local has_args = cmd and cmd.args
 
   if not has_args then
-    -- default ワークスペースで baton ダッシュボードを起動
-    spawn.workspace = 'default'
-    spawn.args = { '/bin/zsh', '-lic', 'baton' }
+    -- tmux の default セッションに接続（なければ作成）
+    spawn.args = { '/bin/zsh', '-lic', 'tmux new-session -A -s default' }
   end
 
   spawn.cwd = spawn.cwd or wezterm.home_dir

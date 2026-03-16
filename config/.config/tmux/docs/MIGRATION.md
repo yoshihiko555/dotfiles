@@ -7,7 +7,7 @@
 WezTerm のワークスペース管理を tmux セッションに移行し、tmux の中で生活する環境を構築する。
 
 - **WezTerm の役割**: GUI レンダラー (背景画像, 透過, フォント) に限定
-- **tmux ブランチの資産**: 225 行の `.tmux.conf` + 14 個のヘルパースクリプト
+- **tmux ブランチの資産**: 分割済み `conf/` 群 + 18 個のヘルパースクリプト
 - **ai-orchestra**: tmux-monitor は現行のまま維持
 
 ## 進捗
@@ -60,7 +60,7 @@ WezTerm のワークスペース管理を tmux セッションに移行し、tmu
 | pane_mode (L110-127) | 18 | `pane-mode.conf` |
 | コピーモード (L130-131) | 2 | `copy-mode.conf` |
 | display-popup (L140-157) | 18 | `popup.conf` |
-| Alt+1-9 セッション切替 (L163-171) | 9 | `session.conf` |
+| Alt+1-9 ウィンドウ直通切替 | 9 | `session.conf` |
 | smart-splits (L177-181) | 5 | `smart-splits.conf` |
 | 見た目 (L185-225) | 41 | `statusbar.conf` + `appearance.conf` |
 
@@ -105,6 +105,7 @@ fzf でセッション選択 → 削除。現在のセッションと `claude-*`
 - claude-squad の導入検証 (baton の代替候補)
 - `tmux-init-panes`: ペイン数に応じて nvim/claude/codex を自動起動
 - 判断基準: Phase 7 の試用期間で baton と比較して決定
+- 補足: ai-orchestra 監視用の `tmux-watch-claude-panes` 系スクリプトは先行実装済み
 
 ## Phase 5: コマンドパレット + URL ハンドラ
 

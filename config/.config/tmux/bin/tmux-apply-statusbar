@@ -1,0 +1,12 @@
+#!/bin/sh
+# Powerline Extra グリフを window-status-format に設定
+# tmux.conf から run-shell で呼び出す
+
+LEFT=$(printf '\xee\x82\xba')   # ple_lower_right_triangle (U+E0BA)
+RIGHT=$(printf '\xee\x82\xbc')  # ple_upper_left_triangle (U+E0BC)
+
+# 非アクティブ
+tmux setw -g window-status-format "#[fg=#005461,bg=default]${LEFT}#[fg=#c8d3f5,bg=#005461]  #W  #[fg=#005461,bg=default]${RIGHT} "
+
+# アクティブ
+tmux setw -g window-status-current-format "#[fg=#3BC1A8,bg=default]${LEFT}#[fg=#c8d3f5,bg=#3BC1A8,bold]  #W  #[fg=#3BC1A8,bg=default]${RIGHT} "

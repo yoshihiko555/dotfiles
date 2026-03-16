@@ -2,50 +2,68 @@
 
 `bin/` 配下のスクリプト一覧。全て `~/.config/tmux/bin/` にインストールされる。
 
-## 概要
+## 現在の使用状況
 
-| スクリプト | 分類 | 概要 |
-|-----------|------|------|
-| tmux-session-tabs | UI | ステータスバー用セッションタブ表示 |
-| tmux-switch-session | ナビ | N 番目のセッションに切替 |
-| tmux-toggle-claude | 制御 | Claude 監視ペインのトグル |
-| tmux-watch-claude-panes | 監視 | ai-orchestra ペイン一覧ダッシュボード |
-| tmux-follow-claude-pane | 監視 | 単一ペインのリアルタイム追跡 |
-| tmux-select-claude-session | 選択 | ai-orchestra セッション選択 (fzf) |
-| tmux-select-claude-pane | 選択 | ai-orchestra ペイン選択 (fzf) |
-| tmux-list-orchestra-sessions | 問合 | アクティブな ai-orchestra セッション一覧 |
-| tmux-pane-claude | 入口 | 監視をペイン内で起動 |
-| tmux-popup-claude | 入口 | 監視をポップアップで起動 |
-| tmux-popup-claude-history | 閲覧 | サブエージェント履歴閲覧 |
-| tmux-save-pane-snapshot | 保存 | ペイン内容のスナップショット保存 |
-| tmux-open-pane-snapshot | 閲覧 | スナップショットを less で表示 |
+| スクリプト | 状態 | 使用箇所 | 概要 |
+|-----------|------|----------|------|
+| tmux-apply-statusbar | 現役 | `statusbar.conf` | Powerline 付き `window-status-format` を適用 |
+| tmux-status-right | 現役 | `statusbar.conf` | セッション名 + 日時を右側に描画 |
+| tmux-save-pane-snapshot | 現役 | `keybinds.conf`, `pane-mode.conf` | ペイン内容のスナップショット保存 |
+| tmux-open-pane-snapshot | 現役 | `copy-mode.conf` | 保存済みスナップショットを popup で表示 |
+| tmux-toggle-claude | 現役 | `popup.conf` (`Prefix+A`) | AI 監視ペインをトグル |
+| tmux-pane-claude | 現役 | `tmux-toggle-claude` | 監視ペイン内の入口 |
+| tmux-popup-claude-history | 現役 | `popup.conf` (`Prefix+a`) | AI 履歴の選択と閲覧 |
+| tmux-list-orchestra-sessions | 現役 | AI 監視フロー内部 | ai-orchestra セッション一覧を取得 |
+| tmux-select-claude-session | 現役 | AI 監視フロー内部 | セッション選択 (fzf) |
+| tmux-select-claude-pane | 現役 | AI 履歴フロー内部 | ペイン選択 (fzf + preview) |
+| tmux-watch-claude-panes | 現役 | AI 監視フロー内部 | セッション全体をリアルタイム監視 |
+| tmux-follow-claude-pane | 現役 | AI 履歴フロー内部 | 単一ペインを `less +F` で追跡 |
+| tmux-popup-claude | 補助 | 手動実行用 | 監視ダッシュボードを popup で起動 |
+| tmux-switch-session | 補助 | 手動実行用 | N 番目の非 Claude セッションへ切替 |
+| tmux-status-left | 未接続 | - | モードバッジのスクリプト版。現行設定では inline format を採用 |
+| tmux-session-tabs | 未接続 | - | 旧セッションタブ表示ヘルパー |
+| tmux-window-status | 未接続 | - | 旧ウィンドウタブ描画ヘルパー |
+| tmux-session-icon | 未接続 | - | セッション名から repo/worktree アイコンを返す小ユーティリティ |
 
 ---
 
-## セッション/UI 系
+## ステータスバー系
 
-### tmux-session-tabs
+### 現行構成
 
-ステータスバー左側にセッション一覧をタブ形式で表示する。
+- 左: `status-left` に inline でモードバッジを定義
+- 中央: tmux ネイティブのウィンドウ一覧
+- 右: `tmux-status-right`
+- Powerline の左右三角は `tmux-apply-statusbar` が `window-status-format` を上書きして適用
 
-- `claude-*` セッションは非表示
-- 現在のセッションはシアン (`#3BC1A8`) でハイライト
-- Powerline Extra グリフ使用
+### tmux-apply-statusbar
 
-**使用箇所**: `status-left` の `#(~/.config/tmux/bin/tmux-session-tabs)`
+`window-status-format` / `window-status-current-format` を Powerline 風に整形する。
 
-### tmux-switch-session
+- 非アクティブ: `#005461`
+- アクティブ: `#3BC1A8`
+- 現在のウィンドウ名文字色は非アクティブと同じ `#c8d3f5`
 
-`tmux-switch-session <N>` で N 番目の非 Claude セッションに切替。
+### tmux-status-right
 
-- `claude-*` セッションを除外してアルファベット順にソート
-- Alt+1-9 キーバインドから呼ばれる
+右側にセッション名と日時を描画する。
+
+- セッション名に `:` を含む場合は worktree アイコン
+- それ以外は repo アイコン
+- 日時は `MM/DD HH:MM` 形式
+
+### 未接続の旧 UI ヘルパー
+
+- `tmux-session-tabs`: 旧 `status-left` 用。現在は使っていない
+- `tmux-window-status`: 旧ウィンドウ一覧用。現在は使っていない
+- `tmux-status-left`: モードバッジのスクリプト版。現在は shell 呼び出しを避けるため inline 化
+- `tmux-session-icon`: 単機能ユーティリティ。現行の右側表示は `tmux-status-right` 内で完結
 
 ---
 
 ## ai-orchestra 監視系
 
-ai-orchestra のサブエージェント (Claude, Codex, Gemini 等) を tmux 上でリアルタイム監視するスクリプト群。
+ai-orchestra のサブエージェント (Claude, Codex, Gemini 等) を tmux 上で監視するスクリプト群。
 
 ### 呼出フロー
 
@@ -54,46 +72,50 @@ Prefix+A (トグル)
   └→ tmux-toggle-claude
        └→ tmux-pane-claude
             ├→ tmux-select-claude-session (fzf)
-            └→ tmux-watch-claude-panes (ダッシュボード)
+            └→ tmux-watch-claude-panes
 
 Prefix+a (履歴)
   └→ tmux-popup-claude-history
        ├→ tmux-select-claude-session (fzf)
-       ├→ tmux-select-claude-pane (fzf + プレビュー)
-       └→ tmux-follow-claude-pane (リアルタイム追跡)
+       ├→ tmux-select-claude-pane (fzf + preview)
+       └→ tmux-follow-claude-pane
 ```
 
 ### tmux-watch-claude-panes `<session>`
 
-全ペインをグリッド表示するダッシュボード。
+セッション内の全ペインを縦積みでリアルタイム表示する。
 
-- 1 秒間隔で更新、差分検出で不要な再描画を回避
-- ペイン状態: `RUNNING` (シアン), `DONE` (緑) で色分け
-- ターミナルリサイズに追従
+- 1 秒間隔で更新
+- `RUNNING` はシアン、`DONE` は緑
+- 差分がないときは再描画しない
+- 端末サイズに応じて表示行数を再計算
 
 ### tmux-follow-claude-pane `<session> <pane_id> [status] [title]`
 
-単一ペインの出力をリアルタイム追跡。
+単一ペインの出力を `less -R +F` で追跡する。
 
-- `Ctrl+C` で一時停止、`F` で再開、`q` で終了
-- ペインリセット検出で自動終了
-- `less` で全履歴を閲覧可能
+- `Ctrl+C` で follow 停止
+- `F` で follow 再開
+- `q` で終了
+- pane reset / pane close をログに追記
 
 ### tmux-select-claude-session
 
-アクティブな ai-orchestra セッションを fzf で選択。単一セッションの場合は自動選択。
+`$CLAUDE_TMUX_SESSION_INFO_DIR` を元にアクティブな ai-orchestra セッションを選択する。
+
+- 候補が 1 件なら自動選択
+- 複数件なら fzf で選択
 
 ### tmux-select-claude-pane `<session>`
 
-セッション内のペインを fzf で選択。プレビューに末尾 120 行を表示。
+セッション内のペインを選択する。
 
-### tmux-list-orchestra-sessions
-
-`$CLAUDE_TMUX_SESSION_INFO_DIR` からアクティブセッション一覧を取得。存在確認 + 重複排除済み。
+- 出力形式: `pane_id<TAB>status<TAB>title`
+- プレビューには末尾 120 行を表示
 
 ### tmux-toggle-claude
 
-Claude 監視ペイン (右 40%) の表示/非表示をトグル。`claude-watch` タイトルで識別。
+右 40% に AI 監視ペインを表示し、同じタイトル (`claude-watch`) のペインがあれば閉じる。
 
 ---
 
@@ -101,15 +123,35 @@ Claude 監視ペイン (右 40%) の表示/非表示をトグル。`claude-watch
 
 ### tmux-save-pane-snapshot `[pane-id]`
 
-ペインズーム時 (`Prefix+z`) に自動呼出。ペイン内容を `~/.cache/tmux/pane-snapshots/` に保存。
+ペインズーム時 (`Prefix+z`, `pane_mode` の `z`) に自動呼出される。
 
-- 代替画面 + ヒストリバッファの両方をキャプチャ
-- メタデータ (セッション名, コマンド, プロジェクト等) を記録
-- アトミック書込み
+- 保存先: `~/.cache/tmux/pane-snapshots/`
+- alternate screen と history buffer の両方をキャプチャ
+- メタデータ (セッション名, コマンド, パスなど) を記録
 
 ### tmux-open-pane-snapshot `[pane-id]`
 
-保存済みスナップショットを `less -R` で表示 (`Prefix+V` で呼出)。
+保存済みスナップショットを `less -R` で表示する。
+
+- `Prefix+V` から popup で呼び出される
+
+---
+
+## 補助スクリプト
+
+### tmux-switch-session `<N>`
+
+N 番目の非 Claude セッションへ切り替える。
+
+- 現在の `session.conf` では未バインド
+- 直接 `tmux-switch-session 2` のように手動で使える
+
+### tmux-popup-claude
+
+AI 監視セッションを popup で開く入口。
+
+- 現在のキーバインドからは呼ばれない
+- 手動実行や将来の popup 導線用に残している
 
 ---
 
@@ -123,29 +165,3 @@ Claude 監視ペイン (右 40%) の表示/非表示をトグル。`claude-watch
 | tmux-baton-status | baton ステータス取得 | 4 |
 | tmux-command-menu | コマンドパレット (fzf) | 5 |
 | tmux-url-handler | URL 選択 → 開く | 5 |
-
-### tmux-sessionizer (Phase 2)
-
-WezTerm の `select_project` 相当。GHQ リポジトリ + git worktree を fzf で選択し、tmux セッションを作成/切替する。
-
-**UI 仕様** (WezTerm の視覚デザインを踏襲):
-
-```
-  ○ 🖥 default
-  ○ 🖥 digital-garden
-  ● 🔀 dotfiles:tmux   (current)
-  ○ 🖥 learno
-  ○ 🖥 tech-site
-```
-
-- `repo-list.sh` の TYPE でアイコンを分岐: `repo` → `○ 🖥`, `worktree` → `● 🔀`
-- 現在のセッションに `(current)` マーカー付与
-- セッション名規則: worktree は `repo:branch`, repo は末尾ディレクトリ名
-- データソース: `scripts/repo-list.sh` (WezTerm と共有)
-- キーバインド: `Prefix + f` → `display-popup -E -w 80% -h 70%`
-
-### tmux-kill-session (Phase 2)
-
-fzf でセッション選択 → 削除。現在のセッションと `claude-*` は除外。
-
-- キーバインド: `Prefix + W` → `display-popup -E -w 60% -h 50%`

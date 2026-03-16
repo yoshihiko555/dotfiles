@@ -1,0 +1,28 @@
+#!/bin/sh
+# ステータスバー右側: セッション名 + 日時
+# セグメント間のみ Powerline 矢印で繋ぐ（左端の矢印は不要）
+
+LEFT_ARROW=$(printf '\xee\x82\xb2')    # U+E0B2
+
+# Nerd Font アイコン
+ICON_REPO=$(printf '\xee\xa9\xa2')        # nf-cod-repo (U+EA62)
+ICON_WORKTREE=$(printf '\xee\x9c\xa8')    # nf-cod-git_merge (U+E728)
+ICON_CALENDAR=$(printf '\xef\x81\xb3')    # nf-fa-calendar (U+F073)
+
+session=$(tmux display-message -p '#{session_name}')
+datetime=$(date '+%m/%d %H:%M')
+
+# セッション名でアイコン切替
+case "$session" in
+  *:*) icon="$ICON_WORKTREE" ;;
+  *)   icon="$ICON_REPO" ;;
+esac
+
+# セッション名セグメント
+printf '#[fg=#c8d3f5,bg=#394270]  %s  %s  ' "$icon" "$session"
+
+# 繋がり矢印（セッション → 日時）
+printf '#[fg=#82aaff,bg=#394270]%s' "$LEFT_ARROW"
+
+# 日時セグメント
+printf '#[fg=#1e2030,bg=#82aaff,bold]  %s %s  ' "$ICON_CALENDAR" "$datetime"

@@ -1,22 +1,27 @@
 #!/bin/sh
-# ステータスバー用セッション一覧（WezTerm タブ風ひし形）
+# ステータスバー右側: セッション名を repo/worktree アイコン付きで表示
 # - claude-* セッションを除外
+# - ":" を含む → worktree (git-merge アイコン)
+# - それ以外 → repo (repo アイコン)
 export PATH="/opt/homebrew/bin:$PATH"
 
-# Powerline Extra グリフ (WezTerm tab.lua 準拠)
-# /bin/sh の printf でも壊れないよう UTF-8 バイト列で定義する
-LEFT=$(printf '\356\202\272')   # ple_lower_right_triangle
-RIGHT=$(printf '\356\202\274')  # ple_upper_left_triangle
+# Nerd Font アイコン
+ICON_REPO=$(printf '\xef\x80\x88')        # nf-fa-book (oct_repo 相当)
+ICON_WORKTREE=$(printf '\xee\x9c\xa8')    # nf-cod-git_merge
 
 current=$(tmux display-message -p '#{session_name}')
 sessions=$(tmux ls -F '#{session_name}' 2>/dev/null | grep -v '^claude-' | sort)
 
-i=1
 for s in $sessions; do
+  # セッション名に ":" が含まれていれば worktree
+  case "$s" in
+    *:*) icon="$ICON_WORKTREE" ;;
+    *)   icon="$ICON_REPO" ;;
+  esac
+
   if [ "$s" = "$current" ]; then
-    printf "#[fg=#3BC1A8,bg=default]${LEFT}#[fg=#1e2030,bg=#3BC1A8,bold] %d  %s #[fg=#3BC1A8,bg=default]${RIGHT}" "$i" "$s"
+    printf "#[fg=#3BC1A8,bg=default] %s #[fg=#1e2030,bg=#3BC1A8,bold] %s #[fg=#3BC1A8,bg=default] " "$icon" "$s"
   else
-    printf "#[fg=#005461,bg=default]${LEFT}#[fg=#c8d3f5,bg=#005461] %d  %s #[fg=#005461,bg=default]${RIGHT}" "$i" "$s"
+    printf "#[fg=#828bb8,bg=default] %s #[fg=#828bb8,bg=default] %s " "$icon" "$s"
   fi
-  i=$((i + 1))
 done
