@@ -182,4 +182,3 @@ AI 監視セッションを popup で開く入口。
 | tmux-init-panes | ペイン数に応じて AI ツール自動起動 | 4 |
 | tmux-baton-status | baton ステータス取得 | 4 |
 | tmux-command-menu | コマンドパレット (fzf) | 5 |
-| tmux-url-handler | URL 選択 → 開く | 5 |

@@ -17,7 +17,7 @@ WezTerm のワークスペース管理を tmux セッションに移行し、tmu
 | - | 基盤機能 (Prefix, smart-splits, pane_mode, popup, テーマ等) | **完了** | 移行前の tmux ブランチ資産 |
 | 1 | 設定ファイル分割 + Stow 対応 | **完了** | `config/.config/tmux/` に分割・移動済み |
 | 2 | プロジェクト管理の移行 | **完了** | sessionizer (Prefix+f), kill-session (Prefix+W), セッション切替 (Prefix+w) |
-| 3 | プラグイン導入 (TPM) | **未着手** | resurrect, continuum, fingers, open |
+| 3 | プラグイン導入 (TPM) | **部分完了** | fingers (Prefix+F), open 導入済み。resurrect/continuum は後回し |
 | 4 | AI セッション管理 (claude-squad 検証) | **未着手** | baton との比較 |
 | 5 | コマンドパレット + URL ハンドラ | **未着手** | command-menu, urlscan |
 | 6 | WezTerm 設定の縮小 | **未着手** | GUI レンダラーに限定 |
@@ -93,12 +93,14 @@ fzf でセッション選択 → 削除。現在のセッションと `claude-*`
 
 ## Phase 3: プラグイン導入
 
-| プラグイン | 用途 | WezTerm 相当 |
-|-----------|------|-------------|
-| tmux-resurrect | セッション保存/復元 | resurrect.lua |
-| tmux-continuum | 自動保存 (15 分間隔) | - |
-| tmux-fingers | テキスト選択 (URL, UUID 等) | QuickSelect |
-| tmux-open | URL/ファイルパスを開く | - |
+TPM を自動ブートストラップ方式で導入。初回 tmux 起動時に自動 clone + プラグインインストール。
+
+| プラグイン | 用途 | WezTerm 相当 | 状態 |
+|-----------|------|-------------|------|
+| tmux-fingers | テキスト選択 (URL, UUID 等) | QuickSelect | **導入済み** (Prefix+F) |
+| tmux-open | URL/ファイルパスを開く | - | **導入済み** (コピーモードで o/S) |
+| tmux-resurrect | セッション保存/復元 | resurrect.lua | 後回し (マシン再起動時のみ必要) |
+| tmux-continuum | 自動保存 (15 分間隔) | - | 後回し (resurrect と同時に検討) |
 
 ## Phase 4: AI セッション管理
 

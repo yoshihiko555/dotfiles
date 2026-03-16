@@ -53,6 +53,16 @@ Prefix: `Ctrl+T`
 | `Prefix + a` | AI サブエージェント履歴 popup (90x90%) |
 | `Prefix + A` | AI 監視ペインの表示 / 非表示 |
 
+## プラグイン
+
+| キー | 動作 |
+|------|------|
+| `Prefix + F` | tmux-fingers (画面内の URL/UUID/パス等にラベル → キーで選択・コピー) |
+| コピーモードで `o` | 選択テキストをブラウザで開く (tmux-open) |
+| コピーモードで `S` | 選択テキストで Google 検索 (tmux-open) |
+| コピーモードで `Ctrl+o` | 選択テキストをエディタで開く (tmux-open) |
+| `Prefix + I` | TPM プラグインをインストール/更新 |
+
 ## コピーモード
 
 | キー | 動作 |
@@ -93,7 +103,6 @@ Prefix: `Ctrl+T`
 
 | キー (予定) | 動作 | Phase |
 |------------|------|-------|
-| `Prefix + F` | tmux-fingers (テキスト選択) | 3 |
 | `Prefix + b` | claude-squad | 4 |
 | `Prefix + Space` | コマンドパレット | 5 |
 | `Prefix + u` | URL 選択 (urlscan) | 5 |
