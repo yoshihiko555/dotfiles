@@ -1,0 +1,52 @@
+customCommands:
+  - key: "<c-g>"
+    context: "files"
+    description: "Gemini で Conventional Commits のメッセージを生成してコミット"
+    output: "terminal"
+    command: |
+      clear
+
+      if git diff --cached --quiet; then
+        echo "No staged changes to commit."
+        exit 1
+      fi
+
+      GEMINI_BIN="${GEMINI_BIN:-$(command -v gemini || true)}"
+      if [ -z "$GEMINI_BIN" ] || [ ! -x "$GEMINI_BIN" ]; then
+        echo "Gemini CLI not found in PATH."
+        exit 1
+      fi
+
+      echo ""
+      echo "  ╭─────────────────────────────────────────────╮"
+      echo "  │  Generating commit message with Gemini...   │"
+      echo "  ╰─────────────────────────────────────────────╯"
+      echo ""
+      echo "  Model : gemini-2.5-flash"
+      echo "  Staged: $(git diff --cached --stat | tail -1)"
+      echo ""
+      echo "  ── Usage ──────────────────────────────────────"
+      echo "  コミット中止: エディタで :cq または ggdG → :wq"
+      echo "  メッセージ編集: エディタで自由に書き換えてOK"
+      echo ""
+
+      PROMPT_CONTENT="$(
+        cat <<'EOF'
+      以下の staged diff だけを根拠に、Conventional Commits 形式の1行コミットメッセージを日本語で生成してください。
+      形式: type(scope): 日本語の要約
+      type は feat, fix, docs, style, refactor, test, chore のいずれかを使ってください。
+      出力はコミットメッセージ本文のみ。コードフェンスや補足説明は禁止です。
+
+      Staged diff:
+      EOF
+        git diff --cached
+      )"
+
+      MSG="$("$GEMINI_BIN" -m gemini-2.5-flash -p "$PROMPT_CONTENT" 2>/dev/null)"
+
+      if [ -z "$MSG" ]; then
+        echo "Gemini did not return a commit message."
+        exit 1
+      fi
+
+      git commit -e -m "$MSG"

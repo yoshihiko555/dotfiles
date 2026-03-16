@@ -31,41 +31,31 @@ config.window_frame = {
 -- イベントハンドラ
 -- 起動時にメインモニターで3ペイン分割＋最大化
 wezterm.on("gui-startup", function(cmd)
-    -- cmd(SpawnCommand) を尊重して初期ウィンドウを作る
-    -- これで `wezterm start --cwd ...` の cwd/args が反映される
-    local spawn = cmd or {}
+  -- 外部から引数付きで起動された場合はそちらを優先
+  local spawn = cmd or {}
+  local has_args = cmd and cmd.args
 
-    -- 起動引数で渡された cwd をベースにする（無ければ home）
-    local base_cwd = spawn.cwd or wezterm.home_dir
-    spawn.cwd = base_cwd
-    local tab, pane, window = mux.spawn_window(spawn)
-    
-    -- AppleScript でウィンドウをサブモニターに移動
-    wezterm.run_child_process({
-      "osascript", "-e", [[
+  if not has_args then
+    -- default ワークスペースで baton ダッシュボードを起動
+    spawn.workspace = 'default'
+    spawn.args = { '/bin/zsh', '-lic', 'baton' }
+  end
+
+  spawn.cwd = spawn.cwd or wezterm.home_dir
+  local tab, pane, window = mux.spawn_window(spawn)
+
+  -- AppleScript でウィンドウをサブモニターに移動
+  wezterm.run_child_process({
+    "osascript", "-e", [[
         tell application "System Events"
           tell process "WezTerm"
             set position of window 1 to {0, 0}
           end tell
         end tell
       ]]
-    })
+  })
 
-    window:gui_window():maximize()
-    wezterm.sleep_ms(200)
-
-    -- パターン1: 左1 + 右上下2
-    -- ┌──────┬──────┐
-    -- │      │  2   │
-    -- │  1   ├──────┤
-    -- │      │  3   │
-    -- └──────┴──────┘
-
-    -- 右側に縦分割（50%）
-    local right_pane = pane:split({ direction = "Right", size = 0.5, cwd = base_cwd })
-    right_pane:split({ direction = "Bottom", size = 0.5, cwd = base_cwd })
-    -- 左ペインにフォーカス
-    pane:activate()
+  window:gui_window():maximize()
 end)
 
 return config

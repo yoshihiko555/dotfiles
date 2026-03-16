@@ -1,4 +1,5 @@
 local wezterm = require("wezterm")
+local context = require("config/context")
 
 local M = {}
 
@@ -25,41 +26,25 @@ local function truncate_left(str, max_len)
   end
 end
 
--- プロセス名を取得する関数
-local function get_process_name(pane)
-  local process_name = pane.foreground_process_name or ""
-  return process_name:match("([^/]+)$") or ""
-end
-
--- カレントディレクトリからプロジェクト名を取得する関数
-local function get_project_name(pane)
-  local cwd_uri = pane.current_working_dir
-  if cwd_uri then
-    local cwd = cwd_uri.file_path or ""
-    -- パスの最後のディレクトリ名を取得
-    local project_name = cwd:match("([^/]+)/?$")
-    if project_name and project_name ~= "" then
-      return project_name
-    end
-  end
-  -- フォールバック: paneのタイトルを使用
-  return pane.title
-end
-
 -- コマンド名を表示するCLIツールのリスト
 -- これらのツールは専用タブとして認識しやすくするためコマンド名を表示
 local cli_tools_show_command = {
-  "lazygit", "lg",           -- Git TUI
-  "htop", "btop", "top",     -- プロセスモニター
-  "lazydocker",              -- Docker TUI
-  "k9s",                     -- Kubernetes TUI
-  "ncdu", "dust",            -- ディスク使用量
-  "ranger", "lf", "yazi",    -- ファイルマネージャー
+  "lazygit", "lg",        -- Git TUI
+  "htop", "btop", "top",  -- プロセスモニター
+  "lazydocker",           -- Docker TUI
+  "k9s",                  -- Kubernetes TUI
+  "ncdu", "dust",         -- ディスク使用量
+  "ranger", "lf", "yazi", -- ファイルマネージャー
+}
+
+local agent_tools_show_command = {
+  claude = true,
+  codex = true,
 }
 
 -- タブタイトルを取得する関数
 local function get_tab_title(pane)
-  local process_name = get_process_name(pane)
+  local process_name = context.get_process_name(pane)
 
   -- CLIツールリストに含まれる場合はコマンド名を表示
   for _, tool in ipairs(cli_tools_show_command) do
@@ -68,8 +53,17 @@ local function get_tab_title(pane)
     end
   end
 
-  -- それ以外（シェル、エディタ、claude、codex等）はプロジェクト名を表示
-  return get_project_name(pane)
+  if agent_tools_show_command[process_name] then
+    return process_name
+  end
+
+  -- それ以外（シェル、エディタ等）は pane.title を表示
+  -- pane.title が空の場合はプロセス名にフォールバック
+  local title = context.get_pane_title(pane)
+  if title == "" then
+    return process_name
+  end
+  return title
 end
 
 function M.setup()
@@ -94,7 +88,7 @@ function M.setup()
 
     -- タブタイトルを取得（プロセス名またはプロジェクト名）
     local title = get_tab_title(tab.active_pane)
-    title = truncate_left(title, max_width - 6)  -- 短縮表示
+    title = truncate_left(title, max_width - 6) -- 短縮表示
 
     -- タイトル形式
     local formatted_title = "  " .. title .. "  "

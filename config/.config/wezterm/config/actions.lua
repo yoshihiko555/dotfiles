@@ -1,179 +1,483 @@
 local wezterm = require 'wezterm'
 local act = wezterm.action
+local context = require('config/context')
 
 local M = {}
 
--- 新規タブを8分割（4x2グリッド）で開くアクション（ホームディレクトリから）
-M.spawn_tab_with_8_panes = wezterm.action_callback(function(window, pane)
-  local tab, first_pane, _ = window:mux_window():spawn_tab({ cwd = wezterm.home_dir })
+-- =============================================================================
+-- smart-splits.nvim 統合（Neovim ↔ WezTerm シームレスペイン移動）
+-- =============================================================================
 
-  -- パターン: 4x2 グリッド
-  -- ┌───┬───┬───┬───┐
-  -- │ 1 │ 2 │ 3 │ 4 │
-  -- ├───┼───┼───┼───┤
-  -- │ 5 │ 6 │ 7 │ 8 │
-  -- └───┴───┴───┴───┘
+local direction_keys = { h = 'Left', j = 'Down', k = 'Up', l = 'Right' }
 
-  -- 上下に2分割
-  local bottom_pane = first_pane:split({ direction = "Bottom", size = 0.5 })
+--- Neovim が実行中かどうかを判定（smart-splits.nvim が設定するユーザー変数を参照）
+local function is_vim(pane)
+  return pane:get_user_vars().IS_NVIM == 'true'
+end
 
-  -- 上段を4列に分割（二分木方式: 常に0.5で分割し丸め誤差を最小化）
-  local top_right_half = first_pane:split({ direction = "Right", size = 0.5 })
-  first_pane:split({ direction = "Right", size = 0.5 })
-  top_right_half:split({ direction = "Right", size = 0.5 })
+--- smart-splits 対応のペイン移動/リサイズキーバインドを生成
+--- @param resize_or_move 'resize' | 'move'
+--- @param key string h/j/k/l
+function M.split_nav(resize_or_move, key)
+  return {
+    key = key,
+    mods = resize_or_move == 'resize' and 'META|SHIFT' or 'META',
+    action = wezterm.action_callback(function(win, pane)
+      if is_vim(pane) then
+        win:perform_action({
+          SendKey = { key = key, mods = resize_or_move == 'resize' and 'META|SHIFT' or 'META' },
+        }, pane)
+      else
+        if resize_or_move == 'resize' then
+          win:perform_action({ AdjustPaneSize = { direction_keys[key], 3 } }, pane)
+        else
+          win:perform_action({ ActivatePaneDirection = direction_keys[key] }, pane)
+        end
+      end
+    end),
+  }
+end
 
-  -- 下段を4列に分割
-  local bottom_right_half = bottom_pane:split({ direction = "Right", size = 0.5 })
-  bottom_pane:split({ direction = "Right", size = 0.5 })
-  bottom_right_half:split({ direction = "Right", size = 0.5 })
+-- =============================================================================
+-- overlay pane（split + zoom でフローティング相当）
+-- =============================================================================
 
-  -- 左上ペインにフォーカス
-  first_pane:activate()
-end)
+local function activate_split(pane, opts)
+  local new_pane = pane:split(opts)
+  new_pane:activate()
+  return new_pane
+end
 
--- ワークスペース初期化アクション（Leader + i）
--- 前提: pane 1 が目的のディレクトリに cd 済み
--- 3ペイン時:
--- ┌────────┬────────┐
--- │ nvim   │ claude │
--- │  (1)   ├────────┤
--- │        │ free   │
--- │        │  (3)   │
--- └────────┴────────┘
--- 8ペイン時:
--- ┌───────┬───────┬───────┬───────┐
--- │claude │claude │ codex │gemini │
--- │  (1)  │  (2)  │  (3)  │  (4)  │
--- ├───────┼───────┼───────┼───────┤
--- │ tmux  │ tmux  │shell  │shell  │
--- │cc1(5) │cc2(6) │  (7)  │  (8)  │
--- └───────┴───────┴───────┴───────┘
-M.init_workspace = wezterm.action_callback(function(window, pane)
-  local tab = pane:tab()
-  local panes_info = tab:panes_with_info()
+local function shell_quote(value)
+  return "'" .. value:gsub("'", "'\\''") .. "'"
+end
 
-  local pane_count = #panes_info
-  local layout = nil
-  if pane_count == 3 then
-    layout = "3pane"
-  elseif pane_count >= 8 then
-    layout = "8pane"
-  else
-    wezterm.log_warn("init_workspace: 3または8ペインが必要です (現在: " .. pane_count .. ")")
-    window:toast_notification("init_workspace", "3または8ペインが必要です (現在: " .. pane_count .. ")", nil, 3000)
-    return
+local function shell_command_args(command)
+  local shell = os.getenv('SHELL') or '/bin/zsh'
+  -- login + interactive shell で起動し、PATH や alias を既存シェル設定に揃える
+  return { shell, '-lic', command }
+end
+
+local function interactive_shell_command()
+  local shell = os.getenv('SHELL') or '/bin/zsh'
+  -- 一時シェルを閉じたら外側の login shell を 0 で終了させ、
+  -- Ctrl+D 時にもペイン枠だけ残らないようにする
+  return shell_quote(shell) .. ' -i; exit 0'
+end
+
+local function command_exists(command)
+  local shell = os.getenv('SHELL') or '/bin/zsh'
+  local probe = shell .. ' -lic ' .. shell_quote('command -v ' .. command .. ' >/dev/null 2>&1')
+  local ok, _, code = os.execute(probe)
+  if type(ok) == 'number' then
+    return ok == 0
   end
+  return ok == true and code == 0
+end
 
-  -- ペインを位置順にソート（上→下、左→右）
-  table.sort(panes_info, function(a, b)
-    if a.top ~= b.top then return a.top < b.top end
-    return a.left < b.left
+--- overlay pane: split + zoom で全画面起動
+--- コマンド終了 → ペイン自動消滅 → レイアウト復帰
+local function open_overlay(command)
+  return wezterm.action_callback(function(window, pane)
+    local new_pane = pane:split({
+      direction = 'Bottom',
+      size = 0.5,
+      cwd = context.get_cwd_path(pane),
+      args = shell_command_args(command),
+    })
+    window:perform_action(act.SetPaneZoomState(true), new_pane)
   end)
+end
 
-  -- pane 1 の cwd を取得
-  local cwd_url = panes_info[1].pane:get_current_working_dir()
-  if not cwd_url then
-    wezterm.log_warn("init_workspace: pane 1 の cwd を取得できません")
-    return
+M.overlay_lazygit = open_overlay('lazygit')
+M.overlay_yazi = open_overlay('yazi')
+M.overlay_claude = open_overlay('claude')
+M.overlay_baton = open_overlay('baton')
+M.open_bottom_shell = open_overlay(interactive_shell_command())
+
+-- =============================================================================
+-- ワークスペース（プロジェクト単位のタブグループ）
+-- =============================================================================
+
+local dotfiles_root = wezterm.home_dir .. '/ghq/github.com/yoshihiko555/dotfiles'
+local repo_list_script = dotfiles_root .. '/scripts/repo-list.sh'
+
+--- ワークスペースが既に存在するか判定
+local function workspace_exists(name)
+  for _, ws in ipairs(wezterm.mux.get_workspace_names()) do
+    if ws == name then return true end
   end
-  local cwd = (cwd_url.file_path or ""):gsub("/$", "")
-  if cwd == "" then return end
+  return false
+end
 
-  -- GHQ リポジトリ配下でのみ実行を許可
-  local ghq_root = wezterm.home_dir .. "/ghq/"
-  if cwd:sub(1, #ghq_root) ~= ghq_root then
-    wezterm.log_warn("init_workspace: GHQ 配下ではありません: " .. cwd)
-    window:toast_notification("init_workspace", "GHQ リポジトリ配下でのみ実行できます\ncwd: " .. cwd, nil, 4000)
-    return
-  end
+--- 指定 workspace に属する pane id を列挙
+local function collect_workspace_pane_ids(name)
+  local pane_ids = {}
 
-  -- シェル引数のクォート
-  local function sq(s)
-    return "'" .. s:gsub("'", "'\\''") .. "'"
-  end
-
-  local max_panes = (layout == "3pane") and 3 or 8
-
-  -- TUI プロセスが実行中のペインがないかチェック（二重起動防止）
-  for i = 1, max_panes do
-    if panes_info[i].pane:is_alt_screen_active() then
-      wezterm.log_warn("init_workspace: ペイン " .. i .. " でプロセスが実行中です")
-      window:toast_notification("init_workspace", "ペイン " .. i .. " でプロセスが実行中です\n先に終了してください", nil, 4000)
-      return
+  for _, mux_win in ipairs(wezterm.mux.all_windows()) do
+    if mux_win:get_workspace() == name then
+      for _, tab in ipairs(mux_win:tabs()) do
+        for _, tab_pane in ipairs(tab:panes()) do
+          table.insert(pane_ids, tab_pane:pane_id())
+        end
+      end
     end
   end
 
-  -- pane 2-*: pane 1 のディレクトリへ移動
-  for i = 2, max_panes do
-    panes_info[i].pane:send_text("cd " .. sq(cwd) .. "\n")
+  return pane_ids
+end
+
+--- pane id を直接指定して安全に終了
+local function kill_pane_by_id(pane_id)
+  local success, _, stderr = wezterm.run_child_process({
+    'wezterm', 'cli', 'kill-pane', '--pane-id', tostring(pane_id),
+  })
+
+  if success then
+    return true
   end
 
-  if layout == "3pane" then
-    -- pane 1: Neovim
-    panes_info[1].pane:send_text("nvim\n")
+  wezterm.log_warn('failed to kill pane ' .. tostring(pane_id) .. ': ' .. (stderr or 'unknown error'))
+  return false
+end
 
-    -- pane 2: Claude Code
-    panes_info[2].pane:send_text("claude\n")
+--- repo-list.sh の出力を InputSelector の choices に変換
+local function build_project_choices()
+  local success, stdout, stderr = wezterm.run_child_process({ 'bash', '-l', repo_list_script })
+  if not success or not stdout then
+    wezterm.log_warn('repo-list.sh failed: ' .. (stderr or 'unknown error'))
+    return {}
+  end
 
-    -- pane 3: Free（cd のみ）
+  local choices = {}
+  -- worktree を先に表示
+  local repos, worktrees = {}, {}
+  for line in stdout:gmatch('[^\n]+') do
+    local type_, label, path = line:match('^(%S+)\t([^\t]+)\t(.+)$')
+    if label and path then
+      if type_ == 'worktree' then
+        table.insert(worktrees, { label = label, path = path })
+      else
+        table.insert(repos, { label = label, path = path })
+      end
+    end
+  end
 
-    -- pane 1 にフォーカス
-    panes_info[1].pane:activate()
+  -- ── Worktrees（アクティブな作業ブランチ）
+  if #worktrees > 0 then
+    table.insert(choices, {
+      id = '',
+      label = wezterm.format {
+        { Foreground = { Color = '#f5a97f' } },
+        { Attribute = { Intensity = 'Bold' } },
+        { Text = wezterm.nerdfonts.cod_git_merge .. ' Worktrees' },
+        { Attribute = { Intensity = 'Normal' } },
+        { Foreground = { Color = '#494d64' } },
+        { Text = ' ' .. string.rep('─', 80) },
+      },
+    })
+    for _, wt in ipairs(worktrees) do
+      local repo, branch = wt.label:match('.-/([^/]+):(.+)$')
+      local ws_name = (repo and branch) and (repo .. ':' .. branch) or wt.label
+      table.insert(choices, {
+        id = wt.path .. '\t' .. ws_name,
+        label = wezterm.format {
+          { Text = '    ' },
+          { Foreground = { Color = '#cad3f5' } },
+          { Attribute = { Intensity = 'Bold' } },
+          { Text = branch or wt.label },
+          { Attribute = { Intensity = 'Normal' } },
+          { Foreground = { Color = '#6e738d' } },
+          { Text = '  ' .. (repo or '') },
+        },
+      })
+    end
+  end
+
+  -- ── Repositories
+  if #repos > 0 then
+    table.insert(choices, {
+      id = '',
+      label = wezterm.format {
+        { Foreground = { Color = '#8bd5ca' } },
+        { Attribute = { Intensity = 'Bold' } },
+        { Text = wezterm.nerdfonts.oct_repo .. ' Repositories' },
+        { Attribute = { Intensity = 'Normal' } },
+        { Foreground = { Color = '#494d64' } },
+        { Text = ' ' .. string.rep('─', 80) },
+      },
+    })
+    for _, r in ipairs(repos) do
+      local repo = r.label:match('([^/]+)$') or r.label
+      table.insert(choices, {
+        id = r.path,
+        label = wezterm.format {
+          { Text = '    ' },
+          { Foreground = { Color = '#8bd5ca' } },
+          { Text = wezterm.nerdfonts.oct_repo .. ' ' },
+          { Foreground = { Color = '#cad3f5' } },
+          { Text = repo },
+        },
+      })
+    end
+  end
+
+  return choices
+end
+
+--- Leader+p: プロジェクトを fuzzy 選択してワークスペースを作成/切替
+M.select_project = wezterm.action_callback(function(window, pane)
+  local choices = build_project_choices()
+  if #choices == 0 then
+    window:toast_notification('workspace', 'プロジェクトが見つかりません', nil, 3000)
     return
   end
 
-  local project = (cwd:match("([^/]+)$") or "project"):gsub("[%.:]", "-")
+  window:perform_action(act.InputSelector {
+    title = 'Open Project',
+    choices = choices,
+    fuzzy = true,
+    action = wezterm.action_callback(function(win, p, id, label)
+      if not id or id == '' then return end
 
-  -- pane 1, 2: サブシェルの PID を保存し exec で claude に置換（PID = claude プロセス PID）
-  panes_info[1].pane:send_text("sh -c 'echo $$ > /tmp/wez-cc1.pid; exec claude'\n")
-  panes_info[2].pane:send_text("sh -c 'echo $$ > /tmp/wez-cc2.pid; exec claude'\n")
+      -- worktree の場合は id が "path\tws_name" 形式
+      local cwd, ws_name = id:match('^([^\t]+)\t(.+)$')
+      if not cwd then
+        -- 通常リポジトリ: id はパスのみ
+        cwd = id
+        ws_name = context.get_project_name_from_path(cwd)
+      end
 
-  -- pane 3: Codex
-  panes_info[3].pane:send_text("codex\n")
-
-  -- pane 4: Gemini
-  panes_info[4].pane:send_text("gemini\n")
-
-  -- pane 5: pane 1 の Claude Code が作成する tmux セッションに自動アタッチ
-  panes_info[5].pane:send_text(
-    "sleep 1 && CC_PID=$(cat /tmp/wez-cc1.pid 2>/dev/null) && "
-    .. "SN=\"claude-" .. project .. "-${CC_PID}\" && "
-    .. "until command tmux has-session -t \"$SN\" 2>/dev/null; do sleep 2; done && "
-    .. "command tmux attach-session -t \"$SN\"\n"
-  )
-
-  -- pane 6: pane 2 の Claude Code が作成する tmux セッションに自動アタッチ
-  panes_info[6].pane:send_text(
-    "sleep 1 && CC_PID=$(cat /tmp/wez-cc2.pid 2>/dev/null) && "
-    .. "SN=\"claude-" .. project .. "-${CC_PID}\" && "
-    .. "until command tmux has-session -t \"$SN\" 2>/dev/null; do sleep 2; done && "
-    .. "command tmux attach-session -t \"$SN\"\n"
-  )
-
-  -- pane 7, 8: そのまま（cd 済み）
-
-  -- pane 1 にフォーカス
-  panes_info[1].pane:activate()
+      win:perform_action(act.SwitchToWorkspace {
+        name = ws_name,
+        spawn = { cwd = cwd },
+      }, p)
+    end),
+  }, pane)
 end)
 
--- 新規タブを3分割で開くアクション（ホームディレクトリから）
-M.spawn_tab_with_3_panes = wezterm.action_callback(function(window, pane)
-  -- 新しいタブを作成（ホームディレクトリで開始）
-  local tab, first_pane, _ = window:mux_window():spawn_tab({ cwd = wezterm.home_dir })
+--- Leader+s: 既存ワークスペース一覧から fuzzy 切替
+M.switch_workspace = wezterm.action_callback(function(window, pane)
+  local current = window:mux_window():get_workspace()
+  local workspaces = wezterm.mux.get_workspace_names()
 
-  -- パターン: 左1 + 右上下2
-  -- ┌──────┬──────┐
-  -- │      │  2   │
-  -- │  1   ├──────┤
-  -- │      │  3   │
-  -- └──────┴──────┘
+  if #workspaces <= 1 then
+    window:toast_notification('workspace', '他のワークスペースがありません', nil, 3000)
+    return
+  end
 
-  -- 右側に縦分割（50%）
-  local right_pane = first_pane:split({ direction = "Right", size = 0.5 })
-  -- 右側ペインをさらに横分割（50%）→ 右上・右下に分かれる
-  right_pane:split({ direction = "Bottom", size = 0.5 })
-  -- 左ペインにフォーカス
-  first_pane:activate()
+  local choices = {}
+  for _, ws in ipairs(workspaces) do
+    local is_current = (ws == current)
+    local is_worktree = ws:find(':') ~= nil
+    local fmt = {}
+    if is_current then
+      table.insert(fmt, { Foreground = { Color = '#f5a97f' } })
+      table.insert(fmt, { Text = wezterm.nerdfonts.fa_circle .. ' ' })
+      if is_worktree then
+        table.insert(fmt, { Foreground = { Color = '#f5a97f' } })
+        table.insert(fmt, { Text = wezterm.nerdfonts.cod_git_merge .. ' ' })
+      else
+        table.insert(fmt, { Foreground = { Color = '#8bd5ca' } })
+        table.insert(fmt, { Text = wezterm.nerdfonts.oct_repo .. ' ' })
+      end
+      table.insert(fmt, { Foreground = { Color = '#cad3f5' } })
+      table.insert(fmt, { Attribute = { Intensity = 'Bold' } })
+      table.insert(fmt, { Text = ws })
+      table.insert(fmt, { Attribute = { Intensity = 'Normal' } })
+      table.insert(fmt, { Foreground = { Color = '#6e738d' } })
+      table.insert(fmt, { Text = '  (current)' })
+    else
+      if is_worktree then
+        table.insert(fmt, { Foreground = { Color = '#f5a97f' } })
+        table.insert(fmt, { Text = wezterm.nerdfonts.fa_circle_o .. ' ' })
+        table.insert(fmt, { Text = wezterm.nerdfonts.cod_git_merge .. ' ' })
+      else
+        table.insert(fmt, { Foreground = { Color = '#8bd5ca' } })
+        table.insert(fmt, { Text = wezterm.nerdfonts.fa_circle_o .. ' ' })
+        table.insert(fmt, { Text = wezterm.nerdfonts.oct_repo .. ' ' })
+      end
+      table.insert(fmt, { Foreground = { Color = '#cad3f5' } })
+      table.insert(fmt, { Text = ws })
+    end
+    table.insert(choices, { id = ws, label = wezterm.format(fmt) })
+  end
+
+  window:perform_action(act.InputSelector {
+    title = 'Switch Workspace',
+    choices = choices,
+    fuzzy = true,
+    action = wezterm.action_callback(function(win, p, id, label)
+      if not id or id == '' then return end
+      win:perform_action(act.SwitchToWorkspace { name = id }, p)
+    end),
+  }, pane)
+end)
+
+--- Leader+S: ワークスペースを選択して削除（全タブ/ペインを閉じる）
+M.delete_workspace = wezterm.action_callback(function(window, pane)
+  local current = window:mux_window():get_workspace()
+  local workspaces = wezterm.mux.get_workspace_names()
+
+  -- 現在のワークスペース以外を候補にする
+  local choices = {}
+  for _, ws in ipairs(workspaces) do
+    if ws ~= current then
+      table.insert(choices, {
+        id = ws,
+        label = wezterm.format {
+          { Foreground = { Color = '#ed8796' } },
+          { Text = wezterm.nerdfonts.fa_trash .. ' ' },
+          { Foreground = { Color = '#cad3f5' } },
+          { Text = ws },
+        },
+      })
+    end
+  end
+
+  if #choices == 0 then
+    window:toast_notification('workspace', '削除できるワークスペースがありません', nil, 3000)
+    return
+  end
+
+  window:perform_action(act.InputSelector {
+    title = 'Delete Workspace',
+    choices = choices,
+    fuzzy = true,
+    action = wezterm.action_callback(function(win, p, id, label)
+      if not id or id == '' then return end
+      local pane_ids = collect_workspace_pane_ids(id)
+
+      if #pane_ids == 0 then
+        win:toast_notification('workspace', id .. ' の pane が見つかりません', nil, 3000)
+        return
+      end
+
+      local failed = 0
+      for _, pane_id in ipairs(pane_ids) do
+        if not kill_pane_by_id(pane_id) then
+          failed = failed + 1
+        end
+      end
+
+      if failed > 0 then
+        win:toast_notification('workspace', id .. ' の削除に一部失敗しました', nil, 3000)
+        return
+      end
+
+      win:toast_notification('workspace', id .. ' を削除しました', nil, 2000)
+    end),
+  }, pane)
+end)
+
+-- =============================================================================
+-- Alfred 外部トリガー（ファイルベース IPC）
+-- /tmp/wezterm-alfred-workspace.json を検知して SwitchToWorkspace を実行
+-- =============================================================================
+
+local ALFRED_TRIGGER_PATH = '/tmp/wezterm-alfred-workspace.json'
+local ALFRED_TRIGGER_MAX_AGE = 5 -- 秒: これより古いトリガーファイルは無視
+local alfred_last_check = 0
+local ALFRED_CHECK_INTERVAL = 1 -- 秒: io.open の頻度を抑制
+
+function M.setup_alfred_watcher()
+  wezterm.on('update-status', function(window, pane)
+    local now = os.time()
+    if (now - alfred_last_check) < ALFRED_CHECK_INTERVAL then return end
+    alfred_last_check = now
+
+    local file = io.open(ALFRED_TRIGGER_PATH, 'r')
+    if not file then return end
+
+    local content = file:read('*a')
+    file:close()
+    os.remove(ALFRED_TRIGGER_PATH)
+
+    if not content or content == '' then return end
+
+    local ok, data = pcall(wezterm.json_parse, content)
+    if not ok or type(data) ~= 'table' then return end
+
+    local ts = tonumber(data.timestamp)
+    if ts and (now - ts) > ALFRED_TRIGGER_MAX_AGE then return end
+
+    local ws_name = data.name
+    local cwd = data.cwd
+    if not ws_name or not cwd then return end
+
+    window:perform_action(act.SwitchToWorkspace {
+      name = ws_name,
+      spawn = { cwd = cwd },
+    }, pane)
+  end)
+end
+
+-- =============================================================================
+-- サブエージェント監視（tmux セッションに overlay attach）
+-- ai-orchestra の tmux-monitor が作成する claude-* セッションを表示
+-- =============================================================================
+
+M.overlay_tmux_monitor = wezterm.action_callback(function(window, pane)
+  -- claude- で始まる tmux セッションを検索
+  local success, stdout = wezterm.run_child_process({
+    'tmux', 'list-sessions', '-F', '#{session_name}',
+  })
+  if not success or not stdout then
+    window:toast_notification('tmux-monitor', 'tmux セッションが見つかりません', nil, 3000)
+    return
+  end
+
+  local sessions = {}
+  for line in stdout:gmatch('[^\n]+') do
+    if line:match('^claude%-') then
+      table.insert(sessions, line)
+    end
+  end
+
+  if #sessions == 0 then
+    window:toast_notification('tmux-monitor', '監視セッションがありません', nil, 3000)
+    return
+  end
+
+  if #sessions == 1 then
+    -- セッションが1つなら直接 attach
+    local new_pane = pane:split({
+      direction = 'Bottom',
+      size = 0.5,
+      args = shell_command_args('tmux attach-session -t ' .. shell_quote(sessions[1])),
+    })
+    window:perform_action(act.SetPaneZoomState(true), new_pane)
+    return
+  end
+
+  -- 複数セッションがある場合は InputSelector で選択
+  local choices = {}
+  for _, s in ipairs(sessions) do
+    table.insert(choices, {
+      id = s,
+      label = wezterm.format {
+        { Foreground = { Color = '#c3e88d' } },
+        { Text = wezterm.nerdfonts.cod_terminal_tmux .. ' ' },
+        { Foreground = { Color = '#cad3f5' } },
+        { Text = s },
+      },
+    })
+  end
+
+  window:perform_action(act.InputSelector {
+    title = 'Attach to Monitor Session',
+    choices = choices,
+    fuzzy = true,
+    action = wezterm.action_callback(function(win, p, id)
+      if not id or id == '' then return end
+      local new_pane = p:split({
+        direction = 'Bottom',
+        size = 0.5,
+        args = shell_command_args('tmux attach-session -t ' .. shell_quote(id)),
+      })
+      win:perform_action(act.SetPaneZoomState(true), new_pane)
+    end),
+  }, pane)
 end)
 
 -- 画面クリア（スクロールバックに内容を保存）アクション
@@ -205,15 +509,27 @@ M.clear_scrollback_and_viewport = wezterm.action_callback(function(window, pane)
   window:perform_action(act.ClearScrollback 'ScrollbackAndViewport', pane)
 end)
 
--- チートシート表示（右ペインに glow で表示、q で閉じる）
-M.show_cheatsheet = wezterm.action_callback(function(window, pane)
-  local cheatsheet = wezterm.home_dir .. '/.config/nvim/docs/CHEATSHEET.md'
-  local cheat_pane = pane:split({
-    direction = 'Right',
-    size = 0.4,
-    args = { '/opt/homebrew/bin/glow', '-p', cheatsheet },
-  })
-  cheat_pane:activate()
-end)
+local function show_cheatsheet(cheatsheet)
+  return wezterm.action_callback(function(window, pane)
+    local args
+
+    if command_exists('glow') then
+      args = { '/opt/homebrew/bin/glow', '-s', 'dracula', '-p', cheatsheet }
+    else
+      args = shell_command_args('nvim -R ' .. shell_quote(cheatsheet))
+    end
+
+    local cheat_pane = pane:split({
+      direction = 'Right',
+      size = 0.4,
+      args = args,
+    })
+    cheat_pane:activate()
+  end)
+end
+
+-- チートシート表示（右ペインに glow / nvim で表示）
+M.show_cheatsheet = show_cheatsheet(wezterm.home_dir .. '/.config/nvim/docs/CHEATSHEET.md')
+M.show_wezterm_cheatsheet = show_cheatsheet(wezterm.home_dir .. '/.config/wezterm/CHEATSHEET.md')
 
 return M

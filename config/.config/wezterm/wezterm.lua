@@ -13,6 +13,18 @@ tab.setup()
 local statusbar = require("config/statusbar")
 statusbar.setup()
 
+-- コマンドパレット拡張の初期化
+local command_palette = require("config/command_palette")
+command_palette.setup()
+
+-- Alfred 外部ワークスペース切替の初期化
+local actions = require("config/actions")
+actions.setup_alfred_watcher()
+
+-- ワークスペース永続化（resurrect.wezterm）
+local resurrect_config = require("config/resurrect")
+resurrect_config.setup()
+
 -- 外部設定ファイルをマージ
 function merge_config(config, new_config)
   for k, v in pairs(new_config) do
@@ -25,6 +37,7 @@ local keybinds = require("config/keybinds")
 local font = require("config/font")
 local general = require("config/general")
 merge_config(config, general)
+merge_config(config, tab.config)
 merge_config(config, window)
 merge_config(config, keybinds)
 merge_config(config, font)

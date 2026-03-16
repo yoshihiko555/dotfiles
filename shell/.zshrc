@@ -29,8 +29,10 @@ setopt APPEND_HISTORY       # 履歴を追記
 stty -ixon
 
 # mise は .zshenv で activate 済み
-eval "$(zoxide init zsh)"
+# sheldon (compinit を含む) を先にロード
 eval "$(sheldon source)"
+eval "$(zoxide init zsh)"
+eval "$(git gtr init zsh)"
 
 # Starship prompt
 export STARSHIP_CONFIG=~/.config/starship/starship.toml
@@ -49,6 +51,11 @@ source ~/.zsh/aliases.zsh
 # --------------------------------------------
 # 5. Functions
 # --------------------------------------------
+# lazygit は起動時だけ ~/.config を設定ディレクトリとして使う
+lazygit() {
+  XDG_CONFIG_HOME="$HOME/.config" command lazygit "$@"
+}
+
 # カスタムコマンド一覧を表示
 cheat() {
   cat <<'HELP'
@@ -70,14 +77,18 @@ cheat() {
 ── Docker ──────────────────────────────────
   d         docker           dc   docker compose
   dps       docker ps        dpsa docker ps -a
-  conin     docker exec -it
+  conin     docker container exec -it
 
 ── Dev ─────────────────────────────────────
-  v         nvim             c    clear
-  h         history          t    tmux
-  cc        claude           cx   codex
+  v         nvim             vd   nvim-dev
+  c         clear            h    history
+  t         tmux             code code .
+  zed       zed .
+  cc        claude           cc-dg  権限スキップ
+  cc-r      claude resume    cx     codex
   gm        gemini
-  code      code .
+  wails     Wails v2         wails3 Wails v3
+  orche     ai-orchestra manager
 
 ── Digital Garden ──────────────────────────
   trend     今日のトレンドメモを開く
@@ -107,8 +118,8 @@ cheat() {
 ── Functions (util) ────────────────────────
   mkcd DIR  ディレクトリ作成して cd
   port NUM  ポート使用プロセス確認
-  cc_interrupt ... 中断証跡を記録/確認 (start|end|open|last)
-  trust ... Codex trust を add/rm/list/audit
+  cc_interrupt ... 中断証跡 (start|end|open|last|report)
+  trust ... Codex trust を add/rm/list/audit/where
   cheat     このヘルプを表示
 HELP
 }
@@ -281,11 +292,29 @@ tp() {
   fi
 }
 
-# ghq + fzf でリポジトリに移動
+# ghq + fzf でリポジトリに移動（.worktrees 配下も対象）
+# リスト生成は scripts/repo-list.sh に委譲（WezTerm InputSelector と共有）
 repo() {
+  local script="$HOME/ghq/github.com/yoshihiko555/dotfiles/scripts/repo-list.sh"
+  if [[ ! -x "$script" ]]; then echo "repo-list.sh が見つかりません" && return 1; fi
+  if ! command -v fzf &>/dev/null; then echo "fzf が見つかりません" && return 1; fi
+
   local selected
-  selected=$(ghq list | fzf --delimiter=/ --with-nth=2.. --preview 'ls -la "$(ghq root)/{}"')
-  [[ -n "$selected" ]] && cd "$(ghq root)/$selected"
+  selected=$(
+    "$script" | awk -F'\t' '{
+      if ($1 == "repo") printf "\xf0\x9f\x8c\xb3 %s\t%s\n", $2, $3
+      else printf "\xf0\x9f\x8c\xbf %s\t%s\n", $2, $3
+    }' | fzf --ansi --with-nth=1 --delimiter='\t' --preview '
+      repo_path={2}
+      ls -la "$repo_path"
+    '
+  )
+
+  [[ -z "$selected" ]] && return
+
+  local repo_path
+  repo_path=$(echo "$selected" | cut -f2)
+  cd "$repo_path"
 }
 
 # fzf + コマンド履歴検索
@@ -703,3 +732,6 @@ EOF
   esac
 }
 # ---- end ----
+
+# baton: AI セッション監視（バックグラウンド常駐）
+pgrep -f "baton --no-tui" > /dev/null 2>&1 || "$HOME/.local/bin/baton" --no-tui > /dev/null 2>&1 &
