@@ -25,6 +25,9 @@ setopt APPEND_HISTORY       # 履歴を追記
 # --------------------------------------------
 # 3. Tool Initialization
 # --------------------------------------------
+# XON/XOFF フロー制御を無効化（Ctrl+Q を tmux Prefix として使うため）
+stty -ixon
+
 # mise は .zshenv で activate 済み
 eval "$(zoxide init zsh)"
 eval "$(sheldon source)"
@@ -32,6 +35,11 @@ eval "$(sheldon source)"
 # Starship prompt
 export STARSHIP_CONFIG=~/.config/starship/starship.toml
 eval "$(starship init zsh)"
+
+# fzf tmux フローティング連携（display-popup で表示）
+export FZF_TMUX_OPTS="--tmux center,80%,60%"
+export FZF_CTRL_T_OPTS="--tmux center,80%,60%"
+export FZF_ALT_C_OPTS="--tmux center,60%,40%"
 
 # --------------------------------------------
 # 4. Aliases
