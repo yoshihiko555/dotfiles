@@ -98,6 +98,8 @@
 | 1 | `.zshrc` での tmux 自動起動は WezTerm タブ追加/分割時に全て同じセッションに接続してしまう | 中 | `gui-startup` 方式に変更済み。将来的に tmux-first 運用に移行するか検討 |
 | 2 | WezTerm が `Alt+h/j/k/l` を smart-splits 用に捕捉しており、tmux の smart-splits.conf が機能しない | 高 | Phase 6 で WezTerm の `split_nav` バインド (keybinds.lua L52-60) を削除して tmux にパススルー |
 | 3 | `Alt+1-9` は現状ウィンドウ切替。セッションの direct switch は popup (`Prefix+s`) のみ | 中 | Phase 2 の sessionizer / kill-session 導入時に再設計 |
+| 4 | claude-squad の detach キー `Ctrl+Q` が WezTerm Leader と衝突。popup 内で detach できず WezTerm が落ちる | 高 | claude-squad 側に設定変更オプションなし。Phase 6 で WezTerm Leader を変更/削除するか、claude-squad を popup ではなく通常シェルで運用するか検討 |
+| 5 | claude-squad を display-popup 内で起動すると、アタッチ後に Ctrl+Q で detach できず完全にスタックする | 高 | popup での起動方法を再検討。通常シェル運用、専用ウィンドウ、WezTerm Leader 変更のいずれかで対応 |
 
 ## 検討課題 (将来)
 
