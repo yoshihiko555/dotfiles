@@ -1,0 +1,12 @@
+#!/bin/sh
+# claude 監視ペイン用（pane 内で実行、TTY あり）
+export PATH="/opt/homebrew/bin:$PATH"
+
+session=$(~/.config/tmux/bin/tmux-select-claude-session)
+if [ -z "$session" ]; then
+  echo "No ai-orchestra tmux session found. Ctrl-D で閉じます."
+  cat >/dev/null
+  exit 0
+fi
+
+exec ~/.config/tmux/bin/tmux-watch-claude-panes "$session"

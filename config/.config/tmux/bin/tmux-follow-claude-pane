@@ -1,0 +1,87 @@
+#!/bin/sh
+# ai-orchestra の監視 pane を realtime follow しつつ、途中で scrollback を読めるようにする
+# Ctrl-C: follow 停止, F: follow 再開, q: 閉じる
+export PATH="/opt/homebrew/bin:$PATH"
+
+SESSION="$1"
+PANE_ID="$2"
+STATUS="$3"
+TITLE="$4"
+
+if [ -z "$SESSION" ] || [ -z "$PANE_ID" ]; then
+  echo "Usage: tmux-follow-claude-pane <session> <pane_id> [status] [title]" >&2
+  exit 1
+fi
+
+TMPDIR="${TMPDIR:-/tmp}"
+LOGFILE="$TMPDIR/claude-pane-follow-$$.log"
+SNAPSHOT="$TMPDIR/claude-pane-snapshot-$$.log"
+SYNC_PID=""
+
+cleanup() {
+  if [ -n "$SYNC_PID" ]; then
+    kill "$SYNC_PID" 2>/dev/null || true
+    wait "$SYNC_PID" 2>/dev/null || true
+  fi
+  rm -f "$LOGFILE" "$SNAPSHOT"
+}
+
+trap 'cleanup' EXIT INT TERM
+
+write_header() {
+  {
+    printf '[%s] %s\n' "$SESSION" "$TITLE"
+    printf 'status=%s  pane=%s\n' "${STATUS:-UNKNOWN}" "$PANE_ID"
+    printf 'Ctrl-C: follow停止  F: follow再開  q: 閉じる\n'
+    printf '%s\n' '----------------------------------------'
+  } > "$LOGFILE"
+}
+
+pane_exists() {
+  tmux list-panes -t "$SESSION" -F '#{pane_id}' 2>/dev/null | grep -Fx "$PANE_ID" >/dev/null
+}
+
+append_snapshot_delta() {
+  prev_lines="$1"
+
+  tmux capture-pane -S - -p -t "$PANE_ID" 2>/dev/null > "$SNAPSHOT" || return 1
+  current_lines=$(wc -l < "$SNAPSHOT" | tr -d ' ')
+
+  if [ "$current_lines" -lt "$prev_lines" ]; then
+    {
+      printf '\n'
+      printf '[pane reset detected at %s]\n' "$(date '+%H:%M:%S')"
+      cat "$SNAPSHOT"
+    } >> "$LOGFILE"
+    printf '%s\n' "$current_lines"
+    return 0
+  fi
+
+  if [ "$current_lines" -gt "$prev_lines" ]; then
+    tail -n +"$((prev_lines + 1))" "$SNAPSHOT" >> "$LOGFILE"
+  fi
+
+  printf '%s\n' "$current_lines"
+}
+
+sync_loop() {
+  tmux capture-pane -S - -p -t "$PANE_ID" 2>/dev/null > "$SNAPSHOT" || return 0
+  cat "$SNAPSHOT" >> "$LOGFILE"
+  prev_lines=$(wc -l < "$SNAPSHOT" | tr -d ' ')
+
+  while tmux has-session -t "$SESSION" 2>/dev/null && pane_exists; do
+    prev_lines=$(append_snapshot_delta "$prev_lines")
+    sleep 1
+  done
+
+  {
+    printf '\n'
+    printf '[pane closed at %s]\n' "$(date '+%H:%M:%S')"
+  } >> "$LOGFILE"
+}
+
+write_header
+sync_loop &
+SYNC_PID=$!
+
+less -R +F "$LOGFILE"

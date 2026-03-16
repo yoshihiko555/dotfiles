@@ -1,0 +1,23 @@
+#!/bin/sh
+# claude 監視セッションを選択して stdout に出力
+# TTY が必要（fzf 使用）。run-shell からは呼ばないこと。
+export PATH="/opt/homebrew/bin:$PATH"
+
+sessions=$(~/.config/tmux/bin/tmux-list-orchestra-sessions)
+
+if [ -z "$sessions" ]; then
+  echo "No ai-orchestra tmux session found" >&2
+  exit 1
+fi
+
+count=$(echo "$sessions" | wc -l | tr -d ' ')
+
+if [ "$count" -eq 1 ]; then
+  echo "$sessions"
+else
+  selected=$(echo "$sessions" | fzf --prompt="AI Orchestra session> " --height=40% --reverse)
+  if [ -z "$selected" ]; then
+    exit 1
+  fi
+  echo "$selected"
+fi

@@ -1,0 +1,25 @@
+#!/bin/sh
+# 直近に退避した pane snapshot を popup で読む
+export PATH="/opt/homebrew/bin:$PATH"
+
+PANE_ID="${1:-$(tmux display-message -p '#{pane_id}')}"
+
+if [ -z "$PANE_ID" ]; then
+  echo "Usage: tmux-open-pane-snapshot <pane-id>" >&2
+  exit 1
+fi
+
+OUT_DIR="$HOME/.cache/tmux/pane-snapshots"
+SAFE_ID=$(printf '%s' "$PANE_ID" | tr '%:/' '_')
+OUT_FILE="$OUT_DIR/$SAFE_ID.log"
+
+if [ ! -f "$OUT_FILE" ]; then
+  echo "No snapshot for $PANE_ID"
+  echo
+  echo "Prefix + z を押す直前の内容だけ保存します。"
+  echo "一度ズームしてから開いてください。"
+  cat >/dev/null
+  exit 0
+fi
+
+exec less -R "$OUT_FILE"

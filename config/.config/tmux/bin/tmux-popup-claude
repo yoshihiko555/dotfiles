@@ -1,0 +1,13 @@
+#!/bin/sh
+# claude 監視セッションをフローティングで表示
+# popup 内で実行されるため TTY あり、fzf も使える
+export PATH="/opt/homebrew/bin:$PATH"
+
+session=$(~/.config/tmux/bin/tmux-select-claude-session)
+if [ -z "$session" ]; then
+  echo "No ai-orchestra tmux session found. Ctrl-D で閉じます."
+  cat >/dev/null
+  exit 0
+fi
+
+exec ~/.config/tmux/bin/tmux-watch-claude-panes "$session"

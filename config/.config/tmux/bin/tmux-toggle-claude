@@ -1,0 +1,17 @@
+#!/bin/sh
+# claude 監視ペインのトグル（表示 / 非表示）
+export PATH="/opt/homebrew/bin:$PATH"
+
+MARK="claude-watch"
+
+# 既存の監視ペインを探す
+watch_pane=$(tmux list-panes -F '#{pane_id} #{pane_title}' | grep "$MARK" | head -1 | awk '{print $1}')
+
+if [ -n "$watch_pane" ]; then
+  tmux kill-pane -t "$watch_pane"
+else
+  # pane 内で選択 + 監視を実行（TTY あり）
+  tmux split-window -h -l 40% "~/.config/tmux/bin/tmux-pane-claude"
+  tmux select-pane -T "$MARK"
+  tmux select-pane -l
+fi

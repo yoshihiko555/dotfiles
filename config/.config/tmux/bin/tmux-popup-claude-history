@@ -1,0 +1,21 @@
+#!/bin/sh
+# ai-orchestra の監視 pane を選んで、full history を pager で開く
+export PATH="/opt/homebrew/bin:$PATH"
+
+session=$(~/.config/tmux/bin/tmux-select-claude-session)
+if [ -z "$session" ]; then
+  echo "No ai-orchestra tmux session found. Ctrl-D で閉じます."
+  cat >/dev/null
+  exit 0
+fi
+
+selected=$(~/.config/tmux/bin/tmux-select-claude-pane "$session")
+if [ -z "$selected" ]; then
+  exit 0
+fi
+
+pane_id=$(printf '%s\n' "$selected" | cut -f 1)
+status=$(printf '%s\n' "$selected" | cut -f 2)
+title=$(printf '%s\n' "$selected" | cut -f 3-)
+
+exec ~/.config/tmux/bin/tmux-follow-claude-pane "$session" "$pane_id" "$status" "$title"
