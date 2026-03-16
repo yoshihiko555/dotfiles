@@ -1,0 +1,34 @@
+#!/bin/bash
+# チートシート選択 → glow で表示
+# ~/.config/*/docs/CHEATSHEET.md を検索して fzf で選択
+
+set -euo pipefail
+
+cheatsheets=()
+for f in ~/.config/*/docs/CHEATSHEET.md; do
+  [ -f "$f" ] || continue
+  # ~/.config/tmux/docs/CHEATSHEET.md → tmux
+  name=$(echo "$f" | sed 's|.*/\.config/\([^/]*\)/.*|\1|')
+  cheatsheets+=("$name"$'\t'"$f")
+done
+
+if [ ${#cheatsheets[@]} -eq 0 ]; then
+  echo "No cheatsheets found."
+  exit 1
+fi
+
+if [ ${#cheatsheets[@]} -eq 1 ]; then
+  selected="${cheatsheets[0]}"
+else
+  selected=$(printf '%s\n' "${cheatsheets[@]}" | \
+    fzf --delimiter=$'\t' \
+        --with-nth=1 \
+        --header="Select cheatsheet" \
+        --preview='glow -s dark {2}' \
+        --preview-window=right:70%)
+fi
+
+[ -z "$selected" ] && exit 0
+
+path=$(echo "$selected" | cut -f2)
+glow -s dark -p "$path"
