@@ -25,3 +25,6 @@ config/.config/karabiner/automatic_backups/
 
 # Git worktrees
 .worktrees/
+
+# TPM plugins (ランタイム依存、plugins.conf で自動インストール)
+config/.config/tmux/plugins/
