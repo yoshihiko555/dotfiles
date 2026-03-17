@@ -10,6 +10,7 @@ Prefix: `Ctrl+Q`
 | `Prefix + d` | 縦分割 |
 | `Prefix + x` | ペイン閉じ |
 | `Prefix + z` | ペインズーム (スナップショット保存付き) |
+| `Alt + ;` | ペインズーム (Prefix 不要) |
 | `Prefix + h/j/k/l` | ペイン移動 |
 | `Alt + h/j/k/l` | ペイン移動 (smart-splits.nvim 連携, Neovim ↔ tmux シームレス) |
 | `Alt + Shift + H/J/K/L` | ペインリサイズ (smart-splits.nvim 連携) |
