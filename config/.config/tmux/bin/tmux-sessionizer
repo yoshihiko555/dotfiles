@@ -19,8 +19,8 @@ current_session=$(tmux display-message -p '#{session_name}' 2>/dev/null || echo 
 selected=$(bash "$REPO_LIST" | while IFS=$'\t' read -r type label path; do
   # セッション名を決定
   if [ "$type" = "worktree" ]; then
-    # worktree: "owner/repo:branch" → "repo:branch"
-    session_name=$(echo "$label" | sed 's|.*/\([^/]*:[^/]*\)$|\1|')
+    # worktree: "owner/repo:branch" → "repo/branch"
+    session_name=$(echo "$label" | sed 's|.*/\([^/]*\):\([^/]*\)$|\1/\2|')
   else
     # repo: 末尾ディレクトリ名
     session_name=$(basename "$path")
@@ -55,7 +55,7 @@ session_name=$(echo "$selected" | cut -f2)
 path=$(echo "$selected" | cut -f3)
 
 # セッション作成 or 切替
-if ! tmux has-session -t="$session_name" 2>/dev/null; then
+if ! tmux has-session -t "$session_name" 2>/dev/null; then
   tmux new-session -ds "$session_name" -c "$path"
 fi
 
