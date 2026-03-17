@@ -14,7 +14,11 @@
                                     }
                                 },
                                 "to": [
-                                    { "key_code": "japanese_eisuu" },
+                                    {
+                                        "select_input_source": {
+                                            "input_source_id": "com.google.inputmethod.Japanese.Roman"
+                                        }
+                                    },
                                     {
                                         "key_code": "q",
                                         "modifiers": ["control"]
