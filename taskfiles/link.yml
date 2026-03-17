@@ -16,6 +16,7 @@ tasks:
       - task: link-gemini
       - task: link-tmux
       - task: link-alfred
+      - task: link-editorconfig
 
   link-shell:
     desc: シェル設定を反映したいときに .zshrc/.zprofile をリンク
@@ -47,6 +48,11 @@ tasks:
     cmds:
       - stow {{.STOW_FLAGS}} tmux
 
+  link-editorconfig:
+    desc: EditorConfig をホーム直下にリンク
+    cmds:
+      - stow {{.STOW_FLAGS}} editorconfig
+
   link-alfred:
     desc: Alfred ワークフローを初回導入/再接続したいときにリンク
     cmds:
@@ -75,6 +81,7 @@ tasks:
       - task: unlink-gemini
       - task: unlink-tmux
       - task: unlink-alfred
+      - task: unlink-editorconfig
 
   unlink-shell:
     desc: シェル設定リンクのみ外したいときに解除
@@ -106,6 +113,11 @@ tasks:
     cmds:
       - stow -D {{.STOW_FLAGS}} tmux
 
+  unlink-editorconfig:
+    desc: EditorConfig リンクのみ外したいときに解除
+    cmds:
+      - stow -D {{.STOW_FLAGS}} editorconfig
+
   unlink-alfred:
     desc: Alfred ワークフローリンクのみ外したいときに解除
     cmds:
@@ -124,7 +136,7 @@ tasks:
   restow:
     desc: 設定変更後に全パッケージを最新化したいときに再リンク
     cmds:
-      - stow -R {{.STOW_FLAGS}} shell config claude codex gemini tmux
+      - stow -R {{.STOW_FLAGS}} shell config claude codex gemini tmux editorconfig
       - task: unlink-alfred
       - task: link-alfred
 
@@ -157,6 +169,11 @@ tasks:
     desc: tmux 設定だけ最新化したいときに再リンク
     cmds:
       - stow -R {{.STOW_FLAGS}} tmux
+
+  restow-editorconfig:
+    desc: EditorConfig だけ最新化したいときに再リンク
+    cmds:
+      - stow -R {{.STOW_FLAGS}} editorconfig
 
   restow-alfred:
     desc: Alfred ワークフローだけ最新化したいときに再リンク
