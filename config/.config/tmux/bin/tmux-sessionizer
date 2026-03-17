@@ -58,4 +58,7 @@ path=$(echo "$selected" | cut -f3)
 if ! tmux has-session -t="$session_name" 2>/dev/null; then
   tmux new-session -ds "$session_name" -c "$path"
 fi
-tmux switch-client -t "$session_name"
+
+# display-popup 内では switch-client が効かないため、
+# 一時ファイルに書き出して popup 終了後に親クライアントで切り替える
+echo "$session_name" > /tmp/tmux-sessionizer-target
