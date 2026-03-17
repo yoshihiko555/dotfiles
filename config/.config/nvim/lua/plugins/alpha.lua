@@ -28,11 +28,11 @@ return {
     }
 
     dashboard.section.buttons.val = {
-      dashboard.button("e", "  NEW JOB", "<cmd>ene | startinsert<cr>"),
+      dashboard.button("n", "  NEW JOB", "<cmd>ene | startinsert<cr>"),
       dashboard.button("f", "󰱼  FIND CONTRACT", "<cmd>FzfLua files<cr>"),
       dashboard.button("r", "  LAST RUNS", "<cmd>FzfLua oldfiles<cr>"),
       dashboard.button("g", "󱎸  BRAINDANCE SEARCH", "<cmd>FzfLua live_grep<cr>"),
-      dashboard.button("x", "  OPEN WAREHOUSE", "<cmd>Neotree toggle<cr>"),
+      dashboard.button("e", "  OPEN WAREHOUSE", "<cmd>Neotree toggle<cr>"),
       dashboard.button("i", "  EDIT CYBERDECK", "<cmd>e $MYVIMRC<cr>"),
       dashboard.button("q", "  JACK OUT", "<cmd>qa<cr>"),
     }
