@@ -27,6 +27,10 @@ setopt APPEND_HISTORY       # 履歴を追記
 # --------------------------------------------
 # mise は .zshenv で activate 済み
 # sheldon (compinit を含む) を先にロード
+# tmux 自動起動（WezTerm 起動時に default セッションへ）
+# if command -v tmux &>/dev/null && [ -z "$TMUX" ] && [[ "$TERM_PROGRAM" == "WezTerm" ]]; then
+#   exec tmux new-session -A -s default
+# fi
 eval "$(sheldon source)"
 eval "$(zoxide init zsh)"
 eval "$(git gtr init zsh)"
