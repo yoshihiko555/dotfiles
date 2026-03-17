@@ -1,6 +1,6 @@
 [
   {
-    "context": "VimControl && vim_mode == insert",
+    "context": "Editor && vim_mode == insert",
     "bindings": {
       "j j": "vim::NormalBefore"
     }
