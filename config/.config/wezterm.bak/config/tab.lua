@@ -14,7 +14,7 @@ M.config = {
   -- タブの最大幅
   tab_max_width = 32,
   -- タブが1つの時もタブバーを表示(お好みで true: 非表示 / false: 表示)
-  hide_tab_bar_if_only_one_tab = false,
+  hide_tab_bar_if_only_one_tab = true,
 }
 
 -- 長い文字列を末尾n文字に省略する関数

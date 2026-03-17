@@ -1,0 +1,37 @@
+#!/bin/sh
+# 現在 pane の表示内容をズーム前に退避する
+export PATH="/opt/homebrew/bin:$PATH"
+
+PANE_ID="${1:-$(tmux display-message -p '#{pane_id}')}"
+
+if [ -z "$PANE_ID" ]; then
+  echo "Usage: tmux-save-pane-snapshot <pane-id>" >&2
+  exit 1
+fi
+
+OUT_DIR="$HOME/.cache/tmux/pane-snapshots"
+mkdir -p "$OUT_DIR"
+
+SAFE_ID=$(printf '%s' "$PANE_ID" | tr '%:/' '_')
+OUT_FILE="$OUT_DIR/$SAFE_ID.log"
+TMP_FILE="$OUT_DIR/$SAFE_ID.tmp"
+
+SESSION=$(tmux display-message -p -t "$PANE_ID" '#{session_name}' 2>/dev/null)
+WINDOW=$(tmux display-message -p -t "$PANE_ID" '#{window_name}' 2>/dev/null)
+TITLE=$(tmux display-message -p -t "$PANE_ID" '#{pane_title}' 2>/dev/null)
+COMMAND=$(tmux display-message -p -t "$PANE_ID" '#{pane_current_command}' 2>/dev/null)
+PROJECT=$(tmux display-message -p -t "$PANE_ID" '#{b:pane_current_path}' 2>/dev/null)
+
+{
+  printf '[snapshot] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')"
+  printf 'pane=%s  session=%s  window=%s\n' "$PANE_ID" "$SESSION" "$WINDOW"
+  printf 'command=%s  project=%s\n' "$COMMAND" "$PROJECT"
+  printf 'title=%s\n' "$TITLE"
+  printf '%s\n' '========================================'
+  printf '%s\n' '[alternate-screen]'
+  if ! tmux capture-pane -a -pJ -t "$PANE_ID" 2>/dev/null; then
+    printf '%s\n' '[unavailable]'
+  fi
+  printf '\n%s\n' '[history]'
+  tmux capture-pane -pJ -S - -t "$PANE_ID" 2>/dev/null || printf '%s\n' '[capture failed]'
+} > "$TMP_FILE" && mv "$TMP_FILE" "$OUT_FILE"

@@ -1,0 +1,42 @@
+#!/bin/sh
+# ウィンドウ一覧: Powerline 矢印で繋がったタブデザイン
+# タブ間のみ矢印で繋ぎ、終端は矢印なし
+
+RIGHT_ARROW=$(printf '\xee\x82\xb0')  # U+E0B0
+
+current=$(tmux display-message -p '#{window_index}')
+windows=$(tmux list-windows -F '#{window_index} #{window_name}')
+total=$(echo "$windows" | wc -l | tr -d ' ')
+
+i=0
+echo "$windows" | while IFS=' ' read -r idx name; do
+  i=$((i + 1))
+
+  # 現在のタブの色を決定
+  if [ "$idx" = "$current" ]; then
+    bg="#3BC1A8"
+    fg="#1e2030"
+    bold=",bold"
+  else
+    bg="#005461"
+    fg="#c8d3f5"
+    bold=""
+  fi
+
+  # タブ本体
+  printf '#[fg=%s,bg=%s%s]  %s  ' "$fg" "$bg" "$bold" "$name"
+
+  # タブ間のみ矢印（終端は出さない）
+  if [ "$i" -lt "$total" ]; then
+    next_idx=$(echo "$windows" | sed -n "$((i + 1))p" | cut -d' ' -f1)
+    if [ "$next_idx" = "$current" ]; then
+      next_bg="#3BC1A8"
+    else
+      next_bg="#005461"
+    fi
+    printf '#[fg=%s,bg=%s]%s' "$bg" "$next_bg" "$RIGHT_ARROW"
+  else
+    # 終端: 背景をリセットするだけ
+    printf '#[bg=default] '
+  fi
+done

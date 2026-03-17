@@ -1,0 +1,8 @@
+#!/bin/sh
+# tmux セッション切替（N番目の非Claudeセッションに切り替える）
+# Usage: tmux-switch-session <N>
+export PATH="/opt/homebrew/bin:$PATH"
+n="${1:-1}"
+session=$(tmux ls -F '#{session_name}' | grep -v '^claude-' | sort | sed -n "${n}p")
+[ -n "$session" ] || exit 0
+tmux switch-client -t "$session" && tmux refresh-client -S

@@ -9,11 +9,8 @@ end
 map("n", "<Esc>", "<cmd>nohlsearch<cr>", "Clear search highlight")
 map("i", "jj", "<Esc>", "Exit insert mode")
 
--- ウィンドウ移動
-map("n", "<C-h>", "<C-w>h", "Window left")
-map("n", "<C-j>", "<C-w>j", "Window down")
-map("n", "<C-k>", "<C-w>k", "Window up")
-map("n", "<C-l>", "<C-w>l", "Window right")
+-- ウィンドウ移動は smart-splits.nvim で管理 (plugins/smart-splits.lua)
+-- Alt+h/j/k/l で Neovim ↔ tmux シームレス移動
 
 -- バッファ操作
 map("n", "<leader>bn", "<cmd>bnext<cr>", "Next buffer")

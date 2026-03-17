@@ -31,6 +31,9 @@ return {
   -- カラースキーム
   color_scheme = "Tokyo Night Moon",
   colors = {
+    tab_bar = {
+      inactive_tab_edge = "none",
+    },
     split = "#c0c8e0",
 
     -- QuickSelect 配色 (Tokyo Night Moon)
@@ -45,12 +48,6 @@ return {
     saturation = 0.8,
     brightness = 0.5,
   },
-
-  -- タブバー完全無効化（tmux がウィンドウ/タブを管理）
-  enable_tab_bar = false,
-
-  -- ステータス更新間隔を最大化（タブバー無効のため不要、デフォルト1000ms）
-  status_update_interval = 86400000,
 
   -- スクロールバック行数
   scrollback_lines = 10000,

@@ -5,18 +5,25 @@ local config = wezterm.config_builder()
 local notification = require("config/notification")
 notification.setup()
 
--- TabBarState 安定化（ちらつき防止）
--- enable_tab_bar=false でも WezTerm は毎サイクル TabBarState を再計算し、
--- 前回と異なると window.invalidate() が発火して画面がちらつく。
--- TabBarState は left_status, right_status, tab titles を含むため、
--- 全てのハンドラで固定値を返して安定させる。
-wezterm.on("update-status", function(window)
-  window:set_left_status("")
-  window:set_right_status("")
-end)
-wezterm.on("format-tab-title", function(tab)
-  return { { Text = " " .. tab.tab_index + 1 .. " " } }
-end)
+-- タブ設定の初期化
+local tab = require("config/tab")
+tab.setup()
+
+-- ステータスバー設定の初期化
+local statusbar = require("config/statusbar")
+statusbar.setup()
+
+-- コマンドパレット拡張の初期化
+local command_palette = require("config/command_palette")
+command_palette.setup()
+
+-- Alfred 外部ワークスペース切替の初期化
+local actions = require("config/actions")
+actions.setup_alfred_watcher()
+
+-- ワークスペース永続化（resurrect.wezterm）
+local resurrect_config = require("config/resurrect")
+resurrect_config.setup()
 
 -- 外部設定ファイルをマージ
 function merge_config(config, new_config)
@@ -30,6 +37,7 @@ local keybinds = require("config/keybinds")
 local font = require("config/font")
 local general = require("config/general")
 merge_config(config, general)
+merge_config(config, tab.config)
 merge_config(config, window)
 merge_config(config, keybinds)
 merge_config(config, font)

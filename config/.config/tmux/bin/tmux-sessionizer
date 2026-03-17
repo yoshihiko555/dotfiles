@@ -1,0 +1,64 @@
+#!/bin/bash
+# tmux-sessionizer — GHQ プロジェクト picker
+# WezTerm の select_project (Leader+f) 相当
+# repo-list.sh の出力を fzf で選択 → tmux セッション作成/切替
+
+set -euo pipefail
+
+REPO_LIST="$HOME/ghq/github.com/yoshihiko555/dotfiles/scripts/repo-list.sh"
+
+if [ ! -f "$REPO_LIST" ]; then
+  echo "repo-list.sh not found: $REPO_LIST" >&2
+  exit 1
+fi
+
+# 現在のセッション名を取得
+current_session=$(tmux display-message -p '#{session_name}' 2>/dev/null || echo "")
+
+# repo-list.sh の出力をアイコン付きに変換して fzf に渡す
+selected=$(bash "$REPO_LIST" | while IFS=$'\t' read -r type label path; do
+  # セッション名を決定
+  if [ "$type" = "worktree" ]; then
+    # worktree: "owner/repo:branch" → "repo:branch"
+    session_name=$(echo "$label" | sed 's|.*/\([^/]*:[^/]*\)$|\1|')
+  else
+    # repo: 末尾ディレクトリ名
+    session_name=$(basename "$path")
+  fi
+  session_name=$(echo "$session_name" | tr '.' '-')
+
+  # アイコンと (current) マーカー
+  if [ "$type" = "worktree" ]; then
+    icon=$'\xe2\x97\x8f \xee\x9c\xa8'   # ● + git-merge
+  else
+    icon=$'\xe2\x97\x8b \xee\xa9\xa2'   # ○ + repo
+  fi
+
+  if [ "$session_name" = "$current_session" ]; then
+    marker="  (current)"
+  else
+    marker=""
+  fi
+
+  # 表示\tセッション名\tパス
+  printf '%s  %s%s\t%s\t%s\n' "$icon" "$label" "$marker" "$session_name" "$path"
+done | fzf --ansi \
+           --delimiter=$'\t' \
+           --with-nth=1 \
+           --header="Select project" \
+           --preview='ls -la {3}' \
+           --preview-window=down:3:wrap)
+
+[ -z "$selected" ] && exit 0
+
+session_name=$(echo "$selected" | cut -f2)
+path=$(echo "$selected" | cut -f3)
+
+# セッション作成 or 切替
+if ! tmux has-session -t="$session_name" 2>/dev/null; then
+  tmux new-session -ds "$session_name" -c "$path"
+fi
+
+# display-popup 内では switch-client が効かないため、
+# 一時ファイルに書き出して popup 終了後に親クライアントで切り替える
+echo "$session_name" > /tmp/tmux-sessionizer-target

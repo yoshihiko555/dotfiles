@@ -1,0 +1,27 @@
+#!/bin/sh
+# ステータスバー右側: セッション名を repo/worktree アイコン付きで表示
+# - claude-* セッションを除外
+# - ":" を含む → worktree (git-merge アイコン)
+# - それ以外 → repo (repo アイコン)
+export PATH="/opt/homebrew/bin:$PATH"
+
+# Nerd Font アイコン
+ICON_REPO=$(printf '\xef\x80\x88')        # nf-fa-book (oct_repo 相当)
+ICON_WORKTREE=$(printf '\xee\x9c\xa8')    # nf-cod-git_merge
+
+current=$(tmux display-message -p '#{session_name}')
+sessions=$(tmux ls -F '#{session_name}' 2>/dev/null | grep -v '^claude-' | sort)
+
+for s in $sessions; do
+  # セッション名に ":" が含まれていれば worktree
+  case "$s" in
+    *:*) icon="$ICON_WORKTREE" ;;
+    *)   icon="$ICON_REPO" ;;
+  esac
+
+  if [ "$s" = "$current" ]; then
+    printf "#[fg=#3BC1A8,bg=default] %s #[fg=#1e2030,bg=#3BC1A8,bold] %s #[fg=#3BC1A8,bg=default] " "$icon" "$s"
+  else
+    printf "#[fg=#828bb8,bg=default] %s #[fg=#828bb8,bg=default] %s " "$icon" "$s"
+  fi
+done

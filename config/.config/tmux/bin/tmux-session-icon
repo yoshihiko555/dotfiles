@@ -1,0 +1,7 @@
+#!/bin/sh
+# セッション名に ":" が含まれていれば worktree アイコン、それ以外は repo アイコン
+session=$(tmux display-message -p '#{session_name}')
+case "$session" in
+  *:*) printf '\xee\x9c\xa8' ;;   # nf-cod-git_merge
+  *)   printf '\xee\xa9\xa2' ;;   # nf-cod-repo (U+EA62)
+esac

@@ -1,0 +1,19 @@
+#!/bin/sh
+# ステータスバー左側: モードバッジを Powerline 矢印付きで表示
+
+RIGHT_ARROW=$(printf '\xee\x82\xb0')  # U+E0B0
+
+# モード判定
+in_copy=$(tmux display-message -p '#{pane_in_mode}')
+client_prefix=$(tmux display-message -p '#{client_prefix}')
+key_table=$(tmux display-message -p '#{client_key_table}')
+
+if [ "$in_copy" = "1" ]; then
+  printf '#[fg=#1e2030,bg=#ffc777,bold]  COPY  #[fg=#ffc777,bg=default]%s#[default] ' "$RIGHT_ARROW"
+elif [ "$key_table" = "pane_mode" ]; then
+  printf '#[fg=#1e2030,bg=#c3e88d,bold]  PANE  #[fg=#c3e88d,bg=default]%s#[default] ' "$RIGHT_ARROW"
+elif [ "$key_table" = "resize_mode" ]; then
+  printf '#[fg=#1e2030,bg=#82aaff,bold]  RESIZE  #[fg=#82aaff,bg=default]%s#[default] ' "$RIGHT_ARROW"
+elif [ "$client_prefix" = "1" ]; then
+  printf '#[fg=#c8d3f5,bg=#3654a7,bold]  PREFIX  #[fg=#3654a7,bg=default]%s#[default] ' "$RIGHT_ARROW"
+fi

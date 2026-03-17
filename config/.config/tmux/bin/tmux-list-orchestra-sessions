@@ -1,0 +1,27 @@
+#!/bin/sh
+# ai-orchestra hook が記録した tmux 監視セッションを新しい順で列挙する
+export PATH="/opt/homebrew/bin:$PATH"
+
+SESSION_INFO_DIR="${CLAUDE_TMUX_SESSION_INFO_DIR:-/tmp/claude-session-info}"
+
+list_from_session_info() {
+  if [ ! -d "$SESSION_INFO_DIR" ]; then
+    return
+  fi
+
+  for file in $(ls -t "$SESSION_INFO_DIR"/*.tmux-session 2>/dev/null); do
+    [ -f "$file" ] || continue
+
+    session=$(tr -d '\r' < "$file")
+    [ -n "$session" ] || continue
+
+    if tmux has-session -t "$session" 2>/dev/null; then
+      printf '%s\n' "$session"
+    fi
+  done | awk '!seen[$0]++'
+}
+
+sessions=$(list_from_session_info)
+if [ -n "$sessions" ]; then
+  printf '%s\n' "$sessions"
+fi

@@ -1,0 +1,51 @@
+#!/bin/sh
+# ai-orchestra 監視セッション内の pane を選択して stdout に出力
+# 出力形式: pane_id<TAB>status<TAB>title
+export PATH="/opt/homebrew/bin:$PATH"
+
+SESSION="$1"
+if [ -z "$SESSION" ]; then
+  echo "Usage: tmux-select-claude-pane <session-name>" >&2
+  exit 1
+fi
+
+panes=$(
+  tmux list-panes -t "$SESSION" -F '#{pane_id}	#{pane_title}' 2>/dev/null \
+    | awk -F '	' '
+        {
+          status = ($2 ~ /^DONE:/ ? "DONE" : "RUNNING")
+          title = $2
+          sub(/^DONE:[ ]*/, "", title)
+          printf "%s\t%s\t%s\n", $1, status, title
+        }
+      '
+)
+
+if [ -z "$panes" ]; then
+  echo "No pane found in session: $SESSION" >&2
+  exit 1
+fi
+
+count=$(printf '%s\n' "$panes" | wc -l | tr -d ' ')
+
+if [ "$count" -eq 1 ]; then
+  printf '%s\n' "$panes"
+  exit 0
+fi
+
+selected=$(
+  printf '%s\n' "$panes" \
+    | fzf \
+        --delimiter='	' \
+        --with-nth=2,3 \
+        --prompt="Agent pane> " \
+        --header="Enter: 詳細表示 / Esc: 閉じる" \
+        --preview 'tmux capture-pane -S - -p -t {1} 2>/dev/null | tail -n 120' \
+        --preview-window='right:70%:wrap'
+)
+
+if [ -z "$selected" ]; then
+  exit 1
+fi
+
+printf '%s\n' "$selected"

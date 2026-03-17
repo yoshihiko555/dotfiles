@@ -1,0 +1,61 @@
+#!/bin/bash
+# tmux-init-panes — ペイン数に応じてプロセスを自動起動
+# WezTerm の layouts.init_panes 相当
+#
+# 2ペイン: pane0=nvim, pane1=free
+# 3ペイン: pane0=nvim, pane1=claude, pane2=free
+# 4ペイン: pane0=claude, pane1=codex, pane2=free, pane3=free
+
+set -euo pipefail
+
+pane_count=$(tmux list-panes | wc -l | tr -d ' ')
+
+# 対応ペイン数チェック
+case "$pane_count" in
+  2|3|4) ;;
+  *)
+    tmux display-message "init-panes: ${pane_count}ペインには未対応です (対応: 2, 3, 4)"
+    exit 1
+    ;;
+esac
+
+# GHQ リポジトリ配下チェック
+cwd=$(tmux display-message -p '#{pane_current_path}')
+ghq_root="$HOME/ghq/"
+if [[ "$cwd" != "$ghq_root"* ]]; then
+  tmux display-message "init-panes: GHQ リポジトリ配下でのみ実行できます"
+  exit 1
+fi
+
+# TUI プロセスの二重起動防止（alt screen チェック）
+for i in $(seq 0 $((pane_count - 1))); do
+  in_alt=$(tmux display-message -t "$i" -p '#{alternate_on}')
+  if [ "$in_alt" = "1" ]; then
+    tmux display-message "init-panes: ペイン $i でプロセスが実行中です"
+    exit 1
+  fi
+done
+
+# 全ペインを同じディレクトリに移動
+for i in $(seq 1 $((pane_count - 1))); do
+  tmux send-keys -t "$i" "cd '${cwd}'" Enter
+done
+
+case "$pane_count" in
+  2)
+    # pane0=nvim, pane1=free
+    tmux send-keys -t 0 "nvim" Enter
+    ;;
+  3)
+    # pane0=nvim, pane1=claude, pane2=free
+    tmux send-keys -t 0 "nvim" Enter
+    tmux send-keys -t 1 "claude" Enter
+    ;;
+  4)
+    # pane0=claude, pane1=codex, pane2=free, pane3=free
+    tmux send-keys -t 0 "claude" Enter
+    tmux send-keys -t 1 "codex" Enter
+    ;;
+esac
+
+tmux select-pane -t 0
