@@ -100,6 +100,8 @@
 | 3 | `Alt+1-9` は現状ウィンドウ切替。セッションの direct switch は popup (`Prefix+s`) のみ | 中 | Phase 2 の sessionizer / kill-session 導入時に再設計 |
 | 4 | claude-squad の detach キー `Ctrl+Q` が WezTerm Leader と衝突。popup 内で detach できず WezTerm が落ちる | 高 | claude-squad 側に設定変更オプションなし。Phase 6 で WezTerm Leader を変更/削除するか、claude-squad を popup ではなく通常シェルで運用するか検討 |
 | 5 | claude-squad を display-popup 内で起動すると、アタッチ後に Ctrl+Q で detach できず完全にスタックする | 高 | popup での起動方法を再検討。通常シェル運用、専用ウィンドウ、WezTerm Leader 変更のいずれかで対応 |
+| 6 | claude-squad のアンインストール。claude-squad 経由で作成された tmux セッション・worktree のゴミデータを確認してから削除する | 中 | `claude-squad reset` でインスタンスクリア → `~/.claude-squad/worktrees/` 確認 → `brew uninstall claude-squad` |
+| 7 | claude-tmux の一部セッションで Claude Code のステータスが `unknown` になる | 低 | 検知精度の問題。再起動後に改善するか確認。改善しなければ claude-tmux の issue を確認 |
 
 ## 検討課題 (将来)
 

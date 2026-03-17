@@ -2,4 +2,5 @@
 go = "latest"
 node = "lts"
 python = "latest"
+rust = "latest"
 uv = "latest"
