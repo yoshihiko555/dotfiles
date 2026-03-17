@@ -1,6 +1,6 @@
 # tmux キーバインド チートシート
 
-Prefix: `Ctrl+T`
+Prefix: `Ctrl+Q`
 
 ## 基本操作
 
@@ -12,6 +12,9 @@ Prefix: `Ctrl+T`
 | `Prefix + z` | ペインズーム (スナップショット保存付き) |
 | `Prefix + h/j/k/l` | ペイン移動 |
 | `Alt + h/j/k/l` | ペイン移動 (smart-splits, Prefix 不要) |
+| `Alt + Shift + H/J/K/L` | ペインリサイズ (Prefix 不要) |
+| `Prefix + 2-8` | 現在ウィンドウを N ペインに分割 (1ペイン時のみ) |
+| `Prefix + 0` | ペイン初期化 (ペイン数に応じて nvim/claude 等起動) |
 | `Prefix + c` | 新しいウィンドウ |
 | `Prefix + n` | 次のウィンドウ |
 | `Prefix + P` | 前のウィンドウ |
@@ -50,6 +53,7 @@ Prefix: `Ctrl+T`
 | `Prefix + g` | lazygit popup (80x80%) |
 | `Prefix + t` | 一時シェル popup (80x80%) |
 | `Prefix + C` | Claude Code popup (90x90%) |
+| `Prefix + b` | claude-tmux (Claude Code 横断監視) popup (90x90%) |
 | `Prefix + a` | AI サブエージェント履歴 popup (90x90%) |
 | `Prefix + A` | AI 監視ペインの表示 / 非表示 |
 
@@ -99,10 +103,19 @@ Prefix: `Ctrl+T`
 
 ---
 
-## 未実装 (移行計画で追加予定)
+## WezTerm ショートカット (Cmd → tmux 変換)
 
-| キー (予定) | 動作 | Phase |
-|------------|------|-------|
-| `Prefix + b` | claude-squad | 4 |
-| `Prefix + Space` | コマンドパレット | 5 |
-| `Prefix + u` | URL 選択 (urlscan) | 5 |
+| キー | tmux 操作 |
+|------|----------|
+| `Cmd + 1-8` | ウィンドウ切替 (Alt+1-8 に変換) |
+| `Cmd + T` | 新規ウィンドウ (Prefix+c に変換) |
+| `Cmd + D` | ペイン横分割 (Prefix+r に変換) |
+| `Cmd + Shift + D` | ペイン縦分割 (Prefix+d に変換) |
+| `Cmd + W` | ペイン閉じ (Prefix+x に変換) |
+
+## 未実装 / 保留
+
+| キー (予定) | 動作 | 備考 |
+|------------|------|------|
+| `Prefix + Space` | コマンドパレット | Phase 5 で保留中 |
+| `Prefix + u` | URL 選択 (urlscan) | Phase 5 で保留中 |

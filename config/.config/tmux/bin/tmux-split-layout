@@ -1,0 +1,122 @@
+#!/bin/bash
+# tmux-split-layout — 現在のウィンドウを N ペインに分割
+# WezTerm の layouts.split_to() 相当
+# Usage: tmux-split-layout <N>
+
+set -euo pipefail
+
+N="${1:-}"
+if [ -z "$N" ] || [ "$N" -lt 2 ] || [ "$N" -gt 8 ]; then
+  tmux display-message "使い方: tmux-split-layout <2-8>"
+  exit 1
+fi
+
+# 現在のペイン数チェック（1ペインのみ許可）
+pane_count=$(tmux list-panes | wc -l | tr -d ' ')
+if [ "$pane_count" -ne 1 ]; then
+  tmux display-message "1ペインのウィンドウでのみ実行できます (現在: ${pane_count}ペイン)"
+  exit 1
+fi
+
+cwd="#{pane_current_path}"
+
+case "$N" in
+  # ┌──────┬──────┐
+  # │  1   │  2   │
+  # └──────┴──────┘
+  2)
+    tmux split-window -h -c "$cwd"
+    tmux select-pane -t 0
+    ;;
+
+  # ┌──────┬──────┐
+  # │      │  2   │
+  # │  1   ├──────┤
+  # │      │  3   │
+  # └──────┴──────┘
+  3)
+    tmux split-window -h -c "$cwd" -p 50
+    tmux split-window -v -c "$cwd" -p 50
+    tmux select-pane -t 0
+    ;;
+
+  # ┌──────┬──────┐
+  # │  1   │  2   │
+  # ├──────┼──────┤
+  # │  3   │  4   │
+  # └──────┴──────┘
+  4)
+    tmux split-window -h -c "$cwd" -p 50
+    tmux select-pane -t 0
+    tmux split-window -v -c "$cwd" -p 50
+    tmux select-pane -t 1
+    tmux split-window -v -c "$cwd" -p 50
+    tmux select-pane -t 0
+    ;;
+
+  # ┌────────┬────────┐
+  # │   1    │   2    │
+  # ├─────┬──┴──┬─────┤
+  # │  3  │  4  │  5  │
+  # └─────┴─────┴─────┘
+  5)
+    tmux split-window -v -c "$cwd" -p 50
+    tmux select-pane -t 0
+    tmux split-window -h -c "$cwd" -p 50
+    tmux select-pane -t 2
+    tmux split-window -h -c "$cwd" -p 67
+    tmux split-window -h -c "$cwd" -p 50
+    tmux select-pane -t 0
+    ;;
+
+  # ┌─────┬─────┬─────┐
+  # │  1  │  2  │  3  │
+  # ├─────┼─────┼─────┤
+  # │  4  │  5  │  6  │
+  # └─────┴─────┴─────┘
+  6)
+    tmux split-window -v -c "$cwd" -p 50
+    tmux select-pane -t 0
+    tmux split-window -h -c "$cwd" -p 67
+    tmux split-window -h -c "$cwd" -p 50
+    tmux select-pane -t 3
+    tmux split-window -h -c "$cwd" -p 67
+    tmux split-window -h -c "$cwd" -p 50
+    tmux select-pane -t 0
+    ;;
+
+  # ┌─────┬─────┬─────┐
+  # │  1  │  2  │  3  │
+  # ├───┬─┴──┬──┴─┬───┤
+  # │ 4 │ 5  │ 6  │ 7 │
+  # └───┴────┴────┴───┘
+  7)
+    tmux split-window -v -c "$cwd" -p 50
+    tmux select-pane -t 0
+    tmux split-window -h -c "$cwd" -p 67
+    tmux split-window -h -c "$cwd" -p 50
+    tmux select-pane -t 3
+    tmux split-window -h -c "$cwd" -p 75
+    tmux split-window -h -c "$cwd" -p 67
+    tmux split-window -h -c "$cwd" -p 50
+    tmux select-pane -t 0
+    ;;
+
+  # ┌───┬───┬───┬───┐
+  # │ 1 │ 2 │ 3 │ 4 │
+  # ├───┼───┼───┼───┤
+  # │ 5 │ 6 │ 7 │ 8 │
+  # └───┴───┴───┴───┘
+  8)
+    tmux split-window -v -c "$cwd" -p 50
+    tmux select-pane -t 0
+    tmux split-window -h -c "$cwd" -p 75
+    tmux split-window -h -c "$cwd" -p 67
+    tmux split-window -h -c "$cwd" -p 50
+    tmux select-pane -t 4
+    tmux split-window -h -c "$cwd" -p 75
+    tmux split-window -h -c "$cwd" -p 67
+    tmux split-window -h -c "$cwd" -p 50
+    tmux select-pane -t 0
+    ;;
+esac

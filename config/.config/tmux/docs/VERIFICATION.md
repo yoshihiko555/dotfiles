@@ -20,7 +20,7 @@
 
 ## キーバインド (keybinds.conf)
 
-- [x] Prefix (Ctrl+T) が機能する
+- [x] Prefix (Ctrl+Q) が機能する
 - [x] Prefix+r で横分割
 - [x] Prefix+d で縦分割
 - [x] Prefix+x でペイン閉じ
