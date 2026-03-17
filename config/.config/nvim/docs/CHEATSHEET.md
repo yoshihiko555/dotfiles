@@ -180,14 +180,23 @@
 | `jj` | Insert | Normal モードに戻る |
 | `Esc` | Normal | 検索ハイライト解除 |
 
-### ウィンドウ移動
+### ペイン移動 (smart-splits — Neovim ↔ tmux シームレス)
 
 | キー | 説明 |
 |------|------|
-| `Ctrl+h` | 左ウィンドウ |
-| `Ctrl+j` | 下ウィンドウ |
-| `Ctrl+k` | 上ウィンドウ |
-| `Ctrl+l` | 右ウィンドウ |
+| `Alt+h` | 左ペイン |
+| `Alt+j` | 下ペイン |
+| `Alt+k` | 上ペイン |
+| `Alt+l` | 右ペイン |
+
+### ペインリサイズ (smart-splits)
+
+| キー | 説明 |
+|------|------|
+| `Alt+Shift+H` | 左にリサイズ |
+| `Alt+Shift+J` | 下にリサイズ |
+| `Alt+Shift+K` | 上にリサイズ |
+| `Alt+Shift+L` | 右にリサイズ |
 
 ### ウィンドウ操作 (`<leader>w` → `Ctrl+w` プロキシ)
 
@@ -312,6 +321,13 @@ diff view 内のキー:
 | `q` | diff を閉じる |
 | `g?` | ヘルプ表示 |
 
+### Copilot (AI 補完 — Insert モード)
+
+| キー | モード | 説明 |
+|------|--------|------|
+| `Ctrl+y` | Insert | Copilot 提案を accept |
+| `Ctrl+e` | Insert | Copilot 提案を dismiss |
+
 ### その他
 
 | キー | 説明 |
@@ -414,3 +430,5 @@ diff view 内のキー:
 | markdown-preview.nvim | ブラウザ Markdown プレビュー (Mermaid対応) |
 | gitsigns.nvim | Git 変更表示・hunk操作・inline blame |
 | codediff.nvim | VSCode風 diff viewer（文字レベルハイライト） |
+| smart-splits.nvim | Neovim ↔ tmux シームレスペイン移動・リサイズ |
+| copilot.lua | GitHub Copilot AI 補完 |
