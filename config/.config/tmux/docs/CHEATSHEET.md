@@ -11,8 +11,8 @@ Prefix: `Ctrl+Q`
 | `Prefix + x` | ペイン閉じ |
 | `Prefix + z` | ペインズーム (スナップショット保存付き) |
 | `Prefix + h/j/k/l` | ペイン移動 |
-| `Alt + h/j/k/l` | ペイン移動 (smart-splits, Prefix 不要) |
-| `Alt + Shift + H/J/K/L` | ペインリサイズ (Prefix 不要) |
+| `Alt + h/j/k/l` | ペイン移動 (smart-splits.nvim 連携, Neovim ↔ tmux シームレス) |
+| `Alt + Shift + H/J/K/L` | ペインリサイズ (smart-splits.nvim 連携) |
 | `Prefix + 2-8` | 現在ウィンドウを N ペインに分割 (1ペイン時のみ) |
 | `Prefix + 0` | ペイン初期化 (ペイン数に応じて nvim/claude 等起動) |
 | `Prefix + c` | 新しいウィンドウ |

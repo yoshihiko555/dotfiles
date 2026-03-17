@@ -18,7 +18,7 @@ if [ "$pane_count" -ne 1 ]; then
   exit 1
 fi
 
-cwd="#{pane_current_path}"
+cwd=$(tmux display-message -p '#{pane_current_path}')
 
 case "$N" in
   # ┌──────┬──────┐
