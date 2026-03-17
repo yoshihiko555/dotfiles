@@ -8,11 +8,40 @@
 docs/
 ├── README.md              # このファイル
 ├── PLUGINS.md             # プラグイン一覧（用途・導入理由）
-├── CHEATSHEET.md          # キーバインド・操作チートシート
+├── cheatsheet/            # キーバインド・操作チートシート（トピック別）
+│   ├── README.md          # 目次
+│   ├── vim-basics.md      # モード/移動/検索/編集/コマンドライン
+│   ├── text-objects.md    # オペレータ+テキストオブジェクト / Visual
+│   ├── registers-marks.md # レジスタ / マーク
+│   ├── custom-keybinds.md # カスタムキーバインド全般
+│   ├── plugin-operations.md # Neo-tree/FzfLua/Alpha 内部操作
+│   └── git-workflow.md    # gitsigns/CodeDiff/Git操作
+├── exercises/             # ハンズオン練習ファイル
+│   ├── README.md          # 練習ガイド・プログレッション
+│   ├── 01-editing-basics.md
+│   ├── 02-text-objects.md
+│   ├── 03-visual-mode.md
+│   ├── 04-registers-marks.md
+│   ├── 05-search-replace.md
+│   ├── 06-surround-comment.md
+│   ├── 07-neo-tree.md
+│   ├── 08-fzf-lua.md
+│   ├── 09-lsp-workflow.md
+│   └── 10-git-workflow.md
 ├── research/              # プラグインのリサーチ・検証メモ
 │   └── TEMPLATE.md        # リサーチメモのテンプレート
 └── adr/                   # 意思決定ログ（ADR: Architecture Decision Records）
 ```
+
+## cheatsheet/
+
+トピック別に分割したキーバインド・操作リファレンス。
+→ [目次](cheatsheet/README.md)
+
+## exercises/
+
+Neovim で開いて指示に従い操作するハンズオン練習ファイル。
+→ [練習ガイド](exercises/README.md)
 
 ## research/
 
