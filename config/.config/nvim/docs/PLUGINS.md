@@ -39,6 +39,18 @@
 | [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) | `plugins/gitsigns.lua` | ガターサイン・hunk操作・inline blame・word diff | エディタ内でリアルタイムにGit差分を確認。hunk単位のステージ/リセットで細かいコミット操作が可能 |
 | [codediff.nvim](https://github.com/esmuellert/codediff.nvim) | `plugins/codediff.lua` | VSCode風diff viewer（サイドバイサイド・文字レベルハイライト） | PR前のdiff確認やファイル履歴の確認をNeovim内で完結。lazygitと役割分担 |
 
+## tmux 連携
+
+| プラグイン | 設定ファイル | 用途 | 導入理由 |
+|-----------|-------------|------|---------|
+| [smart-splits.nvim](https://github.com/mrjones2014/smart-splits.nvim) | `plugins/smart-splits.lua` | Neovim ↔ tmux シームレスペイン移動・リサイズ | Alt+h/j/k/l で Neovim/tmux 境界を意識せずペイン移動。Alt+Shift+H/J/K/L でリサイズ |
+
+## AI 補完
+
+| プラグイン | 設定ファイル | 用途 | 導入理由 |
+|-----------|-------------|------|---------|
+| [copilot.lua](https://github.com/zbirenbaum/copilot.lua) | `plugins/copilot.lua` | GitHub Copilot によるインライン補完 | AI による入力補完でコーディング速度を向上。Ctrl+y で accept、Ctrl+e で dismiss |
+
 ## その他
 
 | プラグイン | 設定ファイル | 用途 | 導入理由 |
