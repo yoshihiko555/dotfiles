@@ -1,15 +1,27 @@
 #!/bin/bash
 # チートシート選択 → glow で表示
-# ~/.config/*/docs/CHEATSHEET.md を検索して fzf で選択
+# ~/.config/*/docs/CHEATSHEET.md および
+# ~/.config/*/docs/cheatsheet/*.md を検索して fzf で選択
 
 set -euo pipefail
 
 cheatsheets=()
+
+# 単体 CHEATSHEET.md (例: tmux)
 for f in ~/.config/*/docs/CHEATSHEET.md; do
   [ -f "$f" ] || continue
-  # ~/.config/tmux/docs/CHEATSHEET.md → tmux
   name=$(echo "$f" | sed 's|.*/\.config/\([^/]*\)/.*|\1|')
   cheatsheets+=("$name"$'\t'"$f")
+done
+
+# 分割チートシート (例: nvim/docs/cheatsheet/*.md)
+for f in ~/.config/*/docs/cheatsheet/*.md; do
+  [ -f "$f" ] || continue
+  tool=$(echo "$f" | sed 's|.*/\.config/\([^/]*\)/.*|\1|')
+  topic=$(basename "$f" .md)
+  # README.md は目次なのでスキップ
+  [ "$topic" = "README" ] && continue
+  cheatsheets+=("$tool/$topic"$'\t'"$f")
 done
 
 if [ ${#cheatsheets[@]} -eq 0 ]; then
