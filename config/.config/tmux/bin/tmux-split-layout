@@ -1,32 +1,42 @@
 #!/bin/bash
 # tmux-split-layout — 現在のウィンドウを N ペインに分割
 # WezTerm の layouts.split_to() 相当
-# Usage: tmux-split-layout <N>
+# Usage: tmux-split-layout <N> <pane_id>
 
 set -euo pipefail
 
 N="${1:-}"
+PANE_ID="${2:-}"
+
 if [ -z "$N" ] || [ "$N" -lt 2 ] || [ "$N" -gt 8 ]; then
   tmux display-message "使い方: tmux-split-layout <2-8>"
   exit 1
 fi
 
+if [ -z "$PANE_ID" ]; then
+  tmux display-message "pane_id が指定されていません"
+  exit 1
+fi
+
 # 現在のペイン数チェック（1ペインのみ許可）
-pane_count=$(tmux list-panes | wc -l | tr -d ' ')
+pane_count=$(tmux list-panes -t "${PANE_ID}" | wc -l | tr -d ' ')
 if [ "$pane_count" -ne 1 ]; then
   tmux display-message "1ペインのウィンドウでのみ実行できます (現在: ${pane_count}ペイン)"
   exit 1
 fi
 
-cwd=$(tmux display-message -p '#{pane_current_path}')
+cwd=$(tmux display-message -t "${PANE_ID}" -p '#{pane_current_path}')
+
+# split-window は PANE_ID を対象にする（そのペインを分割元にする）
+# split-window の途中で select-pane する場合もペインIDで指定
+# 最後に元のペインをアクティブにする
 
 case "$N" in
   # ┌──────┬──────┐
   # │  1   │  2   │
   # └──────┴──────┘
   2)
-    tmux split-window -h -c "$cwd"
-    tmux select-pane -t 0
+    tmux split-window -t "${PANE_ID}" -h -c "$cwd"
     ;;
 
   # ┌──────┬──────┐
@@ -35,9 +45,8 @@ case "$N" in
   # │      │  3   │
   # └──────┴──────┘
   3)
-    tmux split-window -h -c "$cwd" -p 50
-    tmux split-window -v -c "$cwd" -p 50
-    tmux select-pane -t 0
+    p2=$(tmux split-window -t "${PANE_ID}" -h -c "$cwd" -p 50 -P -F '#{pane_id}')
+    tmux split-window -t "${p2}" -v -c "$cwd" -p 50
     ;;
 
   # ┌──────┬──────┐
@@ -46,12 +55,9 @@ case "$N" in
   # │  3   │  4   │
   # └──────┴──────┘
   4)
-    tmux split-window -h -c "$cwd" -p 50
-    tmux select-pane -t 0
-    tmux split-window -v -c "$cwd" -p 50
-    tmux select-pane -t 1
-    tmux split-window -v -c "$cwd" -p 50
-    tmux select-pane -t 0
+    p2=$(tmux split-window -t "${PANE_ID}" -h -c "$cwd" -p 50 -P -F '#{pane_id}')
+    tmux split-window -t "${PANE_ID}" -v -c "$cwd" -p 50
+    tmux split-window -t "${p2}" -v -c "$cwd" -p 50
     ;;
 
   # ┌────────┬────────┐
@@ -60,13 +66,10 @@ case "$N" in
   # │  3  │  4  │  5  │
   # └─────┴─────┴─────┘
   5)
-    tmux split-window -v -c "$cwd" -p 50
-    tmux select-pane -t 0
-    tmux split-window -h -c "$cwd" -p 50
-    tmux select-pane -t 2
-    tmux split-window -h -c "$cwd" -p 67
-    tmux split-window -h -c "$cwd" -p 50
-    tmux select-pane -t 0
+    p_bottom=$(tmux split-window -t "${PANE_ID}" -v -c "$cwd" -p 50 -P -F '#{pane_id}')
+    tmux split-window -t "${PANE_ID}" -h -c "$cwd" -p 50
+    p_br=$(tmux split-window -t "${p_bottom}" -h -c "$cwd" -p 67 -P -F '#{pane_id}')
+    tmux split-window -t "${p_br}" -h -c "$cwd" -p 50
     ;;
 
   # ┌─────┬─────┬─────┐
@@ -75,14 +78,11 @@ case "$N" in
   # │  4  │  5  │  6  │
   # └─────┴─────┴─────┘
   6)
-    tmux split-window -v -c "$cwd" -p 50
-    tmux select-pane -t 0
-    tmux split-window -h -c "$cwd" -p 67
-    tmux split-window -h -c "$cwd" -p 50
-    tmux select-pane -t 3
-    tmux split-window -h -c "$cwd" -p 67
-    tmux split-window -h -c "$cwd" -p 50
-    tmux select-pane -t 0
+    p_bottom=$(tmux split-window -t "${PANE_ID}" -v -c "$cwd" -p 50 -P -F '#{pane_id}')
+    p_tr=$(tmux split-window -t "${PANE_ID}" -h -c "$cwd" -p 67 -P -F '#{pane_id}')
+    tmux split-window -t "${p_tr}" -h -c "$cwd" -p 50
+    p_br=$(tmux split-window -t "${p_bottom}" -h -c "$cwd" -p 67 -P -F '#{pane_id}')
+    tmux split-window -t "${p_br}" -h -c "$cwd" -p 50
     ;;
 
   # ┌─────┬─────┬─────┐
@@ -91,15 +91,12 @@ case "$N" in
   # │ 4 │ 5  │ 6  │ 7 │
   # └───┴────┴────┴───┘
   7)
-    tmux split-window -v -c "$cwd" -p 50
-    tmux select-pane -t 0
-    tmux split-window -h -c "$cwd" -p 67
-    tmux split-window -h -c "$cwd" -p 50
-    tmux select-pane -t 3
-    tmux split-window -h -c "$cwd" -p 75
-    tmux split-window -h -c "$cwd" -p 67
-    tmux split-window -h -c "$cwd" -p 50
-    tmux select-pane -t 0
+    p_bottom=$(tmux split-window -t "${PANE_ID}" -v -c "$cwd" -p 50 -P -F '#{pane_id}')
+    p_tr=$(tmux split-window -t "${PANE_ID}" -h -c "$cwd" -p 67 -P -F '#{pane_id}')
+    tmux split-window -t "${p_tr}" -h -c "$cwd" -p 50
+    p_br_half=$(tmux split-window -t "${p_bottom}" -h -c "$cwd" -p 50 -P -F '#{pane_id}')
+    tmux split-window -t "${p_bottom}" -h -c "$cwd" -p 50
+    tmux split-window -t "${p_br_half}" -h -c "$cwd" -p 50
     ;;
 
   # ┌───┬───┬───┬───┐
@@ -108,15 +105,15 @@ case "$N" in
   # │ 5 │ 6 │ 7 │ 8 │
   # └───┴───┴───┴───┘
   8)
-    tmux split-window -v -c "$cwd" -p 50
-    tmux select-pane -t 0
-    tmux split-window -h -c "$cwd" -p 75
-    tmux split-window -h -c "$cwd" -p 67
-    tmux split-window -h -c "$cwd" -p 50
-    tmux select-pane -t 4
-    tmux split-window -h -c "$cwd" -p 75
-    tmux split-window -h -c "$cwd" -p 67
-    tmux split-window -h -c "$cwd" -p 50
-    tmux select-pane -t 0
+    p_bottom=$(tmux split-window -t "${PANE_ID}" -v -c "$cwd" -p 50 -P -F '#{pane_id}')
+    p_tr_half=$(tmux split-window -t "${PANE_ID}" -h -c "$cwd" -p 50 -P -F '#{pane_id}')
+    tmux split-window -t "${PANE_ID}" -h -c "$cwd" -p 50
+    tmux split-window -t "${p_tr_half}" -h -c "$cwd" -p 50
+    p_br_half=$(tmux split-window -t "${p_bottom}" -h -c "$cwd" -p 50 -P -F '#{pane_id}')
+    tmux split-window -t "${p_bottom}" -h -c "$cwd" -p 50
+    tmux split-window -t "${p_br_half}" -h -c "$cwd" -p 50
     ;;
 esac
+
+# 元のペインをアクティブにする
+tmux select-pane -t "${PANE_ID}"
