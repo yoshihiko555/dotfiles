@@ -1,0 +1,24 @@
+[
+  {
+    "context": "VimControl && vim_mode == insert",
+    "bindings": {
+      "j j": "vim::NormalBefore"
+    }
+  },
+  {
+    "context": "VimControl && !menu",
+    "bindings": {
+      // ペイン移動 (Neovim smart-splits と統一)
+      "alt-h": ["workspace::ActivatePaneInDirection", "Left"],
+      "alt-j": ["workspace::ActivatePaneInDirection", "Down"],
+      "alt-k": ["workspace::ActivatePaneInDirection", "Up"],
+      "alt-l": ["workspace::ActivatePaneInDirection", "Right"]
+    }
+  },
+  {
+    "bindings": {
+      // ターミナルトグル (素早くアクセス)
+      "ctrl-`": "workspace::ToggleBottomDock"
+    }
+  }
+]
