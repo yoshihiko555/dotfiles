@@ -14,7 +14,7 @@
 ## 基本設定 (general.conf)
 
 - [x] True Color が正常に表示される
-- [ ] マウス操作が有効
+- [x] マウス操作が有効
 - [x] ウィンドウ番号が 1 から開始
 - [x] ウィンドウ名が `#{pane_current_command}` で自動更新される
 
@@ -58,8 +58,8 @@
 
 ## smart-splits (smart-splits.conf)
 
-- [ ] Alt+h/j/k/l でペイン移動 (Prefix 不要)
-- [ ] Neovim 内では Neovim のペイン移動として動作
+- [x] Alt+h/j/k/l でペイン移動 (Prefix 不要)
+- [x] Neovim 内では Neovim のペイン移動として動作
 
 ## display-popup (popup.conf)
 
