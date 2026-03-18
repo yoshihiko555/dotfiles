@@ -1,0 +1,38 @@
+#!/bin/sh
+# TODO(baton): baton 移行後に削除候補。詳細は ~/.config/tmux/docs/BATON-MIGRATION.md
+# Claude Code pane を横断表示して、選択した pane へ移動する
+export PATH="/opt/homebrew/bin:$PATH"
+
+TARGET_FILE="${TMUX_CLAUDE_TARGET_FILE:-/tmp/tmux-claude-target}"
+LIST_SCRIPT="${TMUX_CLAUDE_LIST_SCRIPT:-$HOME/.config/tmux/bin/tmux-list-claude-panes}"
+
+rm -f "$TARGET_FILE"
+
+panes=$("$LIST_SCRIPT")
+if [ -z "$panes" ]; then
+  echo "No Claude Code pane found. Ctrl-D で閉じます."
+  cat >/dev/null
+  exit 0
+fi
+
+selected=$(
+  printf '%s\n' "$panes" \
+    | fzf \
+        --delimiter='	' \
+        --with-nth=5,6,1,2,3,7,8 \
+        --prompt="Claude pane> " \
+        --header="Enter: ペインへ移動 / Ctrl-R: 再読込 / Esc: 閉じる" \
+        --preview 'tmux capture-pane -S - -p -J -e -t {4} 2>/dev/null | tail -n 160' \
+        --preview-window='right:70%:wrap' \
+        --bind "ctrl-r:reload($LIST_SCRIPT)"
+)
+
+if [ -z "$selected" ]; then
+  exit 0
+fi
+
+IFS='	' read -r session_name window_index pane_index pane_id _ <<EOF
+$selected
+EOF
+
+printf '%s\t%s\t%s\n' "$session_name" "$window_index" "$pane_id" > "$TARGET_FILE"

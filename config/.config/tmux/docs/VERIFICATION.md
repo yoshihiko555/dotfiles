@@ -134,7 +134,7 @@ WezTerm バックアップ (`config/.config/wezterm.bak/`) と現行 tmux 設定
 - [ ] Prefix+g で lazygit が起動する (WezTerm の overlay_lazygit 相当)
 - [ ] Prefix+t で一時シェルが開く (WezTerm の open_bottom_shell 相当)
 - [ ] Prefix+C で Claude Code が開く
-- [ ] Prefix+b で claude-tmux が開く
+- [ ] Prefix+b で Claude Code pane ダッシュボードが開く
 - [ ] Prefix+? でチートシート (fzf + glow) が開く
 
 ### smart-splits.nvim 連携
@@ -156,7 +156,7 @@ WezTerm バックアップ (`config/.config/wezterm.bak/`) と現行 tmux 設定
 |---|---|---|
 | QuickSelect (Leader+/) | 削除 | tmux-fingers (Prefix+F) |
 | yazi オーバーレイ (Leader+y) | 保留 | WezTerm クラッシュ問題あり |
-| baton オーバーレイ (Leader+B) | 削除 | claude-tmux (Prefix+b) に置換 |
+| baton オーバーレイ (Leader+B) | 削除 | Claude Code pane ダッシュボード (Prefix+b) に置換 |
 | ワークスペース復元 (Leader+r) | 保留 | tmux-resurrect (Phase 3 で検討) |
 | Alfred 外部トリガー | 削除 | tmux-sessionizer で代替 |
 | 画面クリア (Ctrl+L 拡張) | 削除 | tmux 標準のスクロールバック動作に依存 |
@@ -172,7 +172,7 @@ WezTerm バックアップ (`config/.config/wezterm.bak/`) と現行 tmux 設定
 | 4 | ~~claude-squad の detach キー衝突~~ | ~~高~~ | **解決済み**: claude-squad → claude-tmux に移行 (ADR-007) |
 | 5 | ~~claude-squad の popup スタック問題~~ | ~~高~~ | **解決済み**: claude-squad 廃止 |
 | 6 | `tmux-init-panes` に `tmux-split-layout` と同じターゲット未指定バグ | 高 | `list-panes` / `display-message -t` / `send-keys -t` / `select-pane -t` が全てターゲット未指定。`#{pane_id}` を渡す修正が必要 |
-| 7 | claude-tmux の一部セッションで Claude Code のステータスが `unknown` になる | 低 | 検知精度の問題。再起動後に改善するか確認 |
+| 7 | Claude Code pane ダッシュボードの status 判定が一部 UI 変更に追従できない可能性 | 低 | 実ペイン末尾のパターン依存。必要なら判定語彙を追加 |
 
 ## 検討課題 (将来)
 

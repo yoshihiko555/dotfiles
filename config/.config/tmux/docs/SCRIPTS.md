@@ -10,6 +10,9 @@
 | tmux-status-right | 現役 | `statusbar.conf` | セッション名 + 日時を右側に描画 |
 | tmux-save-pane-snapshot | 現役 | `keybinds.conf`, `pane-mode.conf` | ペイン内容のスナップショット保存 |
 | tmux-open-pane-snapshot | 現役 | `copy-mode.conf` | 保存済みスナップショットを popup で表示 |
+| tmux-list-claude-panes | 現役 | Claude pane ダッシュボード内部 | Claude Code pane をペイン単位で一覧化 |
+| tmux-popup-claude-dashboard | 現役 | `popup.conf` (`Prefix+b`) | Claude Code pane の横断選択 UI |
+| tmux-open-claude-target | 現役 | `popup.conf` (`Prefix+b`) | popup 終了後に親クライアントで対象 pane へ移動 |
 | tmux-toggle-claude | 現役 | `popup.conf` (`Prefix+A`) | AI 監視ペインをトグル |
 | tmux-pane-claude | 現役 | `tmux-toggle-claude` | 監視ペイン内の入口 |
 | tmux-popup-claude-history | 現役 | `popup.conf` (`Prefix+a`) | AI 履歴の選択と閲覧 |
@@ -116,6 +119,42 @@ Prefix+a (履歴)
 ### tmux-toggle-claude
 
 右 40% に AI 監視ペインを表示し、同じタイトル (`claude-watch`) のペインがあれば閉じる。
+
+---
+
+## Claude pane ダッシュボード
+
+Claude Code を実行している tmux pane を、セッション単位ではなく pane 単位で扱うためのスクリプト群。
+
+### 呼出フロー
+
+```
+Prefix+b
+  └→ tmux-popup-claude-dashboard
+       ├→ tmux-list-claude-panes
+       └→ tmux-open-claude-target
+```
+
+### tmux-list-claude-panes
+
+全 tmux pane を走査し、Claude Code を実行している pane だけを TSV で出力する。
+
+- `session<TAB>window<TAB>pane_index<TAB>pane_id<...>` の形式で出力
+- 未アタッチの `claude-*-<digits>` session は既定で除外
+- `TMUX_CLAUDE_INCLUDE_HOOK_SESSIONS=1` で hook session も含められる
+- status は pane 末尾の prompt / 承認待ち表現から推定する
+
+### tmux-popup-claude-dashboard
+
+`fzf` popup で Claude Code pane を横断選択する。
+
+- 候補は pane 単位で表示
+- preview には scrollback 末尾 160 行を表示
+- `Ctrl-R` で一覧を再読込
+
+### tmux-open-claude-target
+
+popup 内で選んだ target を受け取り、popup 終了後に親クライアント側で session / window / pane を切り替える。
 
 ---
 

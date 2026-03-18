@@ -1,0 +1,74 @@
+#!/bin/sh
+# TODO(baton): baton 移行後に削除候補。詳細は ~/.config/tmux/docs/BATON-MIGRATION.md
+# tmux 上の Claude Code pane を一覧化する
+# 出力形式:
+#   session<TAB>window<TAB>pane_index<TAB>pane_id<TAB>symbol<TAB>status<TAB>title<TAB>path<TAB>attached
+export PATH="/opt/homebrew/bin:$PATH"
+
+INCLUDE_HOOK_SESSIONS="${TMUX_CLAUDE_INCLUDE_HOOK_SESSIONS:-0}"
+
+strip_ansi() {
+  perl -pe 's/\e\[[0-9;?]*[ -\/]*[@-~]//g; s/\e\][^\a]*(\a|\e\\)//g; s/\r//g'
+}
+
+is_hook_session() {
+  session_name="$1"
+  attached="$2"
+
+  if [ "$INCLUDE_HOOK_SESSIONS" = "1" ] || [ "$attached" = "1" ]; then
+    return 1
+  fi
+
+  printf '%s\n' "$session_name" | grep -Eq '^claude-.*-[0-9]{4,}$'
+}
+
+detect_status() {
+  content="$1"
+
+  if [ -z "$(printf '%s' "$content" | tr -d '[:space:]')" ]; then
+    printf '?\tunknown\n'
+    return
+  fi
+
+  if printf '%s\n' "$content" | grep -Eiq '\[[[:space:]]*[Yy][[:space:]]*/[[:space:]]*[Nn][[:space:]]*\]|\[[[:space:]]*[Nn][[:space:]]*/[[:space:]]*[Yy][[:space:]]*\]|\([[:space:]]*[Yy][[:space:]]*/[[:space:]]*[Nn][[:space:]]*\)|\([[:space:]]*[Nn][[:space:]]*/[[:space:]]*[Yy][[:space:]]*\)|permission required|approval'; then
+    printf '◐\tinput\n'
+    return
+  fi
+
+  if printf '%s\n' "$content" | tail -n 12 | grep '❯' >/dev/null 2>&1; then
+    printf '○\tidle\n'
+    return
+  fi
+
+  printf '●\tworking\n'
+}
+
+tmux list-panes -a -F '#{session_name}	#{session_attached}	#{window_index}	#{pane_index}	#{pane_id}	#{pane_title}	#{pane_current_command}	#{pane_current_path}' \
+  | while IFS='	' read -r session_name attached window_index pane_index pane_id pane_title pane_command pane_path; do
+      printf '%s\n' "$pane_command" | grep -iq 'claude' || continue
+      is_hook_session "$session_name" "$attached" && continue
+
+      if [ -z "$pane_title" ]; then
+        pane_title="Claude Code"
+      fi
+
+      pane_title=$(printf '%s' "$pane_title" | tr '\t\r' '  ')
+      pane_path=$(printf '%s' "$pane_path" | tr '\t\r' '  ')
+
+      pane_content=$(tmux capture-pane -t "$pane_id" -p -J -e 2>/dev/null | tail -n 80 | strip_ansi)
+      status_info=$(detect_status "$pane_content")
+      IFS='	' read -r status_symbol status_label <<EOF
+$status_info
+EOF
+
+      printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+        "$session_name" \
+        "$window_index" \
+        "$pane_index" \
+        "$pane_id" \
+        "$status_symbol" \
+        "$status_label" \
+        "$pane_title" \
+        "$pane_path" \
+        "$attached"
+    done
