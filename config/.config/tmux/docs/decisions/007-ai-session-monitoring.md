@@ -1,6 +1,6 @@
 # ADR-007: AI セッション監視ツールの選定
 
-- **状態**: 承認・実施済み (試用中)
+- **状態**: 失効 (2026-03-19)
 - **日付**: 2026-03-17
 
 ## コンテキスト
@@ -29,13 +29,27 @@
 3. `Ctrl+Q` 問題なし
 4. sessionizer ベースの運用フローとそのまま共存
 
-## 決定
+## 当時の決定
 
 **claude-tmux** を AI セッション監視ツールとして採用 (試用)。`Prefix+b` で popup 起動。
 
 claude-squad は Ctrl+Q 衝突問題と運用フロー重複のため保留。セッション・worktree のクリーンアップ後にアンインストール予定。
 
-## 影響
+## その後の見直し
+
+試用の結果、以下の理由で `claude-tmux` の採用を終了した。
+
+- status 判定が画面パターン依存で、`idle/unknown` に寄りやすい
+- tmux session 単位のモデルで、同一 session 内の複数 Claude Code を個別管理しにくい
+- `ai-orchestra` hook が作る `claude-*` session をそのまま候補に含めてしまう
+
+2026-03-19 時点の現行運用は以下。
+
+- `Prefix+b` は repo 管理の暫定 Claude pane ダッシュボード
+- 本命は `baton`
+- 詳細は `config/.config/tmux/docs/BATON-MIGRATION.md`
+
+## 当時の影響
 
 - `Prefix+b` で claude-tmux のダッシュボードを popup 起動
 - cargo (Rust) が新たな依存に追加。mise で管理

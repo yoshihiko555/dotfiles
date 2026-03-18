@@ -18,7 +18,7 @@ WezTerm のワークスペース管理を tmux セッションに移行し、tmu
 | 1 | 設定ファイル分割 + Stow 対応 | **完了** | `config/.config/tmux/` に分割・移動済み |
 | 2 | プロジェクト管理の移行 | **完了** | sessionizer (Prefix+f), kill-session (Prefix+W), セッション切替 (Prefix+w) |
 | 3 | プラグイン導入 (TPM) | **部分完了** | fingers (Prefix+F), open 導入済み。resurrect/continuum は後回し |
-| 4 | AI セッション管理 | **部分完了** | claude-tmux 採用 (Prefix+b)。claude-squad は保留。ADR-007 参照 |
+| 4 | AI セッション管理 | **部分完了** | `claude-tmux` は試用終了。現在は暫定 Claude pane ダッシュボードを運用しつつ `baton` へ移行予定。ADR-007 / BATON-MIGRATION 参照 |
 | 5 | コマンドパレット + URL ハンドラ | **保留** | チートシート (Prefix+?) で代替。URL は tmux-open で対応済み。必要になれば追加 |
 | 6 | WezTerm 設定の縮小 | **完了** | GUI レンダラーに限定。7 ファイル削除、keybinds.lua 大幅削減 |
 | 7 | 試用 + 微調整 | **進行中** | 1 週間の試用 (目標: 2026-03-23 レビュー) |

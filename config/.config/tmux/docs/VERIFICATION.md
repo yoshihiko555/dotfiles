@@ -169,7 +169,7 @@ WezTerm バックアップ (`config/.config/wezterm.bak/`) と現行 tmux 設定
 | 1 | `.zshrc` での tmux 自動起動は WezTerm タブ追加/分割時に全て同じセッションに接続してしまう | 中 | `gui-startup` 方式に変更済み。tmux-first 運用で解消 |
 | 2 | ~~WezTerm が `Alt+h/j/k/l` を smart-splits 用に捕捉~~ | ~~高~~ | **解決済み**: Phase 6 で WezTerm の `split_nav` を削除、tmux にパススルー |
 | 3 | `Alt+1-9` は現状ウィンドウ切替。セッションの direct switch は popup (`Prefix+w`) のみ | 低 | 現行の運用で十分。必要になれば追加 |
-| 4 | ~~claude-squad の detach キー衝突~~ | ~~高~~ | **解決済み**: claude-squad → claude-tmux に移行 (ADR-007) |
+| 4 | ~~claude-squad の detach キー衝突~~ | ~~高~~ | **一時解消済み**: claude-squad は廃止。`claude-tmux` も試用終了し、現在は暫定 Claude pane ダッシュボードを運用 |
 | 5 | ~~claude-squad の popup スタック問題~~ | ~~高~~ | **解決済み**: claude-squad 廃止 |
 | 6 | `tmux-init-panes` に `tmux-split-layout` と同じターゲット未指定バグ | 高 | `list-panes` / `display-message -t` / `send-keys -t` / `select-pane -t` が全てターゲット未指定。`#{pane_id}` を渡す修正が必要 |
 | 7 | Claude Code pane ダッシュボードの status 判定が一部 UI 変更に追従できない可能性 | 低 | 実ペイン末尾のパターン依存。必要なら判定語彙を追加 |
