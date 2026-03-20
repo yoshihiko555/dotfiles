@@ -1,7 +1,8 @@
 {
   "env": {
     "CLAUDE_CODE_SHELL": "bash",
-    "AI_ORCHESTRA_DIR": "/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra"
+    "AI_ORCHESTRA_DIR": "/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra",
+    "NODE_OPTIONS": "--use-env-proxy"
   },
   "permissions": {
     "allow": [
@@ -104,6 +105,19 @@
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
     "allowUnsandboxedCommands": true,
+    "network": {
+      "allowedDomains": [
+        "generativelanguage.googleapis.com",
+        "accounts.google.com",
+        "127.0.0.1"
+      ]
+    },
+    "filesystem": {
+      "allowWrite": [
+        "~/.gemini"
+      ]
+    },
+    "enableWeakerNetworkIsolation": true,
     "excludedCommands": [
       "docker",
       "docker-compose",
