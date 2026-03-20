@@ -1,0 +1,75 @@
+after-login-command = []
+after-startup-command = ['exec-and-forget ~/.config/aerospace/layouts/default.sh']
+start-at-login = true
+
+default-root-container-layout = 'tiles'
+default-root-container-orientation = 'auto'
+
+[gaps]
+inner.horizontal = 0
+inner.vertical = 0
+outer.left = 0
+outer.right = 0
+outer.top = 0
+outer.bottom = 0
+
+[mode.main.binding]
+ctrl-1 = 'workspace M1'
+ctrl-2 = 'workspace M2'
+ctrl-3 = 'workspace M3'
+ctrl-4 = 'workspace S1'
+ctrl-5 = 'workspace S2'
+ctrl-6 = 'workspace B1'
+ctrl-7 = 'workspace B2'
+ctrl-shift-1 = 'exec-and-forget ~/.config/aerospace/layouts/default.sh'
+ctrl-shift-2 = 'exec-and-forget ~/.config/aerospace/layouts/dev.sh'
+
+# アプリ自動配置
+[[on-window-detected]]
+if.app-id = 'com.google.Chrome'
+run = ['move-node-to-workspace M1']
+
+[[on-window-detected]]
+if.app-id = 'company.thebrowser.dia'
+run = ['move-node-to-workspace M2']
+
+[[on-window-detected]]
+if.app-id = 'com.github.wez.wezterm'
+run = ['move-node-to-workspace M3']
+
+[[on-window-detected]]
+if.app-id = 'notion.id'
+run = ['move-node-to-workspace S1']
+
+[[on-window-detected]]
+if.app-id = 'com.microsoft.VSCode'
+run = ['move-node-to-workspace S2']
+
+[[on-window-detected]]
+if.app-id = 'dev.zed.Zed'
+run = ['move-node-to-workspace S2']
+
+[[on-window-detected]]
+if.app-id = 'com.anthropic.claudefordesktop'
+run = ['move-node-to-workspace B1']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.ActivityMonitor'
+run = ['move-node-to-workspace B1']
+
+# ルールにないアプリは全て B1 へ
+[[on-window-detected]]
+run = ['move-node-to-workspace B1']
+
+# モニター固定
+# 1 = Built-in Retina Display (Mac本体)
+# 2 = DELL U2720QM (メイン)
+# 3 = DELL G2422HS (サブ)
+[workspace-to-monitor-force-assignment]
+M1 = 2
+M2 = 2
+M3 = 2
+S1 = 3
+S2 = 3
+B1 = 1
+B2 = 1
