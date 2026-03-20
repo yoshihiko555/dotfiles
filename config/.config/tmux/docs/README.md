@@ -8,7 +8,6 @@ tmux-first 環境の現行実装と移行計画に関するドキュメント群
 |-------------|------|
 | [DESIGN.md](./DESIGN.md) | 設計思想・アーキテクチャ方針 |
 | [MIGRATION.md](./MIGRATION.md) | WezTerm → tmux 移行計画と進捗 |
-| [BATON-MIGRATION.md](./BATON-MIGRATION.md) | `baton` への移行条件と暫定実装の撤去メモ |
 | [CHEATSHEET.md](./CHEATSHEET.md) | キーバインド一覧 |
 | [SCRIPTS.md](./SCRIPTS.md) | ヘルパースクリプト説明 |
 | [VERIFICATION.md](./VERIFICATION.md) | 現行設定の確認観点と既知の注意点 |

@@ -74,5 +74,3 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 
 alias claude-mem='bun "/Users/yoshihiko/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs"'
 
-# baton: AI セッション監視（バックグラウンド常駐）
-pgrep -f "baton --no-tui" > /dev/null 2>&1 || "$HOME/.local/bin/baton" --no-tui > /dev/null 2>&1 &

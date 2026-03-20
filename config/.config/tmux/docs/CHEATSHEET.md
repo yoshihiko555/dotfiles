@@ -54,7 +54,7 @@ Prefix: `Ctrl+Q`
 | `Prefix + g` | lazygit popup (80x80%) |
 | `Prefix + t` | 一時シェル popup (80x80%) |
 | `Prefix + C` | Claude Code popup (90x90%) |
-| `Prefix + b` | Claude Code pane ダッシュボード popup (90x90%, ペイン単位で一覧) |
+| `Prefix + b` | baton TUI popup (90x90%, Claude Code セッションモニター) |
 | `Prefix + a` | AI サブエージェント履歴 popup (90x90%) |
 | `Prefix + A` | AI 監視ペインの表示 / 非表示 |
 
