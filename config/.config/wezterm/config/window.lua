@@ -37,7 +37,7 @@ wezterm.on("gui-startup", function(cmd)
 
   if not has_args then
     -- tmux の default セッションに接続（なければ作成）
-    spawn.args = { '/bin/zsh', '-lic', 'tmux new-session -A -s default' }
+    spawn.args = { '/bin/zsh', '-lic', 'tmux new-session -A -s default "baton"' }
   end
 
   spawn.cwd = spawn.cwd or wezterm.home_dir
