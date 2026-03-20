@@ -85,7 +85,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "$HOME/.claude/statusline-command.sh"
+    "command": "$HOME/.claude/statusline.py"
   },
   "enabledPlugins": {
     "context7@claude-plugins-official": true,
