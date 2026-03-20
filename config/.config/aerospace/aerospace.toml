@@ -57,9 +57,8 @@ run = ['move-node-to-workspace B1']
 if.app-id = 'com.apple.ActivityMonitor'
 run = ['move-node-to-workspace B1']
 
-# ルールにないアプリは全て B1 へ
-[[on-window-detected]]
-run = ['move-node-to-workspace B1']
+# ルールにないアプリは現在フォーカス中のワークスペースに留まる
+# (catch-all の move を削除し、デフォルト動作に任せる)
 
 # モニター固定
 # 1 = Built-in Retina Display (Mac本体)
