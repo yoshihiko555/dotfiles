@@ -27,12 +27,10 @@
 目標: りんご → バナナ → ぶどう → みかん の順に並べ替える。
 
 ```
-ぶどう
 りんご
-不要な行1
-みかん
-不要な行2
 バナナ
+ぶどう
+みかん
 ```
 
 手順:
@@ -46,11 +44,10 @@
 以下のコードを編集しよう。
 
 ```python
-def calculate_total(price, quantity, tax_rate):
+def compute_sum(price, quantity, tax_rate):
     subtotal = price * quantity
-    tax = subtotal * tax_rate
+    tax = subtotal
     total = subtotal + tax
-    return total
 ```
 
 タスク:
@@ -65,7 +62,7 @@ def calculate_total(price, quantity, tax_rate):
 
 ```
 この部分は残す |この部分を D で消す
-この部分は残す |この部分を C で書き換える
+この部分は残す 新しいテキストを入力してみました
 ```
 
 タスク:
@@ -78,11 +75,11 @@ def calculate_total(price, quantity, tax_rate):
 以下のリストの各行頭の `- ` を `TODO: ` に変更しよう。
 
 ```
-- タスクA
-- タスクB
-- タスクC
-- タスクD
-- タスクE
+TODO: タスクA
+TODO: タスクB
+TODO: タスクC
+TODO: タスクD
+TODO: タスクE
 ```
 
 手順:
@@ -92,11 +89,11 @@ def calculate_total(price, quantity, tax_rate):
 4. 残りの行も `j.` で繰り返す
 
 ## 確認テスト
-- [ ] `dd` で行を削除し、`p`/`P` で好きな位置にペーストできる
-- [ ] `dw`, `cw`, `yw` をスムーズに使える
-- [ ] `D` と `dd` の違いを説明できる
-- [ ] `C` と `cc` の違いを説明できる
-- [ ] `.` で直前の編集を繰り返せる
+- [x] `dd` で行を削除し、`p`/`P` で好きな位置にペーストできる
+- [x] `dw`, `cw`, `yw` をスムーズに使える
+- [x] `D` と `dd` の違いを説明できる
+- [x] `C` と `cc` の違いを説明できる
+- [x] `.` で直前の編集を繰り返せる
 
 ## 次のステップ
 → [Exercise 02: テキストオブジェクト](02-text-objects.md)

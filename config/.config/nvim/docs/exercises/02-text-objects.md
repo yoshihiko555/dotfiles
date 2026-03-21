@@ -25,8 +25,8 @@
 以下の文の `unnecessary` を削除しよう。
 
 ```
-This is an unnecessary word in the sentence.
-This is an unnecessary word in the sentence.
+This is an  word in the sentence.
+This is an word in the sentence.
 ```
 
 タスク:
@@ -40,9 +40,9 @@ This is an unnecessary word in the sentence.
 以下の各行で指示された操作を行おう。
 
 ```javascript
-const name = "Alice";
-const greeting = "Hello, World!";
-const message = 'This is a test';
+const name = "Bob";
+const greeting = "";
+const message =;
 ```
 
 タスク:
@@ -55,9 +55,9 @@ const message = 'This is a test';
 以下のコードで括弧内を操作しよう。
 
 ```python
-result = calculate(price, quantity, tax)
-data = {"name": "Alice", "age": 30}
-items = [apple, banana, cherry]
+result = calculate(total)
+data = {}
+items =
 ```
 
 タスク:
@@ -71,9 +71,9 @@ items = [apple, banana, cherry]
 
 ```html
 <div>
-  <p>This paragraph should be changed.</p>
-  <span>Remove this text</span>
-  <a href="https://example.com">Click here</a>
+  <p>新しい段落</p>
+  <span></span>
+  <a href="">Click here</a>
 </div>
 ```
 
@@ -90,7 +90,9 @@ items = [apple, banana, cherry]
 最初の段落です。
 複数行にわたっています。
 ここまでが1段落目。
+```
 
+```
 2つ目の段落です。
 これも複数行。
 ここまでが2段落目。
@@ -102,11 +104,11 @@ items = [apple, banana, cherry]
 3. `dap` で段落ごと削除（前後の空行含む）
 
 ## 確認テスト
-- [ ] `diw` と `daw` の違いを説明できる
-- [ ] `ci"` で引用符の中身を素早く変更できる
-- [ ] `di(`, `di{`, `di[` で各種括弧内を操作できる
-- [ ] `dit` でHTMLタグ内を操作できる
-- [ ] `ip`/`ap` で段落を扱える
+- [x] `diw` と `daw` の違いを説明できる
+- [x] `ci"` で引用符の中身を素早く変更できる
+- [x] `di(`, `di{`, `di[` で各種括弧内を操作できる
+- [x] `dit` でHTMLタグ内を操作できる
+- [x] `ip`/`ap` で段落を扱える
 
 ## 次のステップ
 → [Exercise 03: Visual モード](03-visual-mode.md)
