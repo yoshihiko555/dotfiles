@@ -39,6 +39,15 @@
 | [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) | `plugins/gitsigns.lua` | ガターサイン・hunk操作・inline blame・word diff | エディタ内でリアルタイムにGit差分を確認。hunk単位のステージ/リセットで細かいコミット操作が可能 |
 | [codediff.nvim](https://github.com/esmuellert/codediff.nvim) | `plugins/codediff.lua` | VSCode風diff viewer（サイドバイサイド・文字レベルハイライト） | PR前のdiff確認やファイル履歴の確認をNeovim内で完結。lazygitと役割分担 |
 
+## Phase 4: LSP強化 & コード品質
+
+| プラグイン | 設定ファイル | 用途 | 導入理由 |
+|-----------|-------------|------|---------|
+| [mason.nvim](https://github.com/williamboman/mason.nvim) | `plugins/lsp.lua` | LSPサーバー・フォーマッタ・リンターの自動インストール管理 | 手動インストール不要で環境構築を簡略化。`:Mason` UIで一元管理 |
+| [mason-lspconfig.nvim](https://github.com/williamboman/mason-lspconfig.nvim) | `plugins/lsp.lua`（依存） | mason と nvim-lspconfig の橋渡し | `ensure_installed` で必要なLSPサーバーを自動インストール・有効化 |
+| [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) | `plugins/lsp.lua` | 各LSPサーバーの設定テンプレート | `vim.lsp.config()` によるサーバー固有設定の簡略化。gopls / pyright / ts_ls / lua_ls を管理 |
+| [conform.nvim](https://github.com/stevearc/conform.nvim) | `plugins/conform.lua` | フォーマッタ統合（保存時自動フォーマット） | 言語ごとのフォーマッタを統一管理。LSPフォーマットへのフォールバック付き |
+
 ## tmux 連携
 
 | プラグイン | 設定ファイル | 用途 | 導入理由 |
@@ -62,6 +71,6 @@
 
 | ファイル | 用途 |
 |---------|------|
-| `core/lsp.lua` | 組み込み LSP の設定（gopls / pyright / tsserver の起動・キーマップ・diagnostics） |
+| `core/lsp.lua` | 移行済み — LSP設定は `plugins/lsp.lua` に統合 |
 | `core/keymaps.lua` | 一般キーマップ（ウィンドウ移動・バッファ操作・quickfix） |
 | `core/options.lua` | Neovim 基本オプション（行番号・インデント・検索等） |
