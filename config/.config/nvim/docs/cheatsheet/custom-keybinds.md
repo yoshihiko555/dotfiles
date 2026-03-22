@@ -103,6 +103,15 @@ which-key により `<leader>w` が `Ctrl+w` のプロキシとして動作:
 | `<leader>xL` | Location list 閉じる |
 | `<leader>xd` | Diagnostics → quickfix |
 
+## Trouble（診断一覧 — `<leader>x` / `<leader>c`）
+
+| キー | 説明 |
+|------|------|
+| `<leader>xx` | Diagnostics（ワークスペース全体） |
+| `<leader>xX` | Diagnostics（現在バッファのみ） |
+| `<leader>cs` | シンボル一覧 |
+| `<leader>cl` | LSP 参照/定義一覧 |
+
 ## Markdown (`<leader>m`)
 
 | キー | 説明 |

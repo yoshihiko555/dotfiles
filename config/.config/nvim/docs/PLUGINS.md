@@ -48,6 +48,8 @@
 | [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) | `plugins/lsp.lua` | 各LSPサーバーの設定テンプレート | `vim.lsp.config()` によるサーバー固有設定の簡略化。gopls / pyright / ts_ls / lua_ls を管理 |
 | [conform.nvim](https://github.com/stevearc/conform.nvim) | `plugins/conform.lua` | フォーマッタ統合（保存時自動フォーマット） | 言語ごとのフォーマッタを統一管理。LSPフォーマットへのフォールバック付き |
 | [nvim-lint](https://github.com/mfussenegger/nvim-lint) | `plugins/lint.lua` | リンター統合 | 保存時・挿入離脱時にリンターを実行し診断を表示。Go: golangci-lint, TS/JS: eslint_d, Python: ruff |
+| [trouble.nvim](https://github.com/folke/trouble.nvim) | `plugins/trouble.lua` | 診断・シンボル・LSP参照の一覧表示 | quickfixより見やすいUIで診断一覧を表示。ワークスペース/バッファ単位の切り替えが可能 |
+| [lazydev.nvim](https://github.com/folke/lazydev.nvim) | `plugins/lazydev.lua` | Neovim Lua API の型定義補完 | lua_ls に vim.* API の型情報を提供し、誤検知（undefined field 等）を解消 |
 
 ## tmux 連携
 
