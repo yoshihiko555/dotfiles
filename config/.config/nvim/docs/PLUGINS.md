@@ -47,6 +47,7 @@
 | [mason-lspconfig.nvim](https://github.com/williamboman/mason-lspconfig.nvim) | `plugins/lsp.lua`（依存） | mason と nvim-lspconfig の橋渡し | `ensure_installed` で必要なLSPサーバーを自動インストール・有効化 |
 | [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) | `plugins/lsp.lua` | 各LSPサーバーの設定テンプレート | `vim.lsp.config()` によるサーバー固有設定の簡略化。gopls / pyright / ts_ls / lua_ls を管理 |
 | [conform.nvim](https://github.com/stevearc/conform.nvim) | `plugins/conform.lua` | フォーマッタ統合（保存時自動フォーマット） | 言語ごとのフォーマッタを統一管理。LSPフォーマットへのフォールバック付き |
+| [nvim-lint](https://github.com/mfussenegger/nvim-lint) | `plugins/lint.lua` | リンター統合 | 保存時・挿入離脱時にリンターを実行し診断を表示。Go: golangci-lint, TS/JS: eslint_d, Python: ruff |
 
 ## tmux 連携
 
