@@ -43,7 +43,7 @@ tasks:
         msg: "VERSION または BUMP を指定してください（例: task release VERSION=v0.1.0 / task release BUMP=minor）"
       - sh: 'echo "{{.NEXT_VERSION}}" | grep -qE "^v[0-9]+\.[0-9]+\.[0-9]+$"'
         msg: "バージョン形式が不正です。vX.Y.Z 形式で指定してください（例: v0.1.0）"
-      - sh: '! git tag -l "{{.NEXT_VERSION}}" | grep -q .'
+      - sh: 'git tag -l "{{.NEXT_VERSION}}" | grep -q . && exit 1 || exit 0'
         msg: "タグ {{.NEXT_VERSION}} は既に存在します"
     cmds:
       - task: release:preflight
