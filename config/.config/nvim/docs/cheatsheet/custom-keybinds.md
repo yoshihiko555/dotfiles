@@ -85,7 +85,12 @@ which-key により `<leader>w` が `Ctrl+w` のプロキシとして動作:
 | `<leader>cd` | 行の Diagnostics |
 | `[d` / `]d` | 前/次の Diagnostic |
 
-**対応 LSP**: gopls, pyright, ts_ls
+| `Ctrl+o` | ジャンプ元に戻る (gd/gr 後) |
+| `Ctrl+i` | ジャンプ先に進む |
+
+**参照一覧の閉じ方**: `:cclose` or `<leader>xc`
+
+**対応 LSP**: gopls, pyright, ts_ls, lua_ls
 
 ## Quickfix (`<leader>x`)
 

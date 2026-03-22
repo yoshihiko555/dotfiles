@@ -1,5 +1,5 @@
 -- 一般キーマップ（非LSP）
--- LSPキーマップは core/lsp.lua の LspAttach autocmd で管理
+-- LSPキーマップは plugins/lsp.lua の LspAttach autocmd で管理
 
 local map = function(mode, lhs, rhs, desc)
   vim.keymap.set(mode, lhs, rhs, { noremap = true, silent = true, desc = desc })
