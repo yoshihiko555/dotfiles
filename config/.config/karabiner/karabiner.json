@@ -4,7 +4,7 @@
             "complex_modifications": {
                 "rules": [
                     {
-                        "description": "Ctrl+Q (tmux Prefix) 押下時に IME を英数に切り替える",
+                        "description": "Ctrl+Q (tmux Prefix) 押下時に英数キーを送ってから Prefix を送る",
                         "manipulators": [
                             {
                                 "from": {
@@ -15,10 +15,10 @@
                                 },
                                 "to": [
                                     {
-                                        "select_input_source": {
-                                            "input_source_id": "com.google.inputmethod.Japanese.Roman"
-                                        }
-                                    },
+                                        "key_code": "japanese_eisuu"
+                                    }
+                                ],
+                                "to_after_key_up": [
                                     {
                                         "key_code": "q",
                                         "modifiers": ["control"]
