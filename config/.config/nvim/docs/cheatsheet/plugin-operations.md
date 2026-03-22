@@ -100,3 +100,10 @@
 | codediff.nvim | VSCode風 diff viewer（文字レベルハイライト） |
 | smart-splits.nvim | Neovim ↔ tmux シームレスペイン移動・リサイズ |
 | copilot.lua | GitHub Copilot AI 補完 |
+| mason.nvim | LSPサーバー自動インストール管理 |
+| nvim-lspconfig | LSP設定テンプレート |
+| conform.nvim | フォーマッタ統合（保存時自動） |
+| nvim-lint | リンター統合 |
+| trouble.nvim | 診断・シンボル一覧 |
+| todo-comments.nvim | TODO/FIXME ハイライト・検索 |
+| lazydev.nvim | Neovim Lua API 型定義補完 |

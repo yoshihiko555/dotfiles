@@ -105,22 +105,26 @@ VSCodeの補完・スニペット体験に近づける。
 
 現在の手動LSP設定を発展させ、フォーマッタ・リンターを統合する。
 
-| プラグイン | 用途 | 優先度 |
-|-----------|------|--------|
-| mason.nvim + mason-lspconfig | LSPサーバーの自動インストール・管理 | 必須 |
-| nvim-lspconfig | LSP設定の簡略化 | 必須 |
-| conform.nvim | フォーマッタ統合（保存時自動フォーマット） | 必須 |
-| nvim-lint | リンター統合 | 推奨 |
-| trouble.nvim | 診断・参照の一覧表示 | 推奨 |
-| todo-comments.nvim | TODO/FIXME/HACKの強調・検索 | 任意 |
+| プラグイン | 用途 | 優先度 | 状態 |
+|-----------|------|--------|------|
+| mason.nvim + mason-lspconfig | LSPサーバーの自動インストール・管理 | 必須 | 導入済み |
+| nvim-lspconfig | LSP設定の簡略化 | 必須 | 導入済み |
+| conform.nvim | フォーマッタ統合（保存時自動フォーマット） | 必須 | 導入済み |
+| nvim-lint | リンター統合 | 推奨 | 導入済み |
+| trouble.nvim | 診断・参照の一覧表示 | 推奨 | 導入済み |
+| todo-comments.nvim | TODO/FIXME/HACKの強調・検索 | 任意 | 導入済み |
+| lazydev.nvim | Neovim Lua API の型定義補完 | — | 導入済み（追加） |
 
 ### 検証ポイント
-- [ ] mason経由でgopls, pyright, ts_lsが自動インストールされるか
-- [ ] 保存時フォーマットが各言語で動作するか
-- [ ] 既存のlsp.luaからの移行がスムーズか
+- [x] mason経由でgopls, pyright, ts_ls, lua_lsが自動インストールされるか
+- [x] 保存時フォーマットが各言語で動作するか（conform.nvim）
+- [x] 既存のlsp.luaからの移行がスムーズか（plugins/lsp.luaへ移行完了）
+- [x] trouble.nvimで診断一覧が表示されるか
+- [x] todo-comments.nvimでTODOがハイライト・検索できるか
+- [ ] nvim-lintの動作確認（Go/TS/Pythonプロジェクトで別途検証）
 
-### 注意
-- 現在の`core/lsp.lua`は組み込みLSP設定。mason/lspconfig導入時に統合が必要
+### 既知の課題
+- diagnostic の `underline` は tmux の Setulc 設定修正後に有効化する（現在 false）
 
 ---
 
@@ -177,13 +181,12 @@ IDE級の最終ピース。ブレークポイント・ステップ実行をNeovi
 - [ ] Phase 1.5: 操作定着（PH2前） ← 並行して定着中
 - [x] Phase 2: 編集効率
 - [x] Phase 3: Git連携
-- [ ] Phase 4: LSP強化 & コード品質
+- [x] Phase 4: LSP強化 & コード品質
 - [ ] Phase 5: デバッグ & テスト
 - [ ] Phase 6: 仕上げ
 
-## 運用メモ（2026-03-04）
+## 運用メモ
 
-- 当面（Phase 1.5〜Phase 2）は、LSP/DAP関連の新規導入を行わない
-- `mason.nvim` の導入検討は Phase 4 開始時に再開する
+- （2026-03-04）当面は基本操作の定着と日常編集フローの安定化を優先
+- （2026-03-22）Phase 4 完了。core/lsp.lua → plugins/lsp.lua へ移行。mason + lspconfig 体制に
 - `nvim-dap` 系の導入検討は Phase 5 開始時に再開する
-- 優先理由: 先に基本操作の定着と日常編集フローの安定化を進める
