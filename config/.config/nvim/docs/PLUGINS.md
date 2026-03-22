@@ -50,6 +50,7 @@
 | [nvim-lint](https://github.com/mfussenegger/nvim-lint) | `plugins/lint.lua` | リンター統合 | 保存時・挿入離脱時にリンターを実行し診断を表示。Go: golangci-lint, TS/JS: eslint_d, Python: ruff |
 | [trouble.nvim](https://github.com/folke/trouble.nvim) | `plugins/trouble.lua` | 診断・シンボル・LSP参照の一覧表示 | quickfixより見やすいUIで診断一覧を表示。ワークスペース/バッファ単位の切り替えが可能 |
 | [lazydev.nvim](https://github.com/folke/lazydev.nvim) | `plugins/lazydev.lua` | Neovim Lua API の型定義補完 | lua_ls に vim.* API の型情報を提供し、誤検知（undefined field 等）を解消 |
+| [todo-comments.nvim](https://github.com/folke/todo-comments.nvim) | `plugins/todo-comments.lua` | TODO/FIXME/HACK等の強調・検索 | コード内のTODOコメントをハイライト表示し、fzf-luaで横断検索が可能 |
 
 ## tmux 連携
 

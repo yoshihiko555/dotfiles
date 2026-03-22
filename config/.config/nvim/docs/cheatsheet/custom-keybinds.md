@@ -127,6 +127,13 @@ which-key により `<leader>w` が `Ctrl+w` のプロキシとして動作:
 | `Ctrl+y` | Insert | Copilot 提案を accept |
 | `Ctrl+e` | Insert | Copilot 提案を dismiss |
 
+## TODO コメント
+
+| キー | 説明 |
+|------|------|
+| `]t` / `[t` | 次/前の TODO へジャンプ |
+| `<leader>st` | TODO を fzf-lua で横断検索 |
+
 ## その他
 
 | キー | 説明 |
