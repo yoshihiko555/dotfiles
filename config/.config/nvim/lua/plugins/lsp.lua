@@ -74,7 +74,7 @@ return {
 
       -- diagnostics 表示設定
       vim.diagnostic.config({
-        underline = false, -- TODO: tmux の Setulc 修正後に true に戻す
+        underline = true,
         update_in_insert = false,
         severity_sort = true,
         virtual_text = {
