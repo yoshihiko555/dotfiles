@@ -26,7 +26,7 @@
 以下の文から特定の部分を選択して操作しよう。
 
 ```
-The quick brown fox jumps over the lazy dog.
+The quick red cat jumps over the lazy dog.quick
 ```
 
 タスク:
@@ -78,10 +78,10 @@ elderberry
 以下の変数宣言の末尾にセミコロンを追加しよう。
 
 ```
-let a = 1
-let b = 2
-let c = 3
-let d = 4
+let a = 1;
+let b = 2;
+let c = 3;
+let d = 4;
 ```
 
 タスク:
@@ -93,7 +93,7 @@ let d = 4
 以下のテキストで `gv` と `o` を使おう。
 
 ```
-AAAA BBBB CCCC
+AAAA bbbb CCCC
 DDDD EEEE FFFF
 GGGG HHHH IIII
 ```
@@ -104,11 +104,11 @@ GGGG HHHH IIII
 3. 1行目の `A` で `v` → 3行目の `I` まで選択 → `o` を押す → カーソルが選択の反対端に移動
 
 ## 確認テスト
-- [ ] `v`, `V`, `Ctrl+v` の違いを説明できる
-- [ ] `Ctrl+v` + `I` で複数行の先頭に同時挿入できる
-- [ ] `Ctrl+v` + `A` で複数行の末尾に同時追記できる
-- [ ] `V` で行選択して `>` / `<` でインデント操作できる
-- [ ] `gv` で前の選択を素早く再選択できる
+- [x] `v`, `V`, `Ctrl+v` の違いを説明できる
+- [x] `Ctrl+v` + `I` で複数行の先頭に同時挿入できる
+- [x] `Ctrl+v` + `A` で複数行の末尾に同時追記できる
+- [x] `V` で行選択して `>` / `<` でインデント操作できる
+- [x] `gv` で前の選択を素早く再選択できる
 
 ## 次のステップ
 → [Exercise 04: レジスタ・マーク](04-registers-marks.md)
