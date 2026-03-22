@@ -15,6 +15,9 @@ includes:
   util:
     taskfile: ./taskfiles/util.yml
     flatten: true
+  rel:
+    taskfile: ./taskfiles/release.yml
+    flatten: true
 
 tasks:
   default:
