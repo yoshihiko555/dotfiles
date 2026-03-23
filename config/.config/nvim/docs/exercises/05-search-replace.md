@@ -81,11 +81,11 @@ foo bar foo baz foo qux foo
 
 ## 練習 4: 全行置換 (:%s)
 
-以下のコードの `oldName` を `newName` に全て置換しよう。
+以下のコードの `newName` を `newName` に全て置換しよう。
 
 ```python
 def oldName():
-    print("oldName called")
+    print("newName called")
     return oldName
 
 class MyClass:
@@ -111,9 +111,9 @@ class MyClass:
 ```
 Line 1: apple is good
 Line 2: apple is great
-Line 3: apple is nice
-Line 4: apple is fine
-Line 5: apple is cool
+Line 3: orange is nice
+Line 4: orange is fine
+Line 5: orange is cool
 Line 6: apple is best
 ```
 
@@ -124,11 +124,11 @@ Line 6: apple is best
 4. `:'<,'>s/apple/orange/g` → Visual 選択範囲の `apple` が置換される
 
 ## 確認テスト
-- [ ] `/pattern` で検索して `n`/`N` で移動できる
-- [ ] `*` でカーソル下の単語を素早く検索できる
-- [ ] `:s/old/new/g` で行内置換ができる
-- [ ] `:%s/old/new/gc` で確認付き全行置換ができる
-- [ ] 範囲指定 (`:3,5s/...`) や Visual 選択からの置換ができる
+- [x] `/pattern` で検索して `n`/`N` で移動できる
+- [x] `*` でカーソル下の単語を素早く検索できる
+- [x] `:s/old/new/g` で行内置換ができる
+- [x] `:%s/old/new/gc` で確認付き全行置換ができる
+- [x] 範囲指定 (`:3,5s/...`) や Visual 選択からの置換ができる
 
 ## 次のステップ
 → [Exercise 06: surround・comment](06-surround-comment.md)
