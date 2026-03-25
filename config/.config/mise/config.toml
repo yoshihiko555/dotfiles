@@ -1,5 +1,6 @@
 [tools]
 go = "latest"
+golangci-lint = "latest"
 node = "lts"
 python = "latest"
 rust = "latest"
