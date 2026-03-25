@@ -63,11 +63,18 @@ dotfiles/
 ├── alfred/                 # Alfred ワークフロー（→ ~/Dropbox/...へリンク）
 │   └── Open-VS-or-IT/      # お気に入りフォルダを開くワークフロー
 │
+├── github/                 # GitHub 関連の運用資材
+│   ├── docs/              # 運用ドキュメント
+│   │   ├── git-release-policy.md
+│   │   └── github-rulesets.md
+│   └── rulesets/           # Rulesets export JSON
+│
 ├── Makefile
 ├── Brewfile                # Homebrew パッケージ定義
 ├── Taskfile.yml            # エントリポイント（taskfiles/ を読み込む）
 ├── taskfiles/
 │   ├── link.yml
+│   ├── release.yml
 │   ├── skills.yml
 │   └── util.yml
 ├── scripts/
@@ -297,3 +304,8 @@ Alfredから指定ディレクトリをWezTermで3分割ペインレイアウト
 ```
 
 詳細は [alfred/README.md](alfred/README.md) を参照。
+
+## 運用ドキュメント
+
+- `github/docs/git-release-policy.md` - グローバルな Git / release 運用方針
+- `github/docs/github-rulesets.md` - GitHub Rulesets の export / import 手順

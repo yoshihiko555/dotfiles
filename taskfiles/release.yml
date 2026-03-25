@@ -24,7 +24,10 @@ tasks:
               esac
             else
               v="${latest#v}"
-              IFS='.' read -r major minor patch <<< "$v"
+              major="${v%%.*}"
+              rest="${v#*.}"
+              minor="${rest%%.*}"
+              patch="${rest#*.}"
               case "{{.BUMP}}" in
                 major) echo "v$((major+1)).0.0" ;;
                 minor) echo "v${major}.$((minor+1)).0" ;;
@@ -35,20 +38,20 @@ tasks:
             echo ""
           fi
     preconditions:
-      - sh: command -v gh
-        msg: "gh CLI が必要です: brew install gh"
-      - sh: gh auth status 2>&1 | grep -q "Logged in"
-        msg: "gh auth login でログインしてください"
       - sh: '[ -n "{{.NEXT_VERSION}}" ]'
         msg: "VERSION または BUMP を指定してください（例: task release VERSION=v0.1.0 / task release BUMP=minor）"
       - sh: 'echo "{{.NEXT_VERSION}}" | grep -qE "^v[0-9]+\.[0-9]+\.[0-9]+$"'
         msg: "バージョン形式が不正です。vX.Y.Z 形式で指定してください（例: v0.1.0）"
       - sh: 'git tag -l "{{.NEXT_VERSION}}" | grep -q . && exit 1 || exit 0'
         msg: "タグ {{.NEXT_VERSION}} は既に存在します"
+      - sh: |
+          version="{{.NEXT_VERSION}}"
+          version="${version#v}"
+          grep -q "^## \[$version\]" CHANGELOG.md
+        msg: "CHANGELOG.md に {{.NEXT_VERSION}} のセクションを追加してください"
     cmds:
       - task: release:preflight
-      - task: release:sync-main
-      - task: release:create
+      - task: release:tag
         vars:
           TAG: "{{.NEXT_VERSION}}"
 
@@ -56,69 +59,50 @@ tasks:
     desc: リリース前チェック
     internal: true
     cmds:
-      - cmd: echo "==> プロジェクト種別を検出中..."
-        silent: true
-      - cmd: |
-          if [ -f pyproject.toml ]; then echo "  Python (pyproject.toml)"
-          elif [ -f setup.py ]; then echo "  Python (setup.py)"
-          elif [ -f package.json ]; then echo "  Node.js (package.json)"
-          elif [ -f go.mod ]; then echo "  Go (go.mod)"
-          elif [ -f Cargo.toml ]; then echo "  Rust (Cargo.toml)"
-          else echo "  汎用（言語固有のビルドなし）"
-          fi
-        silent: true
       - cmd: echo "==> ブランチ・ワークツリーを確認中..."
         silent: true
       - cmd: |
           current=$(git branch --show-current)
           if [ "$current" != "{{.MAIN_BRANCH}}" ]; then
-            echo "  ⚠ 現在 $current ブランチです。{{.MAIN_BRANCH}} に切り替えます。"
+            echo "  ⚠ 現在 $current ブランチです。release は {{.MAIN_BRANCH}} ブランチ上で実行してください。"
+            exit 1
           else
             echo "  ✓ {{.MAIN_BRANCH}} ブランチです"
           fi
         silent: true
       - cmd: |
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "  ⚠ 未コミットの変更があります:"
+          if ! git diff --quiet || ! git diff --cached --quiet; then
+            echo "  ⚠ 追跡済みファイルに未コミット変更があります:"
             git status --short
             echo ""
-            echo "  リリースを続行するには先にコミットまたはスタッシュしてください。"
+            echo "  リリース前にコミットまたはスタッシュしてください。"
             exit 1
           else
-            echo "  ✓ ワークツリーはクリーンです"
+            echo "  ✓ 追跡済みファイルに未コミット変更はありません"
           fi
         silent: true
-      - cmd: echo "==> CI ステータスを確認中..."
-        silent: true
       - cmd: |
-          if gh run list --branch {{.MAIN_BRANCH}} --limit 1 --json conclusion -q '.[0].conclusion' 2>/dev/null | grep -q "success"; then
-            echo "  ✓ 最新の CI はパスしています"
+          if [ -f CHANGELOG.md ]; then
+            echo "  ✓ CHANGELOG.md を検出しました"
           else
-            echo "  ⚠ CI の結果を確認できないか、失敗しています。続行しますか？"
+            echo "  ⚠ CHANGELOG.md が見つかりません"
+            exit 1
           fi
         silent: true
 
-  release:sync-main:
-    desc: main ブランチを最新に同期
+  release:tag:
+    desc: リリースタグを作成して push
     internal: true
     cmds:
       - git checkout {{.MAIN_BRANCH}}
-      - git pull origin {{.MAIN_BRANCH}}
-
-  release:create:
-    desc: タグとリリースを作成
-    internal: true
-    cmds:
-      - cmd: echo "==> {{.TAG}} でリリースを作成します..."
-        silent: true
-      - gh release create {{.TAG}} --generate-notes
-      - cmd: echo "==> ✓ リリース完了！"
-        silent: true
-      - cmd: gh release view {{.TAG}} --web 2>/dev/null || true
+      - git pull --ff-only origin {{.MAIN_BRANCH}}
+      - git tag -a {{.TAG}} -m "Release {{.TAG}}"
+      - git push origin {{.TAG}}
+      - cmd: echo "==> {{.TAG}} を push しました。GitHub Actions が Release を作成します。"
         silent: true
 
   release:status:
-    desc: リリース関連の状態を表示（最新タグ、未リリースコミット数）
+    desc: 最新タグと main との差分を表示
     cmds:
       - cmd: |
           echo "==> リリース状態"
@@ -137,6 +121,6 @@ tasks:
         silent: true
 
   release:list:
-    desc: 過去のリリース一覧を表示
+    desc: 過去のタグ一覧を表示
     cmds:
-      - gh release list --limit 10
+      - git tag --list --sort=-v:refname | head -20
