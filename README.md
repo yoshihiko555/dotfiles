@@ -297,3 +297,16 @@ Alfredから指定ディレクトリをWezTermで3分割ペインレイアウト
 ```
 
 詳細は [alfred/README.md](alfred/README.md) を参照。
+
+## Release 共通基盤
+
+release 運用の共通資材は [`yoshihiko555/.github`](https://github.com/yoshihiko555/.github) で管理:
+
+| 資材 | 配置先 | 役割 |
+|------|--------|------|
+| reusable workflow | `.github/workflows/release.yml` | tag push → GitHub Release 作成 |
+| release タスク | `taskfiles/release.yml` | version bump, preflight, tag 作成・push |
+| Rulesets JSON | `rulesets/` | branch / tag 保護の共通設定 |
+| 運用ドキュメント | `docs/` | Git/release 方針、Rulesets 手順 |
+
+各 repo は caller workflow と `CHANGELOG.md` を置き、Taskfile から `.github` repo の release タスクをローカル参照する。
