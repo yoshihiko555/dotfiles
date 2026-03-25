@@ -1,5 +1,5 @@
 #!/bin/sh
-# ステータスバー右側: セッション名 + 日時
+# ステータスバー右側: baton + project + date
 # セグメント間のみ Powerline 矢印で繋ぐ（左端の矢印は不要）
 
 LEFT_ARROW=$(printf '\xee\x82\xb2')    # U+E0B2
@@ -14,15 +14,35 @@ datetime=$(date '+%m/%d %H:%M')
 
 # セッション名でアイコン切替
 case "$session" in
-  *:*) icon="$ICON_WORKTREE" ;;
-  *)   icon="$ICON_REPO" ;;
+  *:*) project_icon="$ICON_WORKTREE" ;;
+  *)   project_icon="$ICON_REPO" ;;
 esac
 
-# セッション名セグメント
-printf '#[fg=#c8d3f5,bg=#394270]  %s  %s  ' "$icon" "$session"
+# baton の軽量サマリ（🤔/✋/💤）を取得
+baton_status=""
+baton_cmd="${BATON_CMD:-$HOME/.local/bin/baton}"
+if [ -x "$baton_cmd" ]; then
+  baton_status=$($baton_cmd --once --format tmux 2>/dev/null || true)
+elif command -v baton >/dev/null 2>&1; then
+  baton_status=$(baton --once --format tmux 2>/dev/null || true)
+fi
 
-# 繋がり矢印（セッション → 日時）
+# baton セグメント（先頭）: baton 本体の出力をそのまま表示
+if [ -n "$baton_status" ]; then
+  baton_segment="baton $baton_status"
+else
+  baton_segment="baton"
+fi
+printf '#[fg=#e6e8ff,bg=#3654a7,bold]  %s  ' "$baton_segment"
+
+# 繋がり矢印（baton → project）
+printf '#[fg=#394270,bg=#3654a7]%s' "$LEFT_ARROW"
+
+# project セグメント
+printf '#[fg=#c8d3f5,bg=#394270]  %s  %s  ' "$project_icon" "$session"
+
+# 繋がり矢印（project → 日時）
 printf '#[fg=#82aaff,bg=#394270]%s' "$LEFT_ARROW"
 
-# 日時セグメント
+# date セグメント
 printf '#[fg=#1e2030,bg=#82aaff,bold]  %s %s  ' "$ICON_CALENDAR" "$datetime"
