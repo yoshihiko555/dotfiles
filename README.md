@@ -309,3 +309,15 @@ Alfredから指定ディレクトリをWezTermで3分割ペインレイアウト
 
 - `github/docs/git-release-policy.md` - グローバルな Git / release 運用方針
 - `github/docs/github-rulesets.md` - GitHub Rulesets の export / import 手順
+
+## Release 共通基盤
+
+release 運用は以下の 3 層で構成:
+
+| 層 | 配置先 | 役割 |
+|----|--------|------|
+| reusable workflow | [`yoshihiko555/.github`](https://github.com/yoshihiko555/.github) | tag push → GitHub Release 作成 |
+| release タスク | `taskfiles/release.yml` | version bump, preflight, tag 作成・push |
+| Rulesets JSON | `github/rulesets/` | branch / tag 保護の共通設定 |
+
+各 repo には caller workflow と `CHANGELOG.md` を置くだけで同じ release 体験になる。

@@ -89,6 +89,25 @@ git push
 
 - assets の有無はプロジェクトごとに異なる
 - 共通化するのは release 作成の核であり、配布方法までは固定しない
+- GitHub Release の作成は [`yoshihiko555/.github`](https://github.com/yoshihiko555/.github) の reusable workflow が担当する
+- 各 repo には caller workflow を置くだけでよい
+
+### Caller workflow の例
+
+各 repo の `.github/workflows/release.yml` に置く:
+
+```yaml
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    uses: yoshihiko555/.github/.github/workflows/release.yml@main
+```
 
 ## GitHub 設定
 
@@ -109,12 +128,21 @@ git push
 - 競合時は PR branch 側で `origin/main` を取り込んで解決する
 - `main` への統合は GitHub 上の `Squash and merge` を前提にする
 
+## 共通資材の配置
+
+| 対象 | 配置先 |
+|------|--------|
+| reusable release workflow | [`yoshihiko555/.github`](https://github.com/yoshihiko555/.github) |
+| release タスク (tag 作成・push) | `dotfiles/taskfiles/release.yml` |
+| Rulesets JSON | `dotfiles/github/rulesets/` |
+| 運用ドキュメント | `dotfiles/github/docs/` |
+
 ## repo 固有で残るもの
 
 次の要素は各 repo に残る。
 
 - `CHANGELOG.md`
-- `.github/release.yml`
-- release caller workflow
-- asset workflow
+- `.github/release.yml` (release note カテゴリ設定)
+- release caller workflow (`.github/workflows/release.yml`)
+- asset workflow (必要な repo のみ)
 - README や導入手順書などの利用者向け導線
