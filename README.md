@@ -63,18 +63,11 @@ dotfiles/
 ├── alfred/                 # Alfred ワークフロー（→ ~/Dropbox/...へリンク）
 │   └── Open-VS-or-IT/      # お気に入りフォルダを開くワークフロー
 │
-├── github/                 # GitHub 関連の運用資材
-│   ├── docs/              # 運用ドキュメント
-│   │   ├── git-release-policy.md
-│   │   └── github-rulesets.md
-│   └── rulesets/           # Rulesets export JSON
-│
 ├── Makefile
 ├── Brewfile                # Homebrew パッケージ定義
 ├── Taskfile.yml            # エントリポイント（taskfiles/ を読み込む）
 ├── taskfiles/
 │   ├── link.yml
-│   ├── release.yml
 │   ├── skills.yml
 │   └── util.yml
 ├── scripts/
@@ -305,19 +298,15 @@ Alfredから指定ディレクトリをWezTermで3分割ペインレイアウト
 
 詳細は [alfred/README.md](alfred/README.md) を参照。
 
-## 運用ドキュメント
-
-- `github/docs/git-release-policy.md` - グローバルな Git / release 運用方針
-- `github/docs/github-rulesets.md` - GitHub Rulesets の export / import 手順
-
 ## Release 共通基盤
 
-release 運用は以下の 3 層で構成:
+release 運用の共通資材は [`yoshihiko555/.github`](https://github.com/yoshihiko555/.github) で管理:
 
-| 層 | 配置先 | 役割 |
-|----|--------|------|
-| reusable workflow | [`yoshihiko555/.github`](https://github.com/yoshihiko555/.github) | tag push → GitHub Release 作成 |
+| 資材 | 配置先 | 役割 |
+|------|--------|------|
+| reusable workflow | `.github/workflows/release.yml` | tag push → GitHub Release 作成 |
 | release タスク | `taskfiles/release.yml` | version bump, preflight, tag 作成・push |
-| Rulesets JSON | `github/rulesets/` | branch / tag 保護の共通設定 |
+| Rulesets JSON | `rulesets/` | branch / tag 保護の共通設定 |
+| 運用ドキュメント | `docs/` | Git/release 方針、Rulesets 手順 |
 
-各 repo には caller workflow と `CHANGELOG.md` を置くだけで同じ release 体験になる。
+各 repo は caller workflow と `CHANGELOG.md` を置き、Taskfile から `.github` repo の release タスクをローカル参照する。
