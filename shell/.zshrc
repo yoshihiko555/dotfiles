@@ -54,6 +54,7 @@ source ~/.zsh/aliases.zsh
 source ~/.zsh/functions.zsh
 source ~/.zsh/tmux.zsh
 source ~/.zsh/docker.zsh
+source ~/.zsh/wt.zsh
 source ~/.zsh/repo.zsh
 source ~/.zsh/trust.zsh
 source ~/.zsh/cc-interrupt.zsh
@@ -73,4 +74,3 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 . "$HOME/.local/bin/env"
 
 alias claude-mem='bun "/Users/yoshihiko/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs"'
-

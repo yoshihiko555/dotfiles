@@ -24,6 +24,8 @@ cheat() {
   gl        git log (10件)   gd   git diff
   gb        git branch       gco  git checkout
   gsw       git switch       lg   lazygit
+  wt        gtr の薄いラッパー
+            `wt rm` は fzf 選択で削除可
 
 ── Docker ──────────────────────────────────
   d         docker           dc   docker compose
