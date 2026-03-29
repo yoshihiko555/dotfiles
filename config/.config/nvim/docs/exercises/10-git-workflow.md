@@ -107,13 +107,13 @@ hunk テキストオブジェクトの活用:
 7. ターミナルで `git commit`
 
 ## 確認テスト
-- [ ] `]c`/`[c` で hunk 間を移動できる
-- [ ] `<leader>hs` で hunk 単位でステージできる
-- [ ] `<leader>hr` で hunk をリセットできる
-- [ ] `<leader>hp` で hunk のプレビューを表示できる
-- [ ] `<leader>tb` で inline blame をトグルできる
-- [ ] `:CodeDiff` で diff ビューを開いて操作できる
-- [ ] `ih` テキストオブジェクトで hunk を選択できる
+- [x] `]c`/`[c` で hunk 間を移動できる
+- [x] `<leader>hs` で hunk 単位でステージできる
+- [x] `<leader>hr` で hunk をリセットできる
+- [x] `<leader>hp` で hunk のプレビューを表示できる
+- [x] `<leader>tb` で inline blame をトグルできる
+- [x] `:CodeDiff` で diff ビューを開いて操作できる
+- [x] `ih` テキストオブジェクトで hunk を選択できる
 
 ## まとめ
 全10回の Exercise お疲れさまでした。[チートシート](../cheatsheet/README.md)を手元に置きながら日常的に使うことで定着します。

@@ -33,6 +33,7 @@ vim.opt.swapfile = false
 
 -- その他
 vim.opt.updatetime = 250
+vim.opt.timeoutlen = 300
 vim.opt.completeopt = "menuone,noselect"
 vim.opt.clipboard = "unnamedplus"
 vim.opt.autoread = true

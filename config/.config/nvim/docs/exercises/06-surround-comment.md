@@ -32,8 +32,8 @@
 以下のテキストに囲みを追加しよう。
 
 ```
-hello world
-foo bar baz
+"hello" world
+( foo bar baz )
 click here
 ```
 
@@ -44,8 +44,8 @@ click here
 4. `click here` を `v` で選択 → `S<a>` → `<a>click here</a>` になる
 
 囲み文字のルール:
-- `(`, `{`, `[` → スペースあり: `( text )`
-- `)`, `}`, `]` → スペースなし: `(text)`
+- `(`, `{ `, `[` → スペースあり: `( text )`
+- `)`, ` }`, `]` → スペースなし: `(text)`
 - `<tag>` → HTMLタグで囲む
 
 ## 練習 2: surround — 囲みの変更 (cs)
@@ -53,9 +53,9 @@ click here
 以下のテキストの囲みを変更しよう。
 
 ```javascript
-const a = "hello";
-const b = (1 + 2);
-const c = [1, 2, 3];
+const a = 'hello';
+const b = [ 1 + 2 ];
+const c = { 1, 2, 3 };
 ```
 
 タスク:
@@ -68,9 +68,9 @@ const c = [1, 2, 3];
 以下のテキストから囲みを削除しよう。
 
 ```python
-result = str("hello")
-data = list([1, 2, 3])
-value = int({42})
+result = str(hello)
+data = list(1, 2, 3)
+value = int(42)
 ```
 
 タスク:
@@ -114,12 +114,12 @@ function calculate(a, b) {
 3. `const sum` から `const diff` を `V` で選択 → `gb` → ブロックコメント
 
 ## 確認テスト
-- [ ] `ysiw"` で単語を引用符で囲める
-- [ ] `cs"'` で囲み文字を変更できる
-- [ ] `ds"` で囲みを削除できる
-- [ ] `gcc` で行コメントをトグルできる
-- [ ] `gc` (Visual) で複数行をまとめてコメントできる
-- [ ] `(` と `)` でスペースの有無が変わることを理解している
+- [x] `ysiw"` で単語を引用符で囲める
+- [x] `cs"'` で囲み文字を変更できる
+- [x] `ds"` で囲みを削除できる
+- [x] `gcc` で行コメントをトグルできる
+- [x] `gc` (Visual) で複数行をまとめてコメントできる
+- [x] `(` と `)` でスペースの有無が変わることを理解している
 
 ## 次のステップ
 → [Exercise 07: Neo-tree](07-neo-tree.md)
