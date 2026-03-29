@@ -67,6 +67,11 @@ return {
       act.SendKey{ key = 'q', mods = 'CTRL' },
       act.SendKey{ key = 'x' },
     } },
+    -- セッション閉じ (Cmd+Shift+W → Prefix+X)
+    { key = 'w', mods = 'SUPER|SHIFT', action = act.Multiple{
+      act.SendKey{ key = 'q', mods = 'CTRL' },
+      act.SendKey{ key = 'X', mods = 'SHIFT' },
+    } },
 
     ---------------------------------------------------------------------------
     -- ウィンドウ・アプリケーション

@@ -20,3 +20,12 @@
 ## Tests & validation
 - 可能な範囲で、変更に対応するテストコードの追加・修正も提案してください。
 - AGENTS.md にテストコマンドが記載されている場合は、それを優先して実行してください。
+
+## Git / PR / changelog
+- 作業ブランチは常に `main` から切ってください。
+- `main` へ直接 push しないでください。変更は PR を作成して取り込みます。
+- `main` への統合は GitHub 上の squash merge を前提にしてください。
+- ユーザー向け変更がある PR では `CHANGELOG.md` の `Unreleased` を更新してください。
+- changelog 更新不要の変更（テストのみ、内部整理など）は、その判断を PR 内で明示してください。
+- 競合時は PR branch 側で `origin/main` を取り込んで解消してください。
+- release は root worktree の `main` で行います。作業用 worktree から release を実行しないでください。
