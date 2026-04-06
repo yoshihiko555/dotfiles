@@ -27,7 +27,6 @@
 
 ## Git / PR / changelog
 
-- 作業ブランチは常に `main` から切ってください。
 - `main` へ直接 push しないでください。変更は PR を作成して取り込みます。
 - `main` への統合は GitHub 上の squash merge を前提にしてください。
 - ユーザー向け変更がある PR では `CHANGELOG.md` の `Unreleased` を更新してください。
