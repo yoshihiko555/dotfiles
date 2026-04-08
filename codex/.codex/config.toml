@@ -57,6 +57,9 @@ trust_level = "trusted"
 [projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/tech-site"]
 trust_level = "trusted"
 
+[projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/rag-experiment"]
+trust_level = "trusted"
+
 # END managed-trust-projects
 
 [features]
