@@ -55,7 +55,8 @@ session_name=$(echo "$selected" | cut -f2)
 path=$(echo "$selected" | cut -f3)
 
 # セッション作成 or 切替
-if ! tmux has-session -t "$session_name" 2>/dev/null; then
+# '=' プレフィックスで厳密一致（prefix match による誤マッチを防ぐ）
+if ! tmux has-session -t "=$session_name" 2>/dev/null; then
   tmux new-session -ds "$session_name" -c "$path"
 fi
 
