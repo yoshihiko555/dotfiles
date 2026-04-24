@@ -20,5 +20,17 @@
       // ターミナルトグル (素早くアクセス)
       "ctrl-`": "workspace::ToggleBottomDock"
     }
+  },
+  {
+    "context": "ProjectPanel",
+    "bindings": {
+      "z": "project_panel::CollapseAllEntries"
+    }
+  },
+  {
+    "context": "ProjectPanel",
+    "unbind": {
+      "cmd-left": "project_panel::CollapseAllEntries"
+    }
   }
 ]
