@@ -151,3 +151,8 @@ fe() {
   file=$(find . -type f 2>/dev/null | fzf --preview 'head -100 -- {}')
   [[ -n "$file" ]] && nvim "$file"
 }
+
+hermes-ui() {
+  (sleep 2 && open "http://localhost:13000") &
+  ssh -t macmini-hermes "/Users/agent/.local/bin/hermes dashboard"
+}
