@@ -7,6 +7,9 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
+  "outline_panel": {
+    "dock": "left"
+  },
   "notification_panel": {
     "button": false
   },
@@ -17,6 +20,7 @@
     "status_style": "icon"
   },
   "project_panel": {
+    "dock": "left",
     "bold_folder_labels": true,
     "indent_size": 10.0,
     "hide_gitignore": false,
@@ -24,6 +28,7 @@
     "git_status": true
   },
   "agent": {
+    "dock": "right",
     "button": true,
     "favorite_models": [],
     "model_parameters": []
