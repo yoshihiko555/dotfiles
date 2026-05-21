@@ -2,10 +2,10 @@
 
 # ---- 基本設定 ----
 # デフォルトで使うモデル
-model = "gpt-5.4"
+model = "gpt-5.5"
 
 # 推論の深さ（medium: バランス型 / high: より時間をかける）
-model_reasoning_effort = "xhigh"
+model_reasoning_effort = "high"
 
 # Web 検索の動作（"live" / "cached" / "disabled"）
 web_search = "live"
@@ -95,3 +95,6 @@ hide_full_access_warning = true
 
 [tui]
 status_line = ["model-name", "project-root", "git-branch", "context-remaining", "context-used", "five-hour-limit"]
+
+[tui.model_availability_nux]
+"gpt-5.5" = 4
