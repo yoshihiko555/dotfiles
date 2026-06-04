@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string></string>
+	<key>category</key>
+	<string>Tools</string>
+	<key>connections</key>
+	<dict>
+		<key>D4946BC1-B080-4BCB-AE2F-B37275946ECE</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>1159A364-FA87-4F58-A4C6-155B813D0948</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string></string>
+	<key>description</key>
+	<string>全オーディオ出力デバイスを一覧から選んで切り替えるワークフロー</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Audio Output Switcher</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>68</integer>
+				<key>keyword</key>
+				<string>audio</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string></string>
+				<key>script</key>
+				<string>#!/usr/bin/env python3
+import json, subprocess, sys
+
+SAS = "/opt/homebrew/bin/SwitchAudioSource"
+query = (sys.argv[1] if len(sys.argv) &gt; 1 else "").strip().lower()
+
+try:
+    cur = subprocess.check_output([SAS, "-c", "-t", "output", "-f", "json"], text=True).strip()
+    current_uid = json.loads(cur).get("uid", "")
+except Exception:
+    current_uid = ""
+
+devices = []
+try:
+    out = subprocess.check_output([SAS, "-a", "-t", "output", "-f", "json"], text=True)
+    for line in out.splitlines():
+        line = line.strip()
+        if line:
+            devices.append(json.loads(line))
+except Exception:
+    devices = []
+
+items = []
+for d in devices:
+    name = d.get("name", "")
+    uid = d.get("uid", "")
+    if query and query not in name.lower():
+        continue
+    is_cur = (uid == current_uid)
+    items.append({
+        "title": ("✓ " + name) if is_cur else name,
+        "subtitle": "現在の出力先" if is_cur else "この出力先に切り替え",
+        "arg": uid,
+        "valid": (not is_cur),
+        "variables": {"uid": uid, "device_name": name},
+    })
+
+if not items:
+    items = [{"title": "出力デバイスが見つかりません", "valid": False}]
+
+print(json.dumps({"items": items}, ensure_ascii=False))</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>切り替え先の出力デバイスを選択</string>
+				<key>title</key>
+				<string>オーディオ出力デバイス</string>
+				<key>type</key>
+				<integer>9</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>D4946BC1-B080-4BCB-AE2F-B37275946ECE</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>#!/bin/zsh
+set -euo pipefail
+
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+# Alfred は選択アイテムの variables を環境変数として渡す。argv はフォールバック。
+# 名前は Unicode 正規化(NFC/NFD)差で一致しないことがあるため UID で切り替える。
+uid="${uid:-${1:-}}"
+name="${device_name:-$uid}"
+
+if [[ -z "$uid" ]]; then
+  osascript -e 'display notification "デバイスが指定されていません" with title "Audio Output"'
+  exit 1
+fi
+
+SwitchAudioSource -t output -u "$uid"
+osascript -e "display notification \"$name に切り替えました\" with title \"Audio Output\""</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>11</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>1159A364-FA87-4F58-A4C6-155B813D0948</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string></string>
+	<key>uidata</key>
+	<dict>
+		<key>1159A364-FA87-4F58-A4C6-155B813D0948</key>
+		<dict>
+			<key>xpos</key>
+			<integer>475</integer>
+			<key>ypos</key>
+			<integer>300</integer>
+		</dict>
+		<key>D4946BC1-B080-4BCB-AE2F-B37275946ECE</key>
+		<dict>
+			<key>xpos</key>
+			<integer>175</integer>
+			<key>ypos</key>
+			<integer>300</integer>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array/>
+	<key>version</key>
+	<string></string>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>

@@ -45,6 +45,22 @@ task link-alfred
 - Note — コンテンツ投稿
 - YouTube Studio — 動画管理
 
+### audio-output
+
+オーディオ出力デバイスを一覧から選んで切り替えるワークフロー。
+
+**キーワード:** `audio`
+
+**使い方:**
+1. Alfredで `audio` と入力
+2. 全出力デバイスが一覧表示される（現在の出力先は `✓` 付き）
+3. 切り替えたいデバイスを選択
+
+**依存:** `switchaudio-osx`（`SwitchAudioSource` コマンド / Brewfile 管理）
+
+> Proxy Audio Device は出力先選択を driver 内部に保持し CLI から切り替えられないため、
+> macOS のデフォルト出力デバイスを直接切り替える `SwitchAudioSource` を採用。
+
 ## ディレクトリ構造
 
 ```
@@ -55,6 +71,9 @@ alfred/
 ├── Open-VS-or-IT/
 │   ├── info.plist
 │   ├── favorites.json
+│   └── .uuid
+├── audio-output/
+│   ├── info.plist
 │   └── .uuid
 └── README.md
 ```
