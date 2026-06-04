@@ -71,6 +71,7 @@ cheat() {
 ── Functions (util) ────────────────────────
   mkcd DIR  ディレクトリ作成して cd
   port NUM  ポート使用プロセス確認
+  brewup    brew 管理ツールを一括更新 (-a で :latest cask も)
   cc_interrupt ... 中断証跡 (start|end|open|last|report)
   trust ... Codex trust を add/rm/list/audit/where
   cheat     このヘルプを表示
@@ -155,4 +156,54 @@ fe() {
 hermes-ui() {
   (sleep 2 && open "http://localhost:13000") &
   ssh -t macmini-hermes "/Users/agent/.local/bin/hermes dashboard"
+}
+
+# brew 管理ツールを一括更新（最新でないものだけ upgrade）
+#   claude-code / codex / gemini-cli などの CLI agent を含む全 formula/cask が対象。
+#   :latest cask（wezterm@nightly 等、brew がバージョン比較できず毎回再取得になるもの）は
+#   既定で除外し、`brewup -a` を付けたときだけ再取得する。
+brewup() {
+  if ! command -v brew >/dev/null 2>&1; then
+    echo "brew が見つかりません"
+    return 1
+  fi
+
+  local include_latest=0
+  [[ "$1" == "-a" || "$1" == "--all" ]] && include_latest=1
+
+  echo "🔄 brew update ..."
+  brew update -q || { echo "brew update に失敗しました"; return 1; }
+
+  # 更新対象（formula + 通常 cask + auto_updates cask）。:latest cask はここには出ない
+  local outdated
+  outdated=$(brew outdated --quiet --greedy-auto-updates 2>/dev/null)
+  if [[ -n "$outdated" ]]; then
+    echo "⬆️  更新対象:"
+    echo "$outdated" | sed 's/^/   /'
+    brew upgrade --greedy-auto-updates || return 1
+  else
+    echo "✅ 最新でないツールはありません"
+  fi
+
+  # version :latest の cask（brew がバージョン比較不可＝常に再取得）
+  local latest_casks
+  latest_casks=$(brew list --cask --versions 2>/dev/null | awk '$2=="latest"{print $1}')
+  if [[ -n "$latest_casks" ]]; then
+    if (( include_latest )); then
+      echo "♻️  :latest cask を再取得: ${latest_casks//$'\n'/ }"
+      echo "$latest_casks" | xargs brew upgrade --cask --greedy-latest
+    else
+      echo "ℹ️  :latest cask（毎回再取得・既定スキップ）: ${latest_casks//$'\n'/ }"
+      echo "    更新するには: brewup -a"
+    fi
+  fi
+
+  echo "🧹 brew cleanup ..."
+  brew cleanup -q
+
+  # 主要 CLI agent の現在バージョン
+  echo "—— CLI agent ——"
+  command -v claude >/dev/null 2>&1 && printf "  claude  %s\n" "$(claude --version 2>/dev/null)"
+  command -v codex  >/dev/null 2>&1 && printf "  codex   %s\n" "$(codex --version 2>/dev/null)"
+  command -v gemini >/dev/null 2>&1 && printf "  gemini  %s\n" "$(gemini --version 2>/dev/null)"
 }
