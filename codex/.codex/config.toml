@@ -69,6 +69,24 @@ apply_patch_freeform = true
 collaboration_modes = true
 multi_agent = true
 
+[shell_environment_policy]
+inherit = "core"
+ignore_default_excludes = false
+exclude = [
+  "AWS_*",
+  "AZURE_*",
+  "GCP_*",
+  "GOOGLE_*",
+  "OPENAI_*",
+  "ANTHROPIC_*",
+  "GITHUB_*",
+  "GH_*",
+  "NPM_TOKEN",
+  "HOMEBREW_GITHUB_API_TOKEN",
+]
+set = {}
+include_only = []
+
 [mcp_servers.context7]
 command = "npx"
 args = ["-y", "@upstash/context7-mcp"]
