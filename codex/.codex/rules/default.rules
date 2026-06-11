@@ -1,0 +1,130 @@
+# Global guardrails for commands that request execution outside the sandbox.
+
+prefix_rule(
+    pattern = [["bash", "sh", "zsh"], ["-lc", "-c"]],
+    decision = "prompt",
+    justification = "Shell wrappers can hide multiple actions; require approval outside the sandbox.",
+    match = [
+        "bash -lc npm test",
+        "zsh -c git status",
+    ],
+    not_match = [
+        "bash --version",
+        "zsh --version",
+    ],
+)
+
+prefix_rule(
+    pattern = ["sudo"],
+    decision = "prompt",
+    justification = "Privilege escalation requires explicit approval.",
+    match = [
+        "sudo apt install ripgrep",
+        "sudo systemctl restart docker",
+    ],
+)
+
+prefix_rule(
+    pattern = ["rm"],
+    decision = "prompt",
+    justification = "Deleting files outside the sandbox requires explicit approval.",
+    match = [
+        "rm file.txt",
+        "rm -rf build",
+    ],
+)
+
+prefix_rule(
+    pattern = ["rmdir"],
+    decision = "prompt",
+    justification = "Deleting directories outside the sandbox requires explicit approval.",
+    match = [
+        "rmdir old-dir",
+    ],
+)
+
+prefix_rule(
+    pattern = ["git", "reset", "--hard"],
+    decision = "prompt",
+    justification = "Hard resets discard work and require explicit approval.",
+    match = [
+        "git reset --hard",
+        "git reset --hard HEAD~1",
+    ],
+    not_match = [
+        "git reset HEAD file.txt",
+    ],
+)
+
+prefix_rule(
+    pattern = ["git", "clean"],
+    decision = "prompt",
+    justification = "Git clean deletes untracked files and requires explicit approval.",
+    match = [
+        "git clean -fd",
+        "git clean -fdx",
+    ],
+)
+
+prefix_rule(
+    pattern = ["git", "push"],
+    decision = "prompt",
+    justification = "Pushing changes is a remote side effect and requires explicit approval.",
+    match = [
+        "git push",
+        "git push origin main",
+    ],
+)
+
+prefix_rule(
+    pattern = ["gh", "pr", ["merge", "close"]],
+    decision = "prompt",
+    justification = "Changing pull request state requires explicit approval.",
+    match = [
+        "gh pr merge 123",
+        "gh pr close 123",
+    ],
+    not_match = [
+        "gh pr view 123",
+    ],
+)
+
+prefix_rule(
+    pattern = [["npm", "pnpm", "yarn"], ["install", "add", "remove", "upgrade"]],
+    decision = "prompt",
+    justification = "Dependency changes require explicit approval outside the sandbox.",
+    match = [
+        "npm install",
+        "pnpm add vite",
+        "yarn remove react",
+    ],
+    not_match = [
+        "npm test",
+        "pnpm lint",
+    ],
+)
+
+prefix_rule(
+    pattern = [["pip", "pip3", "uv"], ["install", "add", "remove"]],
+    decision = "prompt",
+    justification = "Dependency changes require explicit approval outside the sandbox.",
+    match = [
+        "pip install requests",
+        "pip3 install pytest",
+        "uv add ruff",
+    ],
+    not_match = [
+        "uv run pytest",
+    ],
+)
+
+prefix_rule(
+    pattern = [["brew", "cargo", "go"], "install"],
+    decision = "prompt",
+    justification = "Tool installation requires explicit approval.",
+    match = [
+        "brew install ripgrep",
+        "cargo install cargo-nextest",
+        "go install example.com/tool@latest",
+    ],
+)
