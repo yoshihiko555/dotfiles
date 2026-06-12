@@ -39,7 +39,7 @@ tasks:
       - stow {{.STOW_FLAGS}} codex
 
   link-gemini:
-    desc: Gemini 設定を反映したいときに ~/.gemini をリンク
+    desc: Gemini / Antigravity CLI 設定を反映したいときに ~/.gemini をリンク
     cmds:
       - stow {{.STOW_FLAGS}} gemini
 
@@ -110,7 +110,7 @@ tasks:
       - stow -D {{.STOW_FLAGS}} codex
 
   unlink-gemini:
-    desc: Gemini 設定リンクのみ外したいときに解除
+    desc: Gemini / Antigravity CLI 設定リンクのみ外したいときに解除
     cmds:
       - stow -D {{.STOW_FLAGS}} gemini
 
@@ -174,7 +174,7 @@ tasks:
       - stow -R {{.STOW_FLAGS}} codex
 
   restow-gemini:
-    desc: Gemini 設定だけ最新化したいときに再リンク
+    desc: Gemini / Antigravity CLI 設定だけ最新化したいときに再リンク
     cmds:
       - stow -R {{.STOW_FLAGS}} gemini
 

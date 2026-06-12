@@ -5,7 +5,7 @@ tasks:
   # Skills 同期
   # ====================
   sync-skills:
-    desc: skills を追加・変更した後に Codex/Claude のスキルリンクを同期
+    desc: skills を追加・変更した後に Claude/Codex/Antigravity のスキルリンクを同期
     cmds:
       - |
         set -eu
@@ -13,10 +13,12 @@ tasks:
         common="$root/shared/skills/common"
         codex_only="$root/shared/skills/codex-only"
         claude_only="$root/shared/skills/claude-only"
+        antigravity_only="$root/shared/skills/antigravity-only"
         codex_target="$root/codex/.codex/skills"
         claude_target="$root/claude/.claude/skills"
+        antigravity_target="$root/gemini/.gemini/config/skills"
 
-        mkdir -p "$codex_target" "$claude_target"
+        mkdir -p "$codex_target" "$claude_target" "$antigravity_target"
 
         cleanup_links() {
           target_dir="$1"
@@ -47,11 +49,15 @@ tasks:
         cleanup_links "$codex_target" "../../../shared/skills/codex-only"
         cleanup_links "$claude_target" "../../../shared/skills/common"
         cleanup_links "$claude_target" "../../../shared/skills/claude-only"
+        cleanup_links "$antigravity_target" "../../../../shared/skills/common"
+        cleanup_links "$antigravity_target" "../../../../shared/skills/antigravity-only"
 
         link_dir "$common" "$codex_target" "../../../shared/skills/common"
         link_dir "$common" "$claude_target" "../../../shared/skills/common"
+        link_dir "$common" "$antigravity_target" "../../../../shared/skills/common"
         link_dir "$codex_only" "$codex_target" "../../../shared/skills/codex-only"
         link_dir "$claude_only" "$claude_target" "../../../shared/skills/claude-only"
+        link_dir "$antigravity_only" "$antigravity_target" "../../../../shared/skills/antigravity-only"
 
   sync-claude-work-skills:
     desc: 会社用 Claude Code に common + work のスキルを同期
