@@ -32,7 +32,10 @@
       "Bash(*password*)",
       "Read(.env)"
     ],
-    "additionalDirectories": ["//tmp/claude-501", "//private/tmp/claude-501"]
+    "additionalDirectories": [
+      "//tmp/claude-501",
+      "//private/tmp/claude-501"
+    ]
   },
   "hooks": {
     "PreToolUse": [],
@@ -112,10 +115,19 @@
       ]
     },
     "filesystem": {
-      "allowWrite": ["~/.gemini"]
+      "allowWrite": [
+        "~/.gemini"
+      ]
     },
     "enableWeakerNetworkIsolation": true,
-    "excludedCommands": ["docker", "docker-compose", "codex", "gemini", "gh"]
+    "excludedCommands": [
+      "docker",
+      "docker-compose",
+      "codex",
+      "gemini",
+      "agy",
+      "gh"
+    ]
   },
   "effortLevel": "high",
   "autoDreamEnabled": true,
