@@ -37,7 +37,8 @@ cheat() {
   c         clear            h    history
   t         tmux             code code .
   zed       zed .
-  cc        claude           cc-dg  権限スキップ
+  cc        claude           ccp    claude (個人)
+  ccw       会社Claude      cc-dg  権限スキップ
   cc-r      claude resume    cx     codex
   gm        gemini
   wails     Wails v2         wails3 Wails v3

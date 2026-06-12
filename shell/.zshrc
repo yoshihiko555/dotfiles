@@ -58,6 +58,7 @@ source ~/.zsh/wt.zsh
 source ~/.zsh/repo.zsh
 source ~/.zsh/trust.zsh
 source ~/.zsh/cc-interrupt.zsh
+source ~/.zsh/claude.zsh
 
 # --------------------------------------------
 # 5. Local Config (machine-specific)

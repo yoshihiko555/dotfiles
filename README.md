@@ -58,7 +58,8 @@ dotfiles/
 │   └── skills/             # Codex/Claude 共通スキルの実体
 │       ├── common/         # 共通スキル
 │       ├── claude-only/    # Claude 専用スキル
-│       └── codex-only/     # Codex 専用スキル
+│       ├── codex-only/     # Codex 専用スキル
+│       └── work/           # 会社アカウントでも使うことを明示したスキル
 │
 ├── alfred/                 # Alfred ワークフロー（→ ~/Dropbox/...へリンク）
 │   └── Open-VS-or-IT/      # お気に入りフォルダを開くワークフロー
@@ -133,6 +134,8 @@ task link-tmux     # tmux のみ
 task unlink        # 全パッケージのリンクを解除
 task restow        # 全パッケージを再リンク
 task sync-skills   # shared/skills のリンクを更新
+task claude-work-init # 会社用 Claude Code 設定ディレクトリを初期化
+task sync-claude-work-skills # 会社用 Claude Code の work スキルを同期
 task status        # 現在のリンク状態を確認
 task brew          # Homebrew パッケージを適用
 task edit          # VS Code で開く
@@ -198,6 +201,25 @@ claude plugin disable --all --scope user
 claude plugin disable --all --scope project
 claude plugin disable --all --scope local
 ```
+
+## Claude Code 会社アカウント運用
+
+会社アカウント用の Claude Code 設定は Git 管理しません。`ccw` は
+`CLAUDE_CONFIG_DIR=~/.claude-work` を付けて Claude Code を起動します。
+
+```bash
+# 初回だけ実行
+task claude-work-init
+
+# 会社アカウントとして起動・ログイン
+ccw
+```
+
+- 個人用: `claude` / `cc` / `ccp`（通常の `~/.claude`）
+- 会社用: `ccw`（Git 管理外の `~/.claude-work`）
+- 会社用の `settings.json`、認証情報、履歴、plugin 状態は Git に含めません。
+- 会社アカウントでも使ってよいスキルだけ `shared/skills/work/` に置きます。
+- `task sync-claude-work-skills` は `shared/skills/work/*` だけを `~/.claude-work/skills/` にリンクします。
 
 ## Worktree 補助コマンド
 

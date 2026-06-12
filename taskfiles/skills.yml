@@ -52,3 +52,41 @@ tasks:
         link_dir "$common" "$claude_target" "../../../shared/skills/common"
         link_dir "$codex_only" "$codex_target" "../../../shared/skills/codex-only"
         link_dir "$claude_only" "$claude_target" "../../../shared/skills/claude-only"
+
+  sync-claude-work-skills:
+    desc: 会社用 Claude Code に shared/skills/work のスキルだけを同期
+    cmds:
+      - |
+        set -eu
+        root="{{.ROOT_DIR}}"
+        work_skills="$root/shared/skills/work"
+        work_config="${CLAUDE_WORK_CONFIG_DIR:-{{.HOME}}/.claude-work}"
+        work_target="$work_config/skills"
+
+        mkdir -p "$work_target"
+
+        if [ -d "$work_target" ]; then
+          find "$work_target" -maxdepth 1 -type l -print | while read -r link; do
+            link_target="$(readlink "$link")"
+            case "$link_target" in
+              "$work_skills"/*) rm -f "$link" ;;
+            esac
+          done
+        fi
+
+        if [ -d "$work_skills" ]; then
+          find "$work_skills" -mindepth 1 -maxdepth 1 \( -type d -o -type l \) -print | while read -r path; do
+            name="$(basename "$path")"
+            ln -snf "$path" "$work_target/$name"
+          done
+        fi
+
+  claude-work-init:
+    desc: Git 管理外の会社用 Claude Code 設定ディレクトリを初期化
+    cmds:
+      - |
+        set -eu
+        work_config="${CLAUDE_WORK_CONFIG_DIR:-{{.HOME}}/.claude-work}"
+        mkdir -p "$work_config" "$work_config/skills"
+        echo "会社用 Claude config: $work_config"
+      - task: sync-claude-work-skills
