@@ -1,7 +1,7 @@
 customCommands:
   - key: "<c-g>"
     context: "files"
-    description: "Gemini で Conventional Commits のメッセージを生成してコミット"
+    description: "Antigravity で Conventional Commits のメッセージを生成してコミット"
     output: "terminal"
     command: |
       clear
@@ -11,18 +11,18 @@ customCommands:
         exit 1
       fi
 
-      GEMINI_BIN="${GEMINI_BIN:-$(command -v gemini || true)}"
-      if [ -z "$GEMINI_BIN" ] || [ ! -x "$GEMINI_BIN" ]; then
-        echo "Gemini CLI not found in PATH."
+      AGY_BIN="${AGY_BIN:-$(command -v agy || echo "$HOME/.local/bin/agy")}"
+      if [ -z "$AGY_BIN" ] || [ ! -x "$AGY_BIN" ]; then
+        echo "Antigravity CLI (agy) not found."
         exit 1
       fi
 
       echo ""
       echo "  ╭─────────────────────────────────────────────╮"
-      echo "  │  Generating commit message with Gemini...   │"
+      echo "  │  Generating commit message with Antigravity │"
       echo "  ╰─────────────────────────────────────────────╯"
       echo ""
-      echo "  Model : gemini-2.5-flash"
+      echo "  Model : Gemini 3.5 Flash (Low)"
       echo "  Staged: $(git diff --cached --stat | tail -1)"
       echo ""
       echo "  ── Usage ──────────────────────────────────────"
@@ -42,10 +42,10 @@ customCommands:
         git diff --cached
       )"
 
-      MSG="$("$GEMINI_BIN" -m gemini-2.5-flash -p "$PROMPT_CONTENT" </dev/null 2>/dev/null)"
+      MSG="$("$AGY_BIN" --model "Gemini 3.5 Flash (Low)" -p "$PROMPT_CONTENT" </dev/null 2>/dev/null)"
 
       if [ -z "$MSG" ]; then
-        echo "Gemini did not return a commit message."
+        echo "Antigravity did not return a commit message."
         exit 1
       fi
 
