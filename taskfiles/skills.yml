@@ -54,32 +54,45 @@ tasks:
         link_dir "$claude_only" "$claude_target" "../../../shared/skills/claude-only"
 
   sync-claude-work-skills:
-    desc: 会社用 Claude Code に shared/skills/work のスキルだけを同期
+    desc: 会社用 Claude Code に common + work のスキルを同期
     cmds:
       - |
         set -eu
         root="{{.ROOT_DIR}}"
+        common="$root/shared/skills/common"
         work_skills="$root/shared/skills/work"
         work_config="${CLAUDE_WORK_CONFIG_DIR:-{{.HOME}}/.claude-work}"
         work_target="$work_config/skills"
 
         mkdir -p "$work_target"
 
-        if [ -d "$work_target" ]; then
-          find "$work_target" -maxdepth 1 -type l -print | while read -r link; do
-            link_target="$(readlink "$link")"
-            case "$link_target" in
-              "$work_skills"/*) rm -f "$link" ;;
-            esac
-          done
-        fi
+        cleanup_absolute_links() {
+          src_dir="$1"
+          if [ -d "$work_target" ]; then
+            find "$work_target" -maxdepth 1 -type l -print | while read -r link; do
+              link_target="$(readlink "$link")"
+              case "$link_target" in
+                "$src_dir"/*) rm -f "$link" ;;
+              esac
+            done
+          fi
+        }
 
-        if [ -d "$work_skills" ]; then
-          find "$work_skills" -mindepth 1 -maxdepth 1 \( -type d -o -type l \) -print | while read -r path; do
-            name="$(basename "$path")"
-            ln -snf "$path" "$work_target/$name"
-          done
-        fi
+        link_absolute_dir() {
+          src_dir="$1"
+          if [ -d "$src_dir" ]; then
+            find "$src_dir" -mindepth 1 -maxdepth 1 \( -type d -o -type l \) -print | while read -r path; do
+              name="$(basename "$path")"
+              ln -snf "$path" "$work_target/$name"
+            done
+          fi
+        }
+
+        cleanup_absolute_links "$common"
+        cleanup_absolute_links "$work_skills"
+
+        link_absolute_dir "$common"
+        link_absolute_dir "$work_skills"
 
   claude-work-init:
     desc: Git 管理外の会社用 Claude Code 設定ディレクトリを初期化

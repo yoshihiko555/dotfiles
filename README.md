@@ -218,8 +218,9 @@ ccw
 - 個人用: `claude` / `cc` / `ccp`（通常の `~/.claude`）
 - 会社用: `ccw`（Git 管理外の `~/.claude-work`）
 - 会社用の `settings.json`、認証情報、履歴、plugin 状態は Git に含めません。
-- 会社アカウントでも使ってよいスキルだけ `shared/skills/work/` に置きます。
-- `task sync-claude-work-skills` は `shared/skills/work/*` だけを `~/.claude-work/skills/` にリンクします。
+- `shared/skills/common/` は個人用・会社用の両方で使ってよい共通スキル置き場です。
+- `shared/skills/work/` は会社用に追加したいスキル置き場です。
+- `task sync-claude-work-skills` は `shared/skills/common/*` と `shared/skills/work/*` を `~/.claude-work/skills/` にリンクします。
 
 ## Worktree 補助コマンド
 
