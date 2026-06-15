@@ -1,0 +1,22 @@
+# Minimal Homebrew bundle for macmini-hermes.
+# This intentionally excludes GUI apps and AI CLIs managed elsewhere.
+
+tap "coderabbitai/tap"
+
+brew "coderabbitai/tap/git-gtr"
+brew "d2"
+brew "fd"
+brew "fzf"
+brew "gh"
+brew "ghq"
+brew "git"
+brew "glow"
+brew "lazygit"
+brew "mise"
+brew "neovim"
+brew "ripgrep"
+brew "starship"
+brew "tmux"
+brew "tree"
+brew "yazi"
+brew "zoxide"
