@@ -32,10 +32,7 @@
       "Bash(*password*)",
       "Read(.env)"
     ],
-    "additionalDirectories": [
-      "//tmp/claude-501",
-      "//private/tmp/claude-501"
-    ]
+    "additionalDirectories": ["//tmp/claude-501", "//private/tmp/claude-501"]
   },
   "hooks": {
     "PreToolUse": [],
@@ -115,9 +112,7 @@
       ]
     },
     "filesystem": {
-      "allowWrite": [
-        "~/.gemini"
-      ]
+      "allowWrite": ["~/.gemini", "~/ghq"]
     },
     "enableWeakerNetworkIsolation": true,
     "excludedCommands": [
@@ -126,11 +121,14 @@
       "codex",
       "gemini",
       "agy",
-      "gh"
+      "gh",
+      "git"
     ]
   },
   "effortLevel": "high",
   "autoDreamEnabled": true,
+  "skipWorkflowUsageWarning": true,
   "theme": "dark-ansi",
-  "skipAutoPermissionPrompt": true
+  "skipAutoPermissionPrompt": true,
+  "tui": "fullscreen"
 }
