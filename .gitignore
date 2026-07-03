@@ -28,3 +28,6 @@ config/.config/karabiner/automatic_backups/
 
 # TPM plugins (ランタイム依存、plugins.conf で自動インストール)
 config/.config/tmux/plugins/
+
+# config-analyze が生成する解析キャッシュ（ローカル専用）
+shared/skills/**/ANALYSIS.md
