@@ -1,6 +1,7 @@
 ---
 name: decision-log
-description: ADR/意思決定ログをコミットタイミングで作成・更新するための運用スキル。既存ADR/DECISIONSの形式に合わせ、会話履歴と差分から決定内容を要約して記録する。
+description: ADR（Architecture Decision Record）と意思決定ログ（DECISIONS.md）を、実装が固まりコミットする直前に作成・更新する運用スキル。既存ADR/DECISIONSの形式・見出し・語調に合わせ、直前の会話履歴とコミット差分から決定内容を要約して記録する。「ADRを書いて」「意思決定ログに追記して」「この決定を記録してからコミットして」といった依頼や、コミット前に設計判断を残したい場面で使用する。
+allowed-tools: Read, Write, Edit, Glob, Bash(git diff:*), Bash(git add:*), Bash(git commit:*)
 metadata:
   short-description: ADR/意思決定ログ作成フロー
 ---
@@ -21,37 +22,23 @@ metadata:
 
 | 変数 | 必須 | 取得方法 | 例 |
 |------|------|---------|-----|
-| `{ADR_DIR}` | 必須 | プロジェクト構成から特定 | `docs/08_adr` |
+| `{ADR_DIR}` | 必須 | `Glob` で `**/adr/**`・`**/*ADR*.md` を探索。複数候補・未検出時はユーザーに確認 | `docs/08_adr` |
 | `{DECISIONS_PATH}` | 必須 | `{ADR_DIR}/DECISIONS.md` | `docs/08_adr/DECISIONS.md` |
-| `{ADR_PREFIX}` | 必須 | 既存ADRファイル名から推定 | `ADR` |
+| `{ADR_PREFIX}` | 必須 | 既存ADRファイル名から推定。既存ADRがない場合は `ADR` | `ADR` |
 | `{DATE}` | 自動 | 実行日（YYYY-MM-DD） | `2026-02-08` |
 | `{DATE_NOSEP}` | 自動 | 実行日（YYYYMMDD） | `20260208` |
-| `{NEXT_ID}` | 自動 | DECISIONS.md の最終連番 +1 | `005` |
+| `{NEXT_ID}` | 自動 | DECISIONS.md の最終連番 +1。初回は `001` | `005` |
 | `{TITLE}` | 必須 | ユーザー指定またはコミット内容から要約 | `API認証方式の選定` |
 
 ## 実行フロー（コミット直前）
 1. コミット対象の差分（`Bash: git diff --cached`）と、直前のやり取りを整理する
-2. `{ADR_DIR}` 内の最新ADRを確認し（`Glob` + `Read`）、構成・見出し・語調を合わせる
+2. `{ADR_DIR}` 内の最新ADRを確認し（`Glob` + `Read`）、構成・見出し・語調を合わせる。
+   既存ADRが1件もない場合は `references/ADR.md`・`references/DECISIONS.md` をテンプレートとして使う
 3. `{DECISIONS_PATH}` を確認し（`Read`）、次の連番 `{NEXT_ID}` を決める
 4. 新規ADRを作成（`Write`）: `{ADR_DIR}/{ADR_PREFIX}-{DATE_NOSEP}-{NEXT_ID}.md`
 5. `DECISIONS.md` の ADR 一覧に1行追記（`Edit`）
 6. 内容を見直し、必要なら修正（`Read` + `Edit`）
 7. Git で実装差分 + ADRファイル + DECISIONS.md をまとめてコミット（`Bash: git add && git commit`）
-
-## 既存ADRがある場合の作成プロンプト（汎用）
-```
-以下の変数でADRとDECISIONS.mdを作成してください。
-手順は「実行フロー」、制約は「基本ルール」に従うこと。
-
-- ADRディレクトリ: {ADR_DIR}
-- DECISIONS.md: {DECISIONS_PATH}
-- ファイル名: {ADR_PREFIX}-{DATE_NOSEP}-{NEXT_ID}.md
-- 決定日: {DATE}
-- タイトル: {TITLE}
-```
-
-## 既存ADRがない場合の運用
-- 本スキルの `references/ADR.md` と `references/DECISIONS.md` をテンプレートとして使用する
 
 ## DECISIONS.md 追記フォーマット（例）
 ```
@@ -65,7 +52,7 @@ metadata:
 
 ## 検証チェックリスト
 - [ ] ADRファイルが `{ADR_DIR}/{ADR_PREFIX}-{DATE_NOSEP}-{NEXT_ID}.md` として存在する
-- [ ] ADR本文に必須項目（背景/問題/選択肢/決定/影響）がすべて含まれている
+- [ ] ADR本文に必須項目（背景/問い/選択肢/決定/影響/宿題/検証）がすべて含まれている
 - [ ] 既存ADRの見出し構成・語調と整合している
 - [ ] `{DECISIONS_PATH}` に正しい連番で1行追記されている
 - [ ] コミットに実装差分・ADRファイル・DECISIONS.md がすべて含まれている
