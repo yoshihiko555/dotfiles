@@ -40,6 +40,7 @@ cheat() {
   cc        claude           ccp    claude (個人)
   ccw       会社Claude      cc-dg  権限スキップ
   cc-r      claude resume    cx     codex
+  ccf       claude Fable5 (subagent委譲)
   gm        gemini
   wails     Wails v2         wails3 Wails v3
   orche     ai-orchestra manager

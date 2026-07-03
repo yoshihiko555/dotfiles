@@ -55,6 +55,8 @@ alias cc='claude'
 alias ccp='claude'
 alias cc-dg='claude --dangerously-skip-permissions'
 alias cc-r='claude --resume'
+# Fable 5（期間限定）: subagent に Sonnet 5 を使い、タスクを subagents へ委譲させる
+alias ccf='CLAUDE_CODE_SUBAGENT_MODEL=claude-sonnet-5 claude --append-system-prompt "基本的にタスクや作業の実行は、適切な粒度でsubagentsに実行手順が明確な指示を与えて委譲すること。あなたは全体進行の俯瞰と立案を行う。自己判断による例外は認める"'
 
 # Codex CLI
 alias cx='codex'
