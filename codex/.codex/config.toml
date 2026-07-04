@@ -5,7 +5,7 @@
 model = "gpt-5.5"
 
 # 推論の深さ（medium: バランス型 / high: より時間をかける）
-model_reasoning_effort = "high"
+model_reasoning_effort = "xhigh"
 
 # Web 検索の動作（"live" / "cached" / "disabled"）
 web_search = "live"
@@ -23,7 +23,6 @@ sandbox_mode = "workspace-write"
 
 # ---- 通知 ----
 # 通知の設定（$HOME 展開のため bash -lc 経由で実行）
-notify = ["bash", "-lc", "$HOME/.codex/codex_message.sh \"$0\""]
 
 # ---- 警告表示 ----
 # 開発中機能の警告を抑制
@@ -51,13 +50,16 @@ trust_level = "trusted"
 [projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles"]
 trust_level = "trusted"
 
+[projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/google-apps-scripts"]
+trust_level = "trusted"
+
 [projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/learno/dev"]
 trust_level = "trusted"
 
-[projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/tech-site"]
+[projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/rag-experiment"]
 trust_level = "trusted"
 
-[projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/rag-experiment"]
+[projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/tech-site"]
 trust_level = "trusted"
 
 # END managed-trust-projects
@@ -68,6 +70,7 @@ apply_patch_freeform = true
 # プランモードが使えるやつ
 collaboration_modes = true
 multi_agent = true
+js_repl = false
 
 [shell_environment_policy]
 inherit = "core"
@@ -102,6 +105,25 @@ enabled = false
 command = "/Applications/Pencil.app/Contents/Resources/app.asar.unpacked/out/mcp-server-darwin-arm64"
 args = ["--app", "desktop"]
 
+[mcp_servers.node_repl]
+args = []
+command = "/Applications/Codex.app/Contents/Resources/cua_node/bin/node_repl"
+startup_timeout_sec = 120
+
+[mcp_servers.node_repl.env]
+NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
+NODE_REPL_NODE_MODULE_DIRS = "/Applications/Codex.app/Contents/Resources/cua_node/lib/node_modules"
+NODE_REPL_NODE_PATH = "/Applications/Codex.app/Contents/Resources/cua_node/bin/node"
+NODE_REPL_TRUSTED_CODE_PATHS = "/Users/yoshihiko/.codex"
+CODEX_HOME = "/Users/yoshihiko/.codex"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "a3f3ca79fe2bff56076b895f1f13a8f673168160bd79d880cc34b4500e08a71c"
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
+NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
+BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
+BROWSER_USE_CODEX_APP_VERSION = "26.609.30741"
+CODEX_CLI_PATH = "/Applications/Codex.app/Contents/Resources/codex"
+
 [notice]
 hide_full_access_warning = true
 
@@ -117,3 +139,11 @@ status_line = ["model-name", "project-root", "git-branch", "context-remaining", 
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
+
+[marketplaces.openai-bundled]
+last_updated = "2026-06-12T11:02:15Z"
+source_type = "local"
+source = "/Users/yoshihiko/.codex/.tmp/bundled-marketplaces/openai-bundled"
+
+[plugins."browser@openai-bundled"]
+enabled = true
