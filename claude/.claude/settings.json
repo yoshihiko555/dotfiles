@@ -32,7 +32,10 @@
       "Bash(*password*)",
       "Read(.env)"
     ],
-    "additionalDirectories": ["//tmp/claude-501", "//private/tmp/claude-501"]
+    "additionalDirectories": [
+      "//tmp/claude-501",
+      "//private/tmp/claude-501"
+    ]
   },
   "hooks": {
     "PreToolUse": [],
@@ -112,7 +115,10 @@
       ]
     },
     "filesystem": {
-      "allowWrite": ["~/.gemini", "~/ghq"]
+      "allowWrite": [
+        "~/.gemini",
+        "~/ghq"
+      ]
     },
     "enableWeakerNetworkIsolation": true,
     "excludedCommands": [
@@ -126,9 +132,11 @@
     ]
   },
   "effortLevel": "high",
+  "advisorModel": "fable",
+  "tui": "fullscreen",
   "autoDreamEnabled": true,
   "skipWorkflowUsageWarning": true,
   "theme": "dark-ansi",
   "skipAutoPermissionPrompt": true,
-  "tui": "fullscreen"
+  "model": "claude-fable-5[1m]"
 }
