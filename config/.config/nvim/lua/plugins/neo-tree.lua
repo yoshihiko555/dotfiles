@@ -15,9 +15,14 @@ return {
     vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
       pattern = "*",
       callback = function()
-        local manager = require("neo-tree.sources.manager")
+        local manager = package.loaded["neo-tree.sources.manager"]
+        if not manager then
+          return
+        end
+
         local state = manager.get_state("filesystem")
-        if state and state.tree then
+        local renderer = require("neo-tree.ui.renderer")
+        if state and state.tree and renderer.window_exists(state) then
           require("neo-tree.sources.filesystem.commands").refresh(state)
         end
       end,
