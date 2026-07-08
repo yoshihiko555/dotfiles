@@ -23,6 +23,7 @@ sandbox_mode = "workspace-write"
 
 # ---- 通知 ----
 # 通知の設定（$HOME 展開のため bash -lc 経由で実行）
+notify = ["bash", "-lc", "$HOME/.codex/codex_message.sh \"$0\""]
 
 # ---- 警告表示 ----
 # 開発中機能の警告を抑制
@@ -147,3 +148,14 @@ source = "/Users/yoshihiko/.codex/.tmp/bundled-marketplaces/openai-bundled"
 
 [plugins."browser@openai-bundled"]
 enabled = true
+
+[hooks.state]
+
+[hooks.state."/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra/.codex/hooks.json:pre_tool_use:0:0"]
+trusted_hash = "sha256:87f2333c56c92a53ea420fc45d9eb8dee7560147664bf988077d93a3d8f4d11d"
+
+[hooks.state."/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra/.codex/hooks.json:user_prompt_submit:0:0"]
+trusted_hash = "sha256:94fc68b37f3ad900ca163e474943ae37efdc01918107d5887e416ef5893eef47"
+
+[hooks.state."/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra/.codex/hooks.json:stop:0:0"]
+trusted_hash = "sha256:31875dd9f8b427fdb8095fd3a0f4f550e4331cf2511be57c5c4e84f976a54a55"
