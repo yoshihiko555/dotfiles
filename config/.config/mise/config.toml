@@ -1,7 +1,7 @@
 [tools]
 go = "latest"
 golangci-lint = "latest"
-node = "lts"
+node = "25"
 python = "latest"
 rust = "latest"
 uv = "latest"
