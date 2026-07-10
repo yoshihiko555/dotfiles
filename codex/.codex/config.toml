@@ -2,7 +2,7 @@
 
 # ---- 基本設定 ----
 # デフォルトで使うモデル
-model = "gpt-5.5"
+model = "gpt-5.6-sol"
 
 # 推論の深さ（medium: バランス型 / high: より時間をかける）
 model_reasoning_effort = "xhigh"
@@ -23,7 +23,6 @@ sandbox_mode = "workspace-write"
 
 # ---- 通知 ----
 # 通知の設定（$HOME 展開のため bash -lc 経由で実行）
-notify = ["bash", "-lc", "$HOME/.codex/codex_message.sh \"$0\""]
 
 # ---- 警告表示 ----
 # 開発中機能の警告を抑制
@@ -36,6 +35,8 @@ personality = "pragmatic"
 # 現行形式: [projects."/absolute/path"] + trust_level = "trusted" | "untrusted"
 # BEGIN managed-trust-projects
 # trust add/rm で自動更新
+notify = ["/Users/yoshihiko/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended", "--previous-notify", "[\"bash\",\"-lc\",\"$HOME\\/.codex\\/codex_message.sh \\\"$0\\\"\"]"]
+
 [projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra"]
 trust_level = "trusted"
 
@@ -140,13 +141,17 @@ status_line = ["model-name", "project-root", "git-branch", "context-remaining", 
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
+"gpt-5.6-sol" = 4
 
 [marketplaces.openai-bundled]
-last_updated = "2026-06-12T11:02:15Z"
+last_updated = "2026-07-10T01:17:36Z"
 source_type = "local"
 source = "/Users/yoshihiko/.codex/.tmp/bundled-marketplaces/openai-bundled"
 
 [plugins."browser@openai-bundled"]
+enabled = true
+
+[plugins."sites@openai-bundled"]
 enabled = true
 
 [hooks.state]
@@ -159,3 +164,6 @@ trusted_hash = "sha256:94fc68b37f3ad900ca163e474943ae37efdc01918107d5887e416ef58
 
 [hooks.state."/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra/.codex/hooks.json:stop:0:0"]
 trusted_hash = "sha256:31875dd9f8b427fdb8095fd3a0f4f550e4331cf2511be57c5c4e84f976a54a55"
+
+[desktop]
+followUpQueueMode = "queue"
