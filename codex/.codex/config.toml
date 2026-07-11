@@ -137,6 +137,9 @@ hide_full_access_warning = true
 "gpt-5.4" = "gpt-5.5"
 
 [tui]
+notifications = ["approval-requested"]
+notification_method = "bel"
+notification_condition = "always"
 status_line = ["model-name", "project-root", "git-branch", "context-remaining", "context-used", "five-hour-limit"]
 
 [tui.model_availability_nux]
