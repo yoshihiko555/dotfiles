@@ -27,13 +27,14 @@
 |------|------|
 | `Enter` | 選択を開く |
 | `Ctrl+v` | 垂直分割で開く |
-| `Ctrl+x` | 水平分割で開く |
+| `Ctrl+s` | 水平分割で開く |
 | `Ctrl+t` | 新しいタブで開く |
 | `Ctrl+j` / `Ctrl+k` | 結果リストを上下移動 |
-| `Ctrl+d` / `Ctrl+u` | プレビューをスクロール |
-| `Ctrl+q` | 結果を Quickfix に送る |
+| `Shift+Down` / `Shift+Up` | プレビューをページ単位でスクロール |
+| `Alt+Shift+Down` / `Alt+Shift+Up` | プレビューを行単位でスクロール |
+| `Alt+q` | 結果を Quickfix に送る |
 | `Tab` | 複数選択 toggle |
-| `Ctrl+a` | すべて選択 |
+| `Alt+a` | すべて選択 / 選択解除 |
 | `Esc` | 検索を閉じる |
 
 ## 練習 1: ファイル検索
@@ -49,7 +50,7 @@
 1. `<leader>fg` で Grep 検索を起動
 2. `vim.keymap` と入力 → ファイル内容から検索
 3. 結果を `Ctrl+j`/`Ctrl+k` で移動しながら右のプレビューで確認
-4. `Ctrl+d`/`Ctrl+u` でプレビューをスクロール
+4. `Shift+Down`/`Shift+Up` でプレビューをスクロール
 5. `Enter` で選択した結果を開く
 
 ## 練習 3: バッファ検索
@@ -62,7 +63,7 @@
 
 1. `<leader>fg` で Grep 検索を起動
 2. `require` と入力（多くの結果が出るはず）
-3. `Ctrl+q` で全結果を Quickfix リストに送る
+3. `Alt+q` で全結果を Quickfix リストに送る
 4. `]q` / `[q` で Quickfix を順に移動
 5. `<leader>xq` で Quickfix ウィンドウを開く
 6. `<leader>xc` で Quickfix ウィンドウを閉じる
@@ -73,7 +74,7 @@
 2. 適当なキーワードで検索
 3. `Tab` で個別に選択/解除 → 複数の結果にチェックを付ける
 4. `Enter` で選択した複数ファイルを開く
-5. 再度検索 → `Ctrl+a` で全選択 → `Ctrl+q` で Quickfix に送る
+5. 再度検索 → `Alt+a` で全選択 → `Alt+q` で Quickfix に送る
 
 ## 練習 6: 効率的な検索ワークフロー
 
@@ -92,8 +93,8 @@
 ## 確認テスト
 - [x] `<leader>ff` でファイルを素早く見つけて開ける
 - [x] `<leader>fg` でファイル内容を検索できる
-- [x] `Ctrl+v`/`Ctrl+x` で分割ウィンドウにファイルを開ける
-- [x] `Ctrl+q` で検索結果を Quickfix に送れる
+- [x] `Ctrl+v`/`Ctrl+s` で分割ウィンドウにファイルを開ける
+- [x] `Alt+q` で検索結果を Quickfix に送れる
 - [x] `Tab` で複数選択して一括操作できる
 
 ## 次のステップ

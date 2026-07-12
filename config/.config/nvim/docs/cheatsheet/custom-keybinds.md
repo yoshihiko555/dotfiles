@@ -51,6 +51,13 @@ which-key により `<leader>w` が `Ctrl+w` のプロキシとして動作:
 | `<leader>bp` | 前のバッファ |
 | `<leader>bd` | バッファ削除 |
 
+## ファイルエクスプローラ Neo-tree
+
+| キー | 説明 |
+|------|------|
+| `<leader>e` | Neo-tree を開く / 閉じる |
+| `<leader>E` | 現在のファイルを Neo-tree 上で表示 |
+
 ## ファイル検索 FzfLua (`<leader>f`)
 
 | キー | 説明 |
@@ -91,6 +98,44 @@ which-key により `<leader>w` が `Ctrl+w` のプロキシとして動作:
 **参照一覧の閉じ方**: `:cclose` or `<leader>xc`
 
 **対応 LSP**: gopls, pyright, ts_ls, lua_ls
+
+## フォーマット
+
+| キー | 説明 |
+|------|------|
+| `<leader>cf` | 現在のバッファをフォーマット |
+
+保存時にも対応するフォーマッタ、または LSP によるフォーマットを自動実行する。
+
+## 補完 nvim-cmp（Insert / Select モード）
+
+| キー | 説明 |
+|------|------|
+| `Ctrl+Space` | 補完候補を表示 |
+| `Enter` | 選択中の候補を確定 |
+| `Tab` / `Shift+Tab` | 次/前の候補、またはスニペット位置へ移動 |
+| `Ctrl+b` / `Ctrl+f` | 補完ドキュメントを上/下にスクロール |
+
+## コメント・囲み文字
+
+### Comment.nvim
+
+| キー | モード | 説明 |
+|------|--------|------|
+| `gcc` | Normal | 現在行のコメントを toggle |
+| `gbc` | Normal | 現在行のブロックコメントを toggle |
+| `gc{motion}` | Normal | モーション範囲のコメントを toggle |
+| `gc` / `gb` | Visual | 選択範囲の行/ブロックコメントを toggle |
+
+### nvim-surround
+
+| キー | モード | 説明 |
+|------|--------|------|
+| `ys{motion}{char}` | Normal | モーション範囲を囲む |
+| `yss{char}` | Normal | 行全体を囲む |
+| `ds{char}` | Normal | 囲み文字を削除 |
+| `cs{old}{new}` | Normal | 囲み文字を変更 |
+| `S{char}` | Visual | 選択範囲を囲む |
 
 ## Quickfix (`<leader>x`)
 
