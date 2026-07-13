@@ -14,6 +14,7 @@ docs/
 │   ├── text-objects.md    # オペレータ+テキストオブジェクト / Visual
 │   ├── registers-marks.md # レジスタ / マーク
 │   ├── custom-keybinds.md # カスタムキーバインド全般
+│   ├── ex-commands.md      # キーマップ未割り当ての便利なExコマンド
 │   ├── lsp.md             # 定義/参照/実装/Diagnostics
 │   ├── plugin-operations.md # Neo-tree/FzfLua/Alpha 内部操作
 │   └── git-workflow.md    # gitsigns/CodeDiff/Git操作

@@ -77,38 +77,6 @@ which-key により `<leader>w` が `Ctrl+w` のプロキシとして動作:
 | `<leader>gc` | Git commits |
 | `<leader>gs` | Git status |
 
-## LSP (`<leader>l` — バッファアタッチ時のみ)
-
-詳しい使い分けとトラブルシューティングは [LSP 操作](lsp.md) を参照。
-
-| キー | 説明 |
-|------|------|
-| `<leader>lf` | 定義・参照・実装などを FzfLua でまとめて表示 |
-| `<leader>ld` | 定義を表示 |
-| `<leader>lD` | 宣言を表示 |
-| `<leader>lr` | 参照箇所を表示 |
-| `<leader>li` | 実装を表示 |
-| `<leader>lt` | 型定義を表示 |
-| `<leader>lh` | 型情報・ドキュメントを表示 |
-| `<leader>lp` | 関数の引数情報を表示 |
-| `<leader>ln` | 名前を変更 |
-| `<leader>la` | 修正候補を表示 |
-| `<leader>lc` | コードレンズを実行 |
-| `<leader>le` | 行の Diagnostics |
-| `<leader>lk` / `<leader>lj` | 前/次の Diagnostic |
-| `<leader>ls` | ファイル内のシンボルを検索 |
-| `<leader>lS` | プロジェクト全体のシンボルを検索 |
-
-| `Ctrl+o` | ジャンプ元に戻る |
-| `Ctrl+i` | ジャンプ先に進む |
-
-**参照一覧の閉じ方**: `Esc`
-
-**対応 LSP**: gopls, pyright, ts_ls, lua_ls
-
-Neovim標準のLSPキーマップ（`grr` / `gri` / `grn` / `K` など）は無効化し、
-`<leader>l` 配下へ統一している。
-
 ## フォーマット
 
 | キー | 説明 |
