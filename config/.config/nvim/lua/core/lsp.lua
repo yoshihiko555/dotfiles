@@ -1,2 +1,0 @@
--- LSP設定は plugins/lsp.lua (mason + lspconfig) に移行済み
--- Phase 4 で移行: 2026-03-22
