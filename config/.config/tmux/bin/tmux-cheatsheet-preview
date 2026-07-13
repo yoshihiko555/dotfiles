@@ -1,0 +1,165 @@
+#!/bin/bash
+# チートシート試作 UI — トピック一覧とプレビューを同時表示する
+
+set -euo pipefail
+
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+SCRIPT_PATH="$SCRIPT_DIR/$(basename "${BASH_SOURCE[0]}")"
+
+render_preview() {
+  local path="$1"
+  local start_line="$2"
+  local end_line="$3"
+  local tool="$4"
+  local title="$5"
+  local width="${FZF_PREVIEW_COLUMNS:-100}"
+
+  if [ "$width" -gt 8 ]; then
+    width=$((width - 4))
+  fi
+
+  {
+    printf '# %s · %s\n\n' "$tool" "$title"
+    if [ "$tool" = "tmux" ]; then
+      printf '> Prefix: **Ctrl+Q**\n\n'
+    fi
+    sed -n "${start_line},${end_line}p" "$path" | sed '1{/^#/d;}'
+  } | glow -s dark -w "$width" -
+}
+
+if [ "${1:-}" = "--preview" ]; then
+  shift
+  render_preview "$@"
+  exit 0
+fi
+
+for command in fzf glow; do
+  if ! command -v "$command" >/dev/null 2>&1; then
+    printf 'Required command not found: %s\n' "$command" >&2
+    exit 1
+  fi
+done
+
+entries=()
+
+add_entry() {
+  local tool="$1"
+  local title="$2"
+  local path="$3"
+  local start_line="$4"
+  local end_line="$5"
+  local tool_label
+  local plain_title
+  local display
+
+  tool_label=$(printf '%s' "$tool" | tr '[:lower:]' '[:upper:]')
+  plain_title=$(printf '%s' "$title" | sed 's/`//g')
+  printf -v display '  \033[38;2;130;170;255m%-10s\033[0m  %s' "$tool_label" "$plain_title"
+  entries+=("$display"$'\t'"$path"$'\t'"$start_line"$'\t'"$end_line"$'\t'"$tool"$'\t'"$plain_title")
+}
+
+add_sectioned_file() {
+  local path="$1"
+  local tool="$2"
+  local line_count
+  local sections=()
+  local index
+  local section
+  local start_line
+  local end_line
+  local next_line
+  local title
+
+  line_count=$(wc -l < "$path" | tr -d ' ')
+  while IFS=$'\t' read -r start_line title; do
+    sections+=("$start_line"$'\t'"$title")
+  done < <(awk '/^## / { title=$0; sub(/^## /, "", title); printf "%d\t%s\n", NR, title }' "$path")
+
+  if [ ${#sections[@]} -eq 0 ]; then
+    title=$(awk '/^# / { sub(/^# /, ""); print; exit }' "$path")
+    add_entry "$tool" "${title:-$(basename "$path" .md)}" "$path" 1 "$line_count"
+    return
+  fi
+
+  for ((index = 0; index < ${#sections[@]}; index++)); do
+    section="${sections[$index]}"
+    start_line="${section%%$'\t'*}"
+    title="${section#*$'\t'}"
+    end_line="$line_count"
+    if [ $((index + 1)) -lt ${#sections[@]} ]; then
+      next_line="${sections[$((index + 1))]%%$'\t'*}"
+      end_line=$((next_line - 1))
+    fi
+    add_entry "$tool" "$title" "$path" "$start_line" "$end_line"
+  done
+}
+
+add_topic_file() {
+  local path="$1"
+  local tool="$2"
+  local line_count
+  local title
+
+  line_count=$(wc -l < "$path" | tr -d ' ')
+  title=$(awk '/^# / { sub(/^# /, ""); print; exit }' "$path")
+  add_entry "$tool" "${title:-$(basename "$path" .md)}" "$path" 1 "$line_count"
+}
+
+# 最初に tmux を並べ、起動直後から現在の主要キーを確認できるようにする。
+if [ -f "$CONFIG_HOME/tmux/docs/CHEATSHEET.md" ]; then
+  add_sectioned_file "$CONFIG_HOME/tmux/docs/CHEATSHEET.md" "tmux"
+fi
+
+for path in "$CONFIG_HOME"/*/docs/CHEATSHEET.md; do
+  [ -f "$path" ] || continue
+  tool=$(printf '%s' "$path" | sed 's|.*/\.config/\([^/]*\)/.*|\1|')
+  [ "$tool" = "tmux" ] && continue
+  add_sectioned_file "$path" "$tool"
+done
+
+for path in "$CONFIG_HOME"/*/docs/cheatsheet/*.md; do
+  [ -f "$path" ] || continue
+  [ "$(basename "$path")" = "README.md" ] && continue
+  tool=$(printf '%s' "$path" | sed 's|.*/\.config/\([^/]*\)/.*|\1|')
+  add_topic_file "$path" "$tool"
+done
+
+if [ ${#entries[@]} -eq 0 ]; then
+  printf 'No cheatsheets found.\n' >&2
+  exit 1
+fi
+
+printf '%s\n' "${entries[@]}" | fzf \
+  --ansi \
+  --delimiter=$'\t' \
+  --with-nth=1 \
+  --layout=reverse \
+  --cycle \
+  --scroll-off=3 \
+  --no-multi \
+  --info=inline-right \
+  --border=rounded \
+  --border-label=' Cheat Sheet · Preview ' \
+  --input-border=rounded \
+  --input-label=' Search ' \
+  --list-border=rounded \
+  --list-label=' Topics ' \
+  --preview-border=rounded \
+  --preview-label=' Details ' \
+  --header-border=line \
+  --header=' ↑↓/Ctrl-jk: topic   Enter: maximize   Ctrl-d/u: scroll   Ctrl-/: hide   Esc: close ' \
+  --prompt=' 󰍉  ' \
+  --pointer='▶' \
+  --marker='●' \
+  --preview="$SCRIPT_PATH --preview {2} {3} {4} {5} {6}" \
+  --preview-window='right,72%,border-left,wrap' \
+  --bind='ctrl-d:preview-half-page-down,ctrl-u:preview-half-page-up' \
+  --bind='enter:change-preview-window(down,99%,border-top,wrap|right,72%,border-left,wrap)' \
+  --bind='ctrl-/:change-preview-window(hidden|)' \
+  --color='fg:#c8d3f5,bg:#1e2030,hl:#ffc777' \
+  --color='fg+:#c8d3f5,bg+:#3654a7,hl+:#ffc777' \
+  --color='pointer:#c3e88d,marker:#c3e88d,prompt:#82aaff,spinner:#82aaff' \
+  --color='border:#394270,label:#82aaff,header:#828bb8,info:#828bb8' \
+  --color='preview-border:#394270,preview-label:#c3e88d,list-border:#394270,list-label:#82aaff,input-border:#394270,input-label:#82aaff' \
+  >/dev/null || true
