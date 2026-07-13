@@ -42,6 +42,7 @@ which-key により `<leader>w` が `Ctrl+w` のプロキシとして動作:
 | `<leader>w+` / `<leader>w-` | 高さを増減 |
 | `<leader>w>` / `<leader>w<` | 幅を増減 |
 | `<leader>wH/J/K/L` | ウィンドウを左/下/上/右に移動 |
+| `<leader>wd` / `<leader>w<C-d>` | カーソル位置の診断を表示 |
 
 ## バッファ (`<leader>b`)
 
