@@ -3,8 +3,8 @@ return {
   ft = { "markdown", "mermaid" },
   dependencies = { "selimacerbas/live-server.nvim" },
   keys = {
-    { "<leader>mp", "<cmd>MarkdownPreview<cr>", desc = "Markdown Preview Start" },
-    { "<leader>mP", "<cmd>MarkdownPreviewStop<cr>", desc = "Markdown Preview Stop" },
+    { "<leader>mp", "<cmd>MarkdownPreview<cr>", desc = "プレビューを開始" },
+    { "<leader>mP", "<cmd>MarkdownPreviewStop<cr>", desc = "プレビューを停止" },
   },
   opts = {
     port = 8421,

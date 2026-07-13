@@ -18,8 +18,8 @@
 | `<leader>fh` | Help 検索 |
 | `<leader>fr` | 最近のファイル |
 | `<leader>fd` | Diagnostics |
-| `<leader>fs` | ドキュメントシンボル |
-| `<leader>fw` | ワークスペースシンボル |
+| `<leader>ls` | ドキュメントシンボル |
+| `<leader>lS` | ワークスペースシンボル |
 
 ### 検索ウィンドウ内操作
 

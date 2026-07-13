@@ -2,21 +2,29 @@ return {
   "folke/which-key.nvim",
   event = "VeryLazy",
   opts = {
+    plugins = {
+      presets = {
+        g = false,
+      },
+    },
     spec = {
-      { "<leader>c", group = "Code" },
+      { "<leader>c", group = "コード" },
       { "<leader>m", group = "Markdown" },
-      { "<leader>f", group = "Find" },
+      { "<leader>f", group = "検索" },
       { "<leader>g", group = "Git" },
-      { "<leader>b", group = "Buffer" },
-      { "<leader>x", group = "Quickfix" },
-      { "<leader>w", proxy = "<c-w>", group = "Window" },
+      { "<leader>l", group = "LSP" },
+      { "<leader>b", group = "バッファ" },
+      { "<leader>h", group = "Git差分" },
+      { "<leader>t", group = "表示切替" },
+      { "<leader>x", group = "診断・リスト" },
+      { "<leader>w", proxy = "<c-w>", group = "ウィンドウ" },
     },
   },
   keys = {
     {
       "<leader>?",
       function() require("which-key").show({ global = false }) end,
-      desc = "Buffer Local Keymaps",
+      desc = "現在のキーマップを表示",
     },
   },
 }

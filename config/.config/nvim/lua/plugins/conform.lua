@@ -8,7 +8,7 @@ return {
       function()
         require("conform").format({ async = true, lsp_fallback = true })
       end,
-      desc = "Format buffer",
+      desc = "ファイルを整形",
     },
   },
   opts = {

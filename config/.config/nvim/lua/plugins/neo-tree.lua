@@ -8,8 +8,8 @@ return {
     "nvim-tree/nvim-web-devicons",
   },
   keys = {
-    { "<leader>e", "<cmd>Neotree toggle<cr>", desc = "Explorer" },
-    { "<leader>E", "<cmd>Neotree reveal<cr>", desc = "Explorer (reveal)" },
+    { "<leader>e", "<cmd>Neotree toggle<cr>", desc = "ファイル一覧を開閉" },
+    { "<leader>E", "<cmd>Neotree reveal<cr>", desc = "現在のファイルを表示" },
   },
   init = function()
     vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
