@@ -38,6 +38,7 @@
       "//private/tmp/claude-501"
     ]
   },
+  "model": "claude-fable-5[1m]",
   "hooks": {
     "PreToolUse": [],
     "Stop": [
@@ -137,5 +138,6 @@
   "autoDreamEnabled": true,
   "skipWorkflowUsageWarning": true,
   "theme": "dark-ansi",
-  "skipAutoPermissionPrompt": true
+  "skipAutoPermissionPrompt": true,
+  "advisorModel": "fable"
 }
