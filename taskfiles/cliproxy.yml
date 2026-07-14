@@ -1,0 +1,41 @@
+version: "3"
+
+tasks:
+  # ====================
+  # CLIProxyAPI (ccx 用プロキシ)
+  # ====================
+  cliproxy-setup:
+    desc: CLIProxyAPI を導入しテンプレートから設定を生成 (冪等・キーは引き継ぐ)
+    cmds:
+      - |
+        set -euo pipefail
+        CONF="$(brew --prefix)/etc/cliproxyapi.conf"
+        TMPL="{{.ROOT_DIR}}/shared/cliproxyapi.conf.tmpl"
+
+        command -v cliproxyapi >/dev/null || brew install cliproxyapi
+
+        # 既存 conf のキーを引き継ぎ、なければ新規生成 (テンプレートのプレースホルダは Git 管理外の実体だけに展開)
+        KEY=""
+        if [ -f "$CONF" ]; then
+          KEY=$(sed -n '/^api-keys:/{n;s/.*"\(.*\)".*/\1/p;}' "$CONF")
+        fi
+        case "$KEY" in ""|your-api-key-*|__CLIPROXY_API_KEY__) KEY=$(openssl rand -hex 24);; esac
+        sed "s/__CLIPROXY_API_KEY__/$KEY/" "$TMPL" > "$CONF"
+        echo "✅ 設定を生成: $CONF"
+
+        ls ~/.cli-proxy-api/codex-*.json  >/dev/null 2>&1 || echo "⚠️  Codex 未認証:  cliproxyapi --codex-login"
+        ls ~/.cli-proxy-api/claude-*.json >/dev/null 2>&1 || echo "⚠️  Claude 未認証: cliproxyapi --claude-login"
+
+        brew services restart cliproxyapi
+        echo "✅ サービス再起動完了。ccx で利用できます"
+
+  cliproxy-status:
+    desc: CLIProxyAPI の稼働状態と公開モデル一覧を確認
+    cmds:
+      - |
+        brew services info cliproxyapi
+        CONF="$(brew --prefix)/etc/cliproxyapi.conf"
+        KEY=$(sed -n '/^api-keys:/{n;s/.*"\(.*\)".*/\1/p;}' "$CONF")
+        echo ""
+        curl -sf -m 3 http://127.0.0.1:8317/v1/models -H "Authorization: Bearer $KEY" \
+          | jq -r '.data[].id' | sort || echo "⚠️  プロキシに接続できません"

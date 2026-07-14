@@ -15,6 +15,9 @@ includes:
   util:
     taskfile: ./taskfiles/util.yml
     flatten: true
+  cliproxy:
+    taskfile: ./taskfiles/cliproxy.yml
+    flatten: true
 
 tasks:
   default:

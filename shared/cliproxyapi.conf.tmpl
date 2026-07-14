@@ -1,0 +1,32 @@
+# CLIProxyAPI 設定テンプレート (dotfiles 管理)
+# 実体は `task cliproxy-setup` で $(brew --prefix)/etc/cliproxyapi.conf に生成される。
+# __CLIPROXY_API_KEY__ はセットアップ時にランダム生成キーへ置換される (実体は Git 管理外)。
+# ここに書いていない項目は CLIProxyAPI のデフォルト値が使われる。
+
+# ローカル専用 (Claude Code の ccx から使う)
+host: "127.0.0.1"
+port: 8317
+
+# OAuth 認証情報の保存先 (cliproxyapi --codex-login / --claude-login で生成)
+auth-dir: "~/.cli-proxy-api"
+
+# クライアント認証キー (ccx が実行時に読む)
+api-keys:
+  - "__CLIPROXY_API_KEY__"
+
+# Claude Code の /model ピッカー (gateway model discovery) は claude/anthropic 始まりの
+# ID しか拾わないため、GPT-5.6 系に claude- 接頭辞のエイリアスを fork で追加公開する。
+oauth-model-alias:
+  codex:
+    - name: "gpt-5.6-sol"
+      alias: "claude-gpt-5.6-sol"
+      fork: true
+      force-mapping: true
+    - name: "gpt-5.6-terra"
+      alias: "claude-gpt-5.6-terra"
+      fork: true
+      force-mapping: true
+    - name: "gpt-5.6-luna"
+      alias: "claude-gpt-5.6-luna"
+      fork: true
+      force-mapping: true
