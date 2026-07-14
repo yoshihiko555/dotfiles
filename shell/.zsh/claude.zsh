@@ -39,11 +39,12 @@ ccx() {
     echo "ccx: CLIProxyAPI に接続できない (brew services start cliproxyapi)" >&2
     return 1
   fi
+  # /model ピッカーは gateway model discovery で claude* 始まりの ID だけ自動追加される。
+  # GPT-5.6 系は cliproxyapi.conf の oauth-model-alias で claude-gpt-5.6-* に fork 公開
+  # してあるため、Claude 系 (opus/sonnet/haiku) と GPT 系 (sol/terra/luna) が両方並ぶ。
   ANTHROPIC_BASE_URL="$CLIPROXY_URL" \
   ANTHROPIC_AUTH_TOKEN="$key" \
-  ANTHROPIC_CUSTOM_MODEL_OPTION=gpt-5.6-sol \
-  ANTHROPIC_CUSTOM_MODEL_OPTION_NAME="GPT-5.6 Sol (Codex)" \
-  ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION="CLIProxyAPI 経由 / terra・luna は /model 直打ち" \
+  CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1 \
   CLAUDE_CODE_ALWAYS_ENABLE_EFFORT=1 \
   CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY=3 \
   ENABLE_TOOL_SEARCH=false \
