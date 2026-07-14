@@ -41,7 +41,7 @@ cheat() {
   ccw       会社Claude      cc-dg  権限スキップ
   cc-r      claude resume    cx     codex
   ccf       claude Fable5 (subagent委譲)
-  ccx       claude × GPT-5.6 Sol (CLIProxyAPI経由)
+  ccx       claude 切替式 (/model gpt-5.6-sol でSol)
   gm        gemini
   wails     Wails v2         wails3 Wails v3
   orche     ai-orchestra manager

@@ -16,11 +16,13 @@ ccw() {
 # Claude Code × Codex (GPT-5.6) via CLIProxyAPI
 # ============================================
 
-# Claude Code のハーネスを CLIProxyAPI (localhost:8317) に向けて、
-# ChatGPT 有料プランの Codex 枠で GPT-5.6 系モデルを使う。
+# Claude Code のハーネスを CLIProxyAPI (localhost:8317) に向ける切替式 (ルートB-2)。
+# 起動直後は普段の Claude のまま。`/model gpt-5.6-sol` で Codex 側 (ChatGPT 有料プランの
+# Codex 枠) に切り替え、`/model` で Claude に戻せる。
 # 前提:
 #   brew install cliproxyapi
 #   cliproxyapi --codex-login          # ChatGPT OAuth (初回のみ)
+#   cliproxyapi --claude-login         # Claude OAuth (初回のみ、Claude モデル中継用)
 #   brew services start cliproxyapi    # launchd 常駐
 # API キーは cliproxyapi.conf の api-keys から実行時に読む (dotfiles に秘匿値を置かない)。
 export CLIPROXY_CONF="${CLIPROXY_CONF:-${HOMEBREW_PREFIX:-/opt/homebrew}/etc/cliproxyapi.conf}"
@@ -39,8 +41,8 @@ ccx() {
   fi
   ANTHROPIC_BASE_URL="$CLIPROXY_URL" \
   ANTHROPIC_AUTH_TOKEN="$key" \
-  ANTHROPIC_DEFAULT_OPUS_MODEL=gpt-5.6-sol \
-  ANTHROPIC_DEFAULT_SONNET_MODEL=gpt-5.6-terra \
-  ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-5.6-luna \
-  command claude --model gpt-5.6-sol "$@"
+  CLAUDE_CODE_ALWAYS_ENABLE_EFFORT=1 \
+  CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY=3 \
+  ENABLE_TOOL_SEARCH=false \
+  command claude "$@"
 }
