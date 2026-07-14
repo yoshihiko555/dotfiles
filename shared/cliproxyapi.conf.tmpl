@@ -30,3 +30,19 @@ oauth-model-alias:
       alias: "claude-gpt-5.6-luna"
       fork: true
       force-mapping: true
+
+# /model ピッカーを最新世代だけに絞る。除外モデルはルーティングからも消えるため、
+# 古いモデルを使いたくなったらここから外して task cliproxy-setup を再実行する。
+# 残すもの: claude-fable-5 / claude-opus-4-8 / claude-sonnet-5 / claude-haiku-4-5
+# (haiku-4-5 はバックグラウンド処理用の haiku エイリアス解決先なので除外しない)
+oauth-excluded-models:
+  claude:
+    - "claude-3-*"
+    - "claude-opus-4-20250514"
+    - "claude-opus-4-1-20250805"
+    - "claude-opus-4-5-20251101"
+    - "claude-opus-4-6"
+    - "claude-opus-4-7"
+    - "claude-sonnet-4-20250514"
+    - "claude-sonnet-4-5-20250929"
+    - "claude-sonnet-4-6"
