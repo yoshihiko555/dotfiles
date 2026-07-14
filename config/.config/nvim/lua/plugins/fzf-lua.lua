@@ -23,5 +23,13 @@ return {
         layout = "flex",
       },
     },
+    files = {
+      -- .claude/skills 等の symlink ディレクトリ配下も検索対象にする
+      follow = true,
+    },
+    grep = {
+      hidden = true,
+      follow = true,
+    },
   },
 }
