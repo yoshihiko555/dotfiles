@@ -3,7 +3,8 @@
     "CLAUDE_CODE_SHELL": "bash",
     "AI_ORCHESTRA_DIR": "/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra",
     "CLAUDE_AFK_TIMEOUT_MS": "3600000",
-    "NODE_OPTIONS": "--use-env-proxy"
+    "NODE_OPTIONS": "--use-env-proxy",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
   "permissions": {
     "allow": [
@@ -133,6 +134,7 @@
       "git"
     ]
   },
+  "teammateMode": "auto",
   "effortLevel": "high",
   "tui": "fullscreen",
   "autoDreamEnabled": true,
