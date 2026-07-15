@@ -4,7 +4,6 @@
     "AI_ORCHESTRA_DIR": "/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra",
     "CLAUDE_AFK_TIMEOUT_MS": "3600000",
     "NODE_OPTIONS": "--use-env-proxy",
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
   "permissions": {
     "allow": [
@@ -39,7 +38,6 @@
       "//private/tmp/claude-501"
     ]
   },
-  "model": "claude-fable-5[1m]",
   "hooks": {
     "PreToolUse": [],
     "Stop": [
@@ -134,12 +132,11 @@
       "git"
     ]
   },
-  "teammateMode": "auto",
   "effortLevel": "high",
+  "advisorModel": "fable",
   "tui": "fullscreen",
   "autoDreamEnabled": true,
   "skipWorkflowUsageWarning": true,
   "theme": "dark-ansi",
-  "skipAutoPermissionPrompt": true,
-  "advisorModel": "fable"
+  "skipAutoPermissionPrompt": true
 }
