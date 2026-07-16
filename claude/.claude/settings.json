@@ -3,7 +3,7 @@
     "CLAUDE_CODE_SHELL": "bash",
     "AI_ORCHESTRA_DIR": "/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra",
     "CLAUDE_AFK_TIMEOUT_MS": "3600000",
-    "NODE_OPTIONS": "--use-env-proxy",
+    "NODE_OPTIONS": "--use-env-proxy"
   },
   "permissions": {
     "allow": [
