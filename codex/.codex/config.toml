@@ -122,9 +122,8 @@ BROWSER_USE_CODEX_APP_VERSION = "26.707.51957"
 CODEX_CLI_PATH = "/Applications/ChatGPT.app/Contents/Resources/codex"
 
 [mcp_servers.computer-use]
-command = "./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
+command = "/Users/yoshihiko/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
 args = ["mcp"]
-cwd = "."
 enabled = true
 
 # ---- 通知・モデル移行状態 ----
