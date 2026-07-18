@@ -38,6 +38,7 @@
       "//private/tmp/claude-501"
     ]
   },
+  "model": "claude-fable-5[1m]",
   "hooks": {
     "PreToolUse": [],
     "Stop": [
@@ -101,6 +102,14 @@
     "skill-creator@claude-plugins-official": true,
     "swift-lsp@claude-plugins-official": true,
     "notion@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "mattpocock": {
+      "source": {
+        "source": "github",
+        "repo": "mattpocock/skills"
+      }
+    }
   },
   "language": "日本語",
   "sandbox": {
