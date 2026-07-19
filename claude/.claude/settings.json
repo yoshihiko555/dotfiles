@@ -38,7 +38,7 @@
       "//private/tmp/claude-501"
     ]
   },
-  "model": "claude-fable-5[1m]",
+  "model": "opus[1m]",
   "hooks": {
     "PreToolUse": [],
     "Stop": [
@@ -101,7 +101,9 @@
     "pyright-lsp@claude-plugins-official": false,
     "skill-creator@claude-plugins-official": true,
     "swift-lsp@claude-plugins-official": true,
-    "notion@claude-plugins-official": true
+    "notion@claude-plugins-official": true,
+    "codex@openai-codex": true,
+    "mattpocock-skills@mattpocock": true
   },
   "extraKnownMarketplaces": {
     "mattpocock": {
