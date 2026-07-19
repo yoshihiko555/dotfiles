@@ -94,7 +94,7 @@
     "context7@claude-plugins-official": true,
     "code-simplifier@claude-plugins-official": true,
     "claude-mem@thedotmack": true,
-    "frontend-design@claude-plugins-official": false,
+    "frontend-design@claude-plugins-official": true,
     "playwright@claude-plugins-official": false,
     "gopls-lsp@claude-plugins-official": false,
     "typescript-lsp@claude-plugins-official": false,
@@ -108,6 +108,12 @@
       "source": {
         "source": "github",
         "repo": "mattpocock/skills"
+      }
+    },
+    "openai-codex": {
+      "source": {
+        "source": "github",
+        "repo": "openai/codex-plugin-cc"
       }
     }
   },
