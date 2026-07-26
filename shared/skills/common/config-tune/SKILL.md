@@ -73,6 +73,14 @@ ALL-CAPS MUSTs, prefer deleting over adding, one default + escape hatch).
   (this repo's skills use English bodies for token efficiency)
 - ANALYSIS.md content: Japanese
 
+**Context files (CLAUDE.md / AGENTS.md) — curation rules:**
+Proposals are limited to four moves: delete, make concrete, relocate
+(to hook / permission / skill), or sync drifted sibling copies. Net-new
+lines are allowed ONLY when the proposal cites an observed failure the line
+would have prevented — benchmark evidence shows speculative LLM-generated
+context lines tend to reduce agent success rates, so "sounds prudent" is
+not a reason to add.
+
 ### 4b. Present preview
 
 ```
@@ -118,6 +126,22 @@ isolation:
 4. If any should-trigger query misses: revise the description (add the
    missing trigger vocabulary), re-run once. If it still misses after 2
    attempts, report the failing queries and leave the decision to the user.
+
+### 5a-2. Adherence test (Context only, when instructions changed)
+
+Trigger tests don't apply to context files; test instruction-following
+instead:
+
+1. Take the test pairs from ANALYSIS.md「遵守テスト案」(5 instruction →
+   task + expected-behavior pairs). If absent, generate them per the same
+   rules.
+2. For each pair, spawn a fresh subagent (Task tool) whose ONLY instructions
+   are the tuned file's content plus the task — no access to this
+   conversation, no other context files.
+3. Score each pair: expected behavior observed / not observed.
+4. If a pair fails: revise that instruction (more concrete wording, or
+   relocate per rubric CF3), re-run the failing pair once. If it still
+   fails after 2 attempts, report it and leave the decision to the user.
 
 ### 5b. Behavior smoke test (optional, ask the user)
 
@@ -168,5 +192,6 @@ If `--dry-run`:
 - If ANALYSIS.md has no recommendations, report
   "チューニング推奨事項はありません" and stop
 - Address High items before Medium, Medium before Low
-- Trigger-test subagents must be context-isolated (5a step 2) — results from
-  a subagent that saw the skill body are not valid
+- Trigger-test and adherence-test subagents must be context-isolated
+  (5a step 2, 5a-2 step 2) — results from a subagent that saw the skill
+  body or this conversation are not valid

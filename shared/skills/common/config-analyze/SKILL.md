@@ -11,9 +11,10 @@ allowed-tools: Read, Write, Glob, Grep
 
 # config-analyze
 
-Analyze a configuration file (Skill / Agent / CLAUDE.md / Rule) and generate a
-Japanese ANALYSIS.md in the same directory. Read-only with respect to the
-target file. The companion `/config-tune` consumes the ANALYSIS.md.
+Analyze a configuration file (Skill / Agent / Context (CLAUDE.md, AGENTS.md)
+/ Rule) and generate a Japanese ANALYSIS.md in the same directory. Read-only
+with respect to the target file. The companion `/config-tune` consumes the
+ANALYSIS.md.
 
 ## Inputs
 
@@ -31,13 +32,19 @@ IF filename is "SKILL.md" OR frontmatter has skill fields
    (description + any of: allowed-tools, argument-hint, context, when_to_use) → Skill
 ELSE IF path contains "/agents/" OR frontmatter has `name` + `description`
    with agent fields (tools / model)                                        → Agent
-ELSE IF filename is "CLAUDE.md" OR "AGENTS.md"                              → CLAUDE.md
+ELSE IF filename is "CLAUDE.md", "AGENTS.md" OR "CLAUDE.local.md"           → Context
 ELSE                                                                        → Rule
 ```
 
+For Context files, also identify the CONSUMER from the path using the
+rubric's CF5 table (`claude/`, `~/.claude/` → Claude Code; `codex/` →
+Codex; `gemini/` → Gemini; repo-root AGENTS.md → all agents) — the CF5
+checks differ per consumer.
+
 If ambiguous, ask the user; when running non-interactively (e.g. inside a
 subagent), pick the closest type, state the assumption, and proceed.
-Report the detected type in Japanese before proceeding.
+Report the detected type (and consumer, for Context) in Japanese before
+proceeding.
 
 ## Step 3: Load rubric and context
 
@@ -52,6 +59,9 @@ Report the detected type in Japanese before proceeding.
    If the target has no siblings (isolated copy, standalone file), score
    axis 7 on frontmatter validity and internal consistency alone and note
    the limitation in the report.
+4. For Context targets, Glob the repo for sibling context files
+   (`**/CLAUDE.md`, `**/AGENTS.md`) and read them in full — CF5 sync
+   scoring needs an actual drift diff, not just filenames.
 
 ## Step 4: Measure
 
@@ -63,12 +73,19 @@ Collect objective metrics (from the Read output — no shell needed):
 - Reference files: name, line count, has-TOC (for files over ~100 lines),
   and reference depth (does any references/ file link to another one?)
 - Occurrences of vague verbs, ALL-CAPS MUST/NEVER, and rubric §5 red flags
+- Context only: per-section include/exclude classification (CF1), count of
+  prose rules that are hook/permission/settings candidates (CF3), and a
+  drift summary against each sibling context file (CF5) — which rules are
+  shared, which diverge in wording, which exist in only one copy
 
-## Step 5: Score against the rubric (7 axes)
+## Step 5: Score against the rubric
 
 Score each axis Good / Needs Improvement / Missing / N/A per the rubric's
-scoring criteria, citing the Step 4 measurements as evidence. Axis 1
-(Description & Trigger Quality) is N/A for CLAUDE.md and Rule files.
+scoring criteria, citing the Step 4 measurements as evidence.
+
+- Skill / Agent / Rule → the 7 axes (Axis 1 is N/A for Rule files)
+- Context → the CF1-CF6 axes ("Context-File Axes" section of the rubric)
+  instead of the 7 axes
 
 ## Step 6: Generate ANALYSIS.md
 
@@ -82,7 +99,8 @@ Cite line numbers for every finding so `/config-tune` can act on them.
 
 | 項目 | 内容 |
 |------|------|
-| 種別 | {Skill / Agent / CLAUDE.md / AGENTS.md / Rule} |
+| 種別 | {Skill / Agent / Context (CLAUDE.md / AGENTS.md) / Rule} |
+| 消費者 | {Context のみ: Claude Code / Codex / Gemini / 全エージェント} |
 | 名前 | {name} |
 | ファイルパス | {absolute path} |
 | 本文行数 | {N} 行（目安: Skill は 500 行未満） |
@@ -127,6 +145,10 @@ Cite line numbers for every finding so `/config-tune` can act on them.
 | 6. 使用例の質 | 中 | ... | ... |
 | 7. 一貫性・互換性 | 低 | ... | ... |
 
+Context ファイルの場合は上の 7 行を CF 軸の 6 行に差し替える:
+CF1 内容分類（高）/ CF2 剪定テスト（高）/ CF3 実施チャネル（高）/
+CF4 具体性（中）/ CF5 消費者適合・同期（中）/ CF6 トークンコスト（低）
+
 ## チューニング推奨事項
 
 {Prioritized list. Each item:}
@@ -144,6 +166,15 @@ Cite line numbers for every finding so `/config-tune` can act on them.
 - 発火すべきでないクエリ（should-not-trigger）5 件: キーワードは近いが
   本来別のスキル/素の対話で扱うべき紛らわしい文。無関係すぎる文は不可。
 
+## 遵守テスト案（Context のみ）
+
+`/config-tune` の検証フェーズで使うテスト。ファイル内の指示から影響の
+大きい 5 件を選び、各指示について:
+
+- 対象指示: 引用（行番号つき）
+- タスク: その指示に「違反したくなる」小さな現実的タスク
+- 期待挙動: 指示に従った場合に外から観測できる挙動
+
 ## 補足
 
 - 他CLI（Codex / Gemini）と共有されている場合: Claude 固有 frontmatter の
@@ -156,9 +187,11 @@ Cite line numbers for every finding so `/config-tune` can act on them.
 
 - **Skill** — 「処理フロー」: numbered flow, 入出力仕様, 使用ツール一覧
 - **Agent** — 「ロール定義」: 役割 / ツール割り当て / 出力フォーマット
-- **CLAUDE.md** — 「セクション構成」: section/line-count table, スコープ,
+- **Context** — 「セクション構成」: section/line-count table, スコープ,
   他設定との重複。手順書化しているセクションは「スキルへの切り出し候補」
-  として必ず指摘する（CLAUDE.md は常時ロードされるため）
+  として必ず指摘する（Context ファイルは常時ロードされるため）。
+  兄弟コンテキストファイルとのドリフト表（共通ルール / 文言差 / 片方のみ）
+  を含める（CF5）
 - **Rule** — 「適用ルール」: トリガー条件 / 委譲パターン / 適用範囲
 
 ## Step 7: Report summary

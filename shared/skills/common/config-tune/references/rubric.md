@@ -3,13 +3,20 @@
 Shared rubric used by `/config-analyze` and `/config-tune`.
 Based on Anthropic's official skill-authoring best practices (platform.claude.com
 "Skill authoring best practices", code.claude.com "Extend Claude with skills")
-and the official skill-creator plugin methodology.
+and the official skill-creator plugin methodology. Context files
+(CLAUDE.md / AGENTS.md) use the dedicated CF1-CF6 axes instead — grounded in
+Anthropic's Claude Code memory docs / best-practices guide, the agents.md
+spec, and OpenAI's Codex/GPT-5 prompting guides.
 
 Primary target is Claude Code. Skills in this repo are symlink-shared with
 Codex / Gemini — axes or checks that are Claude-specific are marked [Claude].
 Score them normally, but note cross-CLI applicability in the analysis.
 
-## Axes (7 total)
+**Contents:** Axes for Skill / Agent / Rule (1-7) · Context-File Axes
+(CF1-CF6) · Frontmatter Validation Checklist · Recommended Elements by
+Type · Priority Mapping for Tuning
+
+## Axes for Skill / Agent / Rule (7 total)
 
 ### 1. Description & Trigger Quality — Priority: HIGH
 
@@ -131,6 +138,127 @@ genuinely ambiguous instructions — not everywhere.
 - Needs Improvement: Minor inconsistencies (naming, formatting)
 - Missing: Contradictions or invalid/unknown frontmatter fields
 
+## Context-File Axes (CLAUDE.md / AGENTS.md) — CF1-CF6
+
+Use these six axes INSTEAD of the seven axes above when the target is a
+context file (CLAUDE.md, AGENTS.md, CLAUDE.local.md). Context files load
+into every session unconditionally, so the evaluation logic differs from
+skills (which load on demand). Score against the axis text below, including
+its caveats — not against remembered folklore about context files.
+
+### CF1. Content Taxonomy — Priority: HIGH
+
+Each line must be something the agent cannot get any other way
+(Anthropic's include/exclude table).
+
+**Belongs here:** non-guessable commands; non-default code style; test-runner
+preferences; repo etiquette (branch/merge/PR rules); project-specific
+architecture decisions; environment quirks and non-obvious gotchas.
+**Does not belong:** anything inferable from the code; standard language
+conventions; detailed API docs (link instead); frequently-changing info;
+tutorials and long explanations; file-by-file descriptions; self-evident
+advice ("write clean code").
+**Multi-step procedures** are misplaced: flag them as skill-extraction
+candidates (a skill costs nothing until invoked; a context file pays every
+session).
+
+**Scoring:**
+- Good: Every section classifies as "belongs here"
+- Needs Improvement: 1-3 lines/sections misclassified
+- Missing: Mostly tutorials, self-evident advice, or procedure dumps
+
+### CF2. Per-line Necessity — Priority: HIGH
+
+Anthropic's pruning test: "Would removing this line cause the agent to make
+mistakes?" If no, the line is noise diluting the lines that do matter.
+
+**Checklist:**
+- Each bullet passes the pruning test
+- No rule restated across sections or duplicated from a sibling context file
+- No speculative additions: a line earns its place by an observed failure it
+  prevents, not by sounding prudent (2026 benchmark result: LLM-generated
+  context lines tend to REDUCE agent success rates and inflate cost;
+  human-curated lines are the only kind that measured positive)
+
+**Scoring:**
+- Good: Every line passes the test
+- Needs Improvement: 1-3 lines fail
+- Missing: 4+ lines fail, or clearly auto-generated filler present
+
+### CF3. Enforcement Channel — Priority: HIGH
+
+Prose is the weakest enforcement mechanism. A hard rule written as prose is
+a candidate for a mechanical channel:
+
+- "never push to main" → permission deny rule / PreToolUse hook
+- "always run X after editing" → PostToolUse hook
+- "use model M / env var E" → settings.json
+- Keep in prose only what needs judgment (tone, priorities, escalation)
+
+**Scoring:**
+- Good: No hard rule left in prose that a hook/permission could enforce
+- Needs Improvement: 1-2 hook/permission candidates still in prose
+- Missing: 3+ mechanically enforceable rules living only in prose
+
+### CF4. Concreteness & Verifiability — Priority: MEDIUM
+
+Same bar as skill instructions: "Use 2-space indentation", not "Format code
+properly". An instruction is well-formed when an outside reviewer could
+check compliance from the transcript alone.
+
+**Scoring:**
+- Good: All instructions verifiable
+- Needs Improvement: 1-3 vague items
+- Missing: Pervasive vagueness
+
+### CF5. Consumer Fit & Sync — Priority: MEDIUM
+
+Identify the consumer from the path first, then apply its checks:
+
+| Path pattern | Consumer |
+|---|---|
+| `claude/`, `~/.claude/`, any CLAUDE.md | Claude Code |
+| `codex/`, `~/.codex/` | Codex CLI |
+| `gemini/`, `~/.gemini/` | Gemini |
+| repo-root AGENTS.md | all agents |
+
+**Check points:**
+- [Claude] CLAUDE.md composes via `@path` imports; manually duplicating a
+  canonical AGENTS.md instead of `@AGENTS.md` + a thin Claude-specific
+  addendum is a finding. Prose/tables are the Anthropic-recommended style.
+- Codex injects AGENTS.md root-to-leaf as separate user messages and is
+  trained to follow them closely. XML-tagged instruction blocks are a
+  documented GPT-5 adherence technique — surface as an OPTION for
+  Codex-only files, never as a requirement or for shared files.
+- Shared/core content must stay agent-neutral: no tool names, syntax, or
+  frontmatter that only one CLI understands.
+- Sync: when sibling context files exist (several CLAUDE.md/AGENTS.md
+  variants in one repo), diff them. Unintentional drift — same rule with
+  diverged wording, or a fix applied to one copy only — is a finding.
+  Intentional per-agent diffs belong in one clearly-marked section, not
+  scattered edits.
+- Do NOT recommend per-model variants within one vendor family (e.g.
+  Fable/Opus/Sonnet): no documented basis exists. One file per consumer
+  CLI is the target state.
+
+**Scoring:**
+- Good: Consumer identified, checks pass, no unintentional drift
+- Needs Improvement: Minor drift or one consumer-fit issue
+- Missing: Contradictory copies, or single-CLI syntax shipped to other CLIs
+
+### CF6. Token Cost & Size — Priority: LOW
+
+Anthropic's guidance is ~200 lines per file. Treat size as a token-cost and
+maintainability concern, NOT a compliance lever: a 2026 controlled factorial
+study (25-500 lines, Claude Code) found no detectable effect of file size on
+instruction-following. Never justify a cut with "shorter files are obeyed
+better" — justify it with CF1/CF2, and report line count as cost.
+
+**Scoring:**
+- Good: Under ~200 lines, or every line over that justified under CF1/CF2
+- Needs Improvement: Over ~200 lines with visible CF1/CF2 slack
+- Missing: Several hundred lines of unpruned content
+
 ## Frontmatter Validation Checklist (Skill)
 
 - `name`: max 64 chars, lowercase kebab-case, no "anthropic"/"claude"
@@ -157,6 +285,9 @@ without them (that trades Axis 2 for cosmetics).
 | Rule | Trigger condition; directives; an example if the directive is ambiguous |
 
 ## Priority Mapping for Tuning
+
+Applies to both the seven Skill/Agent/Rule axes and the CF1-CF6 context-file
+axes.
 
 | Priority | Action |
 |----------|--------|
