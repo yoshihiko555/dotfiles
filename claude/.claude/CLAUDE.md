@@ -1,35 +1,4 @@
-# Global agent instructions
+<!-- 実体は shared/agents/ 配下。共通ルールは core.md、Claude 固有は diff-claude.md を編集する。 -->
 
-## Communication
-
-- 文章は簡潔に。ただし重要な理由や前提は箇条書きで補足してください。
-- 不明点が多い場合は、すぐに大きな変更をせず前提の確認から始めてください。
-- 曖昧なものはすべて、AskUserQuestionTool を細分化してヒアリングしてください。
-
-## General coding policy
-
-- 既存の仕様や振る舞いを壊さないことを最優先してください。
-- 大きな変更より、小さく安全なステップでの修正を優先してください。
-- 既存のコードスタイル（命名・インデント・フォーマット）に合わせてください。
-- 削除や大規模リファクタを行う前に、目的とリスクを明示してください。
-
-## File editing
-
-- ファイルを編集する前に、変更の目的を短く宣言してください。
-- 変更後は、差分の要点を箇条書きでまとめてください。
-- 本番環境の接続情報や秘匿情報は書き換えないでください。
-- 環境依存の設定は、必要であればサンプル値（例: `.env.example`）で提案してください。
-
-## Tests & validation
-
-- 可能な範囲で、変更に対応するテストコードの追加・修正も提案してください。
-- CLAUDE.md にテストコマンドが記載されている場合は、それを優先して実行してください。
-
-## Git / PR / changelog
-
-- `main` へ直接 push しないでください。変更は PR を作成して取り込みます。
-- `main` への統合は GitHub 上の squash merge を前提にしてください。
-- ユーザー向け変更がある PR では `CHANGELOG.md` の `Unreleased` を更新してください。
-- changelog 更新不要の変更（テストのみ、内部整理など）は、その判断を PR 内で明示してください。
-- 競合時は PR branch 側で `origin/main` を取り込んで解消してください。
-- release は root worktree の `main` で行います。作業用 worktree から release を実行しないでください。
+@~/ghq/github.com/yoshihiko555/dotfiles/shared/agents/core.md
+@~/ghq/github.com/yoshihiko555/dotfiles/shared/agents/diff-claude.md

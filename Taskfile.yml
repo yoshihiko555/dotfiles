@@ -12,6 +12,9 @@ includes:
   skills:
     taskfile: ./taskfiles/skills.yml
     flatten: true
+  agents:
+    taskfile: ./taskfiles/agents.yml
+    flatten: true
   util:
     taskfile: ./taskfiles/util.yml
     flatten: true

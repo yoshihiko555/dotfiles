@@ -25,7 +25,7 @@ dotfiles/
 │
 ├── claude/                 # Claude CLI（→ ~）
 │   └── .claude/
-│       ├── CLAUDE.md
+│       ├── CLAUDE.md       # shared/agents を @import で参照
 │       ├── settings.json
 │       ├── agents/         # エージェント定義
 │       ├── hooks/          # フック
@@ -35,7 +35,7 @@ dotfiles/
 │
 ├── codex/                  # Codex CLI（→ ~）
 │   └── .codex/
-│       ├── AGENTS.md
+│       ├── AGENTS.md       # 生成物（task sync-agents）
 │       ├── config.toml
 │       ├── prompts/        # カスタムプロンプト
 │       ├── skills/         # → shared/skills へのリンク
@@ -43,7 +43,7 @@ dotfiles/
 │
 ├── gemini/                 # Gemini CLI（→ ~）
 │   └── .gemini/
-│       ├── AGENTS.md       # Antigravity / Gemini グローバル指示
+│       ├── AGENTS.md       # 生成物（task sync-agents）
 │       ├── settings.json
 │       ├── config/
 │       │   └── skills/     # → shared/skills へのリンク
@@ -55,6 +55,7 @@ dotfiles/
 │   └── .tmux.conf
 │
 ├── shared/                 # 共通データ
+│   ├── agents/             # CLAUDE.md / AGENTS.md の実体（core + diff）
 │   ├── commands/           # Claude/Codex 用コマンド定義
 │   │   ├── common/
 │   │   ├── claude-only/
@@ -143,6 +144,7 @@ task link-tmux     # tmux のみ
 task unlink        # 全パッケージのリンクを解除
 task restow        # 全パッケージを再リンク
 task sync-skills   # shared/skills のリンクを更新
+task sync-agents   # shared/agents から Codex/Gemini の AGENTS.md を生成
 task claude-work-init # 会社用 Claude Code 設定ディレクトリを初期化
 task sync-claude-work-skills # 会社用 Claude Code の work スキルを同期
 task status        # 現在のリンク状態を確認
@@ -362,6 +364,16 @@ stow -vt ~ git
 
 ホームディレクトリの設定ファイルは、dotfiles ディレクトリへのリンクになります。
 dotfiles 内のファイルを編集すると、実際の設定に反映されます。
+
+### Agent コンテキストファイルの一元管理
+
+- CLAUDE.md / AGENTS.md の実体は `shared/agents/` に集約
+  - `core.md`: 全エージェント共通ルール（唯一の編集対象）
+  - `diff-claude.md` / `diff-codex.md` / `diff-gemini.md`: CLI 固有の差分
+- Claude Code: `claude/.claude/CLAUDE.md` が `@import` で core + diff を参照（生成不要）
+- Codex / Gemini: `task sync-agents` で core + diff を連結して各 AGENTS.md を生成
+- リポジトリルートの `AGENTS.md` は当リポジトリ固有ルールのみ（`CLAUDE.md` は `@AGENTS.md` で橋渡し）
+- core.md / diff-*.md を編集したら `task sync-agents` を実行すること
 
 ### Skills の一元管理
 
