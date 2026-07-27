@@ -20,6 +20,7 @@
       "Bash(wc *)",
       "Bash(codex *)",
       "Bash(gemini *)",
+      "WebFetch(domain:api.github.com)",
       "mcp__pencil"
     ],
     "deny": [
@@ -129,7 +130,8 @@
         "generativelanguage.googleapis.com",
         "accounts.google.com",
         "127.0.0.1",
-        "mcp.notion.com"
+        "mcp.notion.com",
+        "api.github.com"
       ]
     },
     "filesystem": {
