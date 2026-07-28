@@ -190,19 +190,20 @@ task link-config   # ~/.config/nvim を含む .config 配下をリンク
 
 ## MCP 運用方針（デフォルト無効）
 
-- Codex (`codex/.codex/config.toml`) の `context7` / `notion` は `enabled = false` をデフォルトにしています。
+- Codex (`codex/.codex/config.toml`) の MCP は必要最小限のみ有効にする方針です。追加する MCP は原則
+  `enabled = false` を既定にし、実行時オーバーライドで有効化してください。
+- ただし `notion` は例外で **デフォルト有効** です。`shared/skills/common/notion-task` スキルが
+  会話の途中で呼ばれる前提のため、起動し直さずに使える必要があります。
+  初回のみ `codex mcp login notion` で OAuth 認証してください（`codex mcp list` の Auth 列で確認できます）。
 - プロジェクトの `.mcp.json` は `task mcp-init` で空の `mcpServers`（通常作業向け）を作成し、必要なMCPだけ追記してください。
 - Codex で一時的に有効化する場合は実行時オーバーライドを使います。
 
 ```bash
-# Context7 だけ有効化
+# 無効化している MCP を一時的に有効化する例
 codex -c mcp_servers.context7.enabled=true
 
-# Notion だけ有効化
-codex -c mcp_servers.notion.enabled=true
-
-# 2つとも有効化
-codex -c mcp_servers.context7.enabled=true -c mcp_servers.notion.enabled=true
+# 逆に Notion を一時的に無効化したい場合
+codex -c mcp_servers.notion.enabled=false
 ```
 
 - Claude Code 側は `--scope project` を基本にし、個人限定用途は `--scope local` / `--scope user` を使い分けてください。

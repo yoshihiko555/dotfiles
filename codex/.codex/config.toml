@@ -99,6 +99,11 @@ args = ["--app", "desktop"]
 [mcp_servers.openaiDeveloperDocs]
 url = "https://developers.openai.com/mcp"
 
+# notion-task スキル（shared/skills/common/notion-task）が使用する。
+# 初回のみ `codex mcp login notion` で OAuth 認証が必要。
+[mcp_servers.notion]
+url = "https://mcp.notion.com/mcp"
+
 # ---- ChatGPTアプリ連携（自動管理） ----
 # アプリ更新時にパス、バージョン、ハッシュが更新される。
 [mcp_servers.node_repl]
