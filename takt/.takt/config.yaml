@@ -1,7 +1,46 @@
+# takt グローバル設定
+# 全設定項目は https://github.com/nrslib/takt/blob/main/docs/configuration.md を参照。
+#
+# 秘匿情報 (anthropic_api_key など) はここに書かないこと。
+# このリポジトリは public。API キーが必要な場合は TAKT_ANTHROPIC_API_KEY 等の環境変数を使う。
+
 language: ja
+
+# provider / model はトップレベル指定 = 最弱のフォールバック (優先度 11)。
+# 実際のステップ割り当ては下部の provider_routing で行う。
 provider: claude
-model: default
+model: opus
+
 minimal_output: false
+interactive_preview_steps: 3
+
 logging:
   level: info
-interactive_preview_steps: 3
+
+# ワークフローは worktree で長時間走るため、実行中の macOS スリープを抑止する。
+prevent_sleep: true
+
+# worktree を切る前に remote を fetch し、古い base から分岐する事故を防ぐ。
+auto_fetch: true
+
+# 日本語のタスク名を romaji 直訳せず、AI に英語ブランチ名を生成させる。
+branch_name_strategy: ai
+
+# ステップの役割 (tags) ごとのプロバイダ割り当て。
+# ビルトインワークフローはステップに provider: を書いていないため、
+# ここでの指定が全ワークフローに横断で効く (優先度 5 > workflow の 9)。
+#
+# 実装・テストは Codex (codex/.codex/config.toml の gpt-5.6-sol / xhigh)、
+# 計画・レビュー・最終判定は Claude。実装とレビューが別モデルになる。
+# なお model: opus は provider が claude のステップにのみ適用される
+# (モデル解決は provider 一致の候補だけを採用するため)。
+provider_routing:
+  tags:
+    plan: claude
+    architecture: claude
+    coding: codex
+    testing: codex
+    review: claude
+    ai-antipattern: claude
+    final-gate: claude
+    supervise: claude

@@ -239,6 +239,29 @@ ccw
 - `shared/skills/work/` は会社用に追加したいスキル置き場です。
 - `task sync-claude-work-skills` は `shared/skills/common/*` と `shared/skills/work/*` を `~/.claude-work/skills/` にリンクします。
 
+## takt 運用方針
+
+`takt/.takt/config.yaml` はステップの役割（tags）ごとにプロバイダを割り当てます。
+
+- 実装・テスト（`coding` / `testing`）: Codex（`codex/.codex/config.toml` の `gpt-5.6-sol`）
+- 計画・レビュー・最終判定（`plan` / `review` / `final-gate` など）: Claude（`opus`）
+
+ビルトインワークフローはステップに `provider:` を書いていないため、`provider_routing.tags` の指定が
+全ワークフローに横断で効きます（優先度は `provider_routing.tags` = 5 > `workflow` = 9 で、数値が小さいほど強い）。
+実行時に `takt --provider claude` のように上書きする方法が最優先（= 0）です。
+
+```bash
+# 個人アカウント
+takt
+
+# 会社アカウント（Claude 側のステップのみ ~/.claude-work を使う）
+taktw
+```
+
+- `taktw` は `CLAUDE_CONFIG_DIR` を渡すだけなので、Codex / OpenCode のステップは影響を受けません。
+- 環境変数はプロセス単位で効くため、同一実行内で Claude アカウントを混在させることはできません。
+- API キー（`anthropic_api_key` など）は config.yaml に書かず、`TAKT_ANTHROPIC_API_KEY` 等の環境変数を使います。
+
 ## Worktree 補助コマンド
 
 `git gtr` をそのまま使いつつ、よく使う作成・削除だけ `wt` で短縮できます。
