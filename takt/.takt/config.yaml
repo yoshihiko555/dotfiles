@@ -8,6 +8,11 @@ language: ja
 
 # provider / model はトップレベル指定 = 最弱のフォールバック (優先度 11)。
 # 実際のステップ割り当ては下部の provider_routing で行う。
+#
+# NOTE: model の解決は provider 一致で絞り込まれない。
+# provider だけを上書きするルーティング (例: coding -> codex) を書くと、
+# model はここまで落ちてきて codex に opus が渡ってしまう。
+# 別プロバイダへ振るエントリでは必ず model も併記すること。
 provider: claude
 model: opus
 
@@ -33,17 +38,24 @@ auto_fetch: true
 # 日本語のタスク名を romaji 直訳せず、AI に英語ブランチ名を生成させる。
 branch_name_strategy: ai
 
-# worktree の置き場所。相対パスは projectDir 基準で解決される。
+# takt の作業ディレクトリの置き場所。相対パスは projectDir 基準で解決される。
 # 既定は <project>/../takt-worktrees で、ghq 構成だと ~/ghq/github.com/<user>/ が汚れる。
-# gtr (wt コマンド) と同じ .worktrees/ に寄せると gtr list / go / rm から扱える
-# (gtr は git worktree list ベースなので、takt が作った worktree も認識する)。
+#
+# NOTE: 名前に反して takt が作るのは git worktree ではなく独立クローン
+#       (git clone --reference <project> --dissociate)。したがって:
+#       - gtr (wt コマンド) の list / go / rm からは見えない。gtr 管理外。
+#       - scripts/repo-list.sh は .worktrees/* をディレクトリ走査するため、
+#         repo コマンドと WezTerm セレクタからは拾える。これが同居させる理由。
+#       - --dissociate なのでオブジェクトは実体コピー。容量はタスク数×リポジトリサイズ。
 # NOTE: 対象プロジェクトの .gitignore に .worktrees/ が必要。
 worktree_dir: .worktrees
 
-# プロバイダごとの既定権限。takt の権限モードは claude の --permission-mode に対応する:
-#   readonly -> default (禁止ではなく都度確認。headless では応答できず停止しうる)
-#   edit     -> acceptEdits
-#   full     -> bypassPermissions (全許可、使わない)
+# プロバイダごとの既定権限。takt の抽象モードは各 CLI に次のように写される:
+#            claude            codex
+#   readonly default           read-only
+#   edit     acceptEdits       workspace-write
+#   full     bypassPermissions danger-full-access (使わない)
+# codex は takt が approvalPolicy: never を強制するため、サンドボックスモードが唯一の砦になる。
 # 編集の可否はワークフロー側の edit フラグ (plan は edit: false) が既に制御しているため、
 # ここで readonly に二重に絞らず edit で揃える。
 provider_profiles:
@@ -53,28 +65,56 @@ provider_profiles:
     default_permission_mode: edit
 
 # takt_providers.assistant は設定しない。
-# 未設定ならトップレベルの provider/model (claude / opus) を継承する。
-# assistant は対話セッション・CLI ルーティング判定・レポート生成のフォールバックにのみ使われ、
-# ワークフローの plan ステップとは経路が別 (plan は provider_routing.tags で解決される)。
+# 未設定なら assistant 会話 (対話モードの計画会話・instruct・リトライ対話) は
+# トップレベルの provider/model (claude / opus) を解決する。
+# ただし Report phase の fallback だけは別で、assistant 未設定時は
+# トップレベルへ暗黙フォールバックせず「無効」になる。
+# いずれもワークフローの plan ステップとは経路が別 (plan は provider_routing.tags で解決される)。
 
 # ステップの役割 (tags) ごとのプロバイダ割り当て。
 # ビルトインワークフローはステップに provider: を書いていないため、
 # ここでの指定が全ワークフローに横断で効く (優先度 5 > workflow の 9)。
 #
-# 実装・テストは Codex (codex/.codex/config.toml の gpt-5.6-sol / xhigh)、
-# 計画・レビュー・最終判定は Claude。実装とレビューが別モデルになる。
-# なお model: opus は provider が claude のステップにのみ適用される
-# (モデル解決は provider 一致の候補だけを採用するため)。
+# 実装・テスト作成は Codex、計画・レビュー・最終判定は Claude。実装とレビューが別モデルになる。
+#
+# NOTE: ここに書けるのはビルトインワークフローが実際に付けている tag だけ。
+#       ja ビルトイン 62 本の tag 全集合は以下の 8 種で、それ以外は空振りする:
+#         plan / coding / test-planning / review / merge-readiness / final-gate / supervise / leader
+#       policy: や knowledge: の値 (architecture, testing, unit-testing ...) は tag ではない。
+# NOTE: ai-antipattern-* は step 名であって tag ではないが、steps: に書く必要はない。
+#       review 系 (-review / -1st / -2nd / -no-fix) は tag review、
+#       fix 系 (-fix / -fix-parallel) は tag coding を持つので下の tags で解決される。
+#       steps: に書くと fix 系まで claude に引き戻してしまうので書かないこと。
+# NOTE: codex へ振るエントリは model を必ず書く。省略するとトップレベルの opus が渡る。
+#       ~/.codex/config.toml の model は takt が model を明示指定するため効かない。
 provider_routing:
   tags:
     plan: claude
-    architecture: claude
-    coding: codex
-    testing: codex
     review: claude
-    ai-antipattern: claude
+    merge-readiness: claude
     final-gate: claude
     supervise: claude
+    leader: claude
+    coding:
+      provider: codex
+      model: gpt-5.6-sol
+      provider_options:
+        codex:
+          reasoning_effort: xhigh
+    test-planning:
+      provider: codex
+      model: gpt-5.6-sol
+      provider_options:
+        codex:
+          reasoning_effort: xhigh
+
+# claude がレートリミットに当たったとき codex へ退避して実行を継続する。
+# switch_chain のエントリは provider / model のみ (provider_options は書けない) なので、
+# ここ経由の codex 実行の reasoning effort は ~/.codex/config.toml の xhigh に従う。
+rate_limit_fallback:
+  switch_chain:
+    - provider: codex
+      model: gpt-5.6-sol
 
 # opencode を第三のプロバイダとして使う場合の書き方 (現状は未使用)。
 # tags の値は文字列 (プロバイダ名) だけでなく {provider, model} も取れるので、
