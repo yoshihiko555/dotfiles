@@ -76,6 +76,23 @@ provider_routing:
     final-gate: claude
     supervise: claude
 
+# opencode を第三のプロバイダとして使う場合の書き方 (現状は未使用)。
+# tags の値は文字列 (プロバイダ名) だけでなく {provider, model} も取れるので、
+# トップレベルの model: opus に引きずられず opencode 用のモデルを指定できる。
+#
+#   ai-antipattern:
+#     provider: opencode
+#     model: opencode-go/glm-5.2
+#
+# 注意点:
+# - opencode は model が必ず "provider/model" 形式である必要がある。
+#   モデル名だけを渡すと "requires model in 'provider/model' format" で落ちる。
+# - 認証は opencode 側 (~/.local/share/opencode/auth.json) に完全依存し、
+#   takt の *_api_key 設定は肩代わりしない (opencode_api_key は opencode zen 用)。
+#   現在の認証は opencode-go のみ。使えるモデルは `opencode models` で確認する。
+# - Gemini / Antigravity CLI (agy) は takt のプロバイダ enum に無いため直接は使えない。
+#   使うとすれば opencode に Google 認証を足して opencode 経由で回す形になる。
+
 # --------------------------------------------------------------------------
 # 検討したうえで「既定のまま使う」と判断した項目 (意図的に未設定)
 # --------------------------------------------------------------------------
