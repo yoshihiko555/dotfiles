@@ -1,0 +1,7 @@
+language: ja
+provider: claude
+model: default
+minimal_output: false
+logging:
+  level: info
+interactive_preview_steps: 3

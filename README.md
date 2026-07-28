@@ -51,6 +51,10 @@ dotfiles/
 │           ├── settings.json
 │           └── keybindings.json
 │
+├── takt/                   # takt CLI（→ ~）
+│   └── .takt/
+│       └── config.yaml
+│
 ├── tmux/                   # tmux 設定（→ ~）
 │   └── .tmux.conf
 │
@@ -114,6 +118,7 @@ task link-config    # .config 配下のみ
 task link-claude    # Claude CLI のみ
 task link-codex     # Codex CLI のみ
 task link-gemini    # Gemini / Antigravity CLI のみ
+task link-takt      # takt CLI のみ
 task link-tmux      # tmux のみ
 task link-alfred    # Alfred ワークフローのみ
 ```
@@ -123,7 +128,7 @@ task link-alfred    # Alfred ワークフローのみ
 ```bash
 make bootstrap     # 依存ツールをインストールして全パッケージをリンク
 make install-deps  # 依存ツール (stow, go-task) をインストール
-make link          # shell/config/claude/codex/gemini/tmux をリンク
+make link          # shell/config/claude/codex/gemini/takt/tmux をリンク
 make help          # ヘルプ表示
 ```
 
@@ -140,6 +145,7 @@ task link-config   # .config 配下のみ
 task link-claude   # Claude CLI のみ
 task link-codex    # Codex CLI のみ
 task link-gemini   # Gemini / Antigravity CLI のみ
+task link-takt     # takt CLI のみ
 task link-tmux     # tmux のみ
 task unlink        # 全パッケージのリンクを解除
 task restow        # 全パッケージを再リンク
@@ -358,6 +364,7 @@ stow -vt ~ git
 ~/.codex             → dotfiles/codex/.codex
 ~/.gemini            → dotfiles/gemini/.gemini
 ~/.gemini/AGENTS.md  → dotfiles/gemini/.gemini/AGENTS.md
+~/.takt              → dotfiles/takt/.takt
 ~/.tmux.conf         → dotfiles/tmux/.tmux.conf
 ~/Dropbox/.../workflows/user.workflow.C9692AD7-... → dotfiles/alfred/Open-VS-or-IT
 ```

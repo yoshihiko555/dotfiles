@@ -31,3 +31,7 @@ config/.config/tmux/plugins/
 
 # config-analyze が生成する解析キャッシュ（ローカル専用）
 ANALYSIS.md
+
+# takt のランタイム生成物（ログ・分析イベント）
+takt/.takt/logs/
+takt/.takt/analytics/

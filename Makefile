@@ -36,5 +36,6 @@ link:
 	stow -v -t ~ claude
 	stow -v -t ~ codex
 	stow -v -t ~ gemini
+	stow -v -t ~ takt
 	stow -v -t ~ tmux
 	@echo "✅ リンク作成完了"
