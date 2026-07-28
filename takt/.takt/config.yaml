@@ -26,6 +26,30 @@ auto_fetch: true
 # 日本語のタスク名を romaji 直訳せず、AI に英語ブランチ名を生成させる。
 branch_name_strategy: ai
 
+# worktree の置き場所。相対パスは projectDir 基準で解決される。
+# 既定は <project>/../takt-worktrees で、ghq 構成だと ~/ghq/github.com/<user>/ が汚れる。
+# gtr (wt コマンド) と同じ .worktrees/ に寄せると gtr list / go / rm から扱える
+# (gtr は git worktree list ベースなので、takt が作った worktree も認識する)。
+# NOTE: 対象プロジェクトの .gitignore に .worktrees/ が必要。
+worktree_dir: .worktrees
+
+# プロバイダごとの既定権限。takt の権限モードは claude の --permission-mode に対応する:
+#   readonly -> default (禁止ではなく都度確認。headless では応答できず停止しうる)
+#   edit     -> acceptEdits
+#   full     -> bypassPermissions (全許可、使わない)
+# 編集の可否はワークフロー側の edit フラグ (plan は edit: false) が既に制御しているため、
+# ここで readonly に二重に絞らず edit で揃える。
+provider_profiles:
+  claude:
+    default_permission_mode: edit
+  codex:
+    default_permission_mode: edit
+
+# takt_providers.assistant は設定しない。
+# 未設定ならトップレベルの provider/model (claude / opus) を継承する。
+# assistant は対話セッション・CLI ルーティング判定・レポート生成のフォールバックにのみ使われ、
+# ワークフローの plan ステップとは経路が別 (plan は provider_routing.tags で解決される)。
+
 # ステップの役割 (tags) ごとのプロバイダ割り当て。
 # ビルトインワークフローはステップに provider: を書いていないため、
 # ここでの指定が全ワークフローに横断で効く (優先度 5 > workflow の 9)。

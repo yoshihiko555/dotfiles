@@ -262,6 +262,29 @@ taktw
 - 環境変数はプロセス単位で効くため、同一実行内で Claude アカウントを混在させることはできません。
 - API キー（`anthropic_api_key` など）は config.yaml に書かず、`TAKT_ANTHROPIC_API_KEY` 等の環境変数を使います。
 
+### worktree の配置
+
+`worktree_dir: .worktrees` で、takt の worktree を gtr（`wt` コマンド）と同じ場所に寄せています。
+gtr は `git worktree list` ベースで worktree を列挙するため、takt が作った worktree も
+`gtr list` / `gtr go` / `gtr rm` から扱えます。
+
+- 既定のままだと `<project>/../takt-worktrees` に作られ、ghq 構成では `~/ghq/github.com/<user>/` が汚れます。
+- takt を使うプロジェクトでは `.gitignore` に `.worktrees/` を追加してください（未追加だと gtr が警告します）。
+
+### 権限モード
+
+`provider_profiles` は claude / codex とも `edit` です。takt の権限モードは Claude Code の
+`--permission-mode` に対応します。
+
+| takt | Claude Code | 備考 |
+|---|---|---|
+| `readonly` | `default` | 書き込み禁止ではなく都度確認。headless では応答できず停止しうる |
+| `edit` | `acceptEdits` | |
+| `full` | `bypassPermissions` | 全許可のため使いません |
+
+編集の可否はワークフロー側の `edit` フラグ（`plan` は `edit: false`）が制御するので、
+プロバイダ側で `readonly` に二重に絞っていません。
+
 ## Worktree 補助コマンド
 
 `git gtr` をそのまま使いつつ、よく使う作成・削除だけ `wt` で短縮できます。
