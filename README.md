@@ -132,7 +132,7 @@ make link          # shell/config/claude/codex/gemini/takt/tmux をリンク
 make help          # ヘルプ表示
 ```
 
-- `make link` は `gemini` を含み、`alfred` は含みません。
+- `make link` は `alfred` / `editorconfig` を含みません。それらも含めるなら `task link` を使います。
 
 ## Taskfile コマンド（日常運用）
 
@@ -163,7 +163,7 @@ task clean-claude  # Claude デバッグログを削除
 task codex-trust-audit # Codex trust 設定を監査
 ```
 
-- `task link` は `alfred` を含み、`gemini` は含みません。
+- `task link` は `make link` の対象に加えて `alfred` / `editorconfig` も含みます。
 
 ## Neovim LSP（TypeScript / Go / Python）
 
