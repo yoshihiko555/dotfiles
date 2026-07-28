@@ -285,6 +285,17 @@ gtr は `git worktree list` ベースで worktree を列挙するため、takt �
 編集の可否はワークフロー側の `edit` フラグ（`plan` は `edit: false`）が制御するので、
 プロバイダ側で `readonly` に二重に絞っていません。
 
+### 実行制御
+
+- `concurrency: 2` — 同時実行タスク数（既定 1）
+- `auto_requeue_max_attempts: 1` — 一時的な失敗を 1 回だけ拾い直す（既定 0）
+
+`base_branch` は**意図的に設定していません**。未設定なら `origin/HEAD` → `main` → `master` の順で
+自動判定されますが、明示するとブランチ存在チェックが走り、`master` を使うリポジトリでエラーになります。
+
+その他「既定のまま使う」と判断した項目（`auto_pr`、`observability` など）は
+`takt/.takt/config.yaml` の末尾に理由付きで列挙しています。
+
 ## Worktree 補助コマンド
 
 `git gtr` をそのまま使いつつ、よく使う作成・削除だけ `wt` で短縮できます。

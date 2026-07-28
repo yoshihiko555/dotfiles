@@ -14,6 +14,13 @@ model: opus
 minimal_output: false
 interactive_preview_steps: 3
 
+# 同時実行するタスク数 (既定 1)。8 コア / 32GB に対して余裕を持たせて 2 から始める。
+concurrency: 2
+
+# 一時的な失敗 (ネットワーク断・レート制限) を 1 回だけ拾い直す (既定 0 = 再キューしない)。
+# 回数を増やすと同じ失敗を繰り返すだけになるため 1 に留める。
+auto_requeue_max_attempts: 1
+
 logging:
   level: info
 
@@ -68,3 +75,20 @@ provider_routing:
     ai-antipattern: claude
     final-gate: claude
     supervise: claude
+
+# --------------------------------------------------------------------------
+# 検討したうえで「既定のまま使う」と判断した項目 (意図的に未設定)
+# --------------------------------------------------------------------------
+# base_branch   未設定なら origin/HEAD -> main -> master の順で自動判定される。
+#               明示すると存在チェックが走るため、master のリポジトリでエラーになる。
+# vcs_provider  auto-detect で足りる (GitLab を使っていない)。
+# auto_pr       takt list で差分を確認してから手動で PR を作る。
+#               自動作成するとレビュー未了の PR が乱立する。
+# notification_sound(_events)
+#               既定で完了・中断時に鳴る。長時間実行を放置するため全て鳴らしたい。
+# observability / analytics
+#               既定で無効。コストや失敗傾向を分析したくなってから有効化する。
+# ignore_exceed / task_poll_interval_ms
+#               安全側の既定 (上限を無視しない / 500ms) で問題ない。
+# disabled_builtins
+#               実際に使うワークフローが固まってから絞る。
