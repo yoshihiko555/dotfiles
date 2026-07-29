@@ -98,6 +98,11 @@ config/.config/nix/
 - Linux はバイナリキャッシュのカバレッジが完全で、macOS 固有の SDK 問題が起きない
 - 壊しても `wsl --unregister` で作り直せるため、学習の実験場として最適
 
+**詳細な作業計画・設計**: [PHASE-3-1-WSL2.md](PHASE-3-1-WSL2.md)
+
+**着手前の前提作業**: `shell/.zshrc` の移植阻害要因（`command -v` ガード欠落、
+絶対パスのハードコード、BSD 依存）の修正。詳細は上記の作業計画を参照。
+
 **完了条件**: WSL2 上で `home-manager switch` により zsh / starship / git が再現できる。
 
 ### Phase 3-2: hermes

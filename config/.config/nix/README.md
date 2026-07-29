@@ -22,6 +22,7 @@ stow 経由で `~/.config/nix/` にリンクされる。
 詳細な移行計画・意思決定の履歴:
 
 - [docs/ROADMAP.md](docs/ROADMAP.md) — 段階的な移行計画
+- [docs/PHASE-3-1-WSL2.md](docs/PHASE-3-1-WSL2.md) — 次の着手対象（WSL2）の作業計画・設計
 - [docs/adr/DECISIONS.md](docs/adr/DECISIONS.md) — ADR 一覧
 
 ## 常用コマンド
