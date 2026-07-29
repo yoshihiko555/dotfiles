@@ -3,12 +3,21 @@
 dotfiles 配下の Nix 管理エントリポイント。
 stow 経由で `~/.config/nix/` にリンクされる。
 
-## 現状 (Phase 0)
+## 現状 (Phase 0 完了 / 次は Phase 3-1)
 
 - Nix 2.34.5 インストール済み
 - `flake.nix` は最小の devShell 定義のみ（`git` / `jq` / `ripgrep`）
-- `nix profile` での常用ツール管理はまだ開始していない
+- `nix profile` での常用ツール管理は行わない（Phase 1 はスキップ）
 - `shell/.zprofile` で login shell でも Nix を初期化
+
+3 台（MacBook Pro / Mac mini(hermes) / 会社 Windows の WSL2）を home-manager で
+宣言的に管理する方針。次の着手は WSL2（Phase 3-1）。
+
+| ホスト | system | Nix の適用範囲 |
+|---|---|---|
+| MacBook Pro | `aarch64-darwin` | CLI + dotfiles（GUI / cask は brew のまま） |
+| Mac mini (hermes, M4) | `aarch64-darwin` | ほぼ全体 |
+| 会社 Windows (WSL2) | `x86_64-linux` | WSL2 内部のみ（Windows 本体は対象外） |
 
 詳細な移行計画・意思決定の履歴:
 
