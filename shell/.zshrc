@@ -34,13 +34,23 @@ stty -ixon
 # if command -v tmux &>/dev/null && [ -z "$TMUX" ] && [[ "$TERM_PROGRAM" == "WezTerm" ]]; then
 #   exec tmux new-session -A -s default
 # fi
-eval "$(sheldon source)"
-eval "$(zoxide init zsh)"
-eval "$(git gtr init zsh)"
+if command -v sheldon >/dev/null 2>&1; then
+  eval "$(sheldon source)"
+fi
+
+if command -v zoxide >/dev/null 2>&1; then
+  eval "$(zoxide init zsh)"
+fi
+
+if command -v git-gtr >/dev/null 2>&1; then
+  eval "$(git gtr init zsh)"
+fi
 
 # Starship prompt
-export STARSHIP_CONFIG=~/.config/starship/starship.toml
-eval "$(starship init zsh)"
+if command -v starship >/dev/null 2>&1; then
+  export STARSHIP_CONFIG=~/.config/starship/starship.toml
+  eval "$(starship init zsh)"
+fi
 
 # fzf tmux フローティング連携（display-popup で表示）
 export FZF_TMUX_OPTS="--tmux center,80%,60%"
@@ -73,6 +83,6 @@ source ~/.zsh/takt.zsh
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
-. "$HOME/.local/bin/env"
+[[ -f "$HOME/.local/bin/env" ]] && . "$HOME/.local/bin/env"
 
 alias claude-mem='bun "/Users/yoshihiko/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs"'

@@ -5,7 +5,7 @@
 # ghq + fzf でリポジトリに移動（.worktrees 配下も対象）
 # リスト生成は scripts/repo-list.sh に委譲（WezTerm InputSelector と共有）
 repo() {
-  local script="$HOME/ghq/github.com/yoshihiko555/dotfiles/scripts/repo-list.sh"
+  local script="$DOTFILES/scripts/repo-list.sh"
   if [[ ! -x "$script" ]]; then echo "repo-list.sh が見つかりません" && return 1; fi
   if ! command -v fzf &>/dev/null; then echo "fzf が見つかりません" && return 1; fi
 
