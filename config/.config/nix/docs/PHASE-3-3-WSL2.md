@@ -1,16 +1,40 @@
-# Phase 3-1: WSL2 への home-manager 導入（作業計画）
+# Phase 3-3: WSL2 への home-manager 導入（作業計画）
 
 会社支給 Windows の WSL2 に Nix + home-manager を導入する。
-[ROADMAP](ROADMAP.md) の Phase 3-1、方針は [ADR-20260729-0002](adr/ADR-20260729-0002-multi-host-adoption.md)。
+[ROADMAP](ROADMAP.md) の Phase 3-3、方針は
+[ADR-20260730-0003](adr/ADR-20260730-0003-purpose-and-order.md)
+（[ADR-20260729-0002](adr/ADR-20260729-0002-multi-host-adoption.md) を改訂）。
 
 WSL2 側には dotfiles リポジトリをクローン済みで、参照可能な状態にある。
+
+> **ステータス: 条件付き（実稼働待ち）**
+>
+> 本フェーズは当初 Phase 3-1（最初の着手対象）だったが、WSL2 が予備機であり
+> 現状は稼働プロジェクトがなく日常的に使用していないことが判明したため、
+> **最後（Phase 3-3）に変更した**。
+>
+> **着手トリガー**: 会社の業務プロジェクトが動き始め、WSL2 を日常的に使うようになったとき。
+>
+> 順序変更の理由（ADR-20260730-0003）:
+> - 投資先が日常的に使わない端末になり、学習のフィードバックループが回らない
+> - **Linux での学習は nix-darwin にほとんど転用されない**
+>   （launchd / `homebrew.*` / system defaults はすべて darwin 固有）
+
+## 設計の前提（調査で判明）
+
+- WSL は **standalone home-manager** として構成する。nix-darwin 構成とは独立し、
+  flake の出力が `darwinConfigurations` と `homeConfigurations` の **2 系統に割れる**
+- **`targets.genericLinux.enable = true` が必須**（非 NixOS ディストリ向け統合）
+- 実例: [mozumasu/dotfiles](https://github.com/mozumasu/dotfiles) の `hosts/robusta/home.nix`
+  が同一構成（Windows の WSL/Ubuntu 上の standalone home-manager）
 
 ---
 
 ## 事前に判明している移植阻害要因
 
 Nix 以前の問題として、現行 `shell/.zshrc` には Linux で壊れる箇所がある。
-**これらの修正は Phase 3-1 の着手前に済ませる**（Nix と無関係に価値がある改善）。
+**これらの修正は Phase 3-0（着手前の前提作業）として済ませる**
+（Nix と無関係に価値がある改善。ROADMAP の Phase 3-0 にチェックリスト化してある）。
 
 | 箇所 | 問題 | 対応 |
 |---|---|---|
