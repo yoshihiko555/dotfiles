@@ -176,7 +176,7 @@ macOS のため学習が MacBook Pro に転用でき、ヘッドレスで GUI �
 - [~] `hermes/Brewfile` / `hermes/home/` の重複解消（削除の可否は別途判断） — Brewfile 二重管理と
       zsh 再実装（hermes-helpers.zsh）は解消済み。hermes 固有部分は `hosts/hermes/zshrc.local` へ
       抽出し、共有部分は shell/ パッケージへの symlink に置換。`tmux.conf` / `mise/config.toml` は
-      リンク元として存続中、ディレクトリ自体の削除可否は別途判断のまま
+      リンク元として存続中。ディレクトリは当面残置し、hermes の安定稼働を確認してから削除する（2026-07-31 判断）
 
 **完了条件**:
 1. `darwin-rebuild switch --flake .#hermes` 一発で hermes の環境が再現できる → 達成
