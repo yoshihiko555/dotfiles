@@ -1,0 +1,22 @@
+# hermes 固有の対話シェル設定。~/.zshrc.local として home-manager からリンクされる。
+#
+# 共有側（shell/.zshenv, shell/.zshrc, shell/.zsh/*.zsh）でカバーされる内容
+# （mise/zoxide/starship 初期化、fzf 変数、git/tmux alias、mkcd/port/fh/fkill、
+#   repo、tss/tk/tp、wt、cheat 等）はここに書かない。
+# hermes/home/.zsh/hermes-helpers.zsh からの移植時に重複排除した
+# （ADR-20260730-0003 が指摘した「.zshrc の再実装」状態の解消）。
+
+# Hermes Agent バイナリ（~/.local/bin/hermes）を PATH に通す。
+# hermes-helpers.zsh 由来。共有側は .local/bin を PATH に追加しないため必要。
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*) ;;
+  *) export PATH="$HOME/.local/bin:$PATH" ;;
+esac
+
+# Hermes Agent 運用 alias。共有側に相当するものが無い hermes 固有コマンド。
+alias hms='hermes'
+alias hstatus='hermes status'
+alias hlog='hermes logs'
+alias hlogs='hermes logs -f'
+alias hdash='hermes dashboard'
+alias hstop='hermes dashboard --stop'
