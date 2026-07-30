@@ -17,6 +17,13 @@ map("n", "<leader>bn", "<cmd>bnext<cr>", "次のバッファへ")
 map("n", "<leader>bp", "<cmd>bprevious<cr>", "前のバッファへ")
 map("n", "<leader>bd", "<cmd>bdelete<cr>", "バッファを閉じる")
 
+-- タブ操作（<leader>t は表示切替グループで使用済みのため <leader>T を使う）
+map("n", "<leader>Tn", "<cmd>tabnew<cr>", "新しいタブ")
+map("n", "<leader>Tl", "<cmd>tabnext<cr>", "次のタブへ")
+map("n", "<leader>Th", "<cmd>tabprevious<cr>", "前のタブへ")
+map("n", "<leader>Td", "<cmd>tabclose<cr>", "タブを閉じる")
+map("n", "<leader>To", "<cmd>tabonly<cr>", "ほかのタブをすべて閉じる")
+
 -- Quickfix / location list 操作
 map("n", "]q", "<cmd>cnext<cr>", "次のQuickfixへ")
 map("n", "[q", "<cmd>cprev<cr>", "前のQuickfixへ")

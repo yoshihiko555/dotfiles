@@ -16,6 +16,7 @@ return {
       { "<leader>b", group = "バッファ" },
       { "<leader>h", group = "Git差分" },
       { "<leader>t", group = "表示切替" },
+      { "<leader>T", group = "タブ" },
       { "<leader>x", group = "診断・リスト" },
       { "<leader>w", proxy = "<c-w>", group = "ウィンドウ" },
       { "<c-w>", group = "ウィンドウ" },
