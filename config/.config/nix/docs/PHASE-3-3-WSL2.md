@@ -32,25 +32,29 @@ WSL2 側には dotfiles リポジトリをクローン済みで、参照可能�
 
 ## 事前に判明している移植阻害要因
 
-Nix 以前の問題として、現行 `shell/.zshrc` には Linux で壊れる箇所がある。
-**これらの修正は Phase 3-0（着手前の前提作業）として済ませる**
-（Nix と無関係に価値がある改善。ROADMAP の Phase 3-0 にチェックリスト化してある）。
+Nix 以前の問題として、現行 `shell/.zshrc` には Linux で壊れる箇所があった。
+**これらの修正は Phase 3-0（着手前の前提作業）として 2026-07-30 に完了済み**
+（コミット `ccf2639`。Nix と無関係に価値がある改善）。
 
-| 箇所 | 問題 | 対応 |
-|---|---|---|
-| `eval "$(sheldon source)"` | `command -v` ガードが無い | ガードを追加 |
-| `eval "$(zoxide init zsh)"` | 同上 | ガードを追加 |
-| `eval "$(git gtr init zsh)"` | 同上。かつ `coderabbitai/tap` の Homebrew 専用で **Linux 対応は要確認** | ガードを追加。Linux 非対応なら WSL2 では導入しない |
-| `eval "$(starship init zsh)"` | 同上 | ガードを追加 |
-| `/Users/yoshihiko/.bun/_bun` | 絶対パスをハードコード | `~/.zshrc.local` へ退避 |
-| `claude-mem` alias | 絶対パスをハードコード | `~/.zshrc.local` へ退避 |
-| `. "$HOME/.local/bin/env"` | 存在チェック無し | ガードを追加 |
-| `aliases.zsh` の `ls -G` | BSD ls 専用 | `$OSTYPE` で分岐（GNU は `--color=auto`） |
-| `aliases.zsh` の `trend` / `daily` / `weekly` | Dia (macOS) 依存 | `$OSTYPE` で分岐 |
-| 各所の dotfiles 絶対パス | `$HOME/ghq/github.com/yoshihiko555/dotfiles` を直書き | 変数に集約 |
+| 箇所 | 問題 | 対応 | 状態 |
+|---|---|---|---|
+| `eval "$(sheldon source)"` | `command -v` ガードが無い | ガードを追加 | 済 |
+| `eval "$(zoxide init zsh)"` | 同上 | ガードを追加 | 済 |
+| `eval "$(git gtr init zsh)"` | 同上 | ガードを追加（`command -v git-gtr` で検出） | 済 |
+| `eval "$(starship init zsh)"` | 同上 | ガードを追加 | 済 |
+| `. "$HOME/.local/bin/env"` | 存在チェック無し | ガードを追加 | 済 |
+| 各所の dotfiles 絶対パス | `$HOME/ghq/github.com/yoshihiko555/dotfiles` を直書き | `.zshenv` の `$DOTFILES` に集約 | 済 |
+| `/Users/yoshihiko/.bun/_bun` | 絶対パスをハードコード | **見送り**。既に `[ -s ... ]` でガード済みで起動時エラーにならず、bun インストーラーの自動追記行のため書き換えても再追記されうる | — |
+| `claude-mem` alias | 絶対パスをハードコード | **見送り**。alias 定義はパスを解決しないので起動時は無害。同じくインストーラー管理下 | — |
+| `aliases.zsh` の `ls -G` | ~~BSD ls 専用~~ **誤り**。GNU coreutils にも `-G`（`--no-group`）があり Linux でもエラーにならない | 本フェーズで判断。色が付かず `ll` のグループ列が消えるだけの見た目の問題 | 保留 |
+| `aliases.zsh` の `trend` / `daily` / `weekly` | Dia (macOS) 依存 | 本フェーズで判断。起動時は無害で実行時に `open` が無いだけ。**Windows 端末に Dia を入れる予定が無いなら対応不要** | 保留 |
 
 `.zshrc` には既に `[[ -f ~/.zshrc.local ]] && source ~/.zshrc.local` の仕組みがあるため、
 **ホスト固有の記述はここへ逃がす**のが基本方針。
+
+なお `git gtr` は調査の結果 **Linux でも導入可能**だった。`coderabbitai/tap` の formula は
+純シェル実装（`bin/git-gtr` + `lib` + `adapters`）で `depends_on :macos` が無い。
+下記「作業手順」#3 の判断材料とする。
 
 ---
 

@@ -117,25 +117,44 @@ config/.config/nix/
   `home.activation` を使い、**例外の理由をコメントに残す**
 - 設定内容を Nix 言語で書き直す（`programs.*` への全面移行）方針は採らない
 
-### Phase 3-0: 着手前の前提作業 — `[ ]`
+### Phase 3-0: 着手前の前提作業 — `[x]` 完了（2026-07-30, `ccf2639`）
 
 `shell/.zshrc` の移植阻害要因を修正する。**Nix と無関係に価値がある改善。**
 
-- [ ] `eval "$(sheldon source)"` に `command -v` ガードを追加
-- [ ] `eval "$(zoxide init zsh)"` に `command -v` ガードを追加
-- [ ] `eval "$(git gtr init zsh)"` に `command -v` ガードを追加（Linux 対応は要確認）
-- [ ] `eval "$(starship init zsh)"` に `command -v` ガードを追加
-- [ ] `. "$HOME/.local/bin/env"` に存在チェックを追加
-- [ ] `/Users/yoshihiko/.bun/_bun` の絶対パスを `~/.zshrc.local` へ退避
-- [ ] `claude-mem` alias の絶対パスを `~/.zshrc.local` へ退避
-- [ ] `aliases.zsh` の `ls -G` を `$OSTYPE` で分岐（GNU は `--color=auto`）
-- [ ] `aliases.zsh` の Dia 依存 alias（`trend` / `daily` / `weekly`）を `$OSTYPE` で分岐
-- [ ] dotfiles の絶対パス直書きを変数に集約
+- [x] `eval "$(sheldon source)"` に `command -v` ガードを追加
+- [x] `eval "$(zoxide init zsh)"` に `command -v` ガードを追加
+- [x] `eval "$(git gtr init zsh)"` に `command -v` ガードを追加（Linux 対応は要確認）
+- [x] `eval "$(starship init zsh)"` に `command -v` ガードを追加
+- [x] `. "$HOME/.local/bin/env"` に存在チェックを追加
+- [x] dotfiles の絶対パス直書きを変数に集約（`.zshenv` の `$DOTFILES`）
 
 **参考**: `hermes/home/.zsh/hermes-helpers.zsh` に**正しくガードが入った実装が既にある**。
 本体へ還流させる形になる。
 
 **完了条件**: `.zshrc` が Linux でエラーなく起動する（WSL2 で検証可能な状態になる）。
+→ `PATH=/usr/bin:/bin` の環境で `.zshrc` を読み込みエラーが出ないことを確認済み。
+
+#### 見送った項目（対応不要と判断）
+
+| 項目 | 理由 |
+|---|---|
+| `/Users/yoshihiko/.bun/_bun` の `~/.zshrc.local` 退避 | 既に `[ -s ... ]` でガード済みで起動時エラーにならない。かつ bun インストーラーが `~/.zshrc`（dotfiles への symlink）へ自動追記した行のため、書き換えても再追記されうる |
+| `claude-mem` alias の `~/.zshrc.local` 退避 | alias 定義はパスを解決しないので起動時は無害。同じくインストーラー管理下 |
+
+#### Phase 3-3 へ移送した項目
+
+| 項目 | 理由 |
+|---|---|
+| `aliases.zsh` の `ls -G` の `$OSTYPE` 分岐 | **「BSD 専用」という前提が誤りだった**。GNU coreutils にも `-G`（`--no-group`）があり、Linux でもエラーにならない（Debian 実測で `ls -G /` は exit 0）。色が付かず `ll` のグループ列が消えるだけの見た目の問題 |
+| Dia 依存 alias（`trend` / `daily` / `weekly`）の `$OSTYPE` 分岐 | 起動時は無害で、実行時に `open` が無いだけ。Windows 端末に Dia を入れる予定が現状ないため、そもそも対応不要の可能性が高い |
+
+#### 判明したこと
+
+- `git gtr` は **Linux でも導入可能**。`coderabbitai/tap` の formula は純シェル実装
+  （`bin/git-gtr` + `lib` + `adapters`）で `depends_on :macos` が無い。
+  Phase 3-3 の `home.packages` に含めるかは別途判断
+- `git gtr` の検出は `command -v git-gtr`（実バイナリ名）で行う。
+  `git gtr` 形式では git のサブコマンド解決を経由してしまう
 
 ### Phase 3-1: hermes（Mac mini）— `[ ]` 最初の着手対象
 
