@@ -1,5 +1,13 @@
 # Hermes CLI subset
 
+> **2026-07-31 以降、非推奨**: このディレクトリの手動コピー方式は
+> nix-darwin + home-manager（`config/.config/nix/`）に置き換えられた。
+> `install-hermes-subset.sh` の実行は不要。
+> `home/.config/tmux/tmux.conf` と `home/.config/mise/config.toml` は
+> `hosts/hermes` からの symlink リンク元として参照され続けている。
+> ディレクトリ自体の削除可否は別途判断
+> （[ROADMAP.md Phase 3-1](../config/.config/nix/docs/ROADMAP.md) 参照）。
+
 `macmini-hermes` 向けの手動移植セットです。dotfiles として stow せず、必要なファイルだけ `$HOME` に実体コピーします。
 
 ## Install

@@ -156,25 +156,62 @@ config/.config/nix/
 - `git gtr` の検出は `command -v git-gtr`（実バイナリ名）で行う。
   `git gtr` 形式では git のサブコマンド解決を経由してしまう
 
-### Phase 3-1: hermes（Mac mini）— `[ ]` 最初の着手対象
+### Phase 3-1: hermes（Mac mini）— `[x]` 完了（2026-07-31）
 
 macOS のため学習が MacBook Pro に転用でき、ヘッドレスで GUI 移行の考慮が不要。
 メイン機ではないため壊れても業務が止まらない。
 
-- [ ] `flake.nix` を multi-host 構造へ拡張（mozumasu の構造をコピーして削る）
-- [ ] `hosts/common/` に 3 台共通のパッケージ・設定を定義
-- [ ] `hosts/hermes/` を定義。**cask を 1 つも書かない**（＝ヘッドレスの宣言）
-- [ ] `home/dotfiles.nix` で `mkOutOfStoreSymlink` の配線を書く
-- [ ] `homebrew.brews` に `hermes/Brewfile` の 18 個を移す
-- [ ] `homebrew.onActivation.cleanup = "zap"` を有効化
-- [ ] `darwin-rebuild switch --flake .#hermes` で適用
-- [ ] `scripts/install-hermes-subset.sh` が不要になったことを確認
-- [ ] `hermes/Brewfile` / `hermes/home/` の重複解消（削除の可否は別途判断）
+- [x] `flake.nix` を multi-host 構造へ拡張（mozumasu の構造をコピーして削る）
+- [x] `hosts/common/` に 3 台共通のパッケージ・設定を定義
+- [x] `hosts/hermes/` を定義。cask 7 個を宣言（**当初の「cask を 1 つも書かない」方針は撤回**。
+      実機に GUI cask が存在する実態が判明したため。詳細は下記「実施記録」参照）
+- [x] `home/dotfiles.nix` で `mkOutOfStoreSymlink` の配線を書く
+- [x] `homebrew.brews` に `hermes/Brewfile` を移す（実測 17 個。ROADMAP の「18 個」表記は誤りだった。
+      共通 CLI 15 + hermes 固有 fd/ripgrep + 実機の LLM 基盤 llama.cpp/llama-swap/miniserve を
+      追加宣言し、宣言と実態が一致）
+- [x] `homebrew.onActivation.cleanup = "zap"` を有効化（非対話 activation で正常動作。
+      mozumasu が報告していた対話 dry-run 化問題は再現せず、宣言外の古い openssl@3 等が自動削除された）
+- [x] `darwin-rebuild switch --flake .#hermes` で適用（2026-07-31 成功）
+- [x] `scripts/install-hermes-subset.sh` が不要になったことを確認（home-manager が全機能を代替）
+- [~] `hermes/Brewfile` / `hermes/home/` の重複解消（削除の可否は別途判断） — Brewfile 二重管理と
+      zsh 再実装（hermes-helpers.zsh）は解消済み。hermes 固有部分は `hosts/hermes/zshrc.local` へ
+      抽出し、共有部分は shell/ パッケージへの symlink に置換。`tmux.conf` / `mise/config.toml` は
+      リンク元として存続中、ディレクトリ自体の削除可否は別途判断のまま
 
 **完了条件**:
-1. `darwin-rebuild switch --flake .#hermes` 一発で hermes の環境が再現できる
-2. `install-hermes-subset.sh` を使わずに済む
-3. cask が 1 つも入っていない（環境切り分けが宣言で機能している）
+1. `darwin-rebuild switch --flake .#hermes` 一発で hermes の環境が再現できる → 達成
+2. `install-hermes-subset.sh` を使わずに済む → 達成
+3. **（撤回、2026-07-31）** cask が 1 つも入っていない（環境切り分けが宣言で機能している）
+   → hermes 実機に GUI cask 7 個が存在する実態が判明したため撤回。
+   環境切り分けの検証は「cask ゼロ」ではなく
+   「cask を含む全パッケージの宣言管理 + zap による宣言外の自動削除」で達成する
+
+#### 実施記録（2026-07-31）
+
+- macOS 26 (Tahoe) ではシェル版 Determinate installer が `/etc/fstab` 書き込みで失敗する。
+  **pkg 版**（`https://install.determinate.systems/determinate-pkg/stable/Universal` を
+  `installer -pkg` で導入）が正。そのため hermes は「Determinate Nix」ディストリビューション
+  （`determinate-nixd` 込み、`nix.conf` は `determinate-nixd` 管理、カスタム設定は
+  `/etc/nix/nix.custom.conf`）になった。MacBook Pro のシェル版インストール（素の Nix）とは
+  系統が異なる
+- SSH 経由の root 作業には「システム設定 → 共有 → リモートログイン →
+  リモートユーザーにフルディスクアクセスを許可」の ON が必要
+  （OFF だと root でも `/etc/fstab` 等の rename が `Operation not permitted` になる。
+  hermes で 2026-07-31 に有効化済み）
+- hermes は repo 所有者（`agent`）と sudo 実行者（`admin`）が別のため、
+  root への `git config --global --add safe.directory <repo>` 登録が必要だった
+  （libgit2 の所有権チェック）。単一ユーザー機（MacBook Pro）では不要の見込み
+- `/opt/homebrew` の所有権を `admin` から `agent`（= `system.primaryUser`）へ変更した
+  （nix-darwin は homebrew 処理を `primaryUser` で実行するため。brew は prefix 所有者が実行する設計）
+- sudo 経由の activation ではユーザーの tap trust が見えないため
+  `HOMEBREW_NO_REQUIRE_TAP_TRUST=1` が必要（`hosts/common/homebrew.nix` に対応済み、
+  コミット `384d22e`）
+- 初回のみの儀式: `/etc/zshenv` `/etc/zshrc` `/etc/zprofile` を `*.before-nix-darwin` へ退避
+  してから初回 switch（mozumasu の README と同じ手順）
+- 初回 switch コマンド:
+  `sudo -H /nix/var/nix/profiles/default/bin/nix run github:nix-darwin/nix-darwin/master#darwin-rebuild -- switch --flake <repo>/config/.config/nix#hermes`。
+  2回目以降は `sudo darwin-rebuild switch --flake <repo>/config/.config/nix#hermes`
+  （`darwin-rebuild` が `/run/current-system/sw/bin` に入るため）
 
 ### Phase 3-2: MacBook Pro — `[ ]`
 
@@ -187,6 +224,9 @@ macOS のため学習が MacBook Pro に転用でき、ヘッドレスで GUI �
 - [ ] `~/.config/nvim-dev` の手動リンク（worktree 参照）の扱いを決める
 - [ ] stow から home-manager へ段階移行（パッケージ単位）
 - [ ] `taskfiles/link.yml` / `Makefile` の link ターゲットを撤去
+- [ ] Nix を Determinate pkg 版へ入れ直して hermes と系統統一（現状はシェル版の素の Nix）
+- [ ] flake apps（`nix run .#switch`）パターンの導入検討（mozumasu 流用。評価をユーザー権限で行い
+      root には store パスだけ渡す構造で、safe.directory 問題も回避できる）
 - [x] `config/.config/wezterm.bak`（17 ファイル）の腐敗を解消 — 2026-07-30 に削除（Nix 待ちせず先行対応）
 - [x] `taskfiles/link.yml` の `link-tmux` / `restow-tmux`（存在しないパッケージ参照）を解消 — 2026-07-30 に撤去（Nix 待ちせず先行対応）
 
