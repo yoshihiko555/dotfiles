@@ -1,4 +1,7 @@
 {
   "colorScheme": "tokyo night",
-  "enableTelemetry": false
+  "enableTelemetry": false,
+  "trustedWorkspaces": [
+    "/Users/yoshihiko/ghq/github.com/yoshihiko555/digital-garden"
+  ]
 }

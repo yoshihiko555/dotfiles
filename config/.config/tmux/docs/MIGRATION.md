@@ -136,7 +136,12 @@ WezTerm を GUI レンダラーに限定し、タブ/ペイン/セッション�
 
 ### バックアップ
 
-`config/.config/wezterm.bak/` に全ファイル保存済み。ロールバック可能。
+移行前の全ファイルは `config/.config/wezterm.bak/` に保存していたが、tmux 構成が安定したため
+2026-07-30 に削除した。参照が必要な場合は git 履歴から取得する。
+
+```bash
+git show fbf993a:config/.config/wezterm.bak/config/statusbar.lua
+```
 
 ### WezTerm → tmux キー変換
 

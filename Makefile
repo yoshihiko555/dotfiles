@@ -29,6 +29,7 @@ install-deps:
 	@echo "✅ 依存ツールのインストール完了"
 
 # 全パッケージをリンク（最小限）
+# NOTE: tmux / wezterm など ~/.config 配下の設定は config パッケージに含まれる。
 link:
 	@echo "🔗 シンボリックリンクを作成中..."
 	stow -v -t ~ shell
@@ -37,5 +38,4 @@ link:
 	stow -v -t ~ codex
 	stow -v -t ~ gemini
 	stow -v -t ~ takt
-	stow -v -t ~ tmux
 	@echo "✅ リンク作成完了"

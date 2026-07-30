@@ -94,7 +94,8 @@
 
 ## WezTerm → tmux 移行検証 (機能対比)
 
-WezTerm バックアップ (`config/.config/wezterm.bak/`) と現行 tmux 設定を照合。
+WezTerm バックアップと現行 tmux 設定を照合（バックアップは 2026-07-30 に削除。
+参照が必要な場合は `git show fbf993a:config/.config/wezterm.bak/<path>` で取得する）。
 
 ### ペインレイアウト分割 (Prefix+2~8)
 

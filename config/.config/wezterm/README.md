@@ -59,4 +59,12 @@ Cmd キーは tmux に直接届かないため、WezTerm が Alt や Prefix に�
 
 ## バックアップ
 
-tmux 移行前の完全な WezTerm 設定は `config/.config/wezterm.bak/` に保存済み。
+tmux 移行前の完全な WezTerm 設定は git 履歴に残っている（`config/.config/wezterm.bak/` として保存していたが、
+tmux 構成が安定したため 2026-07-30 に削除）。
+
+```bash
+# 一覧
+git ls-tree -r --name-only fbf993a -- config/.config/wezterm.bak
+# 個別ファイルの内容
+git show fbf993a:config/.config/wezterm.bak/wezterm.lua
+```

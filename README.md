@@ -114,12 +114,11 @@ make bootstrap
 task --list
 task link           # 全パッケージをリンク
 task link-shell     # シェル設定のみ
-task link-config    # .config 配下のみ
+task link-config    # .config 配下のみ (tmux / wezterm などを含む)
 task link-claude    # Claude CLI のみ
 task link-codex     # Codex CLI のみ
 task link-gemini    # Gemini / Antigravity CLI のみ
 task link-takt      # takt CLI のみ
-task link-tmux      # tmux のみ
 task link-alfred    # Alfred ワークフローのみ
 ```
 
@@ -128,7 +127,7 @@ task link-alfred    # Alfred ワークフローのみ
 ```bash
 make bootstrap     # 依存ツールをインストールして全パッケージをリンク
 make install-deps  # 依存ツール (stow, go-task) をインストール
-make link          # shell/config/claude/codex/gemini/takt/tmux をリンク
+make link          # shell/config/claude/codex/gemini/takt をリンク
 make help          # ヘルプ表示
 ```
 
@@ -141,12 +140,11 @@ task --list        # タスク一覧
 task link          # 全パッケージをリンク
 task link-alfred   # Alfred ワークフローのみ
 task link-shell    # シェル設定のみ
-task link-config   # .config 配下のみ
+task link-config   # .config 配下のみ (tmux / wezterm などを含む)
 task link-claude   # Claude CLI のみ
 task link-codex    # Codex CLI のみ
 task link-gemini   # Gemini / Antigravity CLI のみ
 task link-takt     # takt CLI のみ
-task link-tmux     # tmux のみ
 task unlink        # 全パッケージのリンクを解除
 task restow        # 全パッケージを再リンク
 task sync-skills   # shared/skills のリンクを更新

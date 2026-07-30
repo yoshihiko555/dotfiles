@@ -6,25 +6,53 @@ tasks:
   # ====================
   status:
     desc: リンク適用後やトラブル時に現在のシンボリックリンク状態を確認
+    # NOTE: dotfiles を指す symlink だけを抽出する。アプリが自前で書き込む実ファイル
+    # (~/.gemini/conversations 等) は対象外。壊れたリンクは BROKEN として表示する。
+    silent: true
     cmds:
       - |
-        echo "📁 Shell:"
-        ls -la ~/.zshrc ~/.zprofile 2>/dev/null || echo "  (not linked)"
-        echo ""
-        echo "📁 Config:"
-        ls -la ~/.config/wezterm ~/.config/starship ~/.config/mise ~/.config/sheldon 2>/dev/null || echo "  (not linked)"
-        echo ""
-        echo "📁 Claude:"
-        ls -la ~/.claude 2>/dev/null || echo "  (not linked)"
-        echo ""
-        echo "📁 Codex:"
-        ls -la ~/.codex 2>/dev/null || echo "  (not linked)"
-        echo ""
-        echo "📁 Tmux:"
-        ls -la ~/.tmux.conf 2>/dev/null || echo "  (not linked)"
-        echo ""
-        echo "📁 Alfred:"
-        ls -la ~/Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.C9692AD7-2800-42B7-8F97-8F8CCD1CC88E 2>/dev/null || echo "  (not linked)"
+        show_links() {
+          label="$1"; shift
+          echo "📁 ${label}:"
+          found=0
+          for target in "$@"; do
+            # symlink 自身、またはディレクトリ直下 1 階層の symlink を列挙する
+            if [ -L "$target" ]; then
+              links=$(printf '%s\n' "$target")
+            elif [ -d "$target" ]; then
+              links=$(find "$target" -maxdepth 1 -type l 2>/dev/null | sort)
+            else
+              continue
+            fi
+            for link in $links; do
+              dest=$(readlink "$link")
+              case "$dest" in
+                *dotfiles*) ;;
+                *) continue ;;
+              esac
+              found=1
+              if [ -e "$link" ]; then
+                echo "  ✅ ${link#$HOME/} -> $dest"
+              else
+                echo "  ❌ BROKEN: ${link#$HOME/} -> $dest"
+              fi
+            done
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "  (not linked)"
+          fi
+          echo ""
+        }
+
+        show_links "Shell"        ~/.zshrc ~/.zprofile
+        show_links "Config"       ~/.config/wezterm ~/.config/starship ~/.config/mise ~/.config/sheldon
+        show_links "Tmux"         ~/.config/tmux
+        show_links "Claude"       ~/.claude
+        show_links "Codex"        ~/.codex
+        show_links "Gemini"       ~/.gemini ~/.gemini/antigravity ~/.gemini/antigravity-cli ~/.gemini/config
+        show_links "takt"         ~/.takt
+        show_links "EditorConfig" ~/.editorconfig
+        show_links "Alfred"       ~/Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows
 
   brew:
     desc: 新しい Mac の初期構築時に Homebrew パッケージをインストール

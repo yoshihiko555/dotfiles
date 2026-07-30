@@ -168,8 +168,8 @@ macOS のため学習が MacBook Pro に転用でき、ヘッドレスで GUI �
 - [ ] `~/.config/nvim-dev` の手動リンク（worktree 参照）の扱いを決める
 - [ ] stow から home-manager へ段階移行（パッケージ単位）
 - [ ] `taskfiles/link.yml` / `Makefile` の link ターゲットを撤去
-- [ ] `config/.config/wezterm.bak`（17 ファイル）の腐敗を解消
-- [ ] `taskfiles/link.yml` の `link-tmux` / `restow-tmux`（存在しないパッケージ参照）を解消
+- [x] `config/.config/wezterm.bak`（17 ファイル）の腐敗を解消 — 2026-07-30 に削除（Nix 待ちせず先行対応）
+- [x] `taskfiles/link.yml` の `link-tmux` / `restow-tmux`（存在しないパッケージ参照）を解消 — 2026-07-30 に撤去（Nix 待ちせず先行対応）
 
 **完了条件**: メイン機の CLI + dotfiles が home-manager 管理下に入り、
 brew は GUI / cask と nixpkgs 未収録パッケージ専用になる。
