@@ -14,6 +14,11 @@
     extraEnv = {
       HOMEBREW_NO_UPDATE_REPORT_NEW = "1";
       HOMEBREW_NO_ENV_HINTS = "1";
+      # sudo 経由の activation ではユーザーの tap trust 情報が参照できず、
+      # サードパーティ tap（coderabbitai/tap 等）の formula ロードが
+      # "untrusted tap" エラーで拒否されるため無効化する（mozumasu も同様の対応）。
+      # hermes 実機で発生を確認済み（2026-07-31）。
+      HOMEBREW_NO_REQUIRE_TAP_TRUST = "1";
     };
   };
 
