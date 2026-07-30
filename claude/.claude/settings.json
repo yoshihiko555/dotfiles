@@ -20,6 +20,7 @@
       "Bash(wc *)",
       "Bash(codex *)",
       "Bash(gemini *)",
+      "Bash(agy *)",
       "WebFetch(domain:api.github.com)",
       "mcp__pencil"
     ],
@@ -142,13 +143,13 @@
     },
     "enableWeakerNetworkIsolation": true,
     "excludedCommands": [
-      "docker",
-      "docker-compose",
-      "codex",
-      "gemini",
-      "agy",
-      "gh",
-      "git"
+      "docker:*",
+      "docker-compose:*",
+      "codex:*",
+      "gemini:*",
+      "agy:*",
+      "gh:*",
+      "git:*"
     ]
   },
   "effortLevel": "high",
