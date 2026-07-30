@@ -5,6 +5,8 @@ vim.g.maplocalleader = " "
 -- Core settings (loaded before lazy.nvim so editor works even if lazy breaks)
 require("core.options")
 require("core.keymaps")
+-- Claude CLI 連携（自作ミニプラグイン）
+require("ai.claude").setup()
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then

@@ -8,6 +8,7 @@ return {
       },
     },
     spec = {
+      { "<leader>a", group = "AI" },
       { "<leader>c", group = "コード" },
       { "<leader>m", group = "Markdown" },
       { "<leader>f", group = "検索" },

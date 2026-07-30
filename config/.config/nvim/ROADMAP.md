@@ -190,3 +190,4 @@ IDE級の最終ピース。ブレークポイント・ステップ実行をNeovi
 - （2026-03-04）当面は基本操作の定着と日常編集フローの安定化を優先
 - （2026-03-22）Phase 4 完了。core/lsp.lua → plugins/lsp.lua へ移行。mason + lspconfig 体制に
 - `nvim-dap` 系の導入検討は Phase 5 開始時に再開する
+- （2026-07-30）AI質問フロート（`lua/ai/claude.lua`、自作）を導入。`<leader>aa` で claude -p (sonnet) に一問一答
