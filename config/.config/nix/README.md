@@ -31,6 +31,7 @@ zsh 起動最適化（実測 0.244 秒で十分）/ launchd の宣言管理。
 
 詳細な移行計画・意思決定の履歴:
 
+- [docs/GUIDE.md](docs/GUIDE.md) — **設定ファイルの読み方ガイド（学習用）**。どのファイルが何をしていて、nix-darwin / home-manager とどう繋がるか
 - [docs/ROADMAP.md](docs/ROADMAP.md) — 段階的な移行計画（**完了状態つき**）
 - [docs/PHASE-3-3-WSL2.md](docs/PHASE-3-3-WSL2.md) — WSL2 の作業計画・設計（実稼働待ち）
 - [docs/adr/DECISIONS.md](docs/adr/DECISIONS.md) — ADR 一覧
