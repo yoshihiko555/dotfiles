@@ -46,20 +46,24 @@ Metal ビルドの品質は移行時に実測確認すること。
 
 ## 作業計画
 
-- [ ] llama.cpp / llama-swap / miniserve を nixpkgs 移行（hosts/hermes に配置。
-      brew 版とのバージョン・Metal 動作を比較確認してから切替）
-- [ ] `launchd.user.agents` で llama-swap / miniserve を宣言管理
-      （既存 plist は退避。KeepAlive + RunAtLoad をそのまま表現）
-- [ ] llama-swap の `config.yaml` を宣言管理へ取り込み、`llama-server` の
-      パスを Nix ストアパスに差し替え（ストアパス補間が必要なため
-      mkOutOfStoreSymlink 原則の**例外**。理由コメント必須）
-- [ ] `ai.hermes.gateway` の PATH に Nix プロファイル bin
-      （`/etc/profiles/per-user/agent/bin` 等）を追加。plist を宣言管理に
-      取り込むか hermes-agent 側の管理に残すかはここで判断
-- [ ] gh の brew 暫定残留（hosts/hermes、2026-08-01 措置）を解除
-- [ ] 野良 plist（`/private/tmp/com.hermes.poc.capture.jreid.plist`）と
-      孤児 `suica_host.py` の扱いをユーザーに確認（勝手に消さない）
-- [ ] 完了確認: hermes の brew 残留が「cask 7 個 + git-gtr（+ その依存）のみ」になる。
+- [x] llama.cpp / llama-swap / miniserve を nixpkgs 移行（2026-08-01。
+      b8890→b10133 / 209→240 のアップグレードを兼ねた。Metal 動作は実推論で確認済み）
+- [x] home-manager の `launchd.agents` で llama-swap / miniserve を宣言管理（2026-08-01。
+      Label・ログパス・KeepAlive は旧 plist と同一。手書き plist は宣言版に置換）
+- [x] llama-swap の `config.yaml` を宣言管理へ取り込み（2026-08-01、
+      `hosts/hermes/llama-swap-config.yaml`）。当初案のストアパス補間ではなく
+      「裸のコマンド名 + サービス PATH に Nix bin を注入」方式を採用したため、
+      **例外を作らず mkOutOfStoreSymlink（編集即反映）のまま**管理できた
+- [x] `ai.hermes.gateway` 対策（2026-08-01）: **plist は無改変**。gateway の PATH が
+      `~/.local/bin` を含む（/opt/homebrew/bin より先）ことを利用し、
+      `~/.local/bin/gh` → `/etc/profiles/per-user/agent/bin/gh`（安定パス）の
+      symlink を home-manager で配置。plist が hermes-agent 側で再生成されても壊れない
+- [x] gh の brew 暫定残留を解除（2026-08-01）
+- [x] 野良 plist / 孤児プロセスはユーザー確認の結果「残骸」と判明（2026-08-01）。
+      野良 plist は掃除済み。`suica_host.py` は次回再起動で消滅する
+      （どこにも登録が無いため復活しない）
+- [x] 完了確認（2026-08-01）: brew 残留は cask 7 個 + git-gtr + その依存
+      （git/gettext/pcre2 等）のみ。
       注記: zap は宣言済み formula の依存（git-gtr → git 等）を削除しない。
       依存まで無くすには git-gtr の自作パッケージ化（Phase 4-7）が必要
 
@@ -72,9 +76,25 @@ Metal ビルドの品質は移行時に実測確認すること。
   変更（起動宣言の取り込み）は、venv 再構築等と絡めず最小差分で行う
 - 旧 plist は削除ではなく `*.bak` 退避（rollback 可能に）
 
-## 完了条件
+## 完了条件 → すべて達成（2026-08-01）
 
-1. hermes の brew list が「cask + git-gtr」のみになる
-2. llama-swap / miniserve が Nix 宣言由来の launchd agent として稼働する
-3. Hermes Agent（gateway）が Nix 移行後の CLI 群（gh 等）を発見できる
-4. `darwin-rebuild switch` だけで上記が再現できる
+1. hermes の brew list が「cask + git-gtr（+依存）」のみになる → 達成
+2. llama-swap / miniserve が Nix 宣言由来の launchd agent として稼働する → 達成
+   （ストアパス起動をプロセスで確認、実推論 200 応答）
+3. Hermes Agent（gateway）が Nix 移行後の CLI 群（gh 等）を発見できる → 達成
+   （~/.local/bin/gh 経由、gh 2.96.0 nixpkgs 版が応答）
+4. `darwin-rebuild switch` だけで上記が再現できる → 達成
+
+## 実施記録（2026-08-01）
+
+- **llama-server b10133 は `-hf` のモデルを HuggingFace hub キャッシュ
+  （`~/.cache/huggingface/hub/`）に保存する**。blob は拡張子なしのため
+  `*.gguf` 検索では見つからない点に注意
+- 移行後の初回推論が失敗したのは移行起因ではなく、**gemma のモデルキャッシュが
+  以前から消失していたため**（Qwen3.5-9B は存置、過去 438 回の推論実績あり）。
+  オンデマンド再ダウンロード（約3分）が旧 `healthCheckTimeout: 60` に殺されていた
+- 対策として `healthCheckTimeout: 600` へ引き上げ（config はリポジトリ管理に
+  なったので恒久化）。**モデルキャッシュが消えても自己回復する**構成になった
+- ダウンタイム最小化の段取り: hermes 上で `darwin-rebuild build`（sudo 不要）で
+  事前ダウンロード → 旧 agent を bootout → switch（activation のみ）。
+  実績ダウンタイムは数分

@@ -216,7 +216,7 @@ macOS のため学習が MacBook Pro に転用でき、ヘッドレスで GUI �
   2回目以降は `sudo darwin-rebuild switch --flake <repo>/config/.config/nix#hermes`
   （`darwin-rebuild` が `/run/current-system/sw/bin` に入るため）
 
-### Phase 3-1b: hermes の完全 Nix 化 — `[~]` 進行中（2026-08-01 着手）
+### Phase 3-1b: hermes の完全 Nix 化 — `[x]` 完了（2026-08-01）
 
 CLI を brew から Nix パッケージ管理へ移し、自前デーモン群を launchd 宣言管理に
 取り込む。調査結果と詳細計画: [PHASE-3-1B-HERMES-DAEMONS.md](PHASE-3-1B-HERMES-DAEMONS.md)
@@ -226,13 +226,13 @@ CLI を brew から Nix パッケージ管理へ移し、自前デーモン群�
       （gateway の PATH 問題、詳細は計画ドキュメント）。
       注記: `git` は `git-gtr` の依存として brew にも残り、PATH では brew 版が先勝ちする
       （実害なし。git-gtr の自作パッケージ化（Phase 4-7）で解消可能）
-- [ ] LLM 基盤（llama.cpp / llama-swap / miniserve）の nixpkgs 移行
-- [ ] llama-swap / miniserve の launchd 宣言管理化
-- [ ] `ai.hermes.gateway` の PATH に Nix プロファイル bin を追加
-- [ ] 野良 plist / 孤児プロセスの扱いをユーザー確認
-- [ ] 完了確認: brew 残留が「cask 7 個 + git-gtr」のみになる
+- [x] LLM 基盤（llama.cpp / llama-swap / miniserve）の nixpkgs 移行（b10133 / 240 へ更新）
+- [x] llama-swap / miniserve の launchd 宣言管理化（home-manager launchd.agents）
+- [x] `ai.hermes.gateway` 対策は plist 無改変の `~/.local/bin/gh` symlink 方式で解決
+- [x] 野良 plist / 孤児プロセスは残骸と判明、掃除済み（suica は次回再起動で消滅）
+- [x] 完了確認: brew 残留は cask 7 個 + git-gtr（+依存）のみ
 
-**完了条件**: 計画ドキュメントの完了条件 1〜4 を満たす。
+**完了条件**: 計画ドキュメントの完了条件 1〜4 を満たす。→ **すべて達成（2026-08-01）**
 
 ### Phase 3-2: MacBook Pro — `[ ]`
 
