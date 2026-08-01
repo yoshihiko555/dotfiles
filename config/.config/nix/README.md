@@ -3,10 +3,10 @@
 dotfiles 配下の Nix 管理エントリポイント。
 stow 経由で `~/.config/nix/` にリンクされる。
 
-## 現状 (Phase 3-1 完了 / 次は Phase 3-2 → MacBook Pro)
+## 現状 (Phase 3-1 / 3-1b 完了 / 次は Phase 3-2 → MacBook Pro)
 
-- hermes（Mac mini）は `darwin-rebuild switch --flake .#hermes` により
-  nix-darwin + home-manager 管理下に入った（2026-07-31）
+- hermes（Mac mini）は nix-darwin + home-manager 管理下（2026-07-31）。
+  CLI・LLM 基盤・launchd デーモンまで宣言管理済みで、brew 残留は cask + git-gtr のみ（3-1b、2026-08-01）
 - MacBook Pro / 会社 Windows (WSL2) は未着手。`flake.nix` の最小 devShell 定義
   （`git` / `jq` / `ripgrep`）のみが適用されている
 - `nix profile` での常用ツール管理は行わない（Phase 1 はスキップ）
@@ -27,7 +27,7 @@ stow 経由で `~/.config/nix/` にリンクされる。
 3. 複数マシンで同一環境を構築する
 
 目的から外したもの: スキル管理の宣言化 / devShell + direnv（mise と重複）/
-zsh 起動最適化（実測 0.244 秒で十分）/ launchd の宣言管理。
+zsh 起動最適化（実測 0.244 秒で十分）/ launchd の宣言管理（**hermes のみ例外**でスコープ入り、ROADMAP 参照）。
 
 詳細な移行計画・意思決定の履歴:
 
@@ -37,6 +37,42 @@ zsh 起動最適化（実測 0.244 秒で十分）/ launchd の宣言管理。
 - [docs/ROADMAP.md](docs/ROADMAP.md) — 段階的な移行計画（**完了状態つき**）
 - [docs/PHASE-3-3-WSL2.md](docs/PHASE-3-3-WSL2.md) — WSL2 の作業計画・設計（実稼働待ち）
 - [docs/adr/DECISIONS.md](docs/adr/DECISIONS.md) — ADR 一覧
+
+## 運用規約（正式決定事項の一覧）
+
+決定の経緯・理由は各 ADR を参照。ここは「守るルールの一覧」に徹する。
+
+### 構成（[ADR-0004](docs/adr/ADR-20260801-0004-module-layer-design.md)）
+
+- **3 層構成**: `darwin/` = darwin 共通システム層 / `home/` = 全台共通ユーザー層 /
+  `hosts/<host>/` = ホスト固有（**薄く保つ**）。WSL2 は darwin 層を通らない
+- `hosts/<host>/` は「hostSpec + 目次の default.nix + 機能群ファイル」。
+  機能の増築は**新ファイル + imports に 1 行**
+- **2 台以上で使い始めたら共通層へ昇格**。新規はまず使うホストの hosts/ に書く
+
+### 方式（[ADR-0003](docs/adr/ADR-20260730-0003-purpose-and-order.md)）
+
+- 原則 **`mkOutOfStoreSymlink`**（編集即反映）。例外は `home.activation` とし、
+  **理由コメント必須**
+- 設定内容を Nix 言語へ書き直す全面移行（`programs.*`）はしない
+
+### パッケージの置き場
+
+| 種別 | 置き場 |
+|---|---|
+| nixpkgs 収録の CLI（全台共通） | `home/packages.nix` |
+| nixpkgs 未収録の formula | `darwin/homebrew.nix`（共通）/ `hosts/<host>/homebrew.nix`（固有） |
+| cask（GUI） | `hosts/<host>/homebrew.nix` |
+| 言語ランタイム | mise（Nix では管理しない） |
+
+### 運用
+
+- **brew で直接入れたら必ず宣言にも追加**する（宣言外は次の switch で zap が削除）
+- **1 switch = 1 変更クラス**。検証はカテゴリを混ぜず、rollback 可能な単位で
+- 反映フロー: 編集 → push → 対象ホストで pull。設定ファイルの中身だけなら pull で完了、
+  パッケージ・配線の変更は + switch
+- 方針の再議論は「**前提が変わったとき」だけ**。採用/不採用の判断が出たら ADR を書く
+- hermes への SSH は `macmini-agent`、管理作業のみ `macmini-admin`（ルート AGENTS.md 参照）
 
 ## セットアップ（新しい Mac）
 
