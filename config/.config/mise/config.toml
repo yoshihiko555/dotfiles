@@ -5,3 +5,10 @@ node = "25"
 python = "latest"
 rust = "latest"
 uv = "latest"
+
+# mermaid を Unicode art に変換する CLI（nvim の mermaid-nvim が stdin 経由で呼ぶ）
+"pipx:termaid" = "latest"
+
+[settings]
+# pipx backend の実体を uv に寄せる（pipx 本体を別途入れずに済む）
+pipx.uvx = true

@@ -1,0 +1,37 @@
+#!/bin/sh
+# mermaid を termaid に渡す前に正規化するラッパー（stdin → stdout）
+#
+# termaid には mermaid 記法の解釈漏れが2つあり、そのままだと実用的な図が崩れる。
+#
+# 1) <br/> を解釈しない
+#    生の文字列として出るだけでなく、< > を odd-shape ノード記号 `>ラベル]` と
+#    誤認するため、ラベルが途中で切れ subgraph の構造ごと崩れる。
+#    termaid は \n リテラルなら改行として扱えるので、そこへ寄せる。
+#
+# 2) subgraph ID["ラベル"] を解釈しない
+#    行全体がタイトルになり `FE["FE: 生産管理DB（Access）"]` と生表示される。
+#    ID を落としてラベルだけ渡す。
+#
+# 図の見た目は termaid のデフォルトが余白過多なので、下の変数で詰めている。
+
+GAP=2        # ノード間の間隔（既定 4）
+PADDING_X=2  # ノード内の左右余白（既定 4）
+PADDING_Y=1  # ノード内の上下余白（既定 2）
+
+sed -E \
+  -e 's|<[Bb][Rr] */?>|\\n|g' \
+  -e 's|^([[:space:]]*subgraph[[:space:]]+)[A-Za-z0-9_-]+\["([^"]*)"\]|\1\2|' \
+  -e 's|^([[:space:]]*subgraph[[:space:]]+)[A-Za-z0-9_-]+\[([^]"]*)\]|\1\2|' \
+  | termaid --gap "$GAP" --padding-x "$PADDING_X" --padding-y "$PADDING_Y" "$@" \
+  | awk '
+      # termaid は図の前後に空行を出す。nvim 側で図に背景色を敷いているため、
+      # 幅0の行が混ざるとパネルの上下が欠けて見える。ここで落とす。
+      { line[NR] = $0 }
+      END {
+        first = 1
+        while (first <= NR && line[first] ~ /^[[:space:]]*$/) first++
+        last = NR
+        while (last >= first && line[last] ~ /^[[:space:]]*$/) last--
+        for (i = first; i <= last; i++) print line[i]
+      }
+    '
