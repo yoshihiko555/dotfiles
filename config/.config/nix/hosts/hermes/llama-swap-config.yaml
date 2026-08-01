@@ -1,0 +1,43 @@
+# llama-swap config for Hermes Agent on Mac mini (16GB)
+# 配置先: ~/.config/llama-swap/config.yaml（mkOutOfStoreSymlink で配線、編集即反映）
+# ${PORT} は llama-swap が動的に割り当てる内部ポート
+#
+# NOTE: llama-server は裸のコマンド名で書く。実体は launchd サービス
+# （hosts/hermes/default.nix の launchd.agents."com.user.llama-swap"）の
+# PATH 環境変数が指す Nix ストアの llama-cpp から解決される。
+# 絶対パスを書かないことで、この YAML にストアパス補間が不要になり
+# mkOutOfStoreSymlink（編集即反映）のまま管理できる。
+
+healthCheckTimeout: 60
+logLevel: info
+
+models:
+  "gemma-4-e4b":
+    proxy: "http://127.0.0.1:${PORT}"
+    cmd: |
+      llama-server
+      -hf unsloth/gemma-4-E4B-it-GGUF:UD-Q4_K_XL
+      --host 127.0.0.1
+      --port ${PORT}
+      -ngl 99
+      -c 65536
+      -fa on
+      --cache-type-k q4_0
+      --cache-type-v q4_0
+    # 軽量モデル: アイドル 10 分でアンロード
+    ttl: 600
+
+  "qwen3.5-9b":
+    proxy: "http://127.0.0.1:${PORT}"
+    cmd: |
+      llama-server
+      -hf unsloth/Qwen3.5-9B-GGUF:UD-Q4_K_XL
+      --host 127.0.0.1
+      --port ${PORT}
+      -ngl 99
+      -c 65536
+      -fa on
+      --cache-type-k q4_0
+      --cache-type-v q4_0
+    # 推論寄り: アイドル 10 分でアンロード
+    ttl: 600
