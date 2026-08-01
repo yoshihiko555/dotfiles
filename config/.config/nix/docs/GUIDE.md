@@ -47,7 +47,11 @@ config/.config/nix/
 │   │   ├── default.nix    # 全ホスト共通のシステム設定
 │   │   └── homebrew.nix   # 全ホスト共通の brew 宣言（+ zap 設定）
 │   └── hermes/
-│       ├── default.nix    # hermes 固有: hostSpec の値、固有 brew/cask、固有リンク
+│       ├── default.nix    # hostSpec の値と目次（imports）。実体は機能群ごとに分割
+│       ├── homebrew.nix   # hermes の cask 宣言
+│       ├── dotfiles.nix   # hermes 固有の配線（tmux / mise / zshrc.local）
+│       ├── hermes-agent.nix       # Hermes Agent 基盤（LLM の launchd 宣言等）
+│       ├── llama-swap-config.yaml # llama-swap 設定（mkOutOfStoreSymlink で配線）
 │       └── zshrc.local    # hermes 固有の zsh 設定（Nix 言語ではなく普通の zsh ファイル）
 └── home/
     ├── default.nix        # home-manager の入口（ユーザー名・stateVersion）
@@ -90,14 +94,19 @@ flake は「このディレクトリを1つのパッケージのように扱う�
   （宣言に無いパッケージを switch のたびに自動削除 = 腐敗の構造的防止。
   この1行が nix-darwin を最初から使う理由。ADR-0003 参照）
 
-### hosts/hermes/ — hermes だけの事情
+### hosts/hermes/ — hermes だけの事情（機能群ごとにファイル分割）
 
-- `default.nix`:
-  - `hostSpec` の値（hermes の正体はここで決まる）
-  - hermes 固有 brew（fd/ripgrep + LLM 基盤の llama.cpp 等）と cask 7 個
-  - hermes だけに配る symlink（ミニマル tmux.conf、mise、zshrc.local）
+- `default.nix`: `hostSpec` の値と `imports`（目次）だけ。
+  **機能が増えたらファイルを足して imports に1行追加する**のが増築の作法
+- `homebrew.nix`: cask 7 個の宣言
+- `dotfiles.nix`: hermes だけに配る symlink（ミニマル tmux.conf、mise、zshrc.local）
+- `hermes-agent.nix`: LLM 基盤（llama-cpp / llama-swap / miniserve のパッケージと
+  launchd 宣言、gateway 向け gh 橋渡し）
 - `zshrc.local`: Hermes Agent 運用 alias（`hms` 等）。**Nix 言語に書き直さず
   普通の zsh ファイルのまま**置き、symlink で配るのが当リポジトリの方針
+
+複数ファイルに分かれていても、モジュールシステムが `homebrew.*` や
+`home-manager.users.agent` を自動マージするので、置き場所は自由に選べる。
 
 ### home/ — ユーザーのホーム配下（3台共通）
 
@@ -176,9 +185,10 @@ darwinConfigurations.hermes
 | やりたいこと | 編集する場所 |
 |---|---|
 | 全 Mac に CLI を追加 | `hosts/common/homebrew.nix` の `brews` |
-| hermes だけに brew/cask を追加 | `hosts/hermes/default.nix` の `brews` / `casks` |
+| hermes だけに brew/cask を追加 | `hosts/hermes/homebrew.nix` の `brews` / `casks` |
 | 全ホストに dotfile のリンクを追加 | `home/dotfiles.nix` |
-| hermes だけのリンク・zsh 設定 | `hosts/hermes/default.nix` / `zshrc.local` |
+| hermes だけのリンク・zsh 設定 | `hosts/hermes/dotfiles.nix` / `zshrc.local` |
+| hermes のデーモン（launchd） | `hosts/hermes/hermes-agent.nix`（新しい機能群は新ファイル + imports 追加） |
 | 新しいホスト（MacBook Pro 等）を追加 | `hosts/<name>/default.nix` を作り、flake.nix の `darwinConfigurations` に1エントリ追加 |
 
 反映フロー（hermes の場合）:

@@ -36,8 +36,8 @@ sudo darwin-rebuild switch --switch-generation 3  # 番号指定（-G 3）
 ```sh
 # 1. 置き場所を選んで編集（詳細は GUIDE.md §6）
 #    CLI（3台共通）      → home/packages.nix
-#    hermes だけの brew   → hosts/hermes/default.nix の brews
-#    cask                → hosts/hermes/default.nix の casks
+#    hermes だけの brew   → hosts/hermes/homebrew.nix の brews
+#    cask                → hosts/hermes/homebrew.nix の casks
 # 2. あるか探す
 nix search nixpkgs ripgrep            # nixpkgs を検索
 nix eval --raw nixpkgs#fd.name        # 属性名の存在＆バージョン確認
