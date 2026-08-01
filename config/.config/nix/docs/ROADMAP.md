@@ -270,6 +270,7 @@ brew は GUI / cask と nixpkgs 未収録パッケージ専用になる。
 
 ## Phase 4: 付加機能の順次導入 — `[ ]`
 
+> 各項目の「何が嬉しいか・コスト」の比較は [USECASES.md](USECASES.md) を参照。
 > Phase 3 の完了を待たず、**タイミングが来たものから個別に導入する**。
 > 一気に進めない。各項目は独立している。
 >
@@ -344,6 +345,18 @@ hermes が pull 型で設定に自動追従する。
 | `dockerTools` | Dockerfile なしで OCI イメージ生成。レイヤ最適化が自動 |
 | flake templates | `nix flake init -t` でプロジェクト雛形 |
 | `nh`（nix helper） | rebuild の UX 改善・差分表示（ryoppippi 採用） |
+
+### 4-8: セキュリティ / OS 設定の宣言管理 — `[ ]` 優先度: 中（2026-08-01 追加）
+
+ゲストログイン無効・画面ロック・Touch ID sudo（MBP 向け）等を
+`system.defaults` / `security.pam` で宣言化する。検証は hermes で行う。
+
+- [ ] hermes で安全な項目（loginwindow / screensaver 等）を宣言して挙動確認
+- [ ] MBP 向けに `security.pam.services.sudo_local.touchIdAuth` を準備（Phase 3-2 で適用）
+- [ ] アプリケーションファイアウォールは**要設計**（hermes は miniserve が
+      0.0.0.0:18080 で外部公開中のため、未署名バイナリの受信ブロックと干渉する）
+
+**完了条件**: hermes のセキュリティ設定が宣言で再現でき、意図しないサービス断が無い。
 
 ---
 
