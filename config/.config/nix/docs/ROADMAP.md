@@ -92,26 +92,31 @@ Nix の学習度合いに合わせて、小さく動かしながら進める。
 3 ホストを 1 つの flake で宣言的に管理する。**nix-darwin を最初から使う**
 （理由は `homebrew.onActivation.cleanup = "zap"` による腐敗の構造的防止）。
 
-### 目標構成
+### 目標構成（2026-08-01 に層設計を確定、ADR-0004）
 
 ```
 config/.config/nix/
 ├── flake.nix              # darwinConfigurations + homeConfigurations の 2 系統
-├── hosts/
-│   ├── common/            # 3 台共通（+ homebrew-personal / homebrew-work の分離）
-│   ├── macbook/
-│   ├── hermes/
-│   └── wsl/               # standalone home-manager
-├── home/
-│   ├── dotfiles.nix       # mkOutOfStoreSymlink による配線
-│   ├── darwin.nix
-│   └── linux.nix
-├── modules/
-├── packages/              # nixpkgs に無いツールの自作パッケージ
+├── darwin/                # darwin ホスト共通のシステム層（WSL2 は通らない）
+├── home/                  # 全ホスト共通のユーザー層（dotfiles 配線・CLI パッケージ）
+├── hosts/                 # ホスト固有。薄く保つ
+│   ├── hermes/            # default.nix（hostSpec+目次）+ 機能群ファイル
+│   ├── macbook/           # Phase 3-2 で作成
+│   └── wsl/               # Phase 3-3 で作成（standalone home-manager、darwin/ を通らない）
+├── modules/               # オプション定義（hostSpec 等）
+├── packages/              # nixpkgs に無いツールの自作パッケージ（将来）
 └── docs/
 ```
 
 `shared/agents/` の core + diff と同じ構造。
+
+**設計規約**（運用コストを下げるための約束、ADR-0004）:
+
+1. ホスト軸 + 層明示。機能軸（modules/<機能>/<ホスト>.nix）は 3 台規模には過剰なので採らない
+2. `hosts/<host>/` は「hostSpec + 目次の default.nix + 機能群ファイル」で構成し、**薄く保つ**
+3. **2 台以上で使い始めたら共通層へ昇格**（システム層 → darwin/、ユーザー層 → home/）。
+   新規はまず使うホストの hosts/<host>/ に書く（宣言が実態より先行する腐敗を防ぐ）
+4. 機能の増築は「新ファイル + default.nix の imports に 1 行」
 
 ### 方式
 
@@ -165,7 +170,7 @@ macOS のため学習が MacBook Pro に転用でき、ヘッドレスで GUI �
 メイン機ではないため壊れても業務が止まらない。
 
 - [x] `flake.nix` を multi-host 構造へ拡張（mozumasu の構造をコピーして削る）
-- [x] `hosts/common/` に 3 台共通のパッケージ・設定を定義
+- [x] `hosts/common/` に 3 台共通のパッケージ・設定を定義（2026-08-01 に `darwin/` へ改名、ADR-0004）
 - [x] `hosts/hermes/` を定義。cask 7 個を宣言（**当初の「cask を 1 つも書かない」方針は撤回**。
       実機に GUI cask が存在する実態が判明したため。詳細は下記「実施記録」参照）
 - [x] `home/dotfiles.nix` で `mkOutOfStoreSymlink` の配線を書く

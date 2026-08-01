@@ -18,12 +18,14 @@
       system = "aarch64-darwin";
       pkgs = import nixpkgs { inherit system; };
 
-      # 3 ホスト共通で読み込むモジュール群。
       # mozumasu/dotfiles の構造を踏襲しつつ、nix-homebrew / sops-nix / treefmt-nix /
       # overlay 群など依存の多い部分は削ぎ落としている（ADR-20260730-0003）。
+      # darwin ホスト共通で読み込むモジュール群。
+      # 層の設計（ADR-0004）: darwin/ = darwin 共通システム層、home/ = 全台共通ユーザー層、
+      # hosts/<host>/ = ホスト固有（薄く保つ）。WSL2 は darwin/ を通らず home/ を共有する。
       commonModules = [
         ./modules/hostSpec.nix
-        ./hosts/common
+        ./darwin
         home-manager.darwinModules.home-manager
         (
           { config, ... }:

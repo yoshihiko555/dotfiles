@@ -1,5 +1,8 @@
 { config, ... }:
 {
+  # darwin ホスト（hermes / macbook）共通のシステム層。
+  # WSL2（standalone home-manager）はこの層を通らない。
+  # 3 台共通のユーザー環境は home/ に置く（層の設計は ADR-0004）。
   imports = [ ./homebrew.nix ];
 
   # Determinate installer が Nix 本体（デーモン・ストア）を管理するため、

@@ -42,10 +42,10 @@ config/.config/nix/
 ├── flake.lock             # 材料のバージョン固定（git の lock ファイルと同じ発想）
 ├── modules/
 │   └── hostSpec.nix       # 「ホストごとに違う値」を受け渡すための自作オプション定義
-├── hosts/
-│   ├── common/
-│   │   ├── default.nix    # 全ホスト共通のシステム設定
-│   │   └── homebrew.nix   # 全ホスト共通の brew 宣言（+ zap 設定）
+├── darwin/                # darwin ホスト共通のシステム層（WSL2 は通らない）
+│   ├── default.nix        # nix.enable=false, zsh, DOTFILES 注入等
+│   └── homebrew.nix       # 共通 brew 宣言（+ zap 設定）
+├── hosts/                 # ホスト固有（薄く保つ。2台以上で使うものは共通層へ昇格）
 │   └── hermes/
 │       ├── default.nix    # hostSpec の値と目次（imports）。実体は機能群ごとに分割
 │       ├── homebrew.nix   # hermes の cask 宣言
@@ -80,12 +80,12 @@ flake は「このディレクトリを1つのパッケージのように扱う�
 「ホスト名」「ユーザー名」「dotfiles リポジトリの絶対パス」という
 **ホストごとに違う3つの値**を宣言できるオプションを自作している。
 
-なぜ必要か: `hosts/common/` の共通設定は「ユーザー名」等を知らないと書けないが、
+なぜ必要か: `darwin/` の共通設定は「ユーザー名」等を知らないと書けないが、
 ハードコードすると共通にならない。そこで各ホスト（`hosts/hermes/default.nix`）が
 `hostSpec = { username = "agent"; … }` と値を入れ、共通側は
 `config.hostSpec.username` として参照する。**関数の引数のようなもの**と思えばよい。
 
-### hosts/common/ — 全ホスト共通のシステム層
+### darwin/ — darwin ホスト共通のシステム層
 
 - `default.nix`: Determinate が Nix 本体を管理するので `nix.enable = false`、
   zsh の PATH 配線（`programs.zsh.enable`）、`$DOTFILES` 環境変数の注入、
@@ -126,7 +126,7 @@ flake は「このディレクトリを1つのパッケージのように扱う�
 darwinConfigurations.hermes
  ├── hosts/hermes/default.nix     ← ホスト固有の値・宣言
  ├── modules/hostSpec.nix         ← オプション定義
- ├── hosts/common/ (default+homebrew) ← 共通システム設定
+ ├── darwin/ (default+homebrew)       ← darwin 共通システム層
  └── home-manager（darwin モジュールとして内蔵）
       └── users.agent = import ./home
            ├── home/default.nix
@@ -184,7 +184,8 @@ darwinConfigurations.hermes
 
 | やりたいこと | 編集する場所 |
 |---|---|
-| 全 Mac に CLI を追加 | `hosts/common/homebrew.nix` の `brews` |
+| 全台共通の CLI を追加 | `home/packages.nix`（nixpkgs 収録のもの） |
+| darwin 共通の brew を追加 | `darwin/homebrew.nix`（nixpkgs 未収録のみ） |
 | hermes だけに brew/cask を追加 | `hosts/hermes/homebrew.nix` の `brews` / `casks` |
 | 全ホストに dotfile のリンクを追加 | `home/dotfiles.nix` |
 | hermes だけのリンク・zsh 設定 | `hosts/hermes/dotfiles.nix` / `zshrc.local` |
