@@ -156,9 +156,12 @@ fe() {
   [[ -n "$file" ]] && nvim "$file"
 }
 
+# hermes dashboard を SSH トンネル経由でブラウザから開く
+#   ExitOnForwardFailure=yes: 13000 が他の ssh に占有されていたら黙って続行せず失敗させる
+#   （警告を見逃したまま既存トンネルに相乗りし、そちらの終了で切断される事故を防ぐ）
 hermes-ui() {
   (sleep 2 && open "http://localhost:13000") &
-  ssh -t macmini-hermes "/Users/agent/.local/bin/hermes dashboard"
+  ssh -t -o ExitOnForwardFailure=yes macmini-hermes "/Users/agent/.local/bin/hermes dashboard"
 }
 
 # brew 管理ツールを一括更新（最新でないものだけ upgrade）
