@@ -239,6 +239,45 @@ CLI を brew から Nix パッケージ管理へ移し、自前デーモン群�
 
 **完了条件**: 計画ドキュメントの完了条件 1〜4 を満たす。→ **すべて達成（2026-08-01）**
 
+### Phase 3-1c: 素の Nix への移行 — `[x]` 完了（2026-08-02）
+
+hermes を Determinate Nix から**素の Nix**（`NixOS/nix-installer` 版）へ移行し、
+MacBook Pro と系統を統一した。判断の根拠と検討した代替案は
+[ADR-20260802-0005](adr/ADR-20260802-0005-upstream-nix-migration.md)。
+
+**着手理由**: Determinate 運用に必須の `nix.enable = false` が nix-darwin の
+`nix.*` 配下をほぼ全面的に無効化しており、設定を書き溜めるほど移植コストが
+上がる構造だった。とくに `nix.buildMachines`（4-1）は**エラーを出さず無視される**ため、
+「設定したのに効かない」形で破綻する危険があった。
+
+- [x] nix-darwin をアンインストール（`darwin-uninstaller`。要 root）
+- [x] Determinate Nix をアンインストール（`/nix/nix-installer uninstall`）
+- [x] `NixOS/nix-installer` 2.35.1 で素の Nix を導入（`--enable-flakes`）
+- [x] nix-darwin を再導入（`nix.enable = false` のまま。従来どおり動くことを確認）
+- [x] `nix.enable = false` を解除し、`nix.settings` で nix.conf の内容を宣言
+- [x] GC を標準の `nix.gc.automatic` へ移行（4-9）
+- [x] `trusted-users` に作業ユーザーを追加
+
+**実施記録（2026-08-02）**:
+
+- 所要 約 1 時間。停止したサービスは `llama-swap` / `miniserve` / `ai.hermes.gateway` の 3 つ
+- **`/run/current-system` が移行前と同一の store パスで再現された**
+  （`ps5ndcmgdwfwdalgym1gbh2p1j4qf436-darwin-system-26.11.15abb8c`）。
+  `/nix` を丸ごと削除して別インストーラで入れ直しても flake から同一のシステムが
+  再構築できることの実証であり、**目的 2 の達成確認**にあたる
+- **Tahoe 26.4.1 で `NixOS/nix-installer` は問題なく動作した。**
+  7/21 に `/etc/fstab` で失敗したのは Determinate 版インストーラであり、別実装だった
+  （両者はフォーク関係にあるが fstab / APFS 処理の堅牢性が異なる）
+- `nix.enable` を解除すると nix-darwin が `/etc/nix/nix.conf` を管理下に置くため、
+  インストーラが書いていた設定は `nix.settings` で明示しないと失われる。
+  とくに `experimental-features` を落とすと flake を評価できず switch 不能になる
+- 既存の `/etc/nix/nix.conf` は nix-darwin の `knownSha256Hashes` に登録済みだったため
+  activation は中断しなかった（`*.before-nix-darwin` への退避は行われる）
+- **nix 本体のバージョンも nix-darwin が管理する**（nixpkgs 版 2.34.8 が
+  インストーラ由来の 2.35.1 より PATH で優先される）。
+  インストーラのバージョン差は運用上無関係で、MBP に nix-darwin を入れれば自動的に揃う
+- 移行の副作用: `trusted-users` が root のみになる、mise の trust が外れる（`mise trust` で復旧）
+
 ### Phase 3-2: MacBook Pro — `[ ]`
 
 既に動いている環境のため最もリスクが高い。**hermes で手応えを得てから着手する。**
@@ -250,9 +289,11 @@ CLI を brew から Nix パッケージ管理へ移し、自前デーモン群�
 - [ ] `~/.config/nvim-dev` の手動リンク（worktree 参照）の扱いを決める
 - [ ] stow から home-manager へ段階移行（パッケージ単位）
 - [ ] `taskfiles/link.yml` / `Makefile` の link ターゲットを撤去
-- [ ] Nix を Determinate pkg 版へ入れ直して hermes と系統統一（現状はシェル版の素の Nix）。
-      **着手前に要再確認**: Determinate の upstream 配布中止表明に起因するコミュニティ紛争が
-      進行中（2026-08-01 記録、[USECASES.md](USECASES.md) の留意事項参照）
+- [-] ~~Nix を Determinate pkg 版へ入れ直して hermes と系統統一~~ → **対象外**（2026-08-02）。
+      Phase 3-1c で **hermes を素の Nix へ移行したため、MBP は現状のままで系統が揃った**。
+      MBP は `NixOS/nix-installer` 由来の素の Nix（2.34.5）で hermes と同系統。
+      nix-darwin を導入すれば nix 本体も nixpkgs 版に統一されるため、
+      インストーラのバージョン差（2.34.5 / 2.35.1）は解消される
 - [ ] flake apps（`nix run .#switch`）パターンの導入検討（mozumasu 流用。評価をユーザー権限で行い
       root には store パスだけ渡す構造で、safe.directory 問題も回避できる）
 - [x] `config/.config/wezterm.bak`（17 ファイル）の腐敗を解消 — 2026-07-30 に削除（Nix 待ちせず先行対応）
@@ -297,6 +338,11 @@ hermes をビルドマシンにし、MacBook Pro のビルド負荷を逃がす�
 **完了条件**: MacBook Pro で `darwin-rebuild` を実行したとき、重いビルドが hermes で走る。
 
 **前提**: Phase 3-1 完了
+
+**（解消済み）**: 2026-08-02 まで `nix.enable = false` により `nix.buildMachines` を
+書いても `/etc/nix/machines` が生成されない制約があった（nix-darwin の `handleUnmanaged` の
+内側にあるため、**エラーも警告も出ずに無視される**）。この制約が Phase 3-1c の
+素の Nix 移行を決めた主因のひとつであり、現在は `nix.buildMachines` がそのまま使える。
 
 ### 4-2: `comma`（`,` コマンド）— `[ ]` 優先度: 高
 
@@ -364,6 +410,29 @@ hermes が pull 型で設定に自動追従する。
       0.0.0.0:18080 で外部公開中のため、未署名バイナリの受信ブロックと干渉する）
 
 **完了条件**: hermes のセキュリティ設定が宣言で再現でき、意図しないサービス断が無い。
+
+### 4-9: Nix store の自動 GC — `[x]` 完了（2026-08-02）
+
+常時稼働の hermes で、放置すれば世代が溜まり続ける問題への予防。
+実測（2026-08-02）: system プロファイル 4 世代 / store 7.1G / ディスク空き 119Gi。
+**逼迫はしておらず緊急性は低い**。コストがほぼ無いため予防として入れた位置づけ。
+
+- [x] `hosts/hermes/nix-gc.nix` で `nix.gc.automatic` を宣言（週次・日曜 3:15・`--delete-older-than 30d`）
+- [x] hermes に適用し、`/Library/LaunchDaemons/org.nixos.nix-gc.plist` の生成を確認
+- [ ] 30 日後、実際に古い世代が削除されることを確認（初回発動待ち）
+
+**経緯**: 当初は `nix.enable = false`（Determinate 運用）のため
+`nix.gc.automatic` / `nix.optimise.automatic` が assertion で弾かれ、
+`launchd.daemons` の自前宣言 + コマンドパス直書きで代替していた。
+Phase 3-1c の素の Nix 移行で標準オプションが使えるようになり、そちらへ寄せた。
+`config.nix.package` も解決できるようになったためパス直書きが不要になっている。
+
+**Determinate Nixd の自動 GC との違い**（移行前の調査記録）: Determinate も既定で
+自動 GC を持つが、判定軸が「ディスク空き容量」（5〜20% を維持、5% 未満で緊急モード）であり、
+本設定の「世代の古さ」とは守備範囲が異なっていた。世代は GC root のため、
+世代を消さない限り store のパスは回収されない。
+
+**完了条件**: hermes の古い世代が人手を介さず週次で削除される。
 
 ---
 

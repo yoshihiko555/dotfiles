@@ -8,3 +8,4 @@ Nix 関連の意思決定の一覧。詳細は各 ADR ファイルを参照。
 | [ADR-20260729-0002](ADR-20260729-0002-multi-host-adoption.md) | 3台構成を前提とした Nix 導入方針 | 一部改訂 (→0003) | 2026-07-29 | 再現性/運用負荷/学習コスト | Structure/Migration |
 | [ADR-20260730-0003](ADR-20260730-0003-purpose-and-order.md) | Nix 導入の目的と着手順序の再定義 | 採用 | 2026-07-30 | 目的の明確化/学習転用性/リスク | Migration/Scope |
 | [ADR-20260801-0004](ADR-20260801-0004-module-layer-design.md) | Nix 設定のディレクトリ層設計（darwin/home/hosts） | 採用 | 2026-08-01 | 運用コスト/WSL2 非対称性/規約明文化 | Structure |
+| [ADR-20260802-0005](ADR-20260802-0005-upstream-nix-migration.md) | hermes を素の Nix へ移行（Determinate Nix からの離脱） | 採用 | 2026-08-02 | 移植コスト/系統統一/機能制約の解消 | Migration/Infra |

@@ -14,7 +14,7 @@
 
 ---
 
-## すでに手に入れた能力（2026-08-01 時点）
+## すでに手に入れた能力（2026-08-02 時点）
 
 振り返り用。「Nix 化して何が変わったか」の実績。
 
@@ -26,6 +26,7 @@
 | 世代管理 / rollback | switch のたびにスナップショット。数秒で切り戻し可能 |
 | multi-host | 1 つの flake で hermes を管理。MBP / WSL2 も同じ骨格に載る |
 | 環境の自己文書化 | 「マシンに何が入っているか」= リポジトリのファイル。git 履歴が変更ログ |
+| **宣言からの完全再現（実証済み）** | Phase 3-1c で `/nix` を丸ごと削除し別のインストーラで入れ直したが、`darwin-rebuild switch` 一発で**移行前と同一の store パス**の system が再構築された。所要 1 時間・手動作業は 2 手順のみ。ROADMAP の目的 2 が実地で確認された |
 
 ---
 
@@ -53,6 +54,7 @@
 
 | 項目 | 何が嬉しいか | コスト | 出典・所見 |
 |---|---|---|---|
+| **Nix store の自動 GC**（4-9、導入済み） | 常時稼働機で溜まり続ける世代を週次で削除。`nix.gc.automatic` の 3 行で完結 | 極小 | 当方調査（2026-08-02）。実測は 4 世代 / store 7.1G / 空き 119Gi で**逼迫しておらず緊急性は低い**が、コストがほぼ無いため予防として導入。Determinate 運用時は assertion で使えず launchd 自前宣言が必要だったが、素の Nix 移行で標準オプションに戻せた |
 | **nh**（4-7） | rebuild の UX 改善・差分表示・`nh clean` | 極小 | `[世]` 定番度: 中〜高（上昇中）。ただし `[ryo]` は **gc 専用**にしか使わず日常は自作 flake apps。「有名 = 全面採用」ではない実例 |
 | **Cachix / Attic**（4-4） | hermes の pull 型自動追従、ビルド共有 | 中（外部依存 or 自前ホスト） | `[世]` 個人利用は自己ホストの Attic が伸びている（Cachix 値上げリスクの保険）。急がない |
 | **sops-nix / agenix**（4-5） | 秘匿情報の暗号化コミット | 中 | `[世]` 使い分け論調: 初心者・少数シークレットは agenix、束で扱うなら sops-nix。`[moz]` は sops、`[ryo]` は**不採用**（無しで回る規模なら不要という実例） |
@@ -78,20 +80,75 @@
 | nixvim / nvf / lazy2nix 系（Phase 5） | **見送り継続** | `[世]` 賛否割れ（Lua→Nix 変換の起動速度低下報告あり）。`[ryo]` は lazy2nix を自作運用しているが neovim 依存度が高く汎用性低と自己評価 |
 | stylix（テーマ統一） | **見送り** | `[世]` 完成度の評価は高いが、`[moz]` `[ryo]` とも不採用。Tokyo Night で統一済みの当方に追加価値薄 |
 | impermanence | **対象外** | `[世]` NixOS 専用の概念。macOS では成立しない |
+| Determinate Nix 公式 nix-darwin モジュール（`determinateNix.enable`） | **不採用**（2026-08-02） | `nix.enable = false` 問題の正攻法の解で、`customSettings` により宣言性を回復できた（3.15.2 以降）。ただし設定が Determinate 固有の書き方に固定され離脱コストが上がるため、素の Nix への移行（Phase 3-1c）を選んだ。詳細は下記「検討した 3 案と選定」 |
 
 ---
 
-## 留意事項: Determinate Nix の政治的リスク（2026-08-01 記録）
+## 留意事項: Determinate Nix の政治的リスク（2026-08-01 記録 / 2026-08-02 当方への影響は解消）
 
 `[世]` 2025 年 9 月、Determinate Systems が「2026 年から upstream Nix を配布せず
 Determinate Nix のみ配布する」と発表しコミュニティが反発。公式ワーキンググループによる
 upstream 専用フォークインストーラーの作成、Nix Steering Committee の不信任投票にまで
 発展した（[経緯](https://www.haskellforall.com/2025/10/nix-steering-committee-vote-of-no.html)）。
 
-- 当方への影響: hermes は Determinate pkg 版を採用済み。**Phase 3-2 の
-  「MBP を Determinate pkg に統一」は着手前に情勢を再確認すること**
-- 緩和要因: 当方の flake は `nix.enable = false` で Nix 本体の出自に依存しない
-  設計のため、将来 upstream 系インストーラへの乗り換えは可能（ロックインは浅い）
+**この表明は実行された**（2026-08-02 確認）。Determinate Nix Installer は
+2025-11-10 に既定を Determinate Nix へ変更し、**2026-01-01 に upstream Nix の
+インストールオプションを完全廃止**した（`--prefer-upstream-nix` フラグも撤去）。
+
+- **当方への影響は解消**: Phase 3-1c で hermes を素の Nix へ移行し Determinate 系から離脱した。
+  素の Nix の入手には上記ワーキンググループが公開するコミュニティ版
+  [`NixOS/nix-installer`](https://github.com/NixOS/nix-installer) を使う
+  （Determinate Nix Installer のフォーク。macOS aarch64 は Stable。MBP も同系統）
+- ただし**離脱の主因は政治的リスクそのものではなく、下記の技術的制約**だった
+
+---
+
+## 記録: `nix.enable = false` が塞ぐ nix-darwin オプション（2026-08-02、移行により解消）
+
+**本節は解消済みの制約の記録である。** 将来 Determinate Nix を再検討する際の判断材料。
+
+Determinate Nix は自前デーモンが Nix 本体を管理するため、nix-darwin 側で
+`nix.enable = false` が必須になる。この 1 行が **`nix.*` 配下をほぼ全面的に無効化する**。
+遮断の仕組みは 3 通りあり、危険度が大きく異なる。
+
+| 型 | 仕組み | 挙動 | 危険度 |
+|---|---|---|---|
+| **サイレント無視** | nix モジュールの config 全体が `handleUnmanaged`（= `mkIf cfg.enable`）で包まれる | 設定を書いても**エラーも警告も出ず**、ファイルが生成されない | **最高** |
+| 参照即エラー | `managedDefault` が 13 個のオプションのデフォルト値を `throw` に差し替える | 値を書かずに参照した時点で評価が落ちる（`config.nix.package` 等） | 中 |
+| 明示的拒否 | `assertion = cfg.automatic -> config.nix.enable` | メッセージ付きでビルドが止まる（`nix.gc` / `nix.optimise`） | 低（親切） |
+
+サイレント無視の対象には `/etc/nix/nix.conf`・`registry.json`・**`/etc/nix/machines`**
+（`nix.buildMachines` の出力先）・`NIX_PATH` が含まれる。とくに 4-1 Remote builders は
+「宣言したのに分散ビルドが動かない」という気づきにくい形で破綻するため、
+**この項目が移行を決めた主因**となった。
+
+Determinate を再採用する場合は、使いたい `nix.*` オプションが nix-darwin の
+`modules/nix/default.nix` で `handleUnmanaged` の内側にないかを必ず確認すること。
+
+### 検討した 3 案と選定（2026-08-02、[ADR-0005](adr/ADR-20260802-0005-upstream-nix-migration.md)）
+
+| 案 | 内容 | 判定 |
+|---|---|---|
+| A. 現状維持 | 機能ごとに `launchd.daemons` 自前宣言や `nix.custom.conf` 手書きで代替 | **不採用**。代替手段が宣言の外へ漏れ、設定を書き溜めるほど移植コストが上がる |
+| B. Determinate 公式 nix-darwin モジュール | `determinateNix.enable = true` + `customSettings` で宣言性を回復（3.15.2 以降、hermes は 3.21.8 で利用可だった） | **不採用**。宣言性は戻るが設定が Determinate 固有の書き方に固定され、将来の離脱コストが上がる |
+| **C. 素の Nix へ移行** | Determinate を外し upstream Nix へ | **採用**。MBP と系統が揃い、制約が根本から消える |
+
+C は「Tahoe でインストールできないのではないか」が懸念だったが、
+失敗していたのは **Determinate 版インストーラ**であり、`NixOS/nix-installer` では
+問題なく完了した。失ったのは lazy-trees と並列評価の 2 つで、
+いずれもヘッドレスで日常的に nix を叩かない hermes では恩恵が小さいと判断した。
+
+### 参考リポジトリはこの問題に直面していない（重要）
+
+実物調査（2026-08-02）の結果、**`[moz]` `[ryo]` とも Determinate Nix を採用していない**。
+両者の flake inputs に determinate は無く、`nix.settings.*` を通常どおり使っている
+（`[moz]` は `darwin/nix.nix` で experimental-features、`[ryo]` は `darwin/system.nix` で
+trusted-users / max-jobs 等）。**したがって両者から流用できる解法は無い**。
+当方が Determinate になったのは選択ではなく、macOS 26 でシェル版インストーラが失敗し
+pkg 版を使った結果だった（Phase 3-1 実施記録）。**2026-08-02 の移行で両者と同じ構成になった**ため、
+以後は `nix.settings` まわりの実装をそのまま参考にできる
+（`[ryo]` の `darwin/system.nix` はインストーラ生成の nix.conf を宣言で再現した内容であり、
+当方の `darwin/default.nix` も同じ方針を採った）。
 
 ---
 
