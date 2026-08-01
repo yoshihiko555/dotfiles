@@ -23,6 +23,27 @@ ssh -t macmini-admin 'sudo darwin-rebuild switch --flake /Users/agent/hermes-wor
 > ただし `mkOutOfStoreSymlink` 対象（.zshrc / starship / nvim 等の**設定ファイルの中身**）は
 > pull だけで即反映され、switch は不要。switch が要るのは**パッケージや配線の変更**時。
 
+## ショートカット（zsh alias）
+
+上記のコマンドは `shell/.zsh/nix.zsh` で alias 化してある。`nx*` が**ローカル実行**
+（hermes 上で使う）、`hx*` が **MBP からのリモート実行**。
+
+| ローカル | リモート | 内容 |
+| --- | --- | --- |
+| `nxb` | — | 適用せずビルドのみ（sudo 不要） |
+| `nxd` | `hxd` | 現行世代とビルド結果の差分を表示 |
+| `nxbd` | `hxb` | build → diff（`hxb` は `git pull` 込み） |
+| — | `hxp` | hermes の dotfiles を pull するだけ |
+| `nxs` | `hxs` | 適用（switch） |
+| `nxg` | `hxg` | 世代一覧 |
+| `nxrb` | `hxrb` | 1 つ前の世代へロールバック |
+
+- 差分確認は `hxd` が最短。**出力が空なら「宣言 = 実機」で一致**している。
+- `darwin-rebuild build` は `--out-link` を持たず cwd に `result` を作るため、
+  alias は `/tmp/nix-build-hermes` で実行してリポジトリを汚さない。
+- 差分表示は `nvd` ではなく Nix 標準の `nix store diff-closures` を使用（`nvd` は未導入）。
+- リモートの sudo 系（`hxs` / `hxg` / `hxrb`）は `macmini-admin`、それ以外は `macmini-agent`。
+
 ## 元に戻す
 
 ```sh

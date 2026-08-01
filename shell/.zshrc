@@ -70,6 +70,7 @@ source ~/.zsh/trust.zsh
 source ~/.zsh/cc-interrupt.zsh
 source ~/.zsh/claude.zsh
 source ~/.zsh/takt.zsh
+source ~/.zsh/nix.zsh
 
 # --------------------------------------------
 # 5. Local Config (machine-specific)
