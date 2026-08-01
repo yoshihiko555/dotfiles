@@ -221,9 +221,11 @@ macOS のため学習が MacBook Pro に転用でき、ヘッドレスで GUI �
 CLI を brew から Nix パッケージ管理へ移し、自前デーモン群を launchd 宣言管理に
 取り込む。調査結果と詳細計画: [PHASE-3-1B-HERMES-DAEMONS.md](PHASE-3-1B-HERMES-DAEMONS.md)
 
-- [~] nixpkgs 収録の CLI 16 個を `homebrew.brews` から `home/packages.nix`
-      （`home.packages`）へ移行。`gh` のみ暫定で brew にも残す
-      （gateway の PATH 問題、詳細は計画ドキュメント）
+- [x] nixpkgs 収録の CLI 16 個を `homebrew.brews` から `home/packages.nix`
+      （`home.packages`）へ移行（2026-08-01 適用・検証済み）。`gh` のみ暫定で brew にも残す
+      （gateway の PATH 問題、詳細は計画ドキュメント）。
+      注記: `git` は `git-gtr` の依存として brew にも残り、PATH では brew 版が先勝ちする
+      （実害なし。git-gtr の自作パッケージ化（Phase 4-7）で解消可能）
 - [ ] LLM 基盤（llama.cpp / llama-swap / miniserve）の nixpkgs 移行
 - [ ] llama-swap / miniserve の launchd 宣言管理化
 - [ ] `ai.hermes.gateway` の PATH に Nix プロファイル bin を追加

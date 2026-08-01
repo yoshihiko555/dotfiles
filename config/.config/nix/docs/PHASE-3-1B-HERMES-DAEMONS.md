@@ -59,7 +59,9 @@ Metal ビルドの品質は移行時に実測確認すること。
 - [ ] gh の brew 暫定残留（hosts/hermes、2026-08-01 措置）を解除
 - [ ] 野良 plist（`/private/tmp/com.hermes.poc.capture.jreid.plist`）と
       孤児 `suica_host.py` の扱いをユーザーに確認（勝手に消さない）
-- [ ] 完了確認: hermes の brew 残留が「cask 7 個 + git-gtr のみ」になる
+- [ ] 完了確認: hermes の brew 残留が「cask 7 個 + git-gtr（+ その依存）のみ」になる。
+      注記: zap は宣言済み formula の依存（git-gtr → git 等）を削除しない。
+      依存まで無くすには git-gtr の自作パッケージ化（Phase 4-7）が必要
 
 ### リスクと段取りの注意
 
