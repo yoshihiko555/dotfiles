@@ -76,6 +76,15 @@ command -v rg                          # どこ由来か確認
                                        #   /opt/homebrew/bin/...               = brew
 brew list --formula                    # brew 残留の確認（cask + git-gtr + LLM 基盤のみが正常）
 brew leaves                            # brew の明示インストール分
+
+# インストール済みパッケージ一覧（層ごとに 3 つ）
+cat home/packages.nix                  # ① 宣言 = 真の一覧（Nix 的にはこれが正）
+ls /etc/profiles/per-user/agent/bin    # ② Nix 実体（コマンド名だけ手軽に）
+nix-store -q --references $(nix-store -q --references \
+  $(realpath /etc/profiles/per-user/$USER) | grep home-manager-path) \
+  | sed 's|/nix/store/[a-z0-9]*-||' | sort   # ② バージョン付き
+# ③ brew 実体は上記 brew list
+# nix profile list は「手動導入分」の一覧なので、全宣言管理の当構成では空が正常
 nix flake metadata ./config/.config/nix  # lock されている入力の日付・rev
 ```
 
