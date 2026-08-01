@@ -8,7 +8,9 @@
 # 絶対パスを書かないことで、この YAML にストアパス補間が不要になり
 # mkOutOfStoreSymlink（編集即反映）のまま管理できる。
 
-healthCheckTimeout: 60
+# モデル未キャッシュ時のオンデマンドダウンロード（数 GB・数分）が
+# health check に殺されないよう長めに取る（2026-08-01、モデル消失事象を受けて 60→600）
+healthCheckTimeout: 600
 logLevel: info
 
 models:
