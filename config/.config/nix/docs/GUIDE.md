@@ -20,8 +20,17 @@ nix-darwin      = マシンに1つ（/etc、brew、launchd …）      ← sudo 
 home-manager    = ユーザーごと（~/.zshrc、~/.config/* …）    ← sudo 不要の世界
 ```
 
-当リポジトリでは home-manager を**単体では動かさず、nix-darwin の1モジュールとして
-内蔵**している。だから `darwin-rebuild switch` 一発で両方が適用される。
+> **nix-darwin という名前**: macOS の OS 基盤の名前が Darwin。
+> nix-darwin は「OS 全体を設定ファイルから組み立てる NixOS の思想を macOS に移植した
+> レイヤー」で、macOS 本体は置き換えられないため
+> **root 権限で触る領域（/etc・launchd・brew・OS 設定）の宣言管理**に特化している。
+
+home-manager は本来独立したツールで、単体利用なら `home-manager switch` という
+**別コマンド**で `~` 配下だけを管理する（sudo 不要。WSL2 = Phase 3-3 はこの単体形になる）。
+当リポジトリの macOS ホストでは**単体では動かさず、nix-darwin の1モジュールとして
+内蔵**している。`darwin-rebuild switch` の中で「① root がシステム層を適用 →
+② 続けて対象ユーザーとして home-manager を適用」という入れ子で走るため、
+コマンド1つで両方が適用され、バージョンも flake.lock で揃い、hostSpec も共有できる。
 
 ---
 
@@ -183,6 +192,43 @@ sudo darwin-rebuild switch --flake "$DOTFILES/config/.config/nix#hermes"
 
 **注意**: hermes に brew で何かを直接入れたら、必ず宣言にも追加すること。
 宣言に無いものは次の switch で zap に削除される（それが仕様）。
+
+---
+
+## 7. 元に戻す（rollback）と完全撤去
+
+switch のたびに「マシンのあるべき状態一式」が**世代（generation）**として
+`/nix/var/nix/profiles/system-N-link` に番号付きで保存され、古い世代は消されない。
+「元に戻す」とはポインタを昔の番号に付け替えて activation をやり直すこと。
+再ビルド・再ダウンロード不要なので数秒で戻る。
+
+```sh
+sudo darwin-rebuild --list-generations            # 世代一覧
+sudo darwin-rebuild switch --rollback             # 1つ前の世代へ
+sudo darwin-rebuild switch --switch-generation 3  # 番号指定で戻る（-G 3）
+```
+
+### rollback で戻る範囲（限界も含めて）
+
+| 対象 | 戻る？ |
+|---|---|
+| `/etc` の生成ファイル・launchd・OS 設定 | ✅ 完全に戻る |
+| `~` の symlink 配線 | ✅ 旧世代の配線に戻る |
+| brew | ⚠️ 旧世代の宣言で bundle が再実行される。zap で消えた分は再ダウンロードして入れ直しになるため瞬時ではない。cask のアプリ内データは消えたら戻らない |
+| dotfiles リポジトリ自体の編集 | ❌ 戻らない。`mkOutOfStoreSymlink` はリポジトリの生ファイルを指すため、設定の中身を戻すのは **git の仕事**（「編集即反映」の裏返し） |
+| 自分のデータ・管理外ファイル | ❌ そもそも Nix の管轄外 |
+
+古い世代は `nix-collect-garbage` 系で掃除すると戻れなくなる（現状 hermes は自動 GC なし）。
+
+### 完全撤去（Nix ごとやめる）
+
+導入と逆順の儀式で完全に撤退できる:
+
+1. nix-darwin のアンインストーラを実行（`/etc` の生成物が除去される）
+2. 退避してあった `/etc/*.before-nix-darwin` を元の名前に戻す
+3. Determinate Nix をアンインストール（`/nix` ボリュームごと消える）
+
+この撤退路が常に確保されているのが「Nix は試しやすい」と言われる理由。
 
 ---
 
