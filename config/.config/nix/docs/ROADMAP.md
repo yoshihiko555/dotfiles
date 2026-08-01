@@ -245,7 +245,9 @@ CLI を brew から Nix パッケージ管理へ移し、自前デーモン群�
 - [ ] `~/.config/nvim-dev` の手動リンク（worktree 参照）の扱いを決める
 - [ ] stow から home-manager へ段階移行（パッケージ単位）
 - [ ] `taskfiles/link.yml` / `Makefile` の link ターゲットを撤去
-- [ ] Nix を Determinate pkg 版へ入れ直して hermes と系統統一（現状はシェル版の素の Nix）
+- [ ] Nix を Determinate pkg 版へ入れ直して hermes と系統統一（現状はシェル版の素の Nix）。
+      **着手前に要再確認**: Determinate の upstream 配布中止表明に起因するコミュニティ紛争が
+      進行中（2026-08-01 記録、[USECASES.md](USECASES.md) の留意事項参照）
 - [ ] flake apps（`nix run .#switch`）パターンの導入検討（mozumasu 流用。評価をユーザー権限で行い
       root には store パスだけ渡す構造で、safe.directory 問題も回避できる）
 - [x] `config/.config/wezterm.bak`（17 ファイル）の腐敗を解消 — 2026-07-30 に削除（Nix 待ちせず先行対応）
