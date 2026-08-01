@@ -21,6 +21,10 @@
     always-allow-substitutes = true;
     max-jobs = "auto";
     extra-nix-path = "nixpkgs=flake:nixpkgs";
+    # 移行直後は root のみになっていた。作業ユーザーが substituter の指定や
+    # flake の信頼設定を行えるよう追加する（Determinate 運用時は同社が設定していた）。
+    # root は nix-darwin が既定で含めるため、ここには書かない（書くと重複する）。
+    trusted-users = [ config.hostSpec.username ];
   };
 
   # /etc/zshenv 経由で nix-darwin の PATH 設定（/run/current-system/sw/bin 等）を
