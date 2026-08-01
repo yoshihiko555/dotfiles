@@ -5,10 +5,23 @@
   # 3 台共通のユーザー環境は home/ に置く（層の設計は ADR-0004）。
   imports = [ ./homebrew.nix ];
 
-  # Determinate installer が Nix 本体（デーモン・ストア）を管理するため、
-  # nix-darwin 側の Nix 管理は無効化する。hermes には Determinate installer で
-  # 後から Nix を導入する前提（ADR-20260730-0003 の着手順序）。
-  nix.enable = false;
+  # Nix 本体（デーモン・ストア・nix.conf）は nix-darwin が管理する。
+  # 2026-08-02 に hermes を Determinate Nix から素の Nix（NixOS/nix-installer）へ
+  # 移行し、`nix.enable = false` を解除した。Determinate 運用下ではこの 1 行により
+  # `nix.*` 配下の大半が使用不能だった（詳細は docs/USECASES.md の留意事項）。
+  #
+  # nix-darwin が nix.conf を管理下に置くため、nix-installer が書いていた設定は
+  # ここで明示しないと失われる。特に experimental-features を落とすと flake が
+  # 評価できなくなり、次回以降 switch できなくなるので必須。
+  nix.settings = {
+    extra-experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
+    always-allow-substitutes = true;
+    max-jobs = "auto";
+    extra-nix-path = "nixpkgs=flake:nixpkgs";
+  };
 
   # /etc/zshenv 経由で nix-darwin の PATH 設定（/run/current-system/sw/bin 等）を
   # 通すために有効化する。zsh 自体の初期化ロジックは shell/.zshenv 側に一本化しており、
