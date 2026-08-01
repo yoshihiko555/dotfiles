@@ -46,6 +46,18 @@ cheat() {
   wails     Wails v2         wails3 Wails v3
   orche     ai-orchestra manager
 
+── Nix (nix-darwin) ────────────────────────
+  nx*       hermes 上でローカル実行
+  nxb       ビルドのみ (適用なし, sudo 不要)
+  nxd       現行世代との差分   nxbd  build→diff
+  nxs       switch で適用
+  nxg       世代一覧           nxrb  ロールバック
+  hx*       MBP から hermes へリモート実行
+  hxd       差分だけ見る (出力が空なら宣言=実機)
+  hxb       pull→build→差分    hxp   pull のみ
+  hxs       適用 (admin 経由)
+  hxg/hxrb  世代一覧 / ロールバック
+
 ── Digital Garden ──────────────────────────
   trend     今日のトレンドメモを開く
   daily     daily ノート一覧
