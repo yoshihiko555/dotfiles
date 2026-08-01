@@ -5,10 +5,12 @@
   #   homebrew.nix     — cask 宣言
   #   dotfiles.nix     — hermes 固有の配線（tmux / mise / zshrc.local）
   #   hermes-agent.nix — Hermes Agent 基盤（LLM launchd / gh 対策）
+  #   nix-gc.nix       — Nix store の自動 GC（常時稼働機向け）
   imports = [
     ./homebrew.nix
     ./dotfiles.nix
     ./hermes-agent.nix
+    ./nix-gc.nix
   ];
 
   hostSpec = {
