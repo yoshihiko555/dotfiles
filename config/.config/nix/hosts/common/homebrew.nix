@@ -24,23 +24,12 @@
 
   homebrew.taps = [ "coderabbitai/tap" ];
 
-  # 3 台共通の CLI（root Brewfile と hermes/Brewfile の交差 15 個）。
-  # WSL2（Phase 3-3）は darwin モジュールを通らないため、実質 darwin 2 台の共通集合。
+  # nixpkgs 未収録のものだけを brew で管理する（共存方針: CLI = Nix、
+  # brew は cask + nixpkgs 未収録専用）。
+  # nixpkgs 収録の CLI 16 個は home/packages.nix へ移行済み（2026-08-01）。
   homebrew.brews = [
+    # サードパーティ tap の純シェル formula。nixpkgs 未収録。
+    # Phase 4-7 の自作パッケージ化候補
     "coderabbitai/tap/git-gtr"
-    "d2"
-    "fzf"
-    "gh"
-    "ghq"
-    "git"
-    "glow"
-    "lazygit"
-    "mise"
-    "neovim"
-    "starship"
-    "tmux"
-    "tree"
-    "yazi"
-    "zoxide"
   ];
 }

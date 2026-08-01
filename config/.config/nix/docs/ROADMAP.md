@@ -23,6 +23,9 @@ Nix の学習度合いに合わせて、小さく動かしながら進める。
 - devShell + direnv（mise と重複）
 - zsh 起動最適化（実測 0.244 秒で十分速い）
 - launchd の宣言管理（自己管理対象が `cliproxyapi` の 1 つだけ）
+  → **2026-08-01 改訂: hermes に限りスコープ入り**（[Phase 3-1b](PHASE-3-1B-HERMES-DAEMONS.md)）。
+  「1 つだけ」は MacBook Pro 視点の前提で、hermes には自前 launchd agent が
+  3 つあると判明したため。MacBook Pro / WSL2 は引き続き対象外
 
 ---
 
@@ -212,6 +215,22 @@ macOS のため学習が MacBook Pro に転用でき、ヘッドレスで GUI �
   `sudo -H /nix/var/nix/profiles/default/bin/nix run github:nix-darwin/nix-darwin/master#darwin-rebuild -- switch --flake <repo>/config/.config/nix#hermes`。
   2回目以降は `sudo darwin-rebuild switch --flake <repo>/config/.config/nix#hermes`
   （`darwin-rebuild` が `/run/current-system/sw/bin` に入るため）
+
+### Phase 3-1b: hermes の完全 Nix 化 — `[~]` 進行中（2026-08-01 着手）
+
+CLI を brew から Nix パッケージ管理へ移し、自前デーモン群を launchd 宣言管理に
+取り込む。調査結果と詳細計画: [PHASE-3-1B-HERMES-DAEMONS.md](PHASE-3-1B-HERMES-DAEMONS.md)
+
+- [~] nixpkgs 収録の CLI 16 個を `homebrew.brews` から `home/packages.nix`
+      （`home.packages`）へ移行。`gh` のみ暫定で brew にも残す
+      （gateway の PATH 問題、詳細は計画ドキュメント）
+- [ ] LLM 基盤（llama.cpp / llama-swap / miniserve）の nixpkgs 移行
+- [ ] llama-swap / miniserve の launchd 宣言管理化
+- [ ] `ai.hermes.gateway` の PATH に Nix プロファイル bin を追加
+- [ ] 野良 plist / 孤児プロセスの扱いをユーザー確認
+- [ ] 完了確認: brew 残留が「cask 7 個 + git-gtr」のみになる
+
+**完了条件**: 計画ドキュメントの完了条件 1〜4 を満たす。
 
 ### Phase 3-2: MacBook Pro — `[ ]`
 

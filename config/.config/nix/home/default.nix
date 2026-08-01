@@ -1,6 +1,9 @@
 { lib, hostSpec, ... }:
 {
-  imports = [ ./dotfiles.nix ];
+  imports = [
+    ./dotfiles.nix
+    ./packages.nix
+  ];
 
   home.username = hostSpec.username;
   home.homeDirectory = lib.mkForce "/Users/${hostSpec.username}";

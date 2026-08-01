@@ -11,15 +11,19 @@ in
 
   homebrew.taps = [ "mostlygeek/llama-swap" ];
 
-  # hermes 固有 brews（hermes/Brewfile にありルート Brewfile に無いもの: fd, ripgrep）に加え、
-  # Hermes Agent の LLM 基盤（llama.cpp / llama-swap / miniserve）を宣言する。
-  # hermes/Brewfile には未記載だが実機に存在し、zap による削除を防ぐため宣言する。
+  # Hermes Agent の LLM 基盤。実機のツーリングが /opt/homebrew/bin/ の
+  # 絶対パスで起動しており、Nix へ移すと稼働が壊れるため brew に残す。
+  # 絶対パス参照の調査とデーモン群の launchd 宣言化とセットで移行を再判断する
+  # （2026-08-01 時点）。fd / ripgrep は home/packages.nix（Nix 管理）へ移行済み。
   homebrew.brews = [
-    "fd"
-    "ripgrep"
     "llama.cpp"
     "llama-swap"
     "miniserve"
+    # 暫定残留（2026-08-01）: ai.hermes.gateway（launchd）の PATH は
+    # /opt/homebrew/bin 固定で、Nix 版 gh（/etc/profiles/per-user/agent/bin）を
+    # 探索できない。デーモン群の launchd 宣言管理化で PATH を面倒みるまで
+    # brew 版 gh も残す（Nix 版と重複するが無害）
+    "gh"
   ];
 
   # ヘッドレス運用だが、たまに GUI で使う実態があるため cask も宣言管理する。
