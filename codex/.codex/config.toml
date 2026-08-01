@@ -67,12 +67,16 @@ trust_level = "trusted"
 [projects."/private/tmp/claude-501/-Users-yoshihiko-ghq-github-com-yoshihiko555-ai-orchestra--worktrees-feat-loop/7d43b288-5755-4fc7-95c1-6fff6b2e1fca/scratchpad"]
 trust_level = "trusted"
 
+[projects."/Users/yoshihiko/Documents/Codex/2026-07-25/realtime-voice-chat"]
+trust_level = "trusted"
+
 # END managed-trust-projects
 
 # ---- 機能フラグ（手動管理） ----
 [features]
 # 安定機能だが、グローバルで常に有効にするため明示する
 multi_agent = true
+js_repl = false
 
 # ---- 子プロセスへ渡す環境変数 ----
 [shell_environment_policy]
@@ -90,6 +94,11 @@ exclude = [
   "NPM_TOKEN",
   "HOMEBREW_GITHUB_API_TOKEN",
 ]
+
+[shell_environment_policy.set]
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "028a14b6eaa6d98dac2aae00764345ab9f244801ed8493d42b9af3be5575006e,f204d340535055781952b10ed396de20b842f00a19e430852f7e121ad1ce91f6"
+NODE_REPL_TRUSTED_CODE_PATHS = "/Users/yoshihiko/.codex"
 
 # ---- MCPサーバー（手動管理） ----
 [mcp_servers.pencil]
@@ -117,19 +126,20 @@ NODE_REPL_NODE_MODULE_DIRS = "/Applications/ChatGPT.app/Contents/Resources/cua_n
 NODE_REPL_NODE_PATH = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node"
 NODE_REPL_TRUSTED_CODE_PATHS = "/Users/yoshihiko/.codex"
 CODEX_HOME = "/Users/yoshihiko/.codex"
-NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "6d25aa7656feac858f3a3bdaea5bcbab0dbfd426c9de8e6931ce90c399ee8e4f,e74b67ab909392b37f7aef14977fce7aa80cfa02ade5491f30abcdbcb9e69f33"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "028a14b6eaa6d98dac2aae00764345ab9f244801ed8493d42b9af3be5575006e,f204d340535055781952b10ed396de20b842f00a19e430852f7e121ad1ce91f6"
 BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
 NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
 NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
 NODE_REPL_INSTRUCTIONS_USE_CASE_COMPUTER_USE = "Control desktop apps on macOS through Computer Use."
 BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
-BROWSER_USE_CODEX_APP_VERSION = "26.707.51957"
+BROWSER_USE_CODEX_APP_VERSION = "26.727.51351"
 CODEX_CLI_PATH = "/Applications/ChatGPT.app/Contents/Resources/codex"
 
 [mcp_servers.computer-use]
-command = "/Users/yoshihiko/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
+command = "./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
 args = ["mcp"]
-enabled = true
+cwd = "."
+enabled = false
 
 # ---- 通知・モデル移行状態 ----
 [notice]
@@ -156,15 +166,13 @@ status_line = ["model-name", "project-root", "git-branch", "context-remaining", 
 "gpt-5.5" = 4
 "gpt-5.6-sol" = 4
 
-# ---- プラグイン（Codex CLI / ChatGPTアプリ管理） ----
-# marketplaceの更新時刻とインストール状態は自動更新される。
 [marketplaces.openai-bundled]
-last_updated = "2026-07-16T07:36:41Z"
+last_updated = "2026-08-01T03:18:01Z"
 source_type = "local"
 source = "/Users/yoshihiko/.codex/.tmp/bundled-marketplaces/openai-bundled"
 
 [marketplaces.openai-primary-runtime]
-last_updated = "2026-07-16T07:47:20Z"
+last_updated = "2026-08-01T03:18:46Z"
 source_type = "local"
 source = "/Users/yoshihiko/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
 
@@ -207,4 +215,5 @@ trusted_hash = "sha256:31875dd9f8b427fdb8095fd3a0f4f550e4331cf2511be57c5c4e84f97
 # ---- ChatGPTデスクトップアプリ設定 ----
 [desktop]
 followUpQueueMode = "queue"
-conversationDetailMode = "STEPS_COMMANDS"
+conversationDetailMode = "STEPS_PROSE"
+realtimeVoiceScreenContextEnabled = true
