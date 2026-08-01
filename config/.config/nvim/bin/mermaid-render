@@ -12,20 +12,43 @@
 #    行全体がタイトルになり `FE["FE: 生産管理DB（Access）"]` と生表示される。
 #    ID を落としてラベルだけ渡す。
 #
+# 3) 円柱ノード [(ラベル)] の描画が潰れる
+#    上部の楕円にラベルが入り込み、本体が空箱になって「箱が2つ乗っている」ように見える。
+#    矩形に倒す。DB であることは subgraph の中にあるという文脈で読めるため、
+#    形状情報を落とすコストより崩れを消す利益を取る。
+#    菱形 {...} と スタジアム ([...]) は正しく描けるので触らない。
+#
 # 図の見た目は termaid のデフォルトが余白過多なので、下の変数で詰めている。
 
 GAP=2        # ノード間の間隔（既定 4）
 PADDING_X=2  # ノード内の左右余白（既定 4）
 PADDING_Y=1  # ノード内の上下余白（既定 2）
 
-sed -E \
-  -e 's|<[Bb][Rr] */?>|\\n|g' \
-  -e 's|^([[:space:]]*subgraph[[:space:]]+)[A-Za-z0-9_-]+\["([^"]*)"\]|\1\2|' \
-  -e 's|^([[:space:]]*subgraph[[:space:]]+)[A-Za-z0-9_-]+\[([^]"]*)\]|\1\2|' \
-  | termaid --gap "$GAP" --padding-x "$PADDING_X" --padding-y "$PADDING_Y" "$@" \
-  | awk '
-      # termaid は図の前後に空行を出す。nvim 側で図に背景色を敷いているため、
-      # 幅0の行が混ざるとパネルの上下が欠けて見える。ここで落とす。
+# nvim 側は図に背景色を敷いてパネルとして見せている（背景画像 + blur の透けを遮断する狙い）。
+# そのため行の表示幅が揃っていないとパネルの右端がギザギザになる。
+# termaid が右端まで埋めてくれるのは flowchart LR のときだけで、TD や erDiagram では
+# 行長がばらつくため、ここで前後の空行を落としつつ最大幅まで揃える。
+#
+# 全角判定が要るので python3 を使うが、無い環境では空行を落とすだけに留めて動作は保つ
+# （パネルの右端が揃わないだけで図は読める）。
+trim_and_pad() {
+  if command -v python3 >/dev/null 2>&1; then
+    python3 -c '
+import sys, unicodedata
+def width(s):
+    # box-drawing は East Asian Width が Ambiguous だが端末では半角。W/F だけ全角として数える
+    return sum(2 if unicodedata.east_asian_width(c) in "WF" else 1 for c in s)
+lines = sys.stdin.read().split("\n")
+while lines and not lines[0].strip():
+    lines.pop(0)
+while lines and not lines[-1].strip():
+    lines.pop()
+if lines:
+    m = max(width(l) for l in lines)
+    sys.stdout.write("\n".join(l + " " * (m - width(l)) for l in lines) + "\n")
+'
+  else
+    awk '
       { line[NR] = $0 }
       END {
         first = 1
@@ -35,3 +58,14 @@ sed -E \
         for (i = first; i <= last; i++) print line[i]
       }
     '
+  fi
+}
+
+sed -E \
+  -e 's|<[Bb][Rr] */?>|\\n|g' \
+  -e 's|^([[:space:]]*subgraph[[:space:]]+)[A-Za-z0-9_-]+\["([^"]*)"\]|\1\2|' \
+  -e 's|^([[:space:]]*subgraph[[:space:]]+)[A-Za-z0-9_-]+\[([^]"]*)\]|\1\2|' \
+  -e 's|\[\("([^"]*)"\)\]|["\1"]|g' \
+  -e 's|\[\(([^)]*)\)\]|[\1]|g' \
+  | termaid --gap "$GAP" --padding-x "$PADDING_X" --padding-y "$PADDING_Y" "$@" \
+  | trim_and_pad
