@@ -399,7 +399,7 @@ hermes が pull 型で設定に自動追従する。
 | 機能 | 内容 |
 |---|---|
 | overlays | nixpkgs のパッケージを部分上書き・patch。upstream が壊れていても自分で直せる |
-| 自作パッケージ（`packages/`） | nixpkgs 未収録の CLI を宣言に載せる。`agent-browser` / `git-gtr` / `takt` が候補 |
+| 自作パッケージ（`packages/`） | nixpkgs 未収録の CLI を宣言に載せる。`agent-browser` / `git-gtr` / `baton`（自作 Go、buildGoModule） / `orchex`（自作） / `termaid` が候補（2026-08-02 更新。`takt` は公式 flake が判明したため flake input で宣言する方式に変更、自作パッケージ化は不要に） |
 | `dockerTools` | Dockerfile なしで OCI イメージ生成。レイヤ最適化が自動 |
 | flake templates | `nix flake init -t` でプロジェクト雛形 |
 | `nh`（nix helper） | rebuild の UX 改善・差分表示（ryoppippi 採用） |
@@ -460,8 +460,12 @@ Phase 3-1c の素の Nix 移行で標準オプションが使えるようにな�
 | ツール | 方針 |
 |---|---|
 | **stow** | 段階的に home-manager へ寄せ、**最終的に廃止**（Phase 3-2 完了後） |
-| **mise** | **残す**。境界は「言語ランタイム = mise、それ以外の CLI = Nix」 |
+| **mise** | **残す**。境界は「言語ランタイム = mise、それ以外の CLI = Nix」。例外: nixpkgs 未収録の pipx 系 CLI（現状 `termaid` のみ）は mise の pipx backend が最も低コストのため mise に置いてよい（2026-08-02、[PHASE-3-2-CLI-INVENTORY.md](PHASE-3-2-CLI-INVENTORY.md)。将来は Phase 4-7 で自作パッケージ化） |
 | **brew** | GUI / cask と nixpkgs 未収録パッケージ用に**恒久的に残る**。`homebrew.*` で宣言化 |
+
+> 2026-08-02: 全管理系統（brew / mise / npm -g / go install / uv tool / pipx / cargo /
+> 野良バイナリ）の横断棚卸しを実施し、境界の運用は破綻していないことを確認
+> （方針改訂不要と判断）。詳細は PHASE-3-2-BREW-INVENTORY.md / PHASE-3-2-CLI-INVENTORY.md。
 
 **brew が恒久的に残る理由**: `agent-browser` / `git-gtr`（サードパーティ tap）/
 `gemini-cli` / `opencode` / `claude-code` / `codex` は nixpkgs 未収録または追従が遅い。
