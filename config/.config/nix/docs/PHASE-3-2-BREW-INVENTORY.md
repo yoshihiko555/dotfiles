@@ -40,7 +40,7 @@ brew 管理下の全アイテムを「役割・宣言状態・今後の行き先
 | `gh` | GitHub CLI | 宣言済 | 2026-08 | nix共通 |
 | `ghq` | リポジトリ管理 | 宣言済 | 2026-06 | nix共通 |
 | `lazygit` | Git TUI | 宣言済 | 2026-07 | nix共通 |
-| `git-gtr` | worktree ヘルパー（tap: coderabbitai） | 宣言済（隠れ※） | 2026-06 | brew残留（`darwin/homebrew.nix` に宣言済み。Phase 4-7 で自作パッケージ化候補） |
+| `git-gtr` | worktree ヘルパー（tap: coderabbitai） | 宣言済（隠れ※） | 2026-06 | brew残留（Phase 3-2 で `hosts/macbook/homebrew.nix` に宣言。hermes 未使用のため darwin 共通層からは降格済み 2026-08-02。Phase 4-7 で自作パッケージ化候補） |
 | `go-task` | タスクランナー（`taskfiles/` で使用、tap: go-task） | 宣言済（隠れ※） | 2026-06 | nix新規（**タスクランナーは go-task に統一**と決定 2026-08-02。nixpkgs `go-task` 3.48.0 確認済み。Makefile は stow と同時期に廃止、flake apps は Nix 操作専用） |
 
 ### 1-3. エディタ・言語ツール（nvim / LSP）
@@ -188,3 +188,6 @@ brew 管理下の全アイテムを「役割・宣言状態・今後の行き先
 - `cmux` / `codexbar` は両方使用中 → 宣言追加済み
 - `docker-desktop` の Brewfile 宣言は削除（OrbStack が代替稼働中）
 - `~/.config/nvim-dev` のリンク切れ symlink は削除済み
+- **hermes 側も棚卸し実施**（2026-08-02）: cask 7 個は使用実態を確認しすべて継続。
+  git-gtr のみ未使用と判断し darwin 共通層から降格 → zap で削除（switch 適用済み。
+  hermes の brew は formula ゼロ・tap ゼロ・cask 7 個のみに）

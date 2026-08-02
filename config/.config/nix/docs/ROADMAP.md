@@ -231,11 +231,16 @@ CLI を brew から Nix パッケージ管理へ移し、自前デーモン群�
       （gateway の PATH 問題、詳細は計画ドキュメント）。
       注記: `git` は `git-gtr` の依存として brew にも残り、PATH では brew 版が先勝ちする
       （実害なし。git-gtr の自作パッケージ化（Phase 4-7）で解消可能）
+      → **2026-08-02 解消**: git-gtr は hermes で未使用と判断し darwin 共通層から降格
+      （ADR-0004 ルール 3）。zap が git-gtr と依存の brew 版 git を連鎖除去し、
+      git は nix 版に一本化された。MBP 向けは Phase 3-2 で hosts/macbook/ に宣言する
 - [x] LLM 基盤（llama.cpp / llama-swap / miniserve）の nixpkgs 移行（b10133 / 240 へ更新）
 - [x] llama-swap / miniserve の launchd 宣言管理化（home-manager launchd.agents）
 - [x] `ai.hermes.gateway` 対策は plist 無改変の `~/.local/bin/gh` symlink 方式で解決
 - [x] 野良 plist / 孤児プロセスは残骸と判明、掃除済み（suica は次回再起動で消滅）
 - [x] 完了確認: brew 残留は cask 7 個 + git-gtr（+依存）のみ
+      → 2026-08-02 に git-gtr も降格・削除し、**brew 残留は cask 7 個のみ**
+      （formula ゼロ・tap ゼロ。cask 7 個は棚卸しの結果すべて継続と判断）
 
 **完了条件**: 計画ドキュメントの完了条件 1〜4 を満たす。→ **すべて達成（2026-08-01）**
 
