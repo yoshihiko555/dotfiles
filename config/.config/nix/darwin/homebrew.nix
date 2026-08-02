@@ -22,14 +22,12 @@
     };
   };
 
-  homebrew.taps = [ "coderabbitai/tap" ];
-
   # nixpkgs 未収録のものだけを brew で管理する（共存方針: CLI = Nix、
   # brew は cask + nixpkgs 未収録専用）。
   # nixpkgs 収録の CLI 16 個は home/packages.nix へ移行済み（2026-08-01）。
-  homebrew.brews = [
-    # サードパーティ tap の純シェル formula。nixpkgs 未収録。
-    # Phase 4-7 の自作パッケージ化候補
-    "coderabbitai/tap/git-gtr"
-  ];
+  # git-gtr（coderabbitai/tap）は hermes で未使用と判断し共通層から降格（2026-08-02）。
+  # MBP では使用中のため Phase 3-2 で hosts/macbook/homebrew.nix に宣言する
+  # （ADR-0004 ルール 3: 共通層に置くのは 2 台以上で使うものだけ）。
+  homebrew.taps = [ ];
+  homebrew.brews = [ ];
 }
