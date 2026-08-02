@@ -22,6 +22,12 @@ return {
   -- Left Option を Alt として送信（Alt+H/J/K/L の smart-splits 統合に必要）
   send_composed_key_when_left_alt_is_pressed = false,
 
+  -- Kitty keyboard protocol を有効化（既定 false）
+  -- takt 等の TUI が Shift+Enter を改行として受け取るために必要。
+  -- 無効だと修飾が落ちて素の Enter となり、改行のつもりが送信になる。
+  -- tmux 側は extended-keys on / csi-u（conf/general.conf）と対で機能する。
+  enable_kitty_keyboard = true,
+
   -- 設定ファイルの自動リロード
   automatically_reload_config = true,
 
