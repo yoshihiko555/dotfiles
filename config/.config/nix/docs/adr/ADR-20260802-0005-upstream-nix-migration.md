@@ -107,6 +107,51 @@ Determinate 固有機能で、代替不可）。ただし hermes は**ヘッド�
   4-1 の設計上の注意は解消済みとして書き換え、4-9 を完了に
 - [USECASES.md](../USECASES.md): 制約の記録を「解消済み」として残し、
   Determinate 公式モジュールを対象外へ移動。政治的リスクの節に配布廃止の実行を追記
+- [GUIDE.md](../GUIDE.md): Determinate Nix 前提の記述を素の Nix 前提へ更新
+- [../../README.md](../../README.md): 同上（初回セットアップ手順の Determinate 前提記述を更新）
+
+## 撤退条件とロールバック
+
+移行直後のシステムレベル変更のため、逆方向（素の Nix → Determinate Nix）に戻す条件と
+手順をここに記録する。**以下のロールバック手順は未検証**（実行も検証もしていない）。
+断定はできないため、実際に行う際は都度状況を確認しながら進めること。
+
+### 撤退条件
+
+「決定」節の判断は「失うのは lazy-trees と並列評価の 2 つで、hermes はヘッドレスの
+Agent 運用機のため恩恵は小さい」という前提に立っている。この前提が崩れた場合に
+本決定を再検討する。
+
+- hermes で日常的に重い評価（`nix build` / `darwin-rebuild switch` 等）を頻繁に回す
+  運用に変わり、「ヘッドレス機で nix コマンドを叩く頻度は低い」という前提が崩れ、
+  lazy-trees・並列評価の恩恵が無視できなくなった場合
+- 「検証」節で確認した「Tahoe 26.4.1 で `NixOS/nix-installer` は問題なく動作した」が
+  覆り、素の Nix 側で Tahoe 由来の不具合が新たに発生した場合
+  （この場合、素の Nix を選んだ「決定」節の根拠の一つが失われる）
+
+### ロールバック手順（概略・未検証）
+
+「決定」節の 3 段階移行手順、および ROADMAP.md Phase 3-1c の実施チェックリストの
+逆順が骨格になる。ROADMAP.md に記録されているコマンドのみを引用し、
+記録が無い箇所は「要確認」とする。
+
+1. GC を `nix.gc.automatic` から `launchd.daemons` の自前宣言へ戻す
+2. `nix.settings` による宣言をやめ `nix.enable = false` に戻す
+3. nix-darwin をアンインストール（`darwin-uninstaller`。要 root。ROADMAP.md 記録）
+4. 素の Nix（`NixOS/nix-installer` 由来）をアンインストール（`/nix/nix-installer uninstall`。
+   ROADMAP.md Phase 3-1c で Determinate の撤去に同じコマンドを実行した記録があり、
+   両者はフォーク関係でインストーラのパスが共通。ただし素の Nix 側での実行は未検証）
+5. Determinate Nix を再導入する（**要確認** — 「背景」節の記録どおりシェル版インストーラは
+   Tahoe で `/etc/fstab` 書き込みに失敗するため pkg 版を使う必要があるはずだが、
+   具体的な再導入コマンドは記録が無い）
+6. nix-darwin を再導入し、`nix.enable = false` の状態で switch する
+7. `trusted-users` や `mise trust` など、移行時に生じた副作用の再確認
+
+「検証」節にある「`/run/current-system` が移行前と同一の store パスで再現された」という
+結果は、flake から同一システムを再構築できることの実証であり、上記 3〜6（Nix・nix-darwin の
+入れ替え）が原理的に安全な操作であることの根拠にはなる。ただし、この検証は
+「Determinate → 素の Nix」の方向でのみ行われたものであり、逆方向（素の Nix →
+Determinate）で同様の再現性が成り立つかは未検証。
 
 ## 未確定事項（将来の ADR で扱う）
 

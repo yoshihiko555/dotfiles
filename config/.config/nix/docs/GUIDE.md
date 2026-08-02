@@ -43,7 +43,7 @@ config/.config/nix/
 ├── modules/
 │   └── hostSpec.nix       # 「ホストごとに違う値」を受け渡すための自作オプション定義
 ├── darwin/                # darwin ホスト共通のシステム層（WSL2 は通らない）
-│   ├── default.nix        # nix.enable=false, zsh, DOTFILES 注入等
+│   ├── default.nix        # nix.settings 宣言, zsh, DOTFILES 注入等
 │   └── homebrew.nix       # 共通 brew 宣言（+ zap 設定）
 ├── hosts/                 # ホスト固有（薄く保つ。2台以上で使うものは共通層へ昇格）
 │   └── hermes/
@@ -51,6 +51,7 @@ config/.config/nix/
 │       ├── homebrew.nix   # hermes の cask 宣言
 │       ├── dotfiles.nix   # hermes 固有の配線（tmux / mise / zshrc.local）
 │       ├── hermes-agent.nix       # Hermes Agent 基盤（LLM の launchd 宣言等）
+│       ├── nix-gc.nix     # Nix store の自動 GC（常時稼働機向け）
 │       ├── llama-swap-config.yaml # llama-swap 設定（mkOutOfStoreSymlink で配線）
 │       └── zshrc.local    # hermes 固有の zsh 設定（Nix 言語ではなく普通の zsh ファイル）
 └── home/
@@ -87,12 +88,20 @@ flake は「このディレクトリを1つのパッケージのように扱う�
 
 ### darwin/ — darwin ホスト共通のシステム層
 
-- `default.nix`: Determinate が Nix 本体を管理するので `nix.enable = false`、
-  zsh の PATH 配線（`programs.zsh.enable`）、`$DOTFILES` 環境変数の注入、
+- `default.nix`: nix-darwin が `nix.settings` で nix.conf を宣言管理する
+  （`extra-experimental-features = [ "nix-command" "flakes" ]` / `always-allow-substitutes` /
+  `max-jobs = "auto"` / `extra-nix-path` / `trusted-users`）。2026-08-02 に
+  Determinate Nix から素の Nix（`NixOS/nix-installer`）へ移行し
+  `nix.enable = false` を解除した際、nix-installer が書いていた設定をここへ
+  明示しないと flake の評価に必須な experimental-features が失われるため追加した
+  （[ADR-0005](adr/ADR-20260802-0005-upstream-nix-migration.md)）。
+  ほかに zsh の PATH 配線（`programs.zsh.enable`）、`$DOTFILES` 環境変数の注入、
   ユーザー定義、`system.stateVersion`
-- `homebrew.nix`: 共通 CLI 15 個の brew 宣言と、**`cleanup = "zap"`**
-  （宣言に無いパッケージを switch のたびに自動削除 = 腐敗の構造的防止。
-  この1行が nix-darwin を最初から使う理由。ADR-0003 参照）
+- `homebrew.nix`: nixpkgs 未収録の brew formula 1 件（`coderabbitai/tap/git-gtr`）の
+  宣言と、**`cleanup = "zap"`**（宣言に無いパッケージを switch のたびに自動削除 =
+  腐敗の構造的防止。この1行が nix-darwin を最初から使う理由。ADR-0003 参照）。
+  nixpkgs 収録の CLI 16 個は 2026-08-01 に `home/packages.nix` へ移行済み
+  （共存方針: CLI = Nix、brew は cask + nixpkgs 未収録専用）
 
 ### hosts/hermes/ — hermes だけの事情（機能群ごとにファイル分割）
 
@@ -102,6 +111,12 @@ flake は「このディレクトリを1つのパッケージのように扱う�
 - `dotfiles.nix`: hermes だけに配る symlink（ミニマル tmux.conf、mise、zshrc.local）
 - `hermes-agent.nix`: LLM 基盤（llama-cpp / llama-swap / miniserve のパッケージと
   launchd 宣言、gateway 向け gh 橋渡し）
+- `nix-gc.nix`: Nix store の自動 GC。`nix.gc.automatic = true` で週次（日曜 3:15）に
+  `--delete-older-than 30d` を実行する。常時稼働のヘッドレス機は世代が溜まり続けるため、
+  コストがほぼ無い予防的な宣言として置いている。2026-08-02 の素の Nix 移行前は
+  `nix.enable = false`（Determinate Nix 運用）により `nix.gc.automatic` の assertion が
+  弾かれ、`launchd.daemons` の自前宣言で代替していた
+  （[ADR-0005](adr/ADR-20260802-0005-upstream-nix-migration.md)）
 - `zshrc.local`: Hermes Agent 運用 alias（`hms` 等）。**Nix 言語に書き直さず
   普通の zsh ファイルのまま**置き、symlink で配るのが当リポジトリの方針
 
@@ -190,6 +205,7 @@ darwinConfigurations.hermes
 | 全ホストに dotfile のリンクを追加 | `home/dotfiles.nix` |
 | hermes だけのリンク・zsh 設定 | `hosts/hermes/dotfiles.nix` / `zshrc.local` |
 | hermes のデーモン（launchd） | `hosts/hermes/hermes-agent.nix`（新しい機能群は新ファイル + imports 追加） |
+| hermes の自動 GC の頻度・保持期間を変える | `hosts/hermes/nix-gc.nix` の `nix.gc.interval` / `nix.gc.options` |
 | 新しいホスト（MacBook Pro 等）を追加 | `hosts/<name>/default.nix` を作り、flake.nix の `darwinConfigurations` に1エントリ追加 |
 
 反映フロー（hermes の場合）:
@@ -229,7 +245,11 @@ sudo darwin-rebuild switch --switch-generation 3  # 番号指定で戻る（-G 3
 | dotfiles リポジトリ自体の編集 | ❌ 戻らない。`mkOutOfStoreSymlink` はリポジトリの生ファイルを指すため、設定の中身を戻すのは **git の仕事**（「編集即反映」の裏返し） |
 | 自分のデータ・管理外ファイル | ❌ そもそも Nix の管轄外 |
 
-古い世代は `nix-collect-garbage` 系で掃除すると戻れなくなる（現状 hermes は自動 GC なし）。
+古い世代は `nix-collect-garbage` 系で掃除すると戻れなくなる。hermes は
+`hosts/hermes/nix-gc.nix` の `nix.gc.automatic` により週次（日曜 3:15）で
+`--delete-older-than 30d` の自動 GC が動くため、30日より前の世代へは
+自然に戻れなくなっていく点に注意（2026-08-02 の素の Nix 移行で
+`launchd.daemons` の自前宣言から標準オプションへ切り替えた。ADR-0005 参照）。
 
 ### 完全撤去（Nix ごとやめる）
 
@@ -237,7 +257,11 @@ sudo darwin-rebuild switch --switch-generation 3  # 番号指定で戻る（-G 3
 
 1. nix-darwin のアンインストーラを実行（`/etc` の生成物が除去される）
 2. 退避してあった `/etc/*.before-nix-darwin` を元の名前に戻す
-3. Determinate Nix をアンインストール（`/nix` ボリュームごと消える）
+3. Nix 本体をアンインストール（`/nix` ボリュームごと消える）。hermes は 2026-08-02 に
+   素の Nix（[`NixOS/nix-installer`](https://github.com/NixOS/nix-installer)）へ移行済みなので
+   `/nix/nix-installer uninstall`（ROADMAP の Phase 3-1c で Determinate の撤去に
+   同じコマンドを実行した記録あり。両者はフォーク関係でインストーラのパスが共通。
+   [ADR-0005](adr/ADR-20260802-0005-upstream-nix-migration.md) 参照）
 
 この撤退路が常に確保されているのが「Nix は試しやすい」と言われる理由。
 

@@ -95,7 +95,9 @@ nix build ./config/.config/nix#darwinConfigurations.hermes.system --no-link  # �
 command -v rg                          # どこ由来か確認
                                        #   /etc/profiles/per-user/agent/bin/... = Nix
                                        #   /opt/homebrew/bin/...               = brew
-brew list --formula                    # brew 残留の確認（cask + git-gtr + LLM 基盤のみが正常）
+brew list --formula                    # brew 残留の確認（cask + git-gtr（+依存）のみが正常。
+                                       #   LLM 基盤（llama.cpp/llama-swap/miniserve）は
+                                       #   2026-08-01 に nixpkgs へ移行済みで brew には残らない）
 brew leaves                            # brew の明示インストール分
 
 # インストール済みパッケージ一覧（層ごとに 3 つ）

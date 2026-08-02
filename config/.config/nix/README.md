@@ -3,10 +3,13 @@
 dotfiles 配下の Nix 管理エントリポイント。
 stow 経由で `~/.config/nix/` にリンクされる。
 
-## 現状 (Phase 3-1 / 3-1b 完了 / 次は Phase 3-2 → MacBook Pro)
+## 現状 (Phase 3-1 / 3-1b / 3-1c 完了 / 次は Phase 3-2 → MacBook Pro)
 
 - hermes（Mac mini）は nix-darwin + home-manager 管理下（2026-07-31）。
   CLI・LLM 基盤・launchd デーモンまで宣言管理済みで、brew 残留は cask + git-gtr のみ（3-1b、2026-08-01）
+- hermes は 2026-08-02 に Determinate Nix から素の Nix（`NixOS/nix-installer`）へ移行し、
+  MacBook Pro と Nix 本体の系統が揃った（3-1c。経緯・検証は
+  [ADR-0005](docs/adr/ADR-20260802-0005-upstream-nix-migration.md) 参照）
 - MacBook Pro / 会社 Windows (WSL2) は未着手。`flake.nix` の最小 devShell 定義
   （`git` / `jq` / `ripgrep`）のみが適用されている
 - `nix profile` での常用ツール管理は行わない（Phase 1 はスキップ）
@@ -76,12 +79,17 @@ zsh 起動最適化（実測 0.244 秒で十分）/ launchd の宣言管理（**
 
 ## セットアップ（新しい Mac）
 
-初回 bootstrap の手順。hermes（2026-07-31）で実施・検証済み。
+初回 bootstrap の手順。hermes で実施・検証済み（nix-darwin 導入は 2026-07-31、
+素の Nix 系統への移行検証は 2026-08-02。経緯は
+[ADR-0005](docs/adr/ADR-20260802-0005-upstream-nix-migration.md) 参照）。
 
-1. **Determinate pkg 版で Nix をインストール**する
-   （シェル版は macOS 26 (Tahoe) で `/etc/fstab` 書き込みに失敗する）。
-   `https://install.determinate.systems/determinate-pkg/stable/Universal` を
-   `installer -pkg` で導入する
+1. **[`NixOS/nix-installer`](https://github.com/NixOS/nix-installer)（素の Nix）で
+   Nix をインストール**する（`--enable-flakes` 付き）。hermes では 2.35.1 を
+   Tahoe 26.4.1 で導入し動作を確認済み（**要確認**: 実行したコマンド行の記録が
+   残っていないため、GitHub のリリースページの手順に従う）。
+   Determinate 系は使わない（[ADR-0005](docs/adr/ADR-20260802-0005-upstream-nix-migration.md)）。
+   Tahoe で `/etc/fstab` 書き込みに失敗するのは **Determinate 版インストーラ固有**の問題で、
+   `NixOS/nix-installer` では発生しない
 2. dotfiles を ghq で clone する
 3. （repo 所有者と sudo 実行者が異なる場合のみ）root へ
    `git config --global --add safe.directory <repo>` を登録する
@@ -123,4 +131,8 @@ sudo darwin-rebuild switch --flake "$DOTFILES/config/.config/nix#hermes"
 ## トラブルシュート
 
 - `nix` コマンドが見つからない: login shell で `shell/.zprofile` の Nix 初期化が走っているか確認
-- flake 関連エラー: `~/.config/nix/nix.conf` に `experimental-features = nix-command flakes` が入っているか確認
+- flake 関連エラー: `~/.config/nix/nix.conf`（stow でリンクされるユーザーレベル設定。
+  ブートストラップ時や WSL2 など darwin 層を通らないホストで参照される）に
+  `experimental-features = nix-command flakes` が入っているか確認。
+  nix-darwin 管理下の Mac（hermes 等）ではシステム側の `/etc/nix/nix.conf` は
+  `darwin/default.nix` の `nix.settings` が管理するため、両者は別物として扱う

@@ -1,5 +1,7 @@
 # Phase 3-1b: hermes の完全 Nix 化（LLM 基盤 + デーモン宣言管理）
 
+> **完了記録（2026-08-01 完了）。** 以後の運用は [GUIDE.md](GUIDE.md) / [CHEATSHEET.md](CHEATSHEET.md) を参照。
+
 hermes に残る brew 管理（LLM 基盤）と、launchd 直下の自前デーモン群を
 Nix の宣言管理へ移行するための調査結果と作業計画。
 調査は 2026-08-01 に実施（読み取り専用）。
