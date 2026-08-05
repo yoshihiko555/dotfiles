@@ -85,7 +85,73 @@ npm 本体は mise の node 経由（brew の node は他 formula の依存と�
 - [ ] `baton` / `orchex` / `screenpipe` の導入手順を文書化（Phase 4-7 までのつなぎ）
 - [ ] Phase 4-7 候補に `baton`（buildGoModule）/ `orchex` / `termaid` を追加 → ROADMAP 反映済み
 
-## 8. 調査メモ
+## 8. 付録: 全ツール詳細一覧（管理系統別・2026-08-02 実測）
+
+1 章はサマリのため、各ツールの詳細をここに全量残す（Notion タスク完了条件 1 の実体）。
+
+### 8-1. mise（`~/.config/mise/config.toml` = グローバル設定、7 件）
+
+| tool | version | 種別 | 宣言 | 備考 |
+|---|---|---|---|---|
+| `go` | 1.26.1（latest） | 言語ランタイム | 宣言済 | 旧 1.25.5 も残存（latest 追従の副産物） |
+| `node` | 25.2.1 | 言語ランタイム | 宣言済 | npm 本体もここに同梱 |
+| `python` | 3.14.2（latest） | 言語ランタイム | 宣言済 | |
+| `rust` | 1.94.0 | 言語ランタイム | 宣言済 | 実体は `~/.cargo`（rustup 相当）への symlink |
+| `uv` | 0.10.8（latest） | Python パッケージ管理 | 宣言済 | mise のコアツール扱い。境界違反とみなさない |
+| `golangci-lint` | 2.11.4（latest） | Go linter（非ランタイム） | 宣言済 | **境界違反** → Nix へ移送 |
+| `pipx:termaid` | 0.8.0（latest） | mermaid→Unicode art 変換 | 宣言済 | **境界違反** → mise 例外として明文化 |
+
+`[settings] pipx.uvx = true` により pipx 本体は不要（uvx で代替）。独立 pipx 環境は存在しない。
+
+### 8-2. npm -g（実質 4 件 + 同梱 2）
+
+npm 本体は mise の node 経由（`~/.local/share/mise/installs/node/25/bin/npm`）。
+brew の node は他 formula の依存としてのみ存在し npm 実行には無関係。
+
+| package | version | 役割 | 宣言 |
+|---|---|---|---|
+| `npm` / `corepack` | 11.6.2 / 0.34.5 | node 同梱 | 宣言済扱い |
+| `@anthropic-ai/sandbox-runtime` | 0.0.64 | サンドボックス実行（`srt`） | **未宣言** |
+| `@google/clasp` | 3.1.3 | Google Apps Script CLI | **未宣言** |
+| `screenpipe` | 0.4.26 | 画面・音声の継続記録 | **未宣言** |
+| `takt` | 0.54.1 | AI エージェントワークフロー制御 | **設定（~/.takt）は宣言済み・本体導入手順は未宣言** |
+
+### 8-3. go install（1 件）
+
+- `GOBIN` = `~/.local/share/mise/installs/go/1.26.1/bin`（mise の go bin 直下）。`~/go/bin` は無い
+
+| バイナリ | 役割 | 宣言 | 備考 |
+|---|---|---|---|
+| `baton` | AI セッション管理（自作、tmux 連携。ADR: config/.config/tmux/docs/decisions/003） | **未宣言** | GOBIN 側は go バージョンアップで消失リスク。`~/.local/bin/baton` のコピーが実質本体 |
+
+### 8-4. uv tool（2 件）
+
+| tool | version | 役割 | 宣言 |
+|---|---|---|---|
+| `mcp-proxy` | 0.11.0 | MCP stdio↔SSE プロキシ | **未宣言** |
+| `orchex` | 0.3.2 | 自作 CLI | **未宣言** |
+
+### 8-5. `~/.local/bin`（野良・重複）
+
+| 項目 | 種別 | 宣言 | 備考 |
+|---|---|---|---|
+| `agy` | 単体バイナリ（Antigravity CLI 1.1.9、~165MB） | **未宣言** | 公式 curl インストーラ由来。nixpkgs `antigravity-cli` へ移行予定 |
+| `baton` | 単体バイナリ（8-3 のコピー） | **未宣言** | |
+| ~~`ffmpeg`~~ | 野良静的ビルド 51MB | — | **2026-08-02 削除済み**（YouTube 自動投稿の名残） |
+| `uv` / `uvx` | mise 版と同一バージョンの重複コピー | 宣言不要 | PATH で mise 版優先、実害なし。掃除候補として残置 |
+| `mcp-proxy` / `orchex` 等 | uv tool の symlink | 8-4 参照 | |
+
+### 8-6. その他の系統
+
+| 系統 | 状態 |
+|---|---|
+| pipx（独立） | 存在しない（mise backend に一本化） |
+| cargo install | グローバルバイナリなし |
+| bun | 追加グローバルパッケージなし（本体は既知の例外、ROADMAP 記載済み） |
+| deno | 未導入 |
+| プロジェクトローカル `.mise.toml` | `~/ghq` 深さ 3 の走査では検出なし（全リポジトリの網羅走査はしておらず**未確認**） |
+
+## 9. 調査メモ
 
 - ローカルの `nix search nixpkgs <term>` は評価キャッシュがないと非常に遅い。
   `search.nixos.org` の Elasticsearch backend への直接クエリの方が速い（次回への申し送り）
