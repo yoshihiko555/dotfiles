@@ -338,6 +338,20 @@ MBP は単一ユーザー機のため hermes でハマった admin/agent 分離�
   ルール 3 の掃除（旧実体の削除 + zap 解禁）で nix 版へ自然に切替わる
 - 注記: agy は nix 版 1.1.8 が手動導入版 1.1.9 よりわずかに旧い
   （nixpkgs は updateScript による自動追従あり）
+
+#### 実施記録（2026-08-06、npm / uv / mise / 野良系の掃除）
+
+上記「移行期の PATH」のうち **brew 以外の系統を掃除し、nix 版への切替を完了**した。
+詳細は [PHASE-3-2-CLI-INVENTORY.md](PHASE-3-2-CLI-INVENTORY.md) 6 章。
+
+- npm -g（takt / clasp / sandbox-runtime）・uv tool（mcp-proxy）・mise（golangci-lint）・
+  `~/.local/bin` の重複コピー（uv / uvx）と agy 残骸を削除
+- 対話シェルで対象 6 コマンドが `/etc/profiles/per-user/yoshihiko/bin` に解決することを確認。
+  空白期間なし（agy で実証した「rm した瞬間に nix 版が引き継ぐ」挙動が全件で再現）
+- **brew formula は手つかず**。MBP には formula 70 個超が残り、`/opt/homebrew/bin` が
+  PATH で nix より先のため、gh / ghq / git / lazygit / starship / tmux / yazi / zoxide 等は
+  依然 brew 版が使われている。これは安全な移行順序のルール 3（zap の解禁は最後）どおりで、
+  別タスクとして扱う
 - [-] ~~Nix を Determinate pkg 版へ入れ直して hermes と系統統一~~ → **対象外**（2026-08-02）。
       Phase 3-1c で **hermes を素の Nix へ移行したため、MBP は現状のままで系統が揃った**。
       MBP は `NixOS/nix-installer` 由来の素の Nix（2.34.5）で hermes と同系統。

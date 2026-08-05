@@ -71,17 +71,32 @@ npm 本体は mise の node 経由（brew の node は他 formula の依存と�
 
 - 2026-08-02: `~/.local/bin/ffmpeg`（51MB の野良静的ビルド、YouTube 自動投稿の名残）を削除。
   brew 版 ffmpeg の削除（PHASE-3-2-BREW-INVENTORY.md）と合わせ ffmpeg は完全に撤去
-- `~/.local/bin` の `uv` / `uvx`（mise 管理版との重複コピー）は当面残置
-  （PATH で mise 版が優先され実害なし）
+- ~~`~/.local/bin` の `uv` / `uvx`（mise 管理版との重複コピー）は当面残置~~
+  → 2026-08-06 に削除（下記）
+- 2026-08-06: **旧実体の掃除を実施し、nix 版への切替を完了**（Notion「MBP の旧 CLI 実体を
+  掃除して Nix 版へ切り替える」）。実施内容と切替後の解決先:
+  - `npm rm -g takt @google/clasp @anthropic-ai/sandbox-runtime`
+  - `uv tool uninstall mcp-proxy`（`mcp-proxy` / `mcp-reverse-proxy` の 2 実行ファイル）
+  - mise の `golangci-lint` 宣言を削除 + `mise uninstall golangci-lint --all`
+  - `~/.local/bin` の `uv` / `uvx` 重複コピーを削除
+  - `~/.local/bin/agy.<epoch>.old`（164MB、手動導入 1.1.9 の残骸）を削除
+  - 対話シェルで `takt` / `clasp` / `srt` / `mcp-proxy` / `mcp-reverse-proxy` / `golangci-lint` が
+    すべて `/etc/profiles/per-user/yoshihiko/bin` に解決することを確認。動作確認済み
+    （takt 0.55.1 / clasp 3.3.0 / golangci-lint 2.12.2）
+  - `uv` / `uvx` は Nix 未収録のため mise 版のまま（設計どおり）
+- 2026-08-06: `rg` は**掃除対象外と再判断**。棚卸し時に「brew 台帳外の野良」と記録したが、
+  実測では brew 台帳内で `opencode` の依存（`installed_on_request: false`）だった。
+  rg 単独を剥がしても brew formula 70 個超が PATH で nix より優先される状況は変わらないため、
+  MBP の brew formula 掃除タスクへ移送する
 
 ## 7. 残作業（Phase 3-2 実装時に消化）
 
-- [ ] `golangci-lint` / `sandbox-runtime` / `google-clasp` / `mcp-proxy` / `antigravity-cli` を
+- [x] `golangci-lint` / `sandbox-runtime` / `google-clasp` / `mcp-proxy` / `antigravity-cli` を
       Nix 宣言に追加（置き場所は hosts/macbook か home/ 共通層かを ADR-0004 ルール 3 で判断。
-      agy は allowUnfree の設定が必要）
-- [ ] `takt` を flake input（`github:nrslib/takt`）として宣言
-- [ ] mise の `golangci-lint` 宣言を削除（Nix 側の適用確認後）
-- [ ] npm -g / uv tool 側の旧インストールを掃除（Nix 側の適用確認後）
+      agy は allowUnfree の設定が必要）— 2026-08-05 の初回 switch で配布済み
+- [x] `takt` を flake input（`github:nrslib/takt`）として宣言 — 2026-08-05 完了
+- [x] mise の `golangci-lint` 宣言を削除（Nix 側の適用確認後）— 2026-08-06 完了
+- [x] npm -g / uv tool 側の旧インストールを掃除（Nix 側の適用確認後）— 2026-08-06 完了
 - [ ] `baton` / `orchex` / `screenpipe` の導入手順を文書化（Phase 4-7 までのつなぎ）
 - [ ] Phase 4-7 候補に `baton`（buildGoModule）/ `orchex` / `termaid` を追加 → ROADMAP 反映済み
 
