@@ -307,7 +307,12 @@ MBP は単一ユーザー機のため hermes でハマった admin/agent 分離�
       除外必須 3 件（`~/.claude/settings.json`、`~/.gemini/antigravity-cli/settings.json`、
       同 `keybindings.json`。後者 2 件はコミット `ca7e49b` に実害記録あり）。
       要注意 5 件（codex config.toml / karabiner.json / lazy-lock.json / flake.lock /
-      mise config.toml）は移行時に個別検証
+      mise config.toml）は移行時に個別検証。
+      **2026-08-06 追記**: `~/.gemini/antigravity-cli/settings.json` は
+      「`trustedWorkspaces` 追記時に壊れる」のではなく、**`agy` を起動するたびに実体化する**
+      ことが判明した（追記なしでも再現）。repo 側の編集が home 側に届かないまま
+      古い設定で動き続けるため、**除外リスト内でも最優先で mozumasu 方式に移すべき対象**。
+      経緯と権限設計は [gemini/README.md](../../../../gemini/README.md) に記録
 - [x] 復旧手段を用意 → 上記のとおり「安全な移行順序」で代替（文書化は不採用）
 - [x] `hosts/macbook/` を定義。GUI cask 13 個はここに置く — 2026-08-05 完了、
       初回 switch も成功（下記実施記録）
