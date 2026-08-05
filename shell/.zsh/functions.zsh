@@ -47,10 +47,12 @@ cheat() {
   orche     ai-orchestra manager
 
 ── Nix (nix-darwin) ────────────────────────
-  nx*       hermes 上でローカル実行
+  nx*       ローカル実行 (ホスト自動判定: hermes/macbook)
+  nxu       flake update (ピンを進める)
   nxb       ビルドのみ (適用なし, sudo 不要)
   nxd       現行世代との差分   nxbd  build→diff
   nxs       switch で適用
+  更新の流れ: nxu → nxbd → nxs
   nxg       世代一覧           nxrb  ロールバック
   hx*       MBP から hermes へリモート実行
   hxd       差分だけ見る (出力が空なら宣言=実機)

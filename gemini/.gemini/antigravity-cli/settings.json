@@ -2,6 +2,7 @@
   "colorScheme": "tokyo night",
   "enableTelemetry": false,
   "trustedWorkspaces": [
-    "/Users/yoshihiko/ghq/github.com/yoshihiko555/digital-garden"
+    "/Users/yoshihiko/ghq/github.com/yoshihiko555/digital-garden",
+    "/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles"
   ]
 }

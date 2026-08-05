@@ -1,11 +1,20 @@
 # ============================================
 # Nix / nix-darwin
 # ============================================
-# flake は dotfiles 配下、ホスト定義は現状 hermes のみ（MBP は Phase 3-2 で追加予定）。
+# flake は dotfiles 配下、ホスト定義は hermes / macbook（Phase 3-2 で MBP 追加）。
 # hermes の dotfiles は ghq root が標準と違うため、リモート用は固定パスで持つ。
 
 NIX_FLAKE="$DOTFILES/config/.config/nix"
 NIX_HERMES_DOTFILES="/Users/agent/hermes-workspace/ghq/github.com/yoshihiko555/dotfiles"
+
+# nx* 系の対象ホストをユーザー名で自動判定する。
+# hermes はリポジトリ所有者が agent ユーザーという設計（Phase 3-1）のため、
+# ホスト名より whoami の方が判定として安定する
+if [ "$(whoami)" = "agent" ]; then
+  NIX_HOST="hermes"
+else
+  NIX_HOST="macbook"
+fi
 
 # darwin-rebuild build は --out-link を持たず cwd に result を作るため、
 # repo を汚さないよう専用ディレクトリで実行する
@@ -17,7 +26,7 @@ NIX_BUILD_DIR="/tmp/nix-build-hermes"
 # 適用せずビルドのみ。sudo 不要なので安全に構文・依存を検証できる
 nxb() {
   mkdir -p "$NIX_BUILD_DIR" \
-    && (cd "$NIX_BUILD_DIR" && darwin-rebuild build --flake "$NIX_FLAKE#hermes")
+    && (cd "$NIX_BUILD_DIR" && darwin-rebuild build --flake "$NIX_FLAKE#$NIX_HOST")
 }
 
 # 現行世代とビルド結果の差分（nvd 相当。Nix 標準機能）
@@ -30,8 +39,13 @@ nxbd() {
   nxb && nxd
 }
 
-# 適用。sudo が要るので admin ユーザーで実行すること
-alias nxs='sudo darwin-rebuild switch --flake "$NIX_FLAKE#hermes"'
+# flake input（nixpkgs / takt 等）のピンを進める。実行後は nxbd で差分確認 → nxs
+nxu() {
+  (cd "$NIX_FLAKE" && nix flake update)
+}
+
+# 適用。sudo が要る（hermes では admin ユーザーで実行すること）
+alias nxs='sudo darwin-rebuild switch --flake "$NIX_FLAKE#$NIX_HOST"'
 
 alias nxg='sudo darwin-rebuild --list-generations'
 alias nxrb='sudo darwin-rebuild switch --rollback'
