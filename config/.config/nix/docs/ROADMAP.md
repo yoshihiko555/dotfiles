@@ -283,17 +283,41 @@ MacBook Pro と系統を統一した。判断の根拠と検討した代替案�
   インストーラのバージョン差は運用上無関係で、MBP に nix-darwin を入れれば自動的に揃う
 - 移行の副作用: `trusted-users` が root のみになる、mise の trust が外れる（`mise trust` で復旧）
 
-### Phase 3-2: MacBook Pro — `[ ]`
+### Phase 3-2: MacBook Pro — `[~]` 着手（2026-08-05）
 
 既に動いている環境のため最もリスクが高い。**hermes で手応えを得てから着手する。**
+→ 前提棚卸しは完了（2026-08-02、[PHASE-3-2-BREW-INVENTORY.md](PHASE-3-2-BREW-INVENTORY.md) /
+[PHASE-3-2-CLI-INVENTORY.md](PHASE-3-2-CLI-INVENTORY.md)）。
 
-- [ ] アプリが書き込むファイルの**除外リスト**を確定（`~/.claude/settings.json` 等）
-- [ ] 復旧手段を用意（別シェルの確保、リカバリ手順の文書化）
+**安全な移行順序（2026-08-05 決定。リカバリ手順書の代わり）**:
+
+1. **初回 switch は `homebrew.onActivation.cleanup = "none"`** で行う
+   （zap の自動削除を無効化した状態で全宣言の動作を確認する）
+2. **dotfiles 配線はパッケージ単位で unstow → home-manager 化**（一括切替しない。
+   戻しは restow 1 コマンド）
+3. **zap の解禁は最後**（brew 宣言が実機で証明されてから）
+
+リカバリ手順の文書化は**不採用**（2026-08-05 判断）: hermes で switch / ロールバック
+（`nxrb`）/ 同一システム再現まで実証済みで、home-manager の衝突は switch が
+中断されるだけで環境を壊さない。Nix の世代機構と stow の残置が復旧手段そのもの。
+MBP は単一ユーザー機のため hermes でハマった admin/agent 分離系の地雷も発生しない。
+唯一「壊れる」タイプのリスクは zap の宣言漏れ削除で、上記順序 1・3 で無効化する。
+
+- [x] アプリが書き込むファイルの**除外リスト**を確定 — 2026-08-02 調査完了。
+      除外必須 3 件（`~/.claude/settings.json`、`~/.gemini/antigravity-cli/settings.json`、
+      同 `keybindings.json`。後者 2 件はコミット `ca7e49b` に実害記録あり）。
+      要注意 5 件（codex config.toml / karabiner.json / lazy-lock.json / flake.lock /
+      mise config.toml）は移行時に個別検証
+- [x] 復旧手段を用意 → 上記のとおり「安全な移行順序」で代替（文書化は不採用）
 - [ ] `hosts/macbook/` を定義。GUI cask 13 個はここに置く
-- [ ] `homebrew-personal.nix` / `homebrew-work.nix` の分離を検討
-- [ ] `~/.config/nvim-dev` の手動リンク（worktree 参照）の扱いを決める
+- [-] ~~`homebrew-personal.nix` / `homebrew-work.nix` の分離を検討~~ → **不採用**
+      （2026-08-02）。業務用 macOS 端末の配布予定がなく、WSL2 に cask（GUI）需要も
+      ない。再検討トリガー: 業務 Mac が配布されたとき
+- [x] `~/.config/nvim-dev` の手動リンク（worktree 参照）の扱いを決める —
+      リンク切れ（worktree 実体なし）と判明し削除（2026-08-02）
 - [ ] stow から home-manager へ段階移行（パッケージ単位）
 - [ ] `taskfiles/link.yml` / `Makefile` の link ターゲットを撤去
+      （タスクランナーは go-task に統一、Makefile は stow と同時期に廃止 — 2026-08-02 決定）
 - [-] ~~Nix を Determinate pkg 版へ入れ直して hermes と系統統一~~ → **対象外**（2026-08-02）。
       Phase 3-1c で **hermes を素の Nix へ移行したため、MBP は現状のままで系統が揃った**。
       MBP は `NixOS/nix-installer` 由来の素の Nix（2.34.5）で hermes と同系統。

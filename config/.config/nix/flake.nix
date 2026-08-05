@@ -11,9 +11,13 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # nixpkgs 未収録だが公式 flake を持つ CLI（PHASE-3-2-CLI-INVENTORY.md）。
+    # follows は付けない（takt 側の input 名に依存させず、確実にビルドできる方を優先。
+    # closure 最適化は動作確認後に検討する）
+    takt.url = "github:nrslib/takt";
   };
 
-  outputs = { nixpkgs, darwin, home-manager, ... }:
+  outputs = { nixpkgs, darwin, home-manager, takt, ... }:
     let
       system = "aarch64-darwin";
       pkgs = import nixpkgs { inherit system; };
@@ -58,6 +62,12 @@
         hermes = darwin.lib.darwinSystem {
           inherit system;
           modules = [ ./hosts/hermes ] ++ commonModules;
+        };
+        macbook = darwin.lib.darwinSystem {
+          inherit system;
+          # takt は macbook のみで使うため specialArgs で渡す（hermes へは配らない）
+          specialArgs = { inherit takt; };
+          modules = [ ./hosts/macbook ] ++ commonModules;
         };
       };
     };
