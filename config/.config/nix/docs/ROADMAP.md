@@ -309,7 +309,8 @@ MBP は単一ユーザー機のため hermes でハマった admin/agent 分離�
       要注意 5 件（codex config.toml / karabiner.json / lazy-lock.json / flake.lock /
       mise config.toml）は移行時に個別検証
 - [x] 復旧手段を用意 → 上記のとおり「安全な移行順序」で代替（文書化は不採用）
-- [ ] `hosts/macbook/` を定義。GUI cask 13 個はここに置く
+- [x] `hosts/macbook/` を定義。GUI cask 13 個はここに置く — 2026-08-05 完了、
+      初回 switch も成功（下記実施記録）
 - [-] ~~`homebrew-personal.nix` / `homebrew-work.nix` の分離を検討~~ → **不採用**
       （2026-08-02）。業務用 macOS 端末の配布予定がなく、WSL2 に cask（GUI）需要も
       ない。再検討トリガー: 業務 Mac が配布されたとき
@@ -318,6 +319,25 @@ MBP は単一ユーザー機のため hermes でハマった admin/agent 分離�
 - [ ] stow から home-manager へ段階移行（パッケージ単位）
 - [ ] `taskfiles/link.yml` / `Makefile` の link ターゲットを撤去
       （タスクランナーは go-task に統一、Makefile は stow と同時期に廃止 — 2026-08-02 決定）
+
+#### 実施記録（2026-08-05、初回 switch）
+
+- 初回 switch は `nix build .#darwinConfigurations.macbook.system` の成果物に含まれる
+  `darwin-rebuild` を使用（root での GitHub fetch が不要になる。hermes の
+  `nix run github:nix-darwin/...` 方式より簡潔）。/etc/zsh* の退避儀式は hermes と同じ
+- **`brew bundle` は 21 依存すべて「Using」**（新規インストール・削除ともゼロ）。
+  2026-08-02 の棚卸しで宣言と実態を同期済みだったため、初回から完全一致した
+- home-manager の共通配線（zsh / starship / git / nvim）は既存の stow リンクと
+  実体が同一のため「skipped since they are the same」で衝突なく通過
+- 単一ユーザー機のため hermes で必要だった safe.directory / tap trust /
+  homebrew 所有権の対処はすべて不要だった（想定どおり）
+- 活性化時に `/etc/ssh/ssh_host_*`（ホスト鍵）が生成されるが、これはサーバ側の鍵で
+  リモートログインを有効にしない限り未使用。個人鍵（`~/.ssh`）には無関係
+- **移行期の PATH**: 旧実体（brew の git/tmux 等、mise の golangci-lint、npm -g の takt 等）が
+  残っている間はそちらが優先される。これは `cleanup = "none"` の設計どおりで、
+  ルール 3 の掃除（旧実体の削除 + zap 解禁）で nix 版へ自然に切替わる
+- 注記: agy は nix 版 1.1.8 が手動導入版 1.1.9 よりわずかに旧い
+  （nixpkgs は updateScript による自動追従あり）
 - [-] ~~Nix を Determinate pkg 版へ入れ直して hermes と系統統一~~ → **対象外**（2026-08-02）。
       Phase 3-1c で **hermes を素の Nix へ移行したため、MBP は現状のままで系統が揃った**。
       MBP は `NixOS/nix-installer` 由来の素の Nix（2.34.5）で hermes と同系統。
