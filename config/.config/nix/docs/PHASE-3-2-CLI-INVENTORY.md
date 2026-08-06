@@ -19,7 +19,7 @@ cargo / 野良バイナリ / bun・deno）を横断調査し、ROADMAP「既存�
 | npm -g | 4（実質） | sandbox-runtime, clasp, screenpipe, takt | **全件宣言なし** |
 | uv tool | 2 | mcp-proxy, orchex | **全件宣言なし** |
 | go install | 1 | baton（自作） | 宣言なし + 設置場所リスク※ |
-| `~/.local/bin` 野良 | 2 | agy, ffmpeg | agy 宣言なし、ffmpeg は残骸 |
+| `~/.local/bin` 野良 | 2 | agy, ffmpeg | agy 宣言なし、ffmpeg は残骸（2026-08-06 に screenpipe により復活、6章参照） |
 | pipx（独立）/ cargo / bun / deno | 0 | — | 問題なし |
 
 ※ baton は `go install` の産物が mise の go インストール bin 直下
@@ -47,7 +47,7 @@ npm 本体は mise の node 経由（brew の node は他 formula の依存と�
 | `takt` | npm -g | AI エージェントワークフロー制御 | nixpkgs 未収録だが**公式 flake あり**（`github:nrslib/takt`、buildNpmPackage・4 システム対応） | **flake input として Nix 宣言**（Phase 3-2） |
 | `baton` | go install | AI セッション管理（自作） | 未収録（自作） | **Phase 4-7 で自作パッケージ化**（buildGoModule）。それまで導入手順を文書化 |
 | `orchex` | uv tool | 自作 CLI | 未収録（自作） | **Phase 4-7 で自作パッケージ化**。それまで導入手順を文書化 |
-| `screenpipe` | npm -g | 画面・音声の継続記録 | **皆無**（nixpkgs issue #331110 は未完了で closed。prebuilt Rust バイナリ + postinstall で ffmpeg DL という構造で Nix 化ハードル高） | **個別管理を継続**。導入手順（バージョン固定の `npm i -g screenpipe@x.y.z`）を文書化して穴を明示 |
+| `screenpipe` | npm -g | 画面・音声の継続記録 | **皆無**（nixpkgs issue #331110 は未完了で closed。prebuilt Rust バイナリ本体が起動時に ffmpeg の不在を検知すると自動で再取得する構造（`screenpipe_core::ffmpeg` モジュール。postinstall ではない）で Nix 化ハードル高） | **個別管理を継続**。導入手順（バージョン固定の `npm i -g screenpipe@x.y.z`）を文書化して穴を明示 |
 
 ※ golangci-lint は「宣言なし」ではなく境界違反（mise 宣言済み）だが、行き先が同じためここに含めた。
 
@@ -71,6 +71,14 @@ npm 本体は mise の node 経由（brew の node は他 formula の依存と�
 
 - 2026-08-02: `~/.local/bin/ffmpeg`（51MB の野良静的ビルド、YouTube 自動投稿の名残）を削除。
   brew 版 ffmpeg の削除（PHASE-3-2-BREW-INVENTORY.md）と合わせ ffmpeg は完全に撤去
+  → 2026-08-06 に screenpipe が再取得したため撤去済みではない（下記）
+- 2026-08-06: `~/.local/bin/ffmpeg`（51MB, Mach-O arm64, version 8.0）が復活していることを確認。
+  `~/.screenpipe/screenpipe.2026-08-06.0.log` に
+  `screenpipe_core::ffmpeg: ffmpeg not found. installing...`（取得元
+  `https://www.osxexperts.net/ffmpeg80arm.zip`）のログがあり、screenpipe 本体（npm の
+  postinstall ではなく `screenpipe_core::ffmpeg` モジュール）が起動時に ffmpeg の不在を
+  検知して自動で再取得したことを確認。`com.screenpipe.agent` は launchd で `RunAtLoad` +
+  `KeepAlive=true` の常駐設定であり、screenpipe を停止しない限り再取得される
 - ~~`~/.local/bin` の `uv` / `uvx`（mise 管理版との重複コピー）は当面残置~~
   → 2026-08-06 に削除（下記）
 - 2026-08-06: **旧実体の掃除を実施し、nix 版への切替を完了**（Notion「MBP の旧 CLI 実体を
@@ -152,7 +160,7 @@ brew の node は他 formula の依存としてのみ存在し npm 実行には�
 |---|---|---|---|
 | `agy` | 単体バイナリ（Antigravity CLI 1.1.9、~165MB） | **未宣言** | 公式 curl インストーラ由来。nixpkgs `antigravity-cli` へ移行予定 |
 | `baton` | 単体バイナリ（8-3 のコピー） | **未宣言** | |
-| ~~`ffmpeg`~~ | 野良静的ビルド 51MB | — | **2026-08-02 削除済み**（YouTube 自動投稿の名残） |
+| `ffmpeg` | 野良静的ビルド 51MB | — | 2026-08-02 削除（YouTube 自動投稿の名残）→ **2026-08-06 screenpipe により復活**（6章参照） |
 | `uv` / `uvx` | mise 版と同一バージョンの重複コピー | 宣言不要 | PATH で mise 版優先、実害なし。掃除候補として残置 |
 | `mcp-proxy` / `orchex` 等 | uv tool の symlink | 8-4 参照 | |
 
