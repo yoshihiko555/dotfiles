@@ -367,6 +367,25 @@ MBP は単一ユーザー機のため hermes でハマった admin/agent 分離�
 - [x] `config/.config/wezterm.bak`（17 ファイル）の腐敗を解消 — 2026-07-30 に削除（Nix 待ちせず先行対応）
 - [x] `taskfiles/link.yml` の `link-tmux` / `restow-tmux`（存在しないパッケージ参照）を解消 — 2026-07-30 に撤去（Nix 待ちせず先行対応）
 
+#### 実施記録（2026-08-06、zap 解禁 = 安全な移行順序ルール 3 完了）
+
+`hosts/macbook/homebrew.nix` の `cleanup = lib.mkForce "none"` を撤去し、
+darwin 共通層の `"zap"` に復帰。switch で宣言外 formula が自動削除された。
+
+- **事前突合で「失われる CLI ゼロ」を確認してから解禁**: leaves 25 個は
+  宣言済み 4 個 + nix 版が `/etc/profiles/per-user/.../bin` に存在する 21 個で全件カバー
+- zap は **35 formula を削除、go-task/tap も untap**。formula は 69 → 34 個になり、
+  残りは宣言 4 個（agent-browser / cliproxyapi / git-gtr / tmux-fingers）とその依存のみ
+- gh / ghq / starship / tmux / nvim / rg / fzf / lazygit / yazi / zoxide 等が
+  nix 版に解決されることを確認。空白期間なし
+- `git` は git-gtr の依存として brew に残置（Phase 3-1b の注記どおり。brew / nix とも
+  2.55.0 で実害なし。git-gtr の自作パッケージ化（Phase 4-7）で解消可能）。
+  `node` / `npm` も agent-browser の依存で残るが、mise が PATH 上位で node 25 を提供
+- 副作用 1: **既存シェルは起動時に記憶した旧絶対パスでフックを叩き続ける**
+  （`_mise_hook` / starship がプロンプト描画のたびにエラー）。`exec zsh` で解消
+- 副作用 2: tmux `popup.conf` の `w` バインドが `/opt/homebrew/bin/fzf` を直書きしており
+  popup が即死 → 素の `fzf` に修正（tmux サーバーの PATH で nix 版に解決される）
+
 **完了条件**: メイン機の CLI + dotfiles が home-manager 管理下に入り、
 brew は GUI / cask と nixpkgs 未収録パッケージ専用になる。
 

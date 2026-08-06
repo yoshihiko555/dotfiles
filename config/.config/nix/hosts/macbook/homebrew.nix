@@ -1,10 +1,8 @@
-{ lib, ... }:
+{ ... }:
 {
-  # ROADMAP Phase 3-2「安全な移行順序」ルール 1:
-  # 初回 switch は zap の自動削除を無効化した状態で全宣言の動作を確認する。
-  # 宣言が実機で証明されたら（ルール 3）この mkForce を外して darwin/ 共通層の
-  # "zap" に戻す。外し忘れると宣言と実態のズレを検知できないので注意。
-  homebrew.onActivation.cleanup = lib.mkForce "none";
+  # ROADMAP Phase 3-2「安全な移行順序」ルール 3（2026-08-06 実施）:
+  # cleanup の mkForce "none" を撤去し、darwin/ 共通層の "zap" に復帰。
+  # 宣言外 formula は switch のたびに自動削除される。
 
   homebrew.taps = [
     "coderabbitai/tap" # git-gtr
