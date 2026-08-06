@@ -1,7 +1,7 @@
 #!/bin/sh
 # ai-orchestra 監視セッション内の pane を選択して stdout に出力
 # 出力形式: pane_id<TAB>status<TAB>title
-export PATH="/opt/homebrew/bin:$PATH"
+export PATH="/opt/homebrew/bin:/etc/profiles/per-user/$USER/bin:$PATH"
 
 SESSION="$1"
 if [ -z "$SESSION" ]; then

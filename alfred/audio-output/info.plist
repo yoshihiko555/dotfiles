@@ -63,7 +63,7 @@
 				<string>#!/usr/bin/env python3
 import json, subprocess, sys
 
-SAS = "/opt/homebrew/bin/SwitchAudioSource"
+SAS = "/etc/profiles/per-user/yoshihiko/bin/SwitchAudioSource"
 query = (sys.argv[1] if len(sys.argv) &gt; 1 else "").strip().lower()
 
 try:
@@ -144,7 +144,7 @@ if [[ -z "$uid" ]]; then
   exit 1
 fi
 
-SwitchAudioSource -t output -u "$uid"
+/etc/profiles/per-user/yoshihiko/bin/SwitchAudioSource -t output -u "$uid"
 osascript -e "display notification \"$name に切り替えました\" with title \"Audio Output\""</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>

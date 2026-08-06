@@ -1,6 +1,6 @@
 #!/bin/sh
 # claude 監視ペイン用（pane 内で実行、TTY あり）
-export PATH="/opt/homebrew/bin:$PATH"
+export PATH="/opt/homebrew/bin:/etc/profiles/per-user/$USER/bin:$PATH"
 
 session=$(~/.config/tmux/bin/tmux-select-claude-session)
 if [ -z "$session" ]; then

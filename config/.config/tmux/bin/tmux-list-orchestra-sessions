@@ -1,6 +1,6 @@
 #!/bin/sh
 # ai-orchestra hook が記録した tmux 監視セッションを新しい順で列挙する
-export PATH="/opt/homebrew/bin:$PATH"
+export PATH="/opt/homebrew/bin:/etc/profiles/per-user/$USER/bin:$PATH"
 
 SESSION_INFO_DIR="${CLAUDE_TMUX_SESSION_INFO_DIR:-/tmp/claude-session-info}"
 

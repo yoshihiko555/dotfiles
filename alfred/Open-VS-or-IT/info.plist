@@ -122,7 +122,7 @@ try:
 except FileNotFoundError:
     pass
 
-ghq = "/opt/homebrew/bin/ghq"
+ghq = "/etc/profiles/per-user/yoshihiko/bin/ghq"
 try:
     out = subprocess.check_output([ghq, "list", "--full-path"], text=True)
     repos = [l for l in out.strip().splitlines() if l]
