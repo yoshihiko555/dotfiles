@@ -23,6 +23,9 @@
       typescript
       typescript-language-server
 
+      # --- 新規導入 ---
+      resvg # SVG→PNG ラスタライザ。logo-design スキルの export.sh が最優先で検出する
+
       # --- 野良インストールから移行（宣言なし 9 件の解消）---
       antigravity-cli # agy。公式 curl インストーラ → nixpkgs へ（要 allowUnfree、上記）
       golangci-lint # mise から移送（境界違反の解消）

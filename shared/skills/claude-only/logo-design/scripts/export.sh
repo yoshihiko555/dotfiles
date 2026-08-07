@@ -32,7 +32,7 @@ render() { # render <size> <out.png>
     magick -background none -density 300 "$svg" -resize "${size}x${size}" "$out"
   else
     echo "error: no SVG renderer found (tried resvg, rsvg-convert, inkscape, magick)" >&2
-    echo "hint: brew install resvg  # or librsvg / inkscape / imagemagick" >&2
+    echo "hint: add pkgs.resvg to the host's nix packages (e.g. hosts/<host>/packages.nix)" >&2
     exit 1
   fi
 }
