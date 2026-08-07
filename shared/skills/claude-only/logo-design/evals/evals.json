@@ -1,0 +1,54 @@
+{
+  "skill_name": "logo-design",
+  "evals": [
+    {
+      "id": 0,
+      "name": "readme-logo",
+      "prompt": "この dotfiles リポジトリ（/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles）の README 用ロゴを作ってください。非対話で進めてください（質問はせず、妥当なデフォルトで判断）。要件: モノクロ＋アクセント1色、抽象シンボル、ダークターミナル背景でも映えること。最終成果物は SVG と複数サイズの PNG。",
+      "expected_output": "brief.md、複数のコンセプト画像（または SVG スケッチ）、比較用 HTML、QA 規約を満たす最終 SVG（currentColor またはモノクロ+1色、viewBox 0 0 100 100、title/desc 付き）、複数サイズ PNG",
+      "assertions": [
+        "final SVG deliverable exists",
+        "SVG has viewBox and no fixed width/height on root",
+        "SVG contains no <text> elements and no external references (fonts/images/css)",
+        "color palette is monochrome plus at most one accent color (<=3 fills total)",
+        "SVG has <title> and <desc> accessibility elements",
+        "PNGs exported in at least 3 sizes including one <=32px",
+        "multiple distinct concept explorations preserved (>=3 concepts)",
+        "design brief document exists recording assumptions",
+        "comparison/preview HTML generated"
+      ],
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "cli-app-icon",
+      "prompt": "takt という CLI オーケストレーションツールのアプリアイコンを作ってください。非対話で進めてください。指揮棒（タクト）をモチーフに、フラットデザイン、32px でも判別できること。SVG を最終成果物とし、PNG 書き出しまで行ってください。",
+      "expected_output": "brief.md、コンセプト探索の痕跡、単体アイコンの最終 SVG（1〜2 要素、ネガティブスペース確保）、16〜512px の PNG",
+      "assertions": [
+        "final SVG deliverable exists",
+        "SVG has viewBox and no fixed width/height on root",
+        "SVG contains no <text> elements and no external references",
+        "composition is simple: at most 2 core visual elements (grouped paths)",
+        "PNGs exported in at least 3 sizes including 32px or smaller",
+        "multiple distinct concept explorations preserved (>=3 concepts)",
+        "design brief document exists recording assumptions"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "ui-icon-set",
+      "prompt": "dashboard / settings / logs / deploy / rollback の 5 個からなる UI アイコンセットを stroke スタイル（24px グリッド、currentColor）で作ってください。非対話で進めてください。スタイル統一のための style-spec.json も出力してください。",
+      "expected_output": "5 個の SVG（viewBox 0 0 24 24 で統一、stroke 幅・linecap 統一、currentColor）、style-spec.json、プレビュー HTML",
+      "assertions": [
+        "all 5 requested icons exist as separate SVG files (dashboard, settings, logs, deploy, rollback)",
+        "every SVG uses viewBox 0 0 24 24",
+        "every SVG uses currentColor with no hard-coded colors",
+        "stroke width and linecap/linejoin identical across all 5 icons",
+        "style-spec.json exists and parses as valid JSON with grid/strokeWidth keys",
+        "preview HTML generated showing the set"
+      ],
+      "files": []
+    }
+  ]
+}

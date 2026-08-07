@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+  :root { --bg:#fafafa; --fg:#1a1a1a; --card:#fff; --border:#e4e4e4; }
+  html[data-theme="dark"] { --bg:#141414; --fg:#eaeaea; --card:#1f1f1f; --border:#333; }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--bg); color:var(--fg);
+         font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;
+         padding:2rem; }
+  header { display:flex; justify-content:space-between; align-items:center;
+           margin-bottom:1.5rem; }
+  h1 { font-size:1.2rem; font-weight:600; }
+  button { background:var(--card); color:var(--fg); border:1px solid var(--border);
+           border-radius:6px; padding:.4rem .9rem; cursor:pointer; font-size:.85rem; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+          gap:1.25rem; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:10px;
+          padding:1rem; }
+  .card h2 { font-size:.9rem; font-weight:600; margin-bottom:.75rem; }
+  .main img { width:100%; aspect-ratio:1; object-fit:contain;
+              border-radius:6px; background:#fff; }
+  html[data-theme="dark"] .main img.on-theme { background:#141414; }
+  .strip { display:flex; align-items:flex-end; gap:1rem; margin-top:.75rem;
+           padding:.6rem; border-radius:6px; background:var(--bg); }
+  .strip figure { text-align:center; }
+  .strip img { display:block; image-rendering:auto; background:transparent; }
+  .strip figcaption { font-size:.65rem; opacity:.6; margin-top:.25rem; }
+</style>
+</head>
+<body>
+<header>
+  <h1>__TITLE__</h1>
+  <button id="toggle">ダーク/ライト切替</button>
+</header>
+<div class="grid" id="grid"></div>
+<script>
+  // [{ name: "concept-1", src: "concept-1.png" }, ...]
+  const items = __ITEMS__;
+  const grid = document.getElementById("grid");
+  for (const it of items) {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <h2>${it.name}</h2>
+      <div class="main"><img class="on-theme" src="${it.src}" alt="${it.name}"></div>
+      <div class="strip">
+        ${[64,32,16].map(s =>
+          `<figure><img src="${it.src}" width="${s}" height="${s}"><figcaption>${s}px</figcaption></figure>`
+        ).join("")}
+      </div>`;
+    grid.appendChild(card);
+  }
+  const root = document.documentElement;
+  document.getElementById("toggle").onclick = () =>
+    root.dataset.theme = root.dataset.theme === "dark" ? "" : "dark";
+</script>
+</body>
+</html>
