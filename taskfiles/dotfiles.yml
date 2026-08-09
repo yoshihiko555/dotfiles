@@ -1,0 +1,9 @@
+version: "3"
+
+tasks:
+  adopt-settings:
+    desc: アプリが変更した mutable 設定を確認し、repo 側へ回収
+    vars:
+      TARGET: '{{default "all" .TARGET}}'
+    cmds:
+      - bash "{{.ROOT_DIR}}/scripts/adopt-managed-settings.sh" "{{.TARGET}}"

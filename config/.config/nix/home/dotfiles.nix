@@ -1,6 +1,6 @@
 { config, hostSpec, ... }:
 let
-  # 3 台共通の配線。stow の `shell` / `config` パッケージの home-manager 版に相当する。
+  # 2 台以上で使う設定の共通配線（ADR-0004 ルール 3）。
   mkLink = path: config.lib.file.mkOutOfStoreSymlink "${hostSpec.dotfilesDir}/${path}";
 in
 {
@@ -14,6 +14,8 @@ in
   xdg.configFile = {
     "starship".source = mkLink "config/.config/starship";
     "git".source = mkLink "config/.config/git";
+    "mise".source = mkLink "config/.config/mise";
     "nvim".source = mkLink "config/.config/nvim";
+    "tmux".source = mkLink "config/.config/tmux";
   };
 }

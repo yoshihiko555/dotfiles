@@ -55,9 +55,6 @@ dotfiles/
 │   └── .takt/
 │       └── config.yaml
 │
-├── tmux/                   # tmux 設定（→ ~）
-│   └── .tmux.conf
-│
 ├── shared/                 # 共通データ
 │   ├── agents/             # CLAUDE.md / AGENTS.md の実体（core + diff）
 │   ├── commands/           # Claude/Codex 用コマンド定義
@@ -76,14 +73,14 @@ dotfiles/
 ├── alfred/                 # Alfred ワークフロー（→ ~/Dropbox/...へリンク）
 │   └── Open-VS-or-IT/      # お気に入りフォルダを開くワークフロー
 │
-├── Makefile
 ├── Brewfile                # Homebrew パッケージ定義
 ├── Taskfile.yml            # エントリポイント（taskfiles/ を読み込む）
 ├── taskfiles/
-│   ├── link.yml
+│   ├── dotfiles.yml
 │   ├── skills.yml
 │   └── util.yml
 ├── scripts/
+│   ├── adopt-managed-settings.sh
 │   ├── install-brew.sh
 │   └── clean-claude.sh
 └── README.md
@@ -91,14 +88,10 @@ dotfiles/
 
 ## 必要なツール
 
-- [GNU Stow](https://www.gnu.org/software/stow/) - シンボリックリンク管理
-- [go-task](https://taskfile.dev/) - 日常タスク実行用
-- Homebrew（任意） - 依存ツールの導入や Brewfile の適用に使用
-
-```bash
-# macOS
-brew install stow go-task
-```
+- Nix（flakes 有効）
+- nix-darwin + home-manager（この Flake が入力として管理）
+- [go-task](https://taskfile.dev/)（switch 後は Nix が提供）
+- Homebrew（GUI / cask と nixpkgs 未収録パッケージ用）
 
 ## セットアップ
 
@@ -107,46 +100,19 @@ brew install stow go-task
 ghq get https://github.com/yoshihiko555/dotfiles.git
 cd ~/ghq/github.com/yoshihiko555/dotfiles
 
-# 初回セットアップ（依存インストール + リンク）
-make bootstrap
+# MacBook Pro の構成をビルドして適用
+nix build ./config/.config/nix#darwinConfigurations.macbook.system
+sudo ./result/sw/bin/darwin-rebuild switch --flake ./config/.config/nix#macbook
 
 # 以降は task を使用
 task --list
-task link           # 全パッケージをリンク
-task link-shell     # シェル設定のみ
-task link-config    # .config 配下のみ (tmux / wezterm などを含む)
-task link-claude    # Claude CLI のみ
-task link-codex     # Codex CLI のみ
-task link-gemini    # Gemini / Antigravity CLI のみ
-task link-takt      # takt CLI のみ
-task link-alfred    # Alfred ワークフローのみ
 ```
-
-## Makefile コマンド（初回セットアップ用）
-
-```bash
-make bootstrap     # 依存ツールをインストールして全パッケージをリンク
-make install-deps  # 依存ツール (stow, go-task) をインストール
-make link          # shell/config/claude/codex/gemini/takt をリンク
-make help          # ヘルプ表示
-```
-
-- `make link` は `alfred` / `editorconfig` を含みません。それらも含めるなら `task link` を使います。
 
 ## Taskfile コマンド（日常運用）
 
 ```bash
 task --list        # タスク一覧
-task link          # 全パッケージをリンク
-task link-alfred   # Alfred ワークフローのみ
-task link-shell    # シェル設定のみ
-task link-config   # .config 配下のみ (tmux / wezterm などを含む)
-task link-claude   # Claude CLI のみ
-task link-codex    # Codex CLI のみ
-task link-gemini   # Gemini / Antigravity CLI のみ
-task link-takt     # takt CLI のみ
-task unlink        # 全パッケージのリンクを解除
-task restow        # 全パッケージを再リンク
+task adopt-settings # mutable 設定の drift を repo へ回収
 task sync-skills   # shared/skills のリンクを更新
 task sync-agents   # shared/agents から Codex/Gemini の AGENTS.md を生成
 task claude-work-init # 会社用 Claude Code 設定ディレクトリを初期化
@@ -161,17 +127,11 @@ task clean-claude  # Claude デバッグログを削除
 task codex-trust-audit # Codex trust 設定を監査
 ```
 
-- `task link` は `make link` の対象に加えて `alfred` / `editorconfig` も含みます。
-
 ## Neovim LSP（TypeScript / Go / Python）
 
 - `config/.config/nvim/init.lua` と `config/.config/nvim/lua/lsp.lua` で最小構成の LSP を有効化
 - 対象サーバー: `gopls` / `pyright-langserver` / `typescript-language-server`
-- 前提: `Brewfile` に定義された `gopls`, `pyright`, `typescript`, `typescript-language-server` をインストール済み
-
-```bash
-task link-config   # ~/.config/nvim を含む .config 配下をリンク
-```
+- 前提: home-manager が `gopls`, `pyright`, `typescript`, `typescript-language-server` を導入済み
 
 主なキーマップ:
 
@@ -359,50 +319,7 @@ wt cd
 wt ai task/codex-trust
 ```
 
-## Stow の使い方
-
-### 基本コマンド
-
-```bash
-# リンク作成
-stow -vt ~ <パッケージ名>
-
-# リンク削除
-stow -Dvt ~ <パッケージ名>
-
-# ドライラン（実行せず確認のみ）
-stow -nvt ~ <パッケージ名>
-
-# 再リンク（削除して作成）
-stow -Rvt ~ <パッケージ名>
-```
-
-### オプション
-
-| オプション | 説明                                 |
-| ---------- | ------------------------------------ |
-| `-v`       | 詳細表示 (verbose)                   |
-| `-t ~`     | ターゲットディレクトリをホームに指定 |
-| `-n`       | ドライラン（シミュレーション）       |
-| `-D`       | リンク削除 (delete)                  |
-| `-R`       | 再リンク (restow)                    |
-
-### パッケージ追加の例
-
-```bash
-# .config 系ツールを追加
-mkdir -p config/.config/nvim
-mv ~/.config/nvim config/.config/nvim/
-task link-config
-
-# ホーム直下の設定を追加（新パッケージ）
-mkdir -p git
-mv ~/.gitconfig git/
-stow -vt ~ git
-# 必要なら taskfiles/link.yml に link-*/unlink-* タスクを追加
-```
-
-## シンボリックリンクの仕組み
+## home-manager の配線
 
 ```
 ~/.zshrc             → dotfiles/shell/.zshrc
@@ -413,20 +330,23 @@ stow -vt ~ git
 ~/.config/mise       → dotfiles/config/.config/mise
 ~/.config/sheldon    → dotfiles/config/.config/sheldon
 ~/.config/karabiner  → dotfiles/config/.config/karabiner
-~/.config/opencode   → dotfiles/config/.config/opencode
+~/.config/opencode/opencode.json → dotfiles/config/.config/opencode/opencode.json
 ~/.config/nvim       → dotfiles/config/.config/nvim
 ~/.config/git        → dotfiles/config/.config/git
-~/.claude            → dotfiles/claude/.claude
-~/.codex             → dotfiles/codex/.codex
-~/.gemini            → dotfiles/gemini/.gemini
+~/.claude/CLAUDE.md   → dotfiles/claude/.claude/CLAUDE.md
+~/.codex/AGENTS.md    → dotfiles/codex/.codex/AGENTS.md
 ~/.gemini/AGENTS.md  → dotfiles/gemini/.gemini/AGENTS.md
-~/.takt              → dotfiles/takt/.takt
-~/.tmux.conf         → dotfiles/tmux/.tmux.conf
+~/.takt/config.yaml   → dotfiles/takt/.takt/config.yaml
 ~/Dropbox/.../workflows/user.workflow.C9692AD7-... → dotfiles/alfred/Open-VS-or-IT
 ```
 
-ホームディレクトリの設定ファイルは、dotfiles ディレクトリへのリンクになります。
-dotfiles 内のファイルを編集すると、実際の設定に反映されます。
+通常の設定は `mkOutOfStoreSymlink` で配線するため、repo 内の編集が即時反映される。
+Claude Code と Antigravity CLI が置換書き込みする JSON だけは実ファイルとして生成し、
+前回 switch 時の参照コピーとの差分を検知する。drift は次で回収する。
+
+```bash
+task adopt-settings TARGET=all
+```
 
 ### Agent コンテキストファイルの一元管理
 
@@ -447,12 +367,7 @@ dotfiles 内のファイルを編集すると、実際の設定に反映され�
 
 ## Alfred ワークフロー
 
-専用 task でシンボリックリンクを作成して管理。
-
-```bash
-task link-alfred   # ワークフローをリンク
-task unlink-alfred # リンク解除
-```
+home-manager が Dropbox 配下へシンボリックリンクを作成して管理する。
 
 ### WezTerm Open
 

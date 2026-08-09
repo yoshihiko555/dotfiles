@@ -37,7 +37,7 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              # 既存ファイル（stow 由来等）との衝突時に上書きせず *.backup へ退避する
+              # 既存ファイルとの衝突時に上書きせず *.backup へ退避する
               backupFileExtension = "backup";
               extraSpecialArgs = {
                 hostSpec = config.hostSpec;

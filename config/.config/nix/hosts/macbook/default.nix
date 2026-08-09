@@ -4,11 +4,11 @@
   # このファイルは hostSpec と目次（imports）のみ。実体は機能群ごとのファイルに分割:
   #   homebrew.nix — cask 13 個 + brew 残留 formula（棚卸しは PHASE-3-2-BREW-INVENTORY.md）
   #   packages.nix — MBP 固有 CLI（棚卸しは PHASE-3-2-CLI-INVENTORY.md）
-  # dotfiles の配線は共通層 home/dotfiles.nix のみで開始し、stow からの段階移行
-  # （ROADMAP Phase 3-2 の安全な移行順序 2）に合わせて dotfiles.nix を後日追加する。
+  #   dotfiles.nix — MBP 固有の設定配線と、アプリが書き込む設定の drift 保護
   imports = [
     ./homebrew.nix
     ./packages.nix
+    ./dotfiles.nix
   ];
 
   hostSpec = {

@@ -7,8 +7,10 @@ Alfred用のカスタムワークフロー集。
 ## セットアップ
 
 ```bash
-task link-alfred
+sudo darwin-rebuild switch --flake ./config/.config/nix#macbook
 ```
+
+home-manager が Dropbox 配下のワークフローディレクトリへリンクする。
 
 ## ワークフロー一覧
 
@@ -80,7 +82,7 @@ alfred/
 
 ## シンボリックリンク
 
-各ワークフローの `.uuid` ファイルに記載された UUID を使い、`task link-alfred` で自動リンク。
+各ワークフローの `.uuid` ファイルに記載された UUID を使い、home-manager で宣言している。
 
 ```
 ~/Dropbox/.../workflows/user.workflow.<UUID>/

@@ -12,12 +12,11 @@
   home-manager.users.${config.hostSpec.username}.home.packages =
     (with pkgs; [
       # --- brew から移行（2026-08-02 棚卸しで nix新規 と判定）---
-      go-task # タスクランナー統一の決定（Makefile は stow と同時期に廃止）
+      go-task # 日常運用のタスクランナー
       gopls
       opencode
       pyright
       sheldon
-      stow # 経過措置。home-manager 移行完了後に削除する
       switchaudio-osx
       tree-sitter # brew の tree-sitter-cli 相当（CLI 同梱。nvim-treesitter の grammar ビルド用）
       typescript

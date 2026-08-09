@@ -1,13 +1,7 @@
 {
   "colorScheme": "tokyo night",
   "enableTelemetry": false,
-  "trustedWorkspaces": [
-    "/Users/yoshihiko/ghq/github.com/yoshihiko555/digital-garden",
-    "/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles"
-  ],
-  "toolPermission": "proceed-in-sandbox",
   "permissions": {
-    "allow": [],
     "deny": [
       "command(sudo)",
       "command(su)",
@@ -63,5 +57,10 @@
       "read_file(/Users/yoshihiko/Library/Keychains)",
       "read_file(/Users/yoshihiko/.gemini/antigravity-oauth-token)"
     ]
-  }
+  },
+  "toolPermission": "proceed-in-sandbox",
+  "trustedWorkspaces": [
+    "/Users/yoshihiko/ghq/github.com/yoshihiko555/digital-garden",
+    "/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles"
+  ]
 }

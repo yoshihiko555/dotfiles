@@ -9,7 +9,7 @@
 
 - tmux: 3.6a
 - 設定パス: `~/.config/tmux/tmux.conf`
-- stow: worktree (tmux ブランチ) の config パッケージを適用中
+- 配線: home-manager の `mkOutOfStoreSymlink`
 
 ## 基本設定 (general.conf)
 

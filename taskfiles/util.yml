@@ -5,54 +5,58 @@ tasks:
   # ユーティリティ
   # ====================
   status:
-    desc: リンク適用後やトラブル時に現在のシンボリックリンク状態を確認
-    # NOTE: dotfiles を指す symlink だけを抽出する。アプリが自前で書き込む実ファイル
-    # (~/.gemini/conversations 等) は対象外。壊れたリンクは BROKEN として表示する。
+    desc: home-manager の配線と mutable 設定の drift を確認
     silent: true
     cmds:
       - |
-        show_links() {
-          label="$1"; shift
-          echo "📁 ${label}:"
-          found=0
-          for target in "$@"; do
-            # symlink 自身、またはディレクトリ直下 1 階層の symlink を列挙する
-            if [ -L "$target" ]; then
-              links=$(printf '%s\n' "$target")
-            elif [ -d "$target" ]; then
-              links=$(find "$target" -maxdepth 1 -type l 2>/dev/null | sort)
-            else
-              continue
-            fi
-            for link in $links; do
-              dest=$(readlink "$link")
-              case "$dest" in
-                *dotfiles*) ;;
-                *) continue ;;
-              esac
-              found=1
-              if [ -e "$link" ]; then
-                echo "  ✅ ${link#$HOME/} -> $dest"
-              else
-                echo "  ❌ BROKEN: ${link#$HOME/} -> $dest"
-              fi
-            done
-          done
-          if [ "$found" -eq 0 ]; then
-            echo "  (not linked)"
+        root="{{.ROOT_DIR}}"
+
+        show_link() {
+          label="$1"
+          target="$2"
+          if [ ! -L "$target" ]; then
+            echo "❌ $label: ${target#$HOME/} is not a symlink"
+            return
           fi
-          echo ""
+          resolved=$(realpath "$target" 2>/dev/null || true)
+          case "$resolved" in
+            "$root"/*) echo "✅ $label: ${target#$HOME/} -> ${resolved#$root/}" ;;
+            *) echo "❌ $label: ${target#$HOME/} -> $resolved" ;;
+          esac
         }
 
-        show_links "Shell"        ~/.zshrc ~/.zprofile
-        show_links "Config"       ~/.config/wezterm ~/.config/starship ~/.config/mise ~/.config/sheldon
-        show_links "Tmux"         ~/.config/tmux
-        show_links "Claude"       ~/.claude
-        show_links "Codex"        ~/.codex
-        show_links "Gemini"       ~/.gemini ~/.gemini/antigravity ~/.gemini/antigravity-cli ~/.gemini/config
-        show_links "takt"         ~/.takt
-        show_links "EditorConfig" ~/.editorconfig
-        show_links "Alfred"       ~/Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows
+        show_mutable() {
+          label="$1"
+          current="$2"
+          reference="$3"
+          if [ ! -f "$current" ] || [ ! -f "$reference" ]; then
+            echo "❌ $label: mutable file or reference is missing"
+            return
+          fi
+          current_normalized=$(mktemp)
+          reference_normalized=$(mktemp)
+          jq -S . "$current" > "$current_normalized"
+          jq -S . "$reference" > "$reference_normalized"
+          if cmp -s "$current_normalized" "$reference_normalized"; then
+            echo "✅ $label: managed real file (no drift)"
+          else
+            echo "⚠️  $label: drift detected"
+          fi
+          rm -f "$current_normalized" "$reference_normalized"
+        }
+
+        show_link "Shell" ~/.zshrc
+        show_link "XDG config" ~/.config/wezterm
+        show_link "Tmux" ~/.config/tmux
+        show_link "Claude" ~/.claude/CLAUDE.md
+        show_mutable "Claude settings" ~/.claude/settings.json ~/.claude/.settings.json.nix-managed
+        show_link "Codex" ~/.codex/config.toml
+        show_link "Gemini" ~/.gemini/AGENTS.md
+        show_mutable "Antigravity settings" ~/.gemini/antigravity-cli/settings.json ~/.gemini/antigravity-cli/.settings.json.nix-managed
+        show_mutable "Antigravity keybindings" ~/.gemini/antigravity-cli/keybindings.json ~/.gemini/antigravity-cli/.keybindings.json.nix-managed
+        show_link "takt" ~/.takt/config.yaml
+        show_link "EditorConfig" ~/.editorconfig
+        show_link "Alfred" ~/Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.C9692AD7-2800-42B7-8F97-8F8CCD1CC88E
 
   brew:
     desc: 新しい Mac の初期構築時に Homebrew パッケージをインストール

@@ -181,10 +181,9 @@ macOS のため学習が MacBook Pro に転用でき、ヘッドレスで GUI �
       mozumasu が報告していた対話 dry-run 化問題は再現せず、宣言外の古い openssl@3 等が自動削除された）
 - [x] `darwin-rebuild switch --flake .#hermes` で適用（2026-07-31 成功）
 - [x] `scripts/install-hermes-subset.sh` が不要になったことを確認（home-manager が全機能を代替）
-- [~] `hermes/Brewfile` / `hermes/home/` の重複解消（削除の可否は別途判断） — Brewfile 二重管理と
-      zsh 再実装（hermes-helpers.zsh）は解消済み。hermes 固有部分は `hosts/hermes/zshrc.local` へ
-      抽出し、共有部分は shell/ パッケージへの symlink に置換。`tmux.conf` / `mise/config.toml` は
-      リンク元として存続中。ディレクトリは当面残置し、hermes の安定稼働を確認してから削除する（2026-07-31 判断）
+- [x] `hermes/Brewfile` / `hermes/home/` の重複を解消 — 2026-08-07 完了。
+      tmux / mise は `home/dotfiles.nix` の共通層へ昇格し、hermes 固有部分は
+      `hosts/hermes/zshrc.local` に集約。`hermes/` と `scripts/install-hermes-subset.sh` を削除した
 
 **完了条件**:
 1. `darwin-rebuild switch --flake .#hermes` 一発で hermes の環境が再現できる → 達成
@@ -283,7 +282,7 @@ MacBook Pro と系統を統一した。判断の根拠と検討した代替案�
   インストーラのバージョン差は運用上無関係で、MBP に nix-darwin を入れれば自動的に揃う
 - 移行の副作用: `trusted-users` が root のみになる、mise の trust が外れる（`mise trust` で復旧）
 
-### Phase 3-2: MacBook Pro — `[~]` 着手（2026-08-05）
+### Phase 3-2: MacBook Pro — `[x]` 完了（2026-08-07）
 
 既に動いている環境のため最もリスクが高い。**hermes で手応えを得てから着手する。**
 → 前提棚卸しは完了（2026-08-02、[PHASE-3-2-BREW-INVENTORY.md](PHASE-3-2-BREW-INVENTORY.md) /
@@ -321,8 +320,8 @@ MBP は単一ユーザー機のため hermes でハマった admin/agent 分離�
       ない。再検討トリガー: 業務 Mac が配布されたとき
 - [x] `~/.config/nvim-dev` の手動リンク（worktree 参照）の扱いを決める —
       リンク切れ（worktree 実体なし）と判明し削除（2026-08-02）
-- [ ] stow から home-manager へ段階移行（パッケージ単位）
-- [ ] `taskfiles/link.yml` / `Makefile` の link ターゲットを撤去
+- [x] stow から home-manager へ段階移行（パッケージ単位）— 2026-08-07 完了
+- [x] `taskfiles/link.yml` / `Makefile` の link ターゲットを撤去 — 2026-08-07 完了
       （タスクランナーは go-task に統一、Makefile は stow と同時期に廃止 — 2026-08-02 決定）
 
 #### 実施記録（2026-08-05、初回 switch）
@@ -385,6 +384,24 @@ darwin 共通層の `"zap"` に復帰。switch で宣言外 formula が自動削
   （`_mise_hook` / starship がプロンプト描画のたびにエラー）。`exec zsh` で解消
 - 副作用 2: tmux `popup.conf` の `w` バインドが `/opt/homebrew/bin/fzf` を直書きしており
   popup が即死 → 素の `fzf` に修正（tmux サーバーの PATH で nix 版に解決される）
+
+#### 実施記録（2026-08-07、stow 廃止 + home-manager 一本化）
+
+- shell / config / claude / codex / gemini / takt / editorconfig の旧リンクをパッケージ単位で解除し、
+  home-manager の `mkOutOfStoreSymlink` へ移行。Alfred の Dropbox 配線も home-manager に統合
+- `config` はエントリ単位で配線。認証・ランタイムファイルが共存する gh / zed / opencode は
+  ディレクトリ全体を置換せず、管理対象ファイルだけをリンクした
+- tmux / mise を `home/dotfiles.nix` の共通層へ昇格。macbook / hermes 両構成の実ビルドに成功し、
+  hermes の手動配布用 `hermes/` と `scripts/install-hermes-subset.sh` を削除
+- Claude Code の `settings.json`、Antigravity CLI の `settings.json` / `keybindings.json` は、
+  書き込み可能な実ファイル + `.nix-managed` 参照コピーで管理。drift 中は switch が上書きを拒否し、
+  `task adopt-settings` で repo へ回収する。Claude Code は Stop hook でも即時検知
+- codex `config.toml` / karabiner.json / lazy-lock.json / flake.lock / mise config.toml は
+  実機でリンクが維持されることを確認し、通常配線とした
+- `taskfiles/link.yml` / `Makefile` / stow worktree script を撤去し、Nix と Homebrew の双方から
+  stow を削除。`task status` は home-manager の二段リンクと mutable drift を検査する形へ更新
+- macbook へ switch 済み。全リンクが repo に解決すること、mutable 3 ファイルに drift がないこと、
+  tmux / mise / nvim / task の起動を確認。hermes 構成も実ビルド済み
 
 **完了条件**: メイン機の CLI + dotfiles が home-manager 管理下に入り、
 brew は GUI / cask と nixpkgs 未収録パッケージ専用になる。
@@ -454,7 +471,7 @@ hermes をビルドマシンにし、MacBook Pro のビルド負荷を逃がす�
 ### 4-4: Cachix Deploy — `[ ]` 優先度: 中
 
 hermes が pull 型で設定に自動追従する。
-現状は SSH して `install-hermes-subset.sh` を叩きに行く必要がある。
+現状は SSH して pull + `darwin-rebuild switch` を実行する必要がある。
 
 **注意**: 外部サービス依存。まず手動運用に慣れてから。
 
@@ -541,7 +558,7 @@ Phase 3-1c の素の Nix 移行で標準オプションが使えるようにな�
 
 | ツール | 方針 |
 |---|---|
-| **stow** | 段階的に home-manager へ寄せ、**最終的に廃止**（Phase 3-2 完了後） |
+| **stow** | **廃止済み**（2026-08-07）。dotfiles 配線は home-manager に一本化 |
 | **mise** | **残す**。境界は「言語ランタイム = mise、それ以外の CLI = Nix」。例外: nixpkgs 未収録の pipx 系 CLI（現状 `termaid` のみ）は mise の pipx backend が最も低コストのため mise に置いてよい（2026-08-02、[PHASE-3-2-CLI-INVENTORY.md](PHASE-3-2-CLI-INVENTORY.md)。将来は Phase 4-7 で自作パッケージ化） |
 | **brew** | GUI / cask と nixpkgs 未収録パッケージ用に**恒久的に残る**。`homebrew.*` で宣言化 |
 

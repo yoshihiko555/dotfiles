@@ -1,13 +1,10 @@
 # Taskfile.yml
-# 日常的なタスク管理用。初回セットアップは Makefile (make bootstrap) を使用。
+# 日常的なタスク管理用。環境と dotfiles の配線は nix-darwin + home-manager が担う。
 version: "3"
 
-vars:
-  STOW_FLAGS: -v -t ~ --ignore='\.DS_Store$'
-
 includes:
-  link:
-    taskfile: ./taskfiles/link.yml
+  dotfiles:
+    taskfile: ./taskfiles/dotfiles.yml
     flatten: true
   skills:
     taskfile: ./taskfiles/skills.yml

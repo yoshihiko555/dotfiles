@@ -173,6 +173,9 @@ brew 管理下の全アイテムを「役割・宣言状態・今後の行き先
   （Phase 3-2 完了後は bootstrap も Nix が担うため「新規端末に go-task が無い」
   問題が消滅する）。nix flake apps は `nix run .#switch` など Nix 操作の
   エントリポイント専用とし、タスクランナーの代替には使わない
+
+> 2026-08-07 追記: Phase 3-2 の dotfiles 移行完了に伴い、stow と Makefile は廃止した。
+
 - `gemini-cli` は削除（Antigravity CLI へ置き換わり済み。Google の方針としても gemini-cli は廃止方向）
 - `poppler` は削除（未使用）
 - `ffmpeg` / `libass` / `libomp` は削除（デジタルガーデンの YouTube 自動投稿

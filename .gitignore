@@ -35,3 +35,4 @@ ANALYSIS.md
 # takt のランタイム生成物（ログ・分析イベント）
 takt/.takt/logs/
 takt/.takt/analytics/
+takt/.takt/runtime.yaml

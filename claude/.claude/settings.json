@@ -49,6 +49,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": "$HOME/.claude/hooks/check-settings-drift.sh"
+          },
+          {
+            "type": "command",
             "command": "$HOME/.claude/claude_message.sh stop"
           }
         ]

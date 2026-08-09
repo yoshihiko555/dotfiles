@@ -1,16 +1,18 @@
 # Nix 設定
 
-dotfiles 配下の Nix 管理エントリポイント。
-stow 経由で `~/.config/nix/` にリンクされる。
+dotfiles 配下の nix-darwin + home-manager エントリポイント。
+`~/.config/nix/` 自体も home-manager でリポジトリへ配線される。
 
-## 現状 (Phase 3-1 / 3-1b / 3-1c 完了 / 次は Phase 3-2 → MacBook Pro)
+## 現状 (Phase 3-2 完了 / 次は Phase 3-3 → WSL2)
 
 - hermes（Mac mini）は nix-darwin + home-manager 管理下（2026-07-31）。
   CLI・LLM 基盤・launchd デーモンまで宣言管理済みで、brew 残留は cask + git-gtr のみ（3-1b、2026-08-01）
 - hermes は 2026-08-02 に Determinate Nix から素の Nix（`NixOS/nix-installer`）へ移行し、
   MacBook Pro と Nix 本体の系統が揃った（3-1c。経緯・検証は
   [ADR-0005](docs/adr/ADR-20260802-0005-upstream-nix-migration.md) 参照）
-- MacBook Pro / 会社 Windows (WSL2) は未着手。`flake.nix` の最小 devShell 定義
+- MacBook Pro は nix-darwin + home-manager 管理下（2026-08-07）。CLI / cask / dotfiles を
+  宣言管理し、stow は廃止済み
+- 会社 Windows (WSL2) は未着手。`flake.nix` の最小 devShell 定義
   （`git` / `jq` / `ripgrep`）のみが適用されている
 - `nix profile` での常用ツール管理は行わない（Phase 1 はスキップ）
 - `shell/.zprofile` で login shell でも Nix を初期化
@@ -20,7 +22,7 @@ stow 経由で `~/.config/nix/` にリンクされる。
 | ホスト | system | Nix の適用範囲 | 着手順 |
 |---|---|---|---|
 | Mac mini (hermes, M4) | `aarch64-darwin` | ほぼ全体。cask は**宣言管理（7 個）** | **1（完了、2026-07-31）** |
-| MacBook Pro | `aarch64-darwin` | CLI + dotfiles（GUI / cask は brew のまま） | **2（次）** |
+| MacBook Pro | `aarch64-darwin` | CLI + dotfiles + cask（宣言管理） | **2（完了、2026-08-07）** |
 | 会社 Windows (WSL2) | `x86_64-linux` | WSL2 内部のみ（Windows 本体は対象外） | 3（実稼働待ち） |
 
 ### 目的
@@ -131,7 +133,7 @@ sudo darwin-rebuild switch --flake "$DOTFILES/config/.config/nix#hermes"
 ## トラブルシュート
 
 - `nix` コマンドが見つからない: login shell で `shell/.zprofile` の Nix 初期化が走っているか確認
-- flake 関連エラー: `~/.config/nix/nix.conf`（stow でリンクされるユーザーレベル設定。
+- flake 関連エラー: `~/.config/nix/nix.conf`（home-manager でリンクされるユーザーレベル設定。
   ブートストラップ時や WSL2 など darwin 層を通らないホストで参照される）に
   `experimental-features = nix-command flakes` が入っているか確認。
   nix-darwin 管理下の Mac（hermes 等）ではシステム側の `/etc/nix/nix.conf` は

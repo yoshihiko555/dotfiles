@@ -47,7 +47,7 @@ WezTerm のワークスペース管理を tmux セッションに移行し、tmu
 
 ### Stow パス変更
 
-`config/.config/tmux/` に統一。`stow config` で `~/.config/tmux/` にシンボリックリンク作成。
+`config/.config/tmux/` に統一。home-manager で `~/.config/tmux/` に配線する。
 
 ### 分割マッピング
 
@@ -181,5 +181,5 @@ WezTerm は `enable_tab_bar = false` でも内部で `TabBarState` を毎サイ�
 ## リスク管理
 
 - WezTerm の設定は削除しない (main ブランチはそのまま維持)
-- 問題があれば `stow-worktree.sh revert tmux config` で即座にロールバック可能
+- 問題があれば nix-darwin の前世代へロールバック可能
 - Phase 1-3 までは WezTerm と並行利用可能

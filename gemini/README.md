@@ -1,10 +1,6 @@
 # Gemini / Antigravity CLI
 
-Gemini CLI と Antigravity CLI（`agy`）の設定。stow で `~/.gemini` に配線する。
-
-```bash
-task link-gemini
-```
+Gemini CLI と Antigravity CLI（`agy`）の設定。home-manager で `~/.gemini` に配線する。
 
 ## ファイル構成
 
@@ -133,7 +129,7 @@ grep -a "CLI settings initialized" "$(ls -t ~/.gemini/antigravity-cli/log/*.log 
 ## settings.json の symlink 破壊問題
 
 **Antigravity CLI は起動のたびに `~/.gemini/antigravity-cli/settings.json` を実ファイルとして
-書き戻すため、stow の symlink が壊れる。**
+書き戻す。** 過去の symlink 管理では、この動作によりリンクが壊れていた。
 
 当初は `trustedWorkspaces` 追記時に限る問題と考えていたが（コミット `ca7e49b` / `7189397`）、
 2026-08-06 の調査で**追記が無くても `agy` を起動しただけで実体化する**ことを確認した。
@@ -142,20 +138,21 @@ grep -a "CLI settings initialized" "$(ls -t ~/.gemini/antigravity-cli/log/*.log 
 
 `keybindings.json` も同じ挙動をする既知ファイル。
 
-### 暫定の復旧
+### drift の回収
 
 ```bash
-task restow-gemini-adopt   # home の内容を repo に取り込んでリンクを張り直す
+task adopt-settings TARGET=antigravity-settings
+task adopt-settings TARGET=antigravity-keybindings
 ```
 
-### 恒久対策: mozumasu 方式の適用を検討する
+### 恒久対策: mutable 設定の home-manager 管理
 
 symlink 配線をやめ、**repo の JSON を正とし、`home.activation` で書き込み可能な実ファイルとして
 生成する**方式へ移行する。同時に参照コピー（`.nix-managed`）を保存し、アプリの UI 書き込みによる
 drift を検知して、drift がある間は switch が上書きを拒否する（警告方式。どちらの変更も消えない）。
 
 これは Claude Code の `settings.json` と同じ対策で、
-「stow を段階移行で廃止し home-manager に一本化する」タスクの **Phase C** に含まれる。
+`config/.config/nix/hosts/macbook/dotfiles.nix` に実装している。
 agy はフック機構を持たないため、Claude Code のような Stop hook による即時検知は組めず、
 **switch 時チェック止まり**になる。
 
@@ -163,4 +160,3 @@ agy はフック機構を持たないため、Claude Code のような Stop hook
 [claude-code.nix](https://github.com/mozumasu/dotfiles/blob/main/.config/nix/home-manager/claude-code.nix)
 
 なお `agy` は起動のたびに書き戻すため、Claude Code より drift の発生頻度が高い。
-Phase C ではこのファイルを**除外リストの必須対象**として扱う。
