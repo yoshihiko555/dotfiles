@@ -149,3 +149,5 @@ rate_limit_fallback:
 #               安全側の既定 (上限を無視しない / 500ms) で問題ない。
 # disabled_builtins
 #               実際に使うワークフローが固まってから絞る。
+workflow_mcp_servers:
+  stdio: true
