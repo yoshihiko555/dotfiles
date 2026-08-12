@@ -3,45 +3,100 @@
 dotfiles 配下の nix-darwin + home-manager エントリポイント。
 `~/.config/nix/` 自体も home-manager でリポジトリへ配線される。
 
-## 現状 (Phase 3-2 完了 / 次は Phase 3-3 → WSL2)
+**nix-darwin + home-manager** で 3 台を宣言的に管理する。
+このファイルは「**どう管理しているか**」を書く場所とし、移行の進捗・完了状態は
+[docs/ROADMAP.md](docs/ROADMAP.md) を正とする。
 
-- hermes（Mac mini）は nix-darwin + home-manager 管理下（2026-07-31）。
-  CLI・LLM 基盤・launchd デーモンまで宣言管理済みで、brew 残留は cask + git-gtr のみ（3-1b、2026-08-01）
-- hermes は 2026-08-02 に Determinate Nix から素の Nix（`NixOS/nix-installer`）へ移行し、
-  MacBook Pro と Nix 本体の系統が揃った（3-1c。経緯・検証は
-  [ADR-0005](docs/adr/ADR-20260802-0005-upstream-nix-migration.md) 参照）
-- MacBook Pro は nix-darwin + home-manager 管理下（2026-08-07）。CLI / cask / dotfiles を
-  宣言管理し、stow は廃止済み
-- 会社 Windows (WSL2) は未着手。`flake.nix` の最小 devShell 定義
-  （`git` / `jq` / `ripgrep`）のみが適用されている
-- `nix profile` での常用ツール管理は行わない（Phase 1 はスキップ）
-- `shell/.zprofile` で login shell でも Nix を初期化
+## 管理対象ホスト
 
-**nix-darwin + home-manager** で 3 台を宣言的に管理する方針。
-
-| ホスト | system | Nix の適用範囲 | 着手順 |
+| ホスト | system | flake の出力 | Nix の適用範囲 |
 |---|---|---|---|
-| Mac mini (hermes, M4) | `aarch64-darwin` | ほぼ全体。cask は**宣言管理（7 個）** | **1（完了、2026-07-31）** |
-| MacBook Pro | `aarch64-darwin` | CLI + dotfiles + cask（宣言管理） | **2（完了、2026-08-07）** |
-| 会社 Windows (WSL2) | `x86_64-linux` | WSL2 内部のみ（Windows 本体は対象外） | 3（実稼働待ち） |
+| MacBook Pro | `aarch64-darwin` | `darwinConfigurations.macbook` | CLI + dotfiles + cask（宣言管理） |
+| Mac mini (hermes, M4) | `aarch64-darwin` | `darwinConfigurations.hermes` | ほぼ全体。cask も**宣言管理（7 個）** |
+| 会社 Windows (WSL2) | `x86_64-linux` | 未定義（Phase 3-3 で追加予定） | WSL2 内部のみ（Windows 本体は対象外） |
+
+`flake.nix` の `system` は現在 `aarch64-darwin` 固定。WSL2 対応時に
+`homeConfigurations`（standalone home-manager）の系統を追加する。
 
 ### 目的
 
 1. **環境依存の切り分けを宣言的に表現する**（ヘッドレス機に GUI cask を乗せない等）
-2. **新端末で環境を引き継げるようにする**（現状 8 手順 → 1 コマンド）
+2. **新端末で環境を引き継げるようにする**（8 手順 → 1 コマンド）
 3. 複数マシンで同一環境を構築する
 
 目的から外したもの: スキル管理の宣言化 / devShell + direnv（mise と重複）/
-zsh 起動最適化（実測 0.244 秒で十分）/ launchd の宣言管理（**hermes のみ例外**でスコープ入り、ROADMAP 参照）。
+zsh 起動最適化 / launchd の宣言管理（**hermes のみ例外**でスコープ入り）。
+判断の経緯は [ROADMAP](docs/ROADMAP.md) を参照。
 
-詳細な移行計画・意思決定の履歴:
+## ディレクトリ構成
 
-- [docs/GUIDE.md](docs/GUIDE.md) — **設定ファイルの読み方ガイド（学習用）**。どのファイルが何をしていて、nix-darwin / home-manager とどう繋がるか
-- [docs/CHEATSHEET.md](docs/CHEATSHEET.md) — **日常運用チートシート**。反映・rollback・パッケージ追加・更新・掃除の実用コマンド集
-- [docs/USECASES.md](docs/USECASES.md) — **ユースケースカタログ**。次に何をやるかの判断材料（価値・コスト・向き不向き）
-- [docs/ROADMAP.md](docs/ROADMAP.md) — 段階的な移行計画（**完了状態つき**）
-- [docs/PHASE-3-3-WSL2.md](docs/PHASE-3-3-WSL2.md) — WSL2 の作業計画・設計（実稼働待ち）
-- [docs/adr/DECISIONS.md](docs/adr/DECISIONS.md) — ADR 一覧
+3 層構成（`darwin/` / `home/` / `hosts/`）は [ADR-0004](docs/adr/ADR-20260801-0004-module-layer-design.md) で確定。
+
+```
+config/.config/nix/
+├── flake.nix               # エントリポイント。inputs（nixpkgs / darwin / home-manager / takt）と
+│                           # darwinConfigurations.{macbook,hermes} を定義
+├── flake.lock              # 入力のバージョン固定（更新は nix flake update <input>）
+├── nix.conf                # ユーザーレベルの nix 設定（→ ~/.config/nix/nix.conf）
+│                           # ブートストラップ時と darwin 層を通らないホスト向け
+│
+├── darwin/                 # ★ darwin 共通システム層（全 Mac 共通。WSL2 は通らない）
+│   ├── default.nix         #   nix 本体設定（nix.settings）・システム既定値
+│   └── homebrew.nix        #   brew の共通宣言（cleanup = "zap"）
+│
+├── home/                   # ★ 全台共通ユーザー層（home-manager）
+│   ├── default.nix         #   目次
+│   ├── dotfiles.nix        #   共通 dotfiles の配線（zsh / git / tmux / mise / nvim / starship）
+│   └── packages.nix        #   nixpkgs 収録 CLI（全台共通）
+│
+├── hosts/                  # ★ ホスト固有層（薄く保つ）
+│   ├── macbook/
+│   │   ├── default.nix     #   hostSpec + imports の目次
+│   │   ├── dotfiles.nix    #   MBP 固有の配線 + mutable 設定の activation（後述）
+│   │   ├── homebrew.nix    #   cask（GUI）
+│   │   └── packages.nix    #   MBP 固有 CLI（takt 等）
+│   └── hermes/
+│       ├── default.nix
+│       ├── dotfiles.nix
+│       ├── hermes-agent.nix #  LLM 基盤（llama.cpp / llama-swap / miniserve）の launchd 宣言
+│       ├── homebrew.nix
+│       ├── nix-gc.nix      #   Nix store の自動 GC（週次）
+│       ├── llama-swap-config.yaml # hermes-agent.nix が参照する llama-swap 設定
+│       └── zshrc.local     #   hermes 固有の zsh 追加設定
+│
+├── modules/
+│   └── hostSpec.nix        # 全ホスト共通のオプション定義（username / dotfilesDir）
+│
+└── docs/                   # ガイド・チートシート・ROADMAP・ADR
+```
+
+将来追加予定の `packages/`（自作パッケージ）・`hosts/wsl/` を含む目標形は
+[ROADMAP の「目標構成」](docs/ROADMAP.md)を参照。
+
+## 設定の反映方式
+
+**反映タイミングが 3 系統に分かれる**点に注意する。
+
+| 系統 | 対象 | 仕組み | 反映タイミング |
+|---|---|---|---|
+| **symlink**（原則） | 大半の dotfiles | `mkOutOfStoreSymlink` で store 経由リポジトリの実体を指す | **repo を編集した時点で即反映**。switch が要るのは配線を増減したときだけ |
+| **mutable 実ファイル**（例外） | `~/.claude/settings.json`、Antigravity の `settings.json` / `keybindings.json` の 3 件（`hosts/macbook/dotfiles.nix` で定義） | activation が repo からコピーし、`.nix-managed` の参照コピーも保存 | **switch のときだけ**。drift 検出中は上書きを拒否 |
+| **パッケージ** | CLI / cask | `flake.lock` でバージョンを固定 | **switch のときだけ** |
+
+mutable 実ファイル方式は、アプリ本体が atomic write（temp → rename）で
+symlink を実ファイルに置換してしまう問題への対処。正は repo 側のまま保つ。
+
+- **drift**（アプリが書き込んで repo と乖離した状態）の検知は 3 箇所のみ:
+  ① switch の activation ② Claude Code の Stop hook（`claude/.claude/hooks/check-settings-drift.sh`）
+  ③ `task status`
+- 判定は `jq -S` で正規化してから比較するため、キー順の入れ替えは drift 扱いにしない
+- 回収は `task adopt-settings TARGET=claude|antigravity-settings|antigravity-keybindings|all`。
+  home 側の内容を repo へ取り込み、`git diff` で確認してから commit → switch
+
+> **ロールバック（`nxrb`）が戻すのはパッケージと配線だけ。**
+> symlink 先も activation の参照元も `dotfilesDir` の生パスであり store のスナップショットではないため、
+> 旧世代を activate しても設定の中身は「現在の repo の内容」になる。
+> 設定内容の巻き戻しは git、パッケージの巻き戻しは `nxrb` と使い分ける。
 
 ## 運用規約（正式決定事項の一覧）
 
@@ -66,6 +121,8 @@ zsh 起動最適化（実測 0.244 秒で十分）/ launchd の宣言管理（**
 | 種別 | 置き場 |
 |---|---|
 | nixpkgs 収録の CLI（全台共通） | `home/packages.nix` |
+| nixpkgs 収録の CLI（ホスト固有） | `hosts/<host>/packages.nix` |
+| nixpkgs 未収録だが公式 flake あり | `flake.nix` の inputs + 対象ホストの packages.nix（例: takt） |
 | nixpkgs 未収録の formula | `darwin/homebrew.nix`（共通）/ `hosts/<host>/homebrew.nix`（固有） |
 | cask（GUI） | `hosts/<host>/homebrew.nix` |
 | 言語ランタイム | mise（Nix では管理しない） |
@@ -130,6 +187,9 @@ nix profile list
 sudo darwin-rebuild switch --flake "$DOTFILES/config/.config/nix#hermes"
 ```
 
+日常運用の alias（`nxb` / `nxbd` / `nxs` / `nxrb` 等）と実用コマンド集は
+[docs/CHEATSHEET.md](docs/CHEATSHEET.md) にまとめてある。
+
 ## トラブルシュート
 
 - `nix` コマンドが見つからない: login shell で `shell/.zprofile` の Nix 初期化が走っているか確認
@@ -138,3 +198,12 @@ sudo darwin-rebuild switch --flake "$DOTFILES/config/.config/nix#hermes"
   `experimental-features = nix-command flakes` が入っているか確認。
   nix-darwin 管理下の Mac（hermes 等）ではシステム側の `/etc/nix/nix.conf` は
   `darwin/default.nix` の `nix.settings` が管理するため、両者は別物として扱う
+
+## ドキュメント一覧
+
+- [docs/GUIDE.md](docs/GUIDE.md) — **設定ファイルの読み方ガイド（学習用）**。どのファイルが何をしていて、nix-darwin / home-manager とどう繋がるか
+- [docs/CHEATSHEET.md](docs/CHEATSHEET.md) — **日常運用チートシート**。反映・rollback・パッケージ追加・更新・掃除の実用コマンド集
+- [docs/USECASES.md](docs/USECASES.md) — **ユースケースカタログ**。次に何をやるかの判断材料（価値・コスト・向き不向き）
+- [docs/ROADMAP.md](docs/ROADMAP.md) — 段階的な移行計画と**現在地**（進捗はこちらが正）
+- [docs/PHASE-3-3-WSL2.md](docs/PHASE-3-3-WSL2.md) — WSL2 の作業計画・設計（実稼働待ち）
+- [docs/adr/DECISIONS.md](docs/adr/DECISIONS.md) — ADR 一覧
