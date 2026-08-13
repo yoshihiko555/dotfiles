@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# 新規 Mac のブートストラップ時に Homebrew 本体を導入するためのスクリプト。
+# パッケージ自体は nix-darwin の homebrew.* 宣言（config/.config/nix/）が管理する。
 set -euo pipefail
 
 if command -v brew >/dev/null 2>&1; then

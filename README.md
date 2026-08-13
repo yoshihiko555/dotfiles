@@ -73,7 +73,6 @@ dotfiles/
 ├── alfred/                 # Alfred ワークフロー（→ ~/Dropbox/...へリンク）
 │   └── Open-VS-or-IT/      # お気に入りフォルダを開くワークフロー
 │
-├── Brewfile                # Homebrew パッケージ定義
 ├── Taskfile.yml            # エントリポイント（taskfiles/ を読み込む）
 ├── taskfiles/
 │   ├── dotfiles.yml
@@ -118,7 +117,6 @@ task sync-agents   # shared/agents から Codex/Gemini の AGENTS.md を生成
 task claude-work-init # 会社用 Claude Code 設定ディレクトリを初期化
 task sync-claude-work-skills # 会社用 Claude Code の work スキルを同期
 task status        # 現在のリンク状態を確認
-task brew          # Homebrew パッケージを適用
 task edit          # VS Code で開く
 task mcp-init      # 最小構成の .mcp.json をコピー
 task mcp-show      # 最小構成テンプレートの内容を表示

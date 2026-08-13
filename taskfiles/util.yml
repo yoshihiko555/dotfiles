@@ -58,12 +58,6 @@ tasks:
         show_link "EditorConfig" ~/.editorconfig
         show_link "Alfred" ~/Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.C9692AD7-2800-42B7-8F97-8F8CCD1CC88E
 
-  brew:
-    desc: 新しい Mac の初期構築時に Homebrew パッケージをインストール
-    cmds:
-      - bash {{.ROOT_DIR}}/scripts/install-brew.sh
-      - brew bundle --file={{.ROOT_DIR}}/Brewfile
-
   edit:
     desc: dotfiles を編集したいときに VS Code で開く
     cmds:

@@ -58,7 +58,7 @@ home-manager が Dropbox 配下のワークフローディレクトリへリン�
 2. 全出力デバイスが一覧表示される（現在の出力先は `✓` 付き）
 3. 切り替えたいデバイスを選択
 
-**依存:** `switchaudio-osx`（`SwitchAudioSource` コマンド / Brewfile 管理）
+**依存:** `switchaudio-osx`（`SwitchAudioSource` コマンド / Nix 管理、`config/.config/nix/hosts/macbook/packages.nix`）
 
 > Proxy Audio Device は出力先選択を driver 内部に保持し CLI から切り替えられないため、
 > macOS のデフォルト出力デバイスを直接切り替える `SwitchAudioSource` を採用。
