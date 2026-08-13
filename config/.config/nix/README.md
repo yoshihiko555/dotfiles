@@ -138,33 +138,17 @@ symlink を実ファイルに置換してしまう問題への対処。正は re
 
 ## セットアップ（新しい Mac）
 
-初回 bootstrap の手順。hermes で実施・検証済み（nix-darwin 導入は 2026-07-31、
-素の Nix 系統への移行検証は 2026-08-02。経緯は
+**まっさらな Mac からの初回構築は [docs/BOOTSTRAP.md](docs/BOOTSTRAP.md) を参照。**
+Xcode Command Line Tools・Homebrew 本体・GitHub 認証・Nix 本体のインストールから
+初回 `switch` までを手順化している（hermes で実施・検証済み。nix-darwin 導入は
+2026-07-31、素の Nix 系統への移行検証は 2026-08-02。経緯は
 [ADR-0005](docs/adr/ADR-20260802-0005-upstream-nix-migration.md) 参照）。
 
-1. **[`NixOS/nix-installer`](https://github.com/NixOS/nix-installer)（素の Nix）で
-   Nix をインストール**する（`--enable-flakes` 付き）。hermes では 2.35.1 を
-   Tahoe 26.4.1 で導入し動作を確認済み（**要確認**: 実行したコマンド行の記録が
-   残っていないため、GitHub のリリースページの手順に従う）。
-   Determinate 系は使わない（[ADR-0005](docs/adr/ADR-20260802-0005-upstream-nix-migration.md)）。
-   Tahoe で `/etc/fstab` 書き込みに失敗するのは **Determinate 版インストーラ固有**の問題で、
-   `NixOS/nix-installer` では発生しない
-2. dotfiles を ghq で clone する
-3. （repo 所有者と sudo 実行者が異なる場合のみ）root へ
-   `git config --global --add safe.directory <repo>` を登録する
-4. `/etc/zshenv` `/etc/zshrc` `/etc/zprofile` を `*.before-nix-darwin` へ退避する
-5. 初回 switch を実行する
+2 回目以降の日常運用は以下。
 
-   ```sh
-   sudo -H /nix/var/nix/profiles/default/bin/nix run github:nix-darwin/nix-darwin/master#darwin-rebuild -- \
-     switch --flake <repo>/config/.config/nix#<host>
-   ```
-
-   2 回目以降は `darwin-rebuild` が `/run/current-system/sw/bin` に入るため、以下で足りる。
-
-   ```sh
-   sudo darwin-rebuild switch --flake <repo>/config/.config/nix#<host>
-   ```
+```sh
+sudo darwin-rebuild switch --flake <repo>/config/.config/nix#<host>
+```
 
 > **SSH 越しに行う場合**: 「システム設定 → 共有 → リモートログイン →
 > リモートユーザーにフルディスクアクセスを許可」を ON にしておく必要がある
@@ -201,6 +185,7 @@ sudo darwin-rebuild switch --flake "$DOTFILES/config/.config/nix#hermes"
 
 ## ドキュメント一覧
 
+- [docs/BOOTSTRAP.md](docs/BOOTSTRAP.md) — **まっさらな Mac からの初回構築手順（正典）**
 - [docs/GUIDE.md](docs/GUIDE.md) — **設定ファイルの読み方ガイド（学習用）**。どのファイルが何をしていて、nix-darwin / home-manager とどう繋がるか
 - [docs/CHEATSHEET.md](docs/CHEATSHEET.md) — **日常運用チートシート**。反映・rollback・パッケージ追加・更新・掃除の実用コマンド集
 - [docs/USECASES.md](docs/USECASES.md) — **ユースケースカタログ**。次に何をやるかの判断材料（価値・コスト・向き不向き）

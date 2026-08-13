@@ -94,17 +94,33 @@ dotfiles/
 
 ## セットアップ
 
+**まっさらな Mac からの初回構築は
+[config/.config/nix/docs/BOOTSTRAP.md](config/.config/nix/docs/BOOTSTRAP.md) を参照。**
+Xcode Command Line Tools・Homebrew 本体・GitHub 認証・Nix 本体の導入から初回 `switch` まで
+を手順化している。
+
+nix-darwin 導入済みの Mac で設定を取得・反映する場合:
+
 ```bash
 # リポジトリをクローン（ghq 推奨）
 ghq get https://github.com/yoshihiko555/dotfiles.git
 cd ~/ghq/github.com/yoshihiko555/dotfiles
 
-# MacBook Pro の構成をビルドして適用
+# ビルドして事前確認（任意。マシンは無変化）
 nix build ./config/.config/nix#darwinConfigurations.macbook.system
-sudo ./result/sw/bin/darwin-rebuild switch --flake ./config/.config/nix#macbook
+
+# 適用
+sudo darwin-rebuild switch --flake ./config/.config/nix#macbook
 
 # 以降は task を使用
 task --list
+```
+
+`darwin-rebuild` がまだ PATH に無い場合（nix-darwin 未導入、または初回構築時）は、
+ビルド結果から直接呼び出す。
+
+```bash
+sudo ./result/sw/bin/darwin-rebuild switch --flake ./config/.config/nix#macbook
 ```
 
 ## Taskfile コマンド（日常運用）
