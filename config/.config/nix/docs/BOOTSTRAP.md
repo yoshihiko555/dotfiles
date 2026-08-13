@@ -135,6 +135,7 @@ macbook 向けの例。hermes の場合はパスの読み替えが手順 8 と�
 `switch` 前にビルドだけ試して安全確認したい場合は次を使う（マシンは無変化）。
 
 ```sh
+cd ~/ghq/github.com/yoshihiko555/dotfiles
 nix build ./config/.config/nix#darwinConfigurations.macbook.system
 # ビルド結果を確認したら switch へ進む
 ```
@@ -173,7 +174,7 @@ ON にしておく必要がある。OFF だと root でも `/etc/fstab` 等の r
 
 ---
 
-## 未検証・未確定事項（正直に書く）
+## 未検証・未確定事項
 
 - **この手順が実機で通っているのは hermes のみ。** macbook をまっさらな状態から
   再構築した記録は存在しない。
