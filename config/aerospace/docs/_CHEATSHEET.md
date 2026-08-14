@@ -115,4 +115,4 @@ B2 = 'secondary'
     └── CHEATSHEET.md    # このファイル
 ```
 
-dotfiles では `config/.config/aerospace/` で管理。out-of-store link のため編集は即時反映される。
+dotfiles では `config/aerospace/` で管理。out-of-store link のため編集は即時反映される。

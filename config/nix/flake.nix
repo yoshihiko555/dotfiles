@@ -102,7 +102,7 @@
       formatter = eachFormatterSystem (s: treefmtEval.${s}.config.build.wrapper);
 
       # `nix flake check`。self をコピーした先で完結するため、
-      # 実質 config/.config/nix 配下のみが対象（flake.nix のコメント参照）
+      # 実質 config/nix 配下のみが対象（flake.nix のコメント参照）
       checks = eachFormatterSystem (s: {
         formatting = treefmtEval.${s}.config.build.check self;
       });

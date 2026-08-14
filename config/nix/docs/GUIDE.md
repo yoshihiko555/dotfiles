@@ -37,7 +37,7 @@ home-manager は本来独立したツールで、単体利用なら `home-manage
 ## 2. ファイルマップ（このリポジトリの実物）
 
 ```
-config/.config/nix/
+config/nix/
 ├── flake.nix              # 入口。材料（inputs）と成果物（outputs）の宣言
 ├── flake.lock             # 材料のバージョン固定（git の lock ファイルと同じ発想）
 ├── modules/
@@ -214,7 +214,7 @@ darwinConfigurations.hermes
 # 1. このリポジトリを編集して main に push
 # 2. hermes 側で
 git -C "$DOTFILES" pull
-sudo darwin-rebuild switch --flake "$DOTFILES/config/.config/nix#hermes"
+sudo darwin-rebuild switch --flake "$DOTFILES/config/nix#hermes"
 ```
 
 **注意**: hermes に brew で何かを直接入れたら、必ず宣言にも追加すること。

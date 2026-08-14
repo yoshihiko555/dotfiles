@@ -12,10 +12,10 @@ in
   };
 
   xdg.configFile = {
-    "starship".source = mkLink "config/.config/starship";
-    "git".source = mkLink "config/.config/git";
-    "mise".source = mkLink "config/.config/mise";
-    "nvim".source = mkLink "config/.config/nvim";
-    "tmux".source = mkLink "config/.config/tmux";
+    "starship".source = mkLink "config/starship";
+    "git".source = mkLink "config/git";
+    "mise".source = mkLink "config/mise";
+    "nvim".source = mkLink "config/nvim";
+    "tmux".source = mkLink "config/tmux";
   };
 }

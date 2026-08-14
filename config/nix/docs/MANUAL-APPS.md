@@ -11,7 +11,7 @@ Nix（home-manager）/ Homebrew（nix-darwin `homebrew.*` 宣言）のいずれ�
   の `cleanup = "zap"` の対象にもならない（宣言が無いので消しようがない）。
 - 用途列は不明なものは空欄のまま（推測で埋めていない）。
 - brew 管理へ移したくなった場合は、`Brewfile` は存在しないので
-  `config/.config/nix/hosts/<host>/homebrew.nix` の `homebrew.casks` に追加すること。
+  `config/nix/hosts/<host>/homebrew.nix` の `homebrew.casks` に追加すること。
 
 ## 一覧（保留中の cask）
 

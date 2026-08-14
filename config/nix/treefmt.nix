@@ -9,11 +9,11 @@
 { lib, ... }:
 {
   # プロジェクトルートの探索起点。.git/config はリポジトリ直下にあるため、
-  # flake.nix はサブディレクトリ（config/.config/nix）にあっても、
+  # flake.nix はサブディレクトリ（config/nix）にあっても、
   # ここを起点に上方向へ探索すれば常にリポジトリ全体が対象になる。
   #
   # ただし `nix flake check` の checks.formatting は self（このディレクトリ
-  # 以下のみ）をコピーした先で完結するため、実質 config/.config/nix 配下
+  # 以下のみ）をコピーした先で完結するため、実質 config/nix 配下
   # のみが検査対象になる（flake が repo ルートではなくサブディレクトリに
   # あることに起因する制約。詳細は flake.nix のコメント参照）。
   projectRootFile = ".git/config";
@@ -93,7 +93,7 @@
 
     # vendored / 生成物。.gitignore 済みで treefmt の git walk では
     # 元々スキャン対象外だが、意図を明示するためここにも書いておく
-    "config/.config/tmux/plugins/**"
+    "config/tmux/plugins/**"
     "codex/skills/.system/**"
     "shared/skills/codex-only/.system/**"
     "takt/runtime.yaml"
@@ -107,9 +107,9 @@
     #   - flake.lock → enableDefaultExcludes の "*.lock" で既にカバー済み
     #   - 以下2件は toml/yaml のため個別に除外が必要
     "codex/config.toml"
-    "config/.config/mise/config.toml"
+    "config/mise/config.toml"
     # gh 自身が書き込む設定ファイル（上記5件と同じ理由で追加）
-    "config/.config/gh/config.yml"
+    "config/gh/config.yml"
 
     # 引数列を意図的に桁揃えしているファイル。
     # `move_app_to_workspace 'com.google.Chrome'  'M1'` のように
@@ -117,6 +117,6 @@
     # 割り当たるかを一覧できるようにしてある。shfmt はこの桁揃えを
     # 単一スペースへ潰してしまい（-kp は上記のとおり副作用が大きく不採用）、
     # 整形の利得より可読性の損失が上回るため除外する
-    "config/.config/aerospace/layouts/*.sh"
+    "config/aerospace/layouts/*.sh"
   ];
 }

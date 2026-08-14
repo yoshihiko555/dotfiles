@@ -18,17 +18,17 @@ in
       # MacBook 固有の XDG 設定。git / mise / nvim / starship / tmux は
       # 2 台以上で使うため home/dotfiles.nix の共通層で配線する。
       xdg.configFile = {
-        "aerospace".source = mkLink "config/.config/aerospace";
-        "gh/config.yml".source = mkLink "config/.config/gh/config.yml";
-        "ghostty".source = mkLink "config/.config/ghostty";
-        "karabiner".source = mkLink "config/.config/karabiner";
-        "lazygit".source = mkLink "config/.config/lazygit";
-        "nix".source = mkLink "config/.config/nix";
-        "opencode/opencode.json".source = mkLink "config/.config/opencode/opencode.json";
-        "sheldon".source = mkLink "config/.config/sheldon";
-        "wezterm".source = mkLink "config/.config/wezterm";
-        "zed/keymap.json".source = mkLink "config/.config/zed/keymap.json";
-        "zed/settings.json".source = mkLink "config/.config/zed/settings.json";
+        "aerospace".source = mkLink "config/aerospace";
+        "gh/config.yml".source = mkLink "config/gh/config.yml";
+        "ghostty".source = mkLink "config/ghostty";
+        "karabiner".source = mkLink "config/karabiner";
+        "lazygit".source = mkLink "config/lazygit";
+        "nix".source = mkLink "config/nix";
+        "opencode/opencode.json".source = mkLink "config/opencode/opencode.json";
+        "sheldon".source = mkLink "config/sheldon";
+        "wezterm".source = mkLink "config/wezterm";
+        "zed/keymap.json".source = mkLink "config/zed/keymap.json";
+        "zed/settings.json".source = mkLink "config/zed/settings.json";
       };
 
       # CLI が生成する履歴・認証情報・キャッシュは各ディレクトリに残し、

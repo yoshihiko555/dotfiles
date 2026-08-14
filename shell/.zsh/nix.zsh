@@ -4,7 +4,7 @@
 # flake は dotfiles 配下、ホスト定義は hermes / macbook（Phase 3-2 で MBP 追加）。
 # hermes の dotfiles は ghq root が標準と違うため、リモート用は固定パスで持つ。
 
-NIX_FLAKE="$DOTFILES/config/.config/nix"
+NIX_FLAKE="$DOTFILES/config/nix"
 NIX_HERMES_DOTFILES="/Users/agent/hermes-workspace/ghq/github.com/yoshihiko555/dotfiles"
 
 # nx* 系の対象ホストをユーザー名で自動判定する。
@@ -61,7 +61,7 @@ alias nxrb='sudo darwin-rebuild switch --rollback'
 _hx_build_diff() {
   ssh macmini-agent "mkdir -p '$NIX_BUILD_DIR' \
     && cd '$NIX_BUILD_DIR' \
-    && darwin-rebuild build --flake '$NIX_HERMES_DOTFILES/config/.config/nix#hermes' \
+    && darwin-rebuild build --flake '$NIX_HERMES_DOTFILES/config/nix#hermes' \
     && nix store diff-closures /run/current-system '$NIX_BUILD_DIR/result'"
 }
 
@@ -83,7 +83,7 @@ hxb() {
 # 適用。admin 経由 + sudo パスワード入力があるため -t で TTY を割り当てる
 hxs() {
   ssh -t macmini-admin \
-    "sudo darwin-rebuild switch --flake '$NIX_HERMES_DOTFILES/config/.config/nix#hermes'"
+    "sudo darwin-rebuild switch --flake '$NIX_HERMES_DOTFILES/config/nix#hermes'"
 }
 
 hxg() {

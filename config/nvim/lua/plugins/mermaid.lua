@@ -63,7 +63,7 @@ return {
     -- termaid を直接呼ばず、bin/mermaid-render で前処理してから渡す。
     -- termaid は <br/> と subgraph ID["ラベル"] を解釈できず、そのままだと
     -- ラベルが途中で切れて subgraph の構造ごと崩れる（詳細はラッパー内のコメント）。
-    -- termaid 本体は mise 管理（config/.config/mise/config.toml の "pipx:termaid"）。
+    -- termaid 本体は mise 管理（config/mise/config.toml の "pipx:termaid"）。
     cmd = { vim.fn.stdpath("config") .. "/bin/mermaid-render" },
     enabled = true,
     -- 拡大表示は全画面のほうが横に長い図を追いやすい

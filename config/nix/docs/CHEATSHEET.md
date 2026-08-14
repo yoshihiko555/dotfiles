@@ -10,13 +10,13 @@
 ```sh
 # 【基本形】設定を hermes に反映（hermes 上で実行）
 git -C "$DOTFILES" pull
-sudo darwin-rebuild switch --flake "$DOTFILES/config/.config/nix#hermes"
+sudo darwin-rebuild switch --flake "$DOTFILES/config/nix#hermes"
 
 # 適用せずビルドだけ試す（安全確認。マシンは無変化）
-darwin-rebuild build --flake "$DOTFILES/config/.config/nix#hermes"
+darwin-rebuild build --flake "$DOTFILES/config/nix#hermes"
 
 # MacBook Pro から一連を流す場合
-ssh -t macmini-admin 'sudo darwin-rebuild switch --flake /Users/agent/hermes-workspace/ghq/github.com/yoshihiko555/dotfiles/config/.config/nix#hermes'
+ssh -t macmini-admin 'sudo darwin-rebuild switch --flake /Users/agent/hermes-workspace/ghq/github.com/yoshihiko555/dotfiles/config/nix#hermes'
 ```
 
 > 反映フロー: **リポジトリ編集 → push → hermes で pull → switch**。
@@ -63,7 +63,7 @@ sudo darwin-rebuild switch --switch-generation 3  # 番号指定（-G 3）
 nix search nixpkgs ripgrep            # nixpkgs を検索
 nix eval --raw nixpkgs#fd.name        # 属性名の存在＆バージョン確認
 # 3. ローカルでビルド確認 → commit → push → hermes で pull + switch
-nix build ./config/.config/nix#darwinConfigurations.hermes.system --no-link
+nix build ./config/nix#darwinConfigurations.hermes.system --no-link
 ```
 
 > **重要**: hermes に `brew install` で直接入れたものは宣言に無ければ
@@ -81,8 +81,8 @@ nix develop ~/.config/nix             # リポジトリの devShell（git/jq/rip
 
 ```sh
 # MacBook Pro 側で実行し、flake.lock の変更を commit → push する
-nix flake update --flake ./config/.config/nix
-nix build ./config/.config/nix#darwinConfigurations.hermes.system --no-link  # ビルド確認
+nix flake update --flake ./config/nix
+nix build ./config/nix#darwinConfigurations.hermes.system --no-link  # ビルド確認
 # → hermes で pull + switch すると全パッケージが lock 通りに更新される
 ```
 
@@ -108,7 +108,7 @@ nix-store -q --references $(nix-store -q --references \
   | sed 's|/nix/store/[a-z0-9]*-||' | sort   # ② バージョン付き
 # ③ brew 実体は上記 brew list
 # nix profile list は「手動導入分」の一覧なので、全宣言管理の当構成では空が正常
-nix flake metadata ./config/.config/nix  # lock されている入力の日付・rev
+nix flake metadata ./config/nix  # lock されている入力の日付・rev
 ```
 
 ## 掃除

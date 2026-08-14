@@ -114,12 +114,12 @@ nix-darwin がまだ導入されていないため `darwin-rebuild` コマンド
 
 ```sh
 sudo -H /nix/var/nix/profiles/default/bin/nix run github:nix-darwin/nix-darwin/master#darwin-rebuild -- \
-  switch --flake ~/ghq/github.com/yoshihiko555/dotfiles/config/.config/nix#macbook
+  switch --flake ~/ghq/github.com/yoshihiko555/dotfiles/config/nix#macbook
 ```
 
 macbook 向けの例。**hermes は `dotfilesDir` 自体が異なる**（手順 5 の表を参照）ため、
 `#macbook` を `#hermes` に読み替えるだけでなく、flake 参照パスの前半も
-`/Users/agent/hermes-workspace/ghq/github.com/yoshihiko555/dotfiles/config/.config/nix#hermes`
+`/Users/agent/hermes-workspace/ghq/github.com/yoshihiko555/dotfiles/config/nix#hermes`
 に読み替える。
 
 ### 9. 2 回目以降
@@ -127,7 +127,7 @@ macbook 向けの例。**hermes は `dotfilesDir` 自体が異なる**（手順 
 初回 switch 後は `darwin-rebuild` が `/run/current-system/sw/bin` に入るため、以下で足りる。
 
 ```sh
-sudo darwin-rebuild switch --flake ~/ghq/github.com/yoshihiko555/dotfiles/config/.config/nix#macbook
+sudo darwin-rebuild switch --flake ~/ghq/github.com/yoshihiko555/dotfiles/config/nix#macbook
 ```
 
 macbook 向けの例。hermes の場合はパスの読み替えが手順 8 と同様に必要（手順 5 の表を参照）。
@@ -136,7 +136,7 @@ macbook 向けの例。hermes の場合はパスの読み替えが手順 8 と�
 
 ```sh
 cd ~/ghq/github.com/yoshihiko555/dotfiles
-nix build ./config/.config/nix#darwinConfigurations.macbook.system
+nix build ./config/nix#darwinConfigurations.macbook.system
 # ビルド結果を確認したら switch へ進む
 ```
 

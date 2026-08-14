@@ -99,7 +99,7 @@ dotfiles/
 ## セットアップ
 
 **まっさらな Mac からの初回構築は
-[config/.config/nix/docs/BOOTSTRAP.md](config/.config/nix/docs/BOOTSTRAP.md) を参照。**
+[config/nix/docs/BOOTSTRAP.md](config/nix/docs/BOOTSTRAP.md) を参照。**
 Xcode Command Line Tools・Homebrew 本体・GitHub 認証・Nix 本体の導入から初回 `switch` まで
 を手順化している。
 
@@ -111,10 +111,10 @@ ghq get https://github.com/yoshihiko555/dotfiles.git
 cd ~/ghq/github.com/yoshihiko555/dotfiles
 
 # ビルドして事前確認（任意。マシンは無変化）
-nix build ./config/.config/nix#darwinConfigurations.macbook.system
+nix build ./config/nix#darwinConfigurations.macbook.system
 
 # 適用
-sudo darwin-rebuild switch --flake ./config/.config/nix#macbook
+sudo darwin-rebuild switch --flake ./config/nix#macbook
 
 # 以降は task を使用
 task --list
@@ -124,7 +124,7 @@ task --list
 ビルド結果から直接呼び出す。
 
 ```bash
-sudo ./result/sw/bin/darwin-rebuild switch --flake ./config/.config/nix#macbook
+sudo ./result/sw/bin/darwin-rebuild switch --flake ./config/nix#macbook
 ```
 
 ## Taskfile コマンド（日常運用）
@@ -151,7 +151,7 @@ task cliproxy-status # CLIProxyAPI の稼働状態と公開モデル一覧を確
 
 ## Neovim LSP（TypeScript / Go / Python）
 
-- `config/.config/nvim/init.lua` と `config/.config/nvim/lua/lsp.lua` で最小構成の LSP を有効化
+- `config/nvim/init.lua` と `config/nvim/lua/lsp.lua` で最小構成の LSP を有効化
 - 対象サーバー: `gopls` / `pyright-langserver` / `typescript-language-server`
 - 前提: home-manager が `gopls`, `pyright`, `typescript`, `typescript-language-server` を導入済み
 
@@ -346,15 +346,15 @@ wt ai task/codex-trust
 ```
 ~/.zshrc             → dotfiles/shell/.zshrc
 ~/.zprofile          → dotfiles/shell/.zprofile
-~/.config/wezterm    → dotfiles/config/.config/wezterm
-~/.config/ghostty    → dotfiles/config/.config/ghostty
-~/.config/starship   → dotfiles/config/.config/starship
-~/.config/mise       → dotfiles/config/.config/mise
-~/.config/sheldon    → dotfiles/config/.config/sheldon
-~/.config/karabiner  → dotfiles/config/.config/karabiner
-~/.config/opencode/opencode.json → dotfiles/config/.config/opencode/opencode.json
-~/.config/nvim       → dotfiles/config/.config/nvim
-~/.config/git        → dotfiles/config/.config/git
+~/.config/wezterm    → dotfiles/config/wezterm
+~/.config/ghostty    → dotfiles/config/ghostty
+~/.config/starship   → dotfiles/config/starship
+~/.config/mise       → dotfiles/config/mise
+~/.config/sheldon    → dotfiles/config/sheldon
+~/.config/karabiner  → dotfiles/config/karabiner
+~/.config/opencode/opencode.json → dotfiles/config/opencode/opencode.json
+~/.config/nvim       → dotfiles/config/nvim
+~/.config/git        → dotfiles/config/git
 ~/.claude/CLAUDE.md   → dotfiles/claude/CLAUDE.md
 ~/.codex/AGENTS.md    → dotfiles/codex/AGENTS.md
 ~/.gemini/AGENTS.md  → dotfiles/gemini/AGENTS.md

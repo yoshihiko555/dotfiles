@@ -33,7 +33,7 @@ zsh 起動最適化 / launchd の宣言管理（**hermes のみ例外**でスコ
 3 層構成（`darwin/` / `home/` / `hosts/`）は [ADR-0004](docs/adr/ADR-20260801-0004-module-layer-design.md) で確定。
 
 ```
-config/.config/nix/
+config/nix/
 ├── flake.nix               # エントリポイント。inputs（nixpkgs / darwin / home-manager / takt）と
 │                           # darwinConfigurations.{macbook,hermes} を定義
 ├── flake.lock              # 入力のバージョン固定（更新は nix flake update <input>）
@@ -147,7 +147,7 @@ Xcode Command Line Tools・Homebrew 本体・GitHub 認証・Nix 本体のイン
 2 回目以降の日常運用は以下。
 
 ```sh
-sudo darwin-rebuild switch --flake <repo>/config/.config/nix#<host>
+sudo darwin-rebuild switch --flake <repo>/config/nix#<host>
 ```
 
 > **SSH 越しに行う場合**: 「システム設定 → 共有 → リモートログイン →
@@ -168,7 +168,7 @@ nix profile list
 
 # hermes の設定を再適用（hermes 上で実行。$DOTFILES は /etc/zshenv 経由で全ユーザーに設定済み。
 # sudo の前にシェルが展開するのでそのまま通る）
-sudo darwin-rebuild switch --flake "$DOTFILES/config/.config/nix#hermes"
+sudo darwin-rebuild switch --flake "$DOTFILES/config/nix#hermes"
 ```
 
 日常運用の alias（`nxb` / `nxbd` / `nxs` / `nxrb` 等）と実用コマンド集は

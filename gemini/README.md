@@ -152,7 +152,7 @@ symlink 配線をやめ、**repo の JSON を正とし、`home.activation` で�
 drift を検知して、drift がある間は switch が上書きを拒否する（警告方式。どちらの変更も消えない）。
 
 これは Claude Code の `settings.json` と同じ対策で、
-`config/.config/nix/hosts/macbook/dotfiles.nix` に実装している。
+`config/nix/hosts/macbook/dotfiles.nix` に実装している。
 agy はフック機構を持たないため、Claude Code のような Stop hook による即時検知は組めず、
 **switch 時チェック止まり**になる。
 

@@ -25,7 +25,7 @@ in
       # これによりストアパス補間が不要になり、mkOutOfStoreSymlink 原則
       # （編集即反映）を維持できる。
       xdg.configFile."llama-swap/config.yaml".source =
-        mkLink "config/.config/nix/hosts/hermes/llama-swap-config.yaml";
+        mkLink "config/nix/hosts/hermes/llama-swap-config.yaml";
 
       # ai.hermes.gateway（Hermes Agent 本体、hermes-agent 側管理の launchd）の
       # PATH は ~/.local/bin を含むが Nix の per-user profile を含まない。

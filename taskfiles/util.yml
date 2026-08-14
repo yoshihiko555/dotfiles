@@ -95,16 +95,16 @@ tasks:
       - bash {{.ROOT_DIR}}/scripts/codex-trust-audit.sh
 
   # ====================
-  # Nix flake（config/.config/nix）
+  # Nix flake（config/nix）
   # status タスク（symlink drift 確認）とは別軸。
   # こちらは flake 自体の評価とフォーマットを検査・整形する
   # ====================
   nix-check:
     desc: nix flake の評価とフォーマット検査を実行（nix flake check）
     cmds:
-      - nix flake check {{.ROOT_DIR}}/config/.config/nix
+      - nix flake check {{.ROOT_DIR}}/config/nix
 
   nix-fmt:
     desc: nix + shell + yaml/toml を treefmt で整形（nix fmt）。lua/md/json は対象外
     cmds:
-      - cd {{.ROOT_DIR}}/config/.config/nix && nix fmt
+      - cd {{.ROOT_DIR}}/config/nix && nix fmt
