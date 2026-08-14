@@ -28,11 +28,11 @@
   };
 
   # /etc/zshenv 経由で nix-darwin の PATH 設定（/run/current-system/sw/bin 等）を
-  # 通すために有効化する。zsh 自体の初期化ロジックは shell/.zshenv 側に一本化しており、
+  # 通すために有効化する。zsh 自体の初期化ロジックは shell/zshenv 側に一本化しており、
   # ここでは compinit 等は触らない。
   programs.zsh.enable = true;
 
-  # shell/.zshenv は `${DOTFILES:-$HOME/ghq/...}` とデフォルト値参照のため、
+  # shell/zshenv は `${DOTFILES:-$HOME/ghq/...}` とデフォルト値参照のため、
   # /etc 側で先に export しておけば dotfiles 側の記述を変更せずに済む。
   environment.variables.DOTFILES = config.hostSpec.dotfilesDir;
 

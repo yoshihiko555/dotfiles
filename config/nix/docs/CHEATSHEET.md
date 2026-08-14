@@ -25,7 +25,7 @@ ssh -t macmini-admin 'sudo darwin-rebuild switch --flake /Users/agent/hermes-wor
 
 ## ショートカット（zsh alias）
 
-上記のコマンドは `shell/.zsh/nix.zsh` で alias 化してある。`nx*` が**ローカル実行**
+上記のコマンドは `shell/zsh/nix.zsh` で alias 化してある。`nx*` が**ローカル実行**
 （hermes 上で使う）、`hx*` が **MBP からのリモート実行**。
 
 | ローカル | リモート | 内容 |

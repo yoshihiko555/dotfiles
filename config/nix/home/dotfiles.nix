@@ -5,10 +5,10 @@ let
 in
 {
   home.file = {
-    ".zshenv".source = mkLink "shell/.zshenv";
-    ".zprofile".source = mkLink "shell/.zprofile";
-    ".zshrc".source = mkLink "shell/.zshrc";
-    ".zsh".source = mkLink "shell/.zsh";
+    ".zshenv".source = mkLink "shell/zshenv";
+    ".zprofile".source = mkLink "shell/zprofile";
+    ".zshrc".source = mkLink "shell/zshrc";
+    ".zsh".source = mkLink "shell/zsh";
   };
 
   xdg.configFile = {

@@ -176,7 +176,7 @@ sudo darwin-rebuild switch --flake "$DOTFILES/config/nix#hermes"
 
 ## トラブルシュート
 
-- `nix` コマンドが見つからない: login shell で `shell/.zprofile` の Nix 初期化が走っているか確認
+- `nix` コマンドが見つからない: login shell で `shell/zprofile` の Nix 初期化が走っているか確認
 - flake 関連エラー: `~/.config/nix/nix.conf`（home-manager でリンクされるユーザーレベル設定。
   ブートストラップ時や WSL2 など darwin 層を通らないホストで参照される）に
   `experimental-features = nix-command flakes` が入っているか確認。

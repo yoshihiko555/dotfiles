@@ -344,8 +344,8 @@ wt ai task/codex-trust
 ## home-manager の配線
 
 ```
-~/.zshrc             → dotfiles/shell/.zshrc
-~/.zprofile          → dotfiles/shell/.zprofile
+~/.zshrc             → dotfiles/shell/zshrc
+~/.zprofile          → dotfiles/shell/zprofile
 ~/.config/wezterm    → dotfiles/config/wezterm
 ~/.config/ghostty    → dotfiles/config/ghostty
 ~/.config/starship   → dotfiles/config/starship

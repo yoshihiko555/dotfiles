@@ -127,7 +127,7 @@ flake は「このディレクトリを1つのパッケージのように扱う�
 
 - `default.nix`: ユーザー名などの枠組み
 - `dotfiles.nix`: 本丸。`mkOutOfStoreSymlink` で
-  `~/.zshrc → <リポジトリ>/shell/.zshrc` のような symlink を宣言する。
+  `~/.zshrc → <リポジトリ>/shell/zshrc` のような symlink を宣言する。
   **stow がやっていたことの home-manager 版**。リポジトリ側を編集すれば即反映される
 
 ---

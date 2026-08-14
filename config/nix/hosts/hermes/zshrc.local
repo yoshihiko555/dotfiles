@@ -1,6 +1,6 @@
 # hermes 固有の対話シェル設定。~/.zshrc.local として home-manager からリンクされる。
 #
-# 共有側（shell/.zshenv, shell/.zshrc, shell/.zsh/*.zsh）でカバーされる内容
+# 共有側（shell/zshenv, shell/zshrc, shell/zsh/*.zsh）でカバーされる内容
 # （mise/zoxide/starship 初期化、fzf 変数、git/tmux alias、mkcd/port/fh/fkill、
 #   repo、tss/tk/tp、wt、cheat 等）はここに書かない。
 # hermes/home/.zsh/hermes-helpers.zsh からの移植時に重複排除した
