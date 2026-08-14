@@ -22,8 +22,9 @@ Phase 3 全体は WSL2（3-3）が実稼働待ちのため `[~]` のまま残し
 下記「目的」の 3 項目はいずれも達成済み。
 
 **2026-08-14 に Phase 4 の 4 項目（4-3 / 4-1 / 4-8 / 4-5）へ着手した。**
-4-3 は実装済みで初回 CI の結果待ち。4-9 の GC 初回発動確認は 2026-09 上旬。
-他はトリガー待ちか任意着手。
+4-3（flake check + CI）と 4-1（remote builders）は完了。
+4-8 は MBP 適用済み・hermes 適用待ち。4-5 は方針検討中。
+4-9 の GC 初回発動確認は 2026-09 上旬。
 
 > ホストごとの構成・運用ルールは [../README.md](../README.md) を参照。
 > このファイルは**進捗と判断の履歴**、README は**現在の管理方法**と役割を分ける。
@@ -452,18 +453,44 @@ brew は GUI / cask と nixpkgs 未収録パッケージ専用になる。
 >
 > （旧 Phase 4「nix-darwin 移行」は Phase 3 に吸収した）
 
-### 4-1: Remote builders — `[ ]` 優先度: 高
+### 4-1: Remote builders — `[x]` 完了（2026-08-14）
 
 hermes をビルドマシンにし、MacBook Pro のビルド負荷を逃がす。
 両機とも `aarch64-darwin` なので成果物がそのまま使える。
 
 **stow では原理的に代替不可能な唯一の価値。** ヘッドレス機の存在価値が上がる。
 
-- [ ] hermes を builder として登録（`nix.buildMachines`）
-- [ ] `builders-use-substitutes` を有効化してキャッシュ併用
-- [ ] MacBook Pro でのビルドが hermes に委譲されることを確認
+- [x] hermes を builder として登録（`nix.buildMachines`、`hosts/macbook/nix-builders.nix`）
+- [x] `builders-use-substitutes` を有効化してキャッシュ併用
+- [x] MacBook Pro でのビルドが hermes に委譲されることを確認
 
 **完了条件**: MacBook Pro で `darwin-rebuild` を実行したとき、重いビルドが hermes で走る。
+→ 達成。`-j0`（ローカルビルド禁止）付きのビルドが hermes 上で実行され、
+`uname -a` が `mac-mini.local` / `T8132`（M4）を返すことで実証した。
+
+#### 実施記録（2026-08-14）
+
+- **root の SSH 設定に依存しない構成を採った。** nix-daemon は root 権限で SSH 発信するが、
+  `/var/root/.ssh/` の状態は sudo 無しでは確認できない。そこで
+  (1) builder 専用鍵を新規作成（個人鍵 `id_ed25519_macmini` を root に流用しない。
+  漏洩時の影響範囲を鍵ごとに限定するため）、(2) `sshKey` に絶対パスを指定して
+  root の `~/.ssh/config` を経由しない、(3) known_hosts の初回登録問題は
+  `publicHostKey`（ホスト公開鍵ファイル全体の base64）で回避する、とした。
+  そのため `hostName` は alias ではなく IP 直書きになっている
+- **`nix.distributedBuilds = true` の明示が必須だった。** `buildMachines` を書くだけでは
+  有効にならない。nix-darwin は `distributedBuilds = false`（既定）のとき
+  `nix.settings.builders` を明示的に `null` へ上書きし、`/etc/nix/machines` が
+  存在しても無視する（`modules/nix/default.nix` 945-969 行、rev 15abb8c で確認）。
+  **下記「解消済み」の事故とは別経路で同じ「黙って効かない」状態になりうる**ため、
+  適用後は `/etc/nix/nix.conf` から `builders = ` の行が消えていることを確認するのが確実
+- `builders-use-substitutes` は distributed build の**送り手（MBP）側**の設定のため、
+  `darwin/` 共通層ではなく `hosts/macbook/` に置いた（ADR-0004 ルール 3）
+- `speedFactor = 2` は M4（10 コア）と M1 Pro（8 コア = 6P+2E）の世代差・コア数差からの
+  見積りで**実測値ではない**。運用しながら見直す
+- `hostName` が DHCP の IP 直書きのため、**ルーター側で hermes に IP 予約をしておかないと
+  IP 変更で静かに壊れる**
+- 検証時の注意: nix のビルド環境には `hostname` コマンドが無い（coreutils ではなく
+  別パッケージ）。委譲の確認には `uname -n` を使う
 
 **前提**: Phase 3-1 完了
 
@@ -567,17 +594,42 @@ hermes が pull 型で設定に自動追従する。
 | flake templates | `nix flake init -t` でプロジェクト雛形 |
 | `nh`（nix helper） | rebuild の UX 改善・差分表示（ryoppippi 採用） |
 
-### 4-8: セキュリティ / OS 設定の宣言管理 — `[ ]` 優先度: 中（2026-08-01 追加）
+### 4-8: セキュリティ / OS 設定の宣言管理 — `[~]` MBP 適用済み・hermes 適用待ち（2026-08-14）
 
 ゲストログイン無効・画面ロック・Touch ID sudo（MBP 向け）等を
 `system.defaults` / `security.pam` で宣言化する。検証は hermes で行う。
 
-- [ ] hermes で安全な項目（loginwindow / screensaver 等）を宣言して挙動確認
-- [ ] MBP 向けに `security.pam.services.sudo_local.touchIdAuth` を準備（Phase 3-2 で適用）
-- [ ] アプリケーションファイアウォールは**要設計**（hermes は miniserve が
-      0.0.0.0:18080 で外部公開中のため、未署名バイナリの受信ブロックと干渉する）
+- [x] MBP 向けに `security.pam.services.sudo_local.touchIdAuth` を準備 → **適用済み**
+      （`hosts/macbook/security.nix`。`reattach = true` も併せて有効化し tmux 内でも効くようにした）
+- [x] hermes で安全な項目（loginwindow / screensaver 等）を宣言（`hosts/hermes/security.nix`）
+- [ ] hermes へ適用して挙動確認（switch 待ち）
+- [-] アプリケーションファイアウォールは**要設計** → hermes 分は**解決**（下記実施記録）。
+      MBP は現在無効で、有効化は実挙動の変化を伴うため**今回スコープ外**とした
+      （常用ネットワークサービスの洗い出しが先。別途再検討）
 
 **完了条件**: hermes のセキュリティ設定が宣言で再現でき、意図しないサービス断が無い。
+
+#### 実施記録（2026-08-14）
+
+- **層の配置**: Touch ID は MBP 専用（hermes はヘッドレスで生体認証デバイスが無い）のため
+  共通層へ昇格せずホスト固有層に置く（ADR-0004 ルール 3）
+- **ファイアウォールの「要設計」は解決した。** hermes は実機で既に有効・ステルス ON で、
+  miniserve を per-app 許可 2 件で明示的に通していたが、**すべて手動設定で nix 管理外**だった。
+  nix-darwin の `networking.applicationFirewall` モジュールは global 系オプション
+  （`--setglobalstate` / `--setallowsigned` / `--setallowsignedapp` / `--setstealthmode`）
+  しか操作せず、**per-app の allow/block には触れない**ため、現在値をそのまま宣言すれば
+  miniserve の許可を壊さずに宣言管理へ取り込める
+- **`blockAllIncoming` は意図的に宣言しない。** true にすると per-app 許可を無視して
+  受信を全遮断し、miniserve どころか SSH ごとリモートからロックアウトされる。
+  同モジュールは全オプションが `nullOr bool` の既定 `null` で、activation script が
+  `lib.optionalString (cfg.X != null)` でガードされているため、**未宣言なら
+  `setblockall` は一度も呼ばれない**（pin 済み rev の実ソースで確認）
+- **既知の要検証事項**: `screensaver.askForPassword` / `askForPasswordDelay` は
+  最近の macOS でロック画面のポリシーが別の場所へ移っており、**宣言しても効かない可能性**がある。
+  activation script に `defaults write` が正しく生成されることは生成物で確認済みだが、
+  OS 側が読むかは別問題。適用後に実挙動を確認する
+- hermes への適用は **tmux 内で実行**すること。`switch` のたびに `socketfilterfw` が
+  再実行されるため、適用の瞬間に SSH が切れうる（切れても tmux 内の処理は継続する）
 
 ### 4-9: Nix store の自動 GC — `[x]` 完了（2026-08-02）
 
