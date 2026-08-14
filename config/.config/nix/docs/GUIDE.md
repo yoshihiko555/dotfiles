@@ -49,7 +49,7 @@ config/.config/nix/
 │   └── hermes/
 │       ├── default.nix    # hostSpec の値と目次（imports）。実体は機能群ごとに分割
 │       ├── homebrew.nix   # hermes の cask 宣言
-│       ├── dotfiles.nix   # hermes 固有の配線（tmux / mise / zshrc.local）
+│       ├── dotfiles.nix   # hermes 固有の配線（zshrc.local のみ。tmux / mise は home/dotfiles.nix の共通層）
 │       ├── hermes-agent.nix       # Hermes Agent 基盤（LLM の launchd 宣言等）
 │       ├── nix-gc.nix     # Nix store の自動 GC（常時稼働機向け）
 │       ├── llama-swap-config.yaml # llama-swap 設定（mkOutOfStoreSymlink で配線）
@@ -108,7 +108,7 @@ flake は「このディレクトリを1つのパッケージのように扱う�
 - `default.nix`: `hostSpec` の値と `imports`（目次）だけ。
   **機能が増えたらファイルを足して imports に1行追加する**のが増築の作法
 - `homebrew.nix`: cask 7 個の宣言
-- `dotfiles.nix`: hermes だけに配る symlink（ミニマル tmux.conf、mise、zshrc.local）
+- `dotfiles.nix`: hermes だけに配る symlink（zshrc.local のみ。tmux / mise は共通層へ昇格済み）
 - `hermes-agent.nix`: LLM 基盤（llama-cpp / llama-swap / miniserve のパッケージと
   launchd 宣言、gateway 向け gh 橋渡し）
 - `nix-gc.nix`: Nix store の自動 GC。`nix.gc.automatic = true` で週次（日曜 3:15）に

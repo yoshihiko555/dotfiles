@@ -71,10 +71,14 @@ dotfiles/
 │       └── work/           # 会社アカウントでも使うことを明示したスキル
 │
 ├── alfred/                 # Alfred ワークフロー（→ ~/Dropbox/...へリンク）
-│   └── Open-VS-or-IT/      # お気に入りフォルダを開くワークフロー
+│   ├── Open-VS-or-IT/      # お気に入りフォルダを開くワークフロー
+│   ├── audio-output/       # オーディオ出力デバイスを切り替えるワークフロー
+│   └── post/               # コンテンツ投稿サイトを一括で開くワークフロー
 │
 ├── Taskfile.yml            # エントリポイント（taskfiles/ を読み込む）
 ├── taskfiles/
+│   ├── agents.yml
+│   ├── cliproxy.yml
 │   ├── dotfiles.yml
 │   ├── skills.yml
 │   └── util.yml
@@ -139,6 +143,10 @@ task mcp-show      # 最小構成テンプレートの内容を表示
 task clean-claude-dry # Claude デバッグログ削除の dry-run
 task clean-claude  # Claude デバッグログを削除
 task codex-trust-audit # Codex trust 設定を監査
+task nix-check     # nix flake の評価とフォーマット検査（nix flake check）
+task nix-fmt       # nix + shell + yaml/toml を treefmt で整形（nix fmt）
+task cliproxy-setup  # CLIProxyAPI を導入しテンプレートから設定を生成
+task cliproxy-status # CLIProxyAPI の稼働状態と公開モデル一覧を確認
 ```
 
 ## Neovim LSP（TypeScript / Go / Python）
@@ -352,6 +360,8 @@ wt ai task/codex-trust
 ~/.gemini/AGENTS.md  → dotfiles/gemini/.gemini/AGENTS.md
 ~/.takt/config.yaml   → dotfiles/takt/.takt/config.yaml
 ~/Dropbox/.../workflows/user.workflow.C9692AD7-... → dotfiles/alfred/Open-VS-or-IT
+~/Dropbox/.../workflows/user.workflow.D644F268-... → dotfiles/alfred/audio-output
+~/Dropbox/.../workflows/user.workflow.455DAC0F-... → dotfiles/alfred/post
 ```
 
 通常の設定は `mkOutOfStoreSymlink` で配線するため、repo 内の編集が即時反映される。
@@ -397,6 +407,18 @@ Alfredから指定ディレクトリをWezTermで3分割ペインレイアウト
 │      │  3   │
 └──────┴──────┘
 ```
+
+### post
+
+コンテンツ投稿サイト（Adobe Firefly / Contentful / Zenn / Note / YouTube Studio）を一括で開く。
+
+**キーワード:** `post`
+
+### audio-output
+
+オーディオ出力デバイスを一覧から選んで切り替える（`SwitchAudioSource` 依存）。
+
+**キーワード:** `audio`
 
 詳細は [alfred/README.md](alfred/README.md) を参照。
 
