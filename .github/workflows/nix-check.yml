@@ -1,0 +1,51 @@
+name: nix-check
+
+# Phase 4-3（ROADMAP.md 4-3節）: nix flake check + フォーマット検査。
+# 評価とフォーマットのみを検査し、darwinConfigurations.*.system の実ビルドは
+# 行わない（macos runner のコストを避けるため）。
+#
+# runner は ubuntu-latest（x86_64-linux）を使用する。
+# この flake は darwinConfigurations を aarch64-darwin 固定で持つが、
+# 評価（nix eval）だけであればクロスプラットフォームで通ることを
+# ローカルの aarch64-darwin 機で確認済み。ubuntu-latest 上で実際に通るかは
+# このワークフローの初回実行で実測する。もし evaluation が通らない場合は
+# runs-on を macos-14 に切り替える。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  nix-flake-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # 「素の Nix」方針（config/.config/nix/docs ROADMAP・hermes 運用）に合わせ、
+      # Determinate Systems 系ではなく cachix/install-nix-action（NixOS 公式寄り）を使う。
+      # flakes / nix-command はこの action の既定で有効化される。
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      # flake の評価とフォーマット検査（checks.<system>.formatting）。
+      # --no-build は付けない: checks 自体は treefmt によるフォーマット検査のみで
+      # 軽量なため、ここではビルドまで行って実際に検査を通す
+      - name: nix flake check
+        run: nix flake check ./config/.config/nix
+
+      # nix flake check は darwinConfigurations のような未知の output type を
+      # 深く評価しない（≒ 壊れていても検出できない）。実ビルドはしないが、
+      # 評価だけは強制する（link-tmux のような設定崩れを検出する目的）
+      - name: evaluate darwinConfigurations (no build)
+        run: |
+          nix eval ./config/.config/nix#darwinConfigurations.hermes.config.system.build.toplevel.drvPath
+          nix eval ./config/.config/nix#darwinConfigurations.macbook.config.system.build.toplevel.drvPath
+
+      # checks.formatting は self（flake が config/.config/nix サブディレクトリに
+      # あることに由来し、config/.config/nix 配下のみ）の検査に留まる。
+      # リポジトリ全体（shell/yaml/toml）のフォーマット崩れは、生きた checkout
+      # 全体に対して formatter を --ci（no-cache + fail-on-change）で走らせて検出する
+      - name: repo-wide formatting check
+        run: nix run ./config/.config/nix#formatter.x86_64-linux -- --ci

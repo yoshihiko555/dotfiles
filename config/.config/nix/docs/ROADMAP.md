@@ -19,8 +19,11 @@ Phase 3 全体は WSL2（3-3）が実稼働待ちのため `[~]` のまま残し
 | Mac mini (hermes) | `[x]` 管理下（2026-07-31）。CLI・LLM 基盤・launchd デーモンまで宣言管理済みで、brew 残留は cask 7 個 + git-gtr（+依存）のみ。2026-08-02 に素の Nix へ移行（3-1c） |
 | 会社 Windows (WSL2) | `[?]` 未着手（実稼働待ち）。`flake.nix` の `system` は `aarch64-darwin` 固定で、**WSL2 に適用されている出力は現時点で無い**（Phase 0 の最小 devShell も darwin 用）。Phase 3-3 で `homeConfigurations` を追加する |
 
-下記「目的」の 3 項目はいずれも達成済み。残る**能動タスクは 4-9 の GC 初回発動確認**
-（2026-09 上旬）のみで、他はトリガー待ちか任意着手。
+下記「目的」の 3 項目はいずれも達成済み。
+
+**2026-08-14 に Phase 4 の 4 項目（4-3 / 4-1 / 4-8 / 4-5）へ着手した。**
+4-3 は実装済みで初回 CI の結果待ち。4-9 の GC 初回発動確認は 2026-09 上旬。
+他はトリガー待ちか任意着手。
 
 > ホストごとの構成・運用ルールは [../README.md](../README.md) を参照。
 > このファイルは**進捗と判断の履歴**、README は**現在の管理方法**と役割を分ける。
@@ -477,16 +480,57 @@ hermes をビルドマシンにし、MacBook Pro のビルド負荷を逃がす�
 
 **完了条件**: `, <command>` で未インストールのコマンドが実行できる。
 
-### 4-3: `nix flake check` + CI — `[ ]` 優先度: 中
+### 4-3: `nix flake check` + CI — `[~]` 実装済み・CI 初回実行待ち（2026-08-14）
 
 設定自体の検証。リポジトリに `.github` が無く **CI 未設定のため純増**。
 `link-tmux` の腐敗は CI があれば検出できていた。
 
-- [ ] `nix flake check` が通る状態にする
-- [ ] treefmt-nix でフォーマッタを統合（mozumasu 採用）
-- [ ] GitHub Actions で `nix flake check` を実行
+- [x] `nix flake check` が通る状態にする（`checks.<system>.formatting` を追加）
+- [x] treefmt-nix でフォーマッタを統合（mozumasu 採用）
+- [x] GitHub Actions で `nix flake check` を実行（`.github/workflows/nix-check.yml`）
+- [ ] 初回 CI が緑になることを確認（push 後）
 
 **完了条件**: push 時に設定の破綻が自動検出される。
+→ ローカル検証は完了。**実際に CI が通るかは初回 push まで未確定**のため `[~]` のまま残す。
+
+#### 実施記録（2026-08-14）
+
+- **適用範囲は nix + shell + yaml/toml に限定**。lua / markdown / json は対象外とした。
+  `config/` 配下に nvim の設定（lua 36 / md 195 / json 63 ファイル）が同居しており、
+  巻き込むと整形差分が巨大になって何が変わったかレビューできなくなるため
+- **フォーマッタの既定値は、既存のコードスタイルに合わせて上書きした**（core.md の
+  「既存のコードスタイルに合わせる」に従う）。判断の根拠は `treefmt.nix` のコメントに残した
+  - `shfmt -ci`: `case` ブロックを 1 段字下げする既存スタイルを維持
+  - `shfmt -bn`: `&&` / `|` を行頭に置く継続行スタイルを維持（リポジトリ内 6 件すべてが行頭型）
+  - `shfmt -sr` は**不採用**。`> "$file"` はスペースあり多数派（16/18）だが
+    `2>/dev/null` 系はスペースなしが全会一致（19/19）で、`-sr` は両者を区別できないため、
+    有効化すると多数派 16 件を直すために全会一致 21 件を崩すことになる
+  - `shfmt -kp` は**不採用**。桁揃えとインデントを区別できず、`-bn` 後の while ブロック等で
+    壊れた出力（インデント 20 列超）を生んだ
+  - `taplo align_comments = false`: 行末コメントの桁揃えで starship.toml の可読性が落ちるため
+  - `taplo array_auto_expand = false`: 短い配列が複数行へ展開されるのを抑止
+  - `yamlfmt retain_line_breaks = true`: taskfiles の意図的な空行区切りを潰さないため
+- **アプリが書き戻すファイルは除外**した。整形しても次のアプリ起動で崩れ、CI が理由もなく
+  赤くなるため。Phase 3-2 の「要注意 5 件」と全件突合し、`codex/config.toml` /
+  `mise/config.toml` を個別に除外（`karabiner.json` / `lazy-lock.json` は `*.json`、
+  `flake.lock` は既定の `*.lock` で既にカバー済み）。同じ理由で gh が書き込む
+  `config/.config/gh/config.yml` も除外
+- `config/.config/aerospace/layouts/*.sh` も除外。`move_app_to_workspace 'id'  'M1'` の
+  **引数列の桁揃えが意図的**（どのアプリがどの画面へ行くか一覧できる）で、
+  shfmt が単一スペースへ潰すため
+- **`self` が `config/.config/nix` サブツリーにしかスコープされない制約が判明した。**
+  flake がリポジトリ直下ではなくサブディレクトリにあるため
+  `git+file://...?dir=config/.config/nix` として解決され、`self.outPath` に
+  `scripts/` や `shared/` が含まれない。このため `checks.formatting` の検査対象は
+  実質 nix サブツリーのみになる。**リポジトリ全体のフォーマット崩れ検出は
+  CI 側の独立ステップ**（`nix run .#formatter -- --ci`、ライブチェックアウト全体が対象）が担う
+- CI runner は `ubuntu-latest` を選定（`formatter.x86_64-linux` と
+  `checks.x86_64-linux.formatting` のクロス評価がローカルで成功したため）。
+  **初回実行で落ちたら `macos-14` へ切り替える**旨をワークフローにコメントで明記。
+  `actions/checkout` の shallow clone で git+file flake が解決できない場合は
+  `fetch-depth: 0` を追加する
+- ローカル検証用に `task nix-check` / `task nix-fmt` を追加（既存の `task status` は
+  home-manager の symlink drift 検査で役割が異なる）
 
 ### 4-4: Cachix Deploy — `[ ]` 優先度: 中
 
