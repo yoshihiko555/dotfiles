@@ -13,8 +13,8 @@ current_normalized="$(mktemp)"
 reference_normalized="$(mktemp)"
 trap 'rm -f "$current_normalized" "$reference_normalized"' EXIT
 
-if jq -S . "$current" > "$current_normalized" 2>/dev/null \
-  && jq -S . "$reference" > "$reference_normalized" 2>/dev/null; then
+if jq -S . "$current" >"$current_normalized" 2>/dev/null \
+  && jq -S . "$reference" >"$reference_normalized" 2>/dev/null; then
   different=0
   cmp -s "$current_normalized" "$reference_normalized" || different=1
 else

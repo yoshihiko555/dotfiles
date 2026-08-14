@@ -149,10 +149,10 @@ render_managed_block() {
         echo "[projects.\"$esc\"]"
         echo "trust_level = \"$lv\""
         echo ""
-      done < "$entries"
+      done <"$entries"
     fi
     echo "# END managed-trust-projects"
-  } > "$managed_file"
+  } >"$managed_file"
 }
 
 insert_managed_block() {
@@ -209,23 +209,23 @@ insert_managed_block() {
         emit_managed()
       }
     }
-  ' "$base" > "$final_file"
+  ' "$base" >"$final_file"
 }
 
 write_final_preserve_symlink() {
   # symlink 自体を置き換えないため、ファイルへ上書きする
-  cat "$final_file" > "$CONFIG_PATH"
+  cat "$final_file" >"$CONFIG_PATH"
 }
 
 rewrite_config() {
   local entries="$1"
-  extract_base_without_projects > "$base_file"
+  extract_base_without_projects >"$base_file"
   render_managed_block "$entries"
   insert_managed_block "$base_file" "$managed_file"
   write_final_preserve_symlink
 }
 
-extract_entries | canonicalize_entries > "$entries_file"
+extract_entries | canonicalize_entries >"$entries_file"
 
 case "$ACTION" in
   add)
@@ -241,7 +241,7 @@ case "$ACTION" in
     {
       cat "$entries_file"
       printf '%s\t%s\n' "$target" "$LEVEL"
-    } | canonicalize_entries > "$entries_new_file"
+    } | canonicalize_entries >"$entries_new_file"
     rewrite_config "$entries_new_file"
     echo "設定しました: $target ($LEVEL)"
     echo "config: $CONFIG_PATH"
@@ -252,12 +252,12 @@ case "$ACTION" in
       echo "パスが不正です: $INPUT_PATH"
       exit 1
     fi
-    awk -F'\t' -v target="$target" '$1 != target { print $0 }' "$entries_file" > "$entries_new_file"
+    awk -F'\t' -v target="$target" '$1 != target { print $0 }' "$entries_file" >"$entries_new_file"
     if cmp -s "$entries_file" "$entries_new_file"; then
       echo "対象が見つかりません: $target"
       exit 1
     fi
-    canonicalize_entries < "$entries_new_file" > "$entries_new_file.sorted"
+    canonicalize_entries <"$entries_new_file" >"$entries_new_file.sorted"
     rewrite_config "$entries_new_file.sorted"
     echo "削除しました: $target"
     echo "config: $CONFIG_PATH"

@@ -34,7 +34,7 @@ awk '
     print current "\t" level
     current = ""
   }
-' "$CONFIG_PATH" > "$tmp_entries"
+' "$CONFIG_PATH" >"$tmp_entries"
 
 total=0
 missing=0
@@ -73,7 +73,7 @@ while IFS=$'\t' read -r path level; do
   fi
 
   printf "%-10s %-8s %s\n" "$status" "$level" "$path"
-done < "$tmp_entries"
+done <"$tmp_entries"
 
 echo ""
 echo "summary:"

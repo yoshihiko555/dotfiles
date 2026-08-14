@@ -5,7 +5,12 @@ let
 in
 {
   home-manager.users.${username} =
-    { config, lib, pkgs, ... }:
+    {
+      config,
+      lib,
+      pkgs,
+      ...
+    }:
     let
       mkLink = path: config.lib.file.mkOutOfStoreSymlink "${dotfilesDir}/${path}";
     in
@@ -49,8 +54,7 @@ in
         ".codex/skills".source = mkLink "codex/.codex/skills";
 
         ".gemini/AGENTS.md".source = mkLink "gemini/.gemini/AGENTS.md";
-        ".gemini/antigravity/mcp_config.json".source =
-          mkLink "gemini/.gemini/antigravity/mcp_config.json";
+        ".gemini/antigravity/mcp_config.json".source = mkLink "gemini/.gemini/antigravity/mcp_config.json";
         ".gemini/config/skills".source = mkLink "gemini/.gemini/config/skills";
         ".gemini/settings.json".source = mkLink "gemini/.gemini/settings.json";
 

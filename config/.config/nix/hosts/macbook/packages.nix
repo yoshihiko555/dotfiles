@@ -1,4 +1,10 @@
-{ config, pkgs, lib, takt, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  takt,
+  ...
+}:
 {
   # MBP 固有の CLI パッケージ（棚卸し: PHASE-3-2-CLI-INVENTORY.md）。
   # ADR-0004 ルール 3 に従い、まず使うホストの hosts/macbook/ に置く。
@@ -6,8 +12,7 @@
 
   # agy（antigravity-cli）は unfree ライセンスのため個別に許可する。
   # allowUnfree = true の全面許可はせず、対象を明示する。
-  nixpkgs.config.allowUnfreePredicate =
-    pkg: builtins.elem (lib.getName pkg) [ "antigravity-cli" ];
+  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "antigravity-cli" ];
 
   home-manager.users.${config.hostSpec.username}.home.packages =
     (with pkgs; [

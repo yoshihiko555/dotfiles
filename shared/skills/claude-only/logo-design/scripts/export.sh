@@ -15,7 +15,10 @@ shift 2
 sizes=("$@")
 [ ${#sizes[@]} -eq 0 ] && sizes=(16 32 64 128 256 512 1024)
 
-[ -f "$svg" ] || { echo "error: $svg not found" >&2; exit 1; }
+[ -f "$svg" ] || {
+  echo "error: $svg not found" >&2
+  exit 1
+}
 mkdir -p "$outdir"
 base="$(basename "$svg" .svg)"
 

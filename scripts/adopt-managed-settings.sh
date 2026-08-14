@@ -13,8 +13,8 @@ json_equal() {
 
   left_normalized="$(mktemp)"
   right_normalized="$(mktemp)"
-  if jq -S . "$left" > "$left_normalized" 2>/dev/null \
-    && jq -S . "$right" > "$right_normalized" 2>/dev/null; then
+  if jq -S . "$left" >"$left_normalized" 2>/dev/null \
+    && jq -S . "$right" >"$right_normalized" 2>/dev/null; then
     if cmp -s "$left_normalized" "$right_normalized"; then
       result=0
     else
