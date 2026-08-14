@@ -1,0 +1,7 @@
+keys:
+  - &yoshihiko_macbook age1k3qk760dhgq82zgfep8gy9qaz7ng5y8h7479e9r2twmj723a292q2fqyrt
+creation_rules:
+  - path_regex: config/nix/secrets/.*\.yaml$
+    key_groups:
+      - age:
+          - *yoshihiko_macbook

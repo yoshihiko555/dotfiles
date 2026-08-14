@@ -19,6 +19,17 @@
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # 秘匿情報を暗号化したままコミットするための復号基盤（Phase 4-5）。
+    # 2026-08-14 時点で sops.secrets を宣言しているホストは無い（管理対象ゼロ）。
+    # ~/.ssh/config は中身が秘匿情報でないため平文配線（hosts/macbook/dotfiles.nix）
+    # に変更した。将来 API トークン等の本物の秘密が出てきたときに即座に
+    # sops.secrets へ載せられるよう、仕組み（この input・.sops.yaml・age 鍵）だけ
+    # 先に用意して残している。home-manager 用モジュールのみ使う予定
+    # （darwinModules は不採用。理由は docs/ROADMAP.md 4-5 節参照）
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -29,6 +40,7 @@
       home-manager,
       takt,
       treefmt-nix,
+      sops-nix,
       ...
     }:
     let
@@ -63,11 +75,19 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              # 既存ファイルとの衝突時に上書きせず *.backup へ退避する
+              # 既存ファイルとの衝突時に上書きせず *.backup へ退避する。
+              # sops-nix の secrets.path はこの保護を経由しない別経路
+              # （sops-install-secrets が直接シンボリックリンクを張り替える）ため、
+              # 将来 sops.secrets を使うホストが出たら該当ファイルの事前退避が別途必要になる
               backupFileExtension = "backup";
               extraSpecialArgs = {
                 hostSpec = config.hostSpec;
               };
+              # sops-nix: home-manager 用モジュールのみ全ホスト共通で読み込む。
+              # 2026-08-14 時点で sops.secrets を宣言しているホストは無い
+              # （管理対象ゼロ。経緯は docs/ROADMAP.md 4-5 節）。宣言が無い限り
+              # launchd agent 等は一切生成されない（sops.secrets = {} のため）
+              sharedModules = [ sops-nix.homeManagerModules.sops ];
               users.${config.hostSpec.username} = import ./home;
             };
           }

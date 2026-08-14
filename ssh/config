@@ -1,0 +1,44 @@
+# Added by OrbStack: 'orb' SSH host for Linux machines
+# This only works if it's at the top of ssh_config (before any Host blocks).
+# This won't be added again if you remove it.
+Include ~/.orbstack/ssh/config
+
+# Mac mini（admin）
+Host macmini macmini-admin
+  HostName 192.168.1.100
+  User admin
+  IdentityFile ~/.ssh/id_ed25519_macmini
+  IdentitiesOnly yes
+  UseKeychain yes
+  AddKeysToAgent yes
+
+# Mac mini agent（Hermes 運用作業用 / 通常のシェル作業はこちら）
+Host macmini-agent
+  HostName 192.168.1.100
+  User agent
+  IdentityFile ~/.ssh/id_ed25519_macmini
+  IdentitiesOnly yes
+  UseKeychain yes
+  AddKeysToAgent yes
+  ServerAliveInterval 60
+  ServerAliveCountMax 3
+
+Host macmini-hermes
+  HostName 192.168.1.100
+  User agent
+  IdentityFile ~/.ssh/id_ed25519_macmini
+  IdentitiesOnly yes
+  LocalForward 13000 localhost:9119
+  ServerAliveInterval 60
+  ServerAliveCountMax 3
+  UseKeychain yes
+  AddKeysToAgent yes
+
+Host github-anvil
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/github_anvil
+  IdentitiesOnly yes
+
+Host *
+  IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"

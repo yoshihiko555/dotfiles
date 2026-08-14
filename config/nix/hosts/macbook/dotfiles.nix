@@ -36,6 +36,12 @@ in
       home.file = {
         ".editorconfig".source = mkLink "home/editorconfig";
 
+        # 中身は IP・ホスト名のみで秘匿情報ではないため平文配線。sops-nix の
+        # 仕組み自体は導入済み（flake.nix / .sops.yaml）なので、将来 GitHub
+        # Packages トークンのような本物の秘密が必要になれば sops.secrets へ
+        # 切り替えられる（Phase 4-5, 2026-08-14 の方針転換。詳細は ROADMAP 参照）
+        ".ssh/config".source = mkLink "ssh/config";
+
         ".claude/.mcp.json".source = mkLink "claude/.mcp.json";
         ".claude/CLAUDE.md".source = mkLink "claude/CLAUDE.md";
         ".claude/agents".source = mkLink "claude/agents";
