@@ -13,13 +13,17 @@ dotfiles/
 ├── config/                 # XDG_CONFIG_HOME 系（→ ~/.config）
 │   ├── wezterm/            # ターミナル (WezTerm)
 │   ├── ghostty/            # ターミナル (Ghostty)
+│   ├── tmux/               # ターミナルマルチプレクサ
 │   ├── starship/           # プロンプト
 │   ├── mise/               # ランタイム管理
 │   ├── sheldon/            # zsh プラグイン
 │   ├── karabiner/          # キーリマッピング
+│   ├── aerospace/          # ウィンドウマネージャー (タイリング)
 │   ├── lazygit/            # Git TUI
 │   ├── opencode/           # OpenCode CLI
 │   ├── nvim/               # エディタ (Neovim)
+│   ├── zed/                # エディタ (Zed)
+│   ├── gh/                 # GitHub CLI
 │   └── git/                # git 設定 (global ignore 等)
 │
 ├── home/                   # $HOME 直下に置く単体ファイル（→ ~）

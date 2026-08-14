@@ -15,7 +15,8 @@ wezterm/
     ├── font.lua         # フォント設定
     ├── window.lua       # ウィンドウ設定（背景, 透過, tmux 自動起動）
     ├── keybinds.lua     # キーバインド（Cmd→tmux 変換 + GUI 操作）
-    └── notification.lua # 通知設定（ベル音カスタマイズ）
+    ├── notification.lua # 通知設定（ベル音カスタマイズ）
+    └── baton-status.lua # symlink → baton リポジトリ（別リポジトリ管理）
 ```
 
 ## 主な特徴

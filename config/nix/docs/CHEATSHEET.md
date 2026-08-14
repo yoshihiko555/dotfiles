@@ -56,9 +56,9 @@ sudo darwin-rebuild switch --switch-generation 3  # 番号指定（-G 3）
 
 ```sh
 # 1. 置き場所を選んで編集（詳細は GUIDE.md §6）
-#    CLI（3台共通）      → home/packages.nix
-#    hermes だけの brew   → hosts/hermes/homebrew.nix の brews
-#    cask                → hosts/hermes/homebrew.nix の casks
+#    CLI（3台共通）      → config/nix/home/packages.nix
+#    hermes だけの brew   → config/nix/hosts/hermes/homebrew.nix の brews
+#    cask                → config/nix/hosts/hermes/homebrew.nix の casks
 # 2. あるか探す
 nix search nixpkgs ripgrep            # nixpkgs を検索
 nix eval --raw nixpkgs#fd.name        # 属性名の存在＆バージョン確認
@@ -101,7 +101,7 @@ brew list --formula                    # brew 残留の確認（cask + git-gtr�
 brew leaves                            # brew の明示インストール分
 
 # インストール済みパッケージ一覧（層ごとに 3 つ）
-cat home/packages.nix                  # ① 宣言 = 真の一覧（Nix 的にはこれが正）
+cat config/nix/home/packages.nix       # ① 宣言 = 真の一覧（Nix 的にはこれが正）
 ls /etc/profiles/per-user/agent/bin    # ② Nix 実体（コマンド名だけ手軽に）
 nix-store -q --references $(nix-store -q --references \
   $(realpath /etc/profiles/per-user/$USER) | grep home-manager-path) \

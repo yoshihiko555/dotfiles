@@ -96,6 +96,11 @@ flake の位置は `config/nix` に維持し、リポジトリルートへは移
 - **hermes はこの ADR 作成時点でまだ switch していない。** macbook のみ適用・動作確認済み。
   hermes への反映は次回 `git pull` + `switch` 時に行う
 
+  > **追記（2026-08-14）**: hermes にも `darwin-rebuild switch` を適用済み。
+  > 全配線の解決と、LLM デーモン（miniserve / llama-swap / gateway）の稼働継続を確認した。
+  > 下記「未確定事項」の 1 件目（配線の確認）はこれにより解消。
+  > 詳細は [ROADMAP.md](../ROADMAP.md)（`7fc08ae`）を参照。
+
 ## 未確定事項（将来の ADR で扱う）
 
 - hermes への反映後、`shell/` / `config/{starship,git,mise,nvim,tmux,nix}` の配線が
