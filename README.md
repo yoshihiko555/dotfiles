@@ -7,60 +7,54 @@
 ```
 dotfiles/
 ├── shell/                  # シェル設定（→ ~）
-│   ├── .zshrc
-│   └── .zprofile
+│   ├── zshrc
+│   └── zprofile
 │
-├── config/                 # XDG_CONFIG_HOME 系（→ ~）
-│   └── .config/
-│       ├── wezterm/        # ターミナル (WezTerm)
-│       ├── ghostty/        # ターミナル (Ghostty)
-│       ├── starship/       # プロンプト
-│       ├── mise/           # ランタイム管理
-│       ├── sheldon/        # zsh プラグイン
-│       ├── karabiner/      # キーリマッピング
-│       ├── lazygit/        # Git TUI
-│       ├── opencode/       # OpenCode CLI
-│       ├── nvim/           # エディタ (Neovim)
-│       └── git/            # git 設定 (global ignore 等)
+├── config/                 # XDG_CONFIG_HOME 系（→ ~/.config）
+│   ├── wezterm/            # ターミナル (WezTerm)
+│   ├── ghostty/            # ターミナル (Ghostty)
+│   ├── starship/           # プロンプト
+│   ├── mise/               # ランタイム管理
+│   ├── sheldon/            # zsh プラグイン
+│   ├── karabiner/          # キーリマッピング
+│   ├── lazygit/            # Git TUI
+│   ├── opencode/           # OpenCode CLI
+│   ├── nvim/               # エディタ (Neovim)
+│   └── git/                # git 設定 (global ignore 等)
 │
-├── claude/                 # Claude CLI（→ ~）
-│   └── .claude/
-│       ├── CLAUDE.md       # shared/agents を @import で参照
+├── home/                   # $HOME 直下に置く単体ファイル（→ ~）
+│   └── editorconfig
+│
+├── claude/                 # Claude CLI（→ ~/.claude）
+│   ├── CLAUDE.md           # shared/agents を @import で参照
+│   ├── settings.json
+│   ├── agents/             # エージェント定義
+│   ├── hooks/              # フック
+│   ├── rules/              # ルール
+│   ├── templates/          # テンプレート
+│   └── skills/             # → shared/skills へのリンク
+│
+├── codex/                  # Codex CLI（→ ~/.codex）
+│   ├── AGENTS.md           # 生成物（task sync-agents）
+│   ├── config.toml
+│   ├── prompts/            # カスタムプロンプト
+│   ├── skills/             # → shared/skills へのリンク
+│   └── codex_message.sh
+│
+├── gemini/                 # Gemini CLI（→ ~/.gemini）
+│   ├── AGENTS.md           # 生成物（task sync-agents）
+│   ├── settings.json
+│   ├── config/
+│   │   └── skills/         # → shared/skills へのリンク
+│   └── antigravity-cli/
 │       ├── settings.json
-│       ├── agents/         # エージェント定義
-│       ├── hooks/          # フック
-│       ├── rules/          # ルール
-│       ├── templates/      # テンプレート
-│       └── skills/         # → shared/skills へのリンク
+│       └── keybindings.json
 │
-├── codex/                  # Codex CLI（→ ~）
-│   └── .codex/
-│       ├── AGENTS.md       # 生成物（task sync-agents）
-│       ├── config.toml
-│       ├── prompts/        # カスタムプロンプト
-│       ├── skills/         # → shared/skills へのリンク
-│       └── codex_message.sh
-│
-├── gemini/                 # Gemini CLI（→ ~）
-│   └── .gemini/
-│       ├── AGENTS.md       # 生成物（task sync-agents）
-│       ├── settings.json
-│       ├── config/
-│       │   └── skills/     # → shared/skills へのリンク
-│       └── antigravity-cli/
-│           ├── settings.json
-│           └── keybindings.json
-│
-├── takt/                   # takt CLI（→ ~）
-│   └── .takt/
-│       └── config.yaml
+├── takt/                   # takt CLI（→ ~/.takt）
+│   └── config.yaml
 │
 ├── shared/                 # 共通データ
 │   ├── agents/             # CLAUDE.md / AGENTS.md の実体（core + diff）
-│   ├── commands/           # Claude/Codex 用コマンド定義
-│   │   ├── common/
-│   │   ├── claude-only/
-│   │   └── codex-only/
 │   ├── mcp.template.json   # MCP 設定テンプレート（最小構成）
 │   ├── notify_message.sh   # 通知スクリプト
 │   └── skills/             # AI エージェント向けスキルの実体
