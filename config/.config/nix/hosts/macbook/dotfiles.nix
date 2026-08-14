@@ -36,29 +36,29 @@ in
       home.file = {
         ".editorconfig".source = mkLink "editorconfig/.editorconfig";
 
-        ".claude/.mcp.json".source = mkLink "claude/.claude/.mcp.json";
-        ".claude/CLAUDE.md".source = mkLink "claude/.claude/CLAUDE.md";
-        ".claude/agents".source = mkLink "claude/.claude/agents";
-        ".claude/claude_message.sh".source = mkLink "claude/.claude/claude_message.sh";
-        ".claude/docs".source = mkLink "claude/.claude/docs";
-        ".claude/hooks".source = mkLink "claude/.claude/hooks";
-        ".claude/rules".source = mkLink "claude/.claude/rules";
-        ".claude/skills".source = mkLink "claude/.claude/skills";
-        ".claude/statusline.py".source = mkLink "claude/.claude/statusline.py";
-        ".claude/templates".source = mkLink "claude/.claude/templates";
+        ".claude/.mcp.json".source = mkLink "claude/.mcp.json";
+        ".claude/CLAUDE.md".source = mkLink "claude/CLAUDE.md";
+        ".claude/agents".source = mkLink "claude/agents";
+        ".claude/claude_message.sh".source = mkLink "claude/claude_message.sh";
+        ".claude/docs".source = mkLink "claude/docs";
+        ".claude/hooks".source = mkLink "claude/hooks";
+        ".claude/rules".source = mkLink "claude/rules";
+        ".claude/skills".source = mkLink "claude/skills";
+        ".claude/statusline.py".source = mkLink "claude/statusline.py";
+        ".claude/templates".source = mkLink "claude/templates";
 
-        ".codex/AGENTS.md".source = mkLink "codex/.codex/AGENTS.md";
-        ".codex/codex_message.sh".source = mkLink "codex/.codex/codex_message.sh";
-        ".codex/config.toml".source = mkLink "codex/.codex/config.toml";
-        ".codex/rules".source = mkLink "codex/.codex/rules";
-        ".codex/skills".source = mkLink "codex/.codex/skills";
+        ".codex/AGENTS.md".source = mkLink "codex/AGENTS.md";
+        ".codex/codex_message.sh".source = mkLink "codex/codex_message.sh";
+        ".codex/config.toml".source = mkLink "codex/config.toml";
+        ".codex/rules".source = mkLink "codex/rules";
+        ".codex/skills".source = mkLink "codex/skills";
 
-        ".gemini/AGENTS.md".source = mkLink "gemini/.gemini/AGENTS.md";
-        ".gemini/antigravity/mcp_config.json".source = mkLink "gemini/.gemini/antigravity/mcp_config.json";
-        ".gemini/config/skills".source = mkLink "gemini/.gemini/config/skills";
-        ".gemini/settings.json".source = mkLink "gemini/.gemini/settings.json";
+        ".gemini/AGENTS.md".source = mkLink "gemini/AGENTS.md";
+        ".gemini/antigravity/mcp_config.json".source = mkLink "gemini/antigravity/mcp_config.json";
+        ".gemini/config/skills".source = mkLink "gemini/config/skills";
+        ".gemini/settings.json".source = mkLink "gemini/settings.json";
 
-        ".takt/config.yaml".source = mkLink "takt/.takt/config.yaml";
+        ".takt/config.yaml".source = mkLink "takt/config.yaml";
 
         "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.C9692AD7-2800-42B7-8F97-8F8CCD1CC88E".source =
           mkLink "alfred/Open-VS-or-IT";
@@ -134,17 +134,17 @@ in
 
         manage_mutable_json \
           claude \
-          "${dotfilesDir}/claude/.claude/settings.json" \
+          "${dotfilesDir}/claude/settings.json" \
           "$HOME/.claude/settings.json" \
           "$HOME/.claude/.settings.json.nix-managed"
         manage_mutable_json \
           antigravity-settings \
-          "${dotfilesDir}/gemini/.gemini/antigravity-cli/settings.json" \
+          "${dotfilesDir}/gemini/antigravity-cli/settings.json" \
           "$HOME/.gemini/antigravity-cli/settings.json" \
           "$HOME/.gemini/antigravity-cli/.settings.json.nix-managed"
         manage_mutable_json \
           antigravity-keybindings \
-          "${dotfilesDir}/gemini/.gemini/antigravity-cli/keybindings.json" \
+          "${dotfilesDir}/gemini/antigravity-cli/keybindings.json" \
           "$HOME/.gemini/antigravity-cli/keybindings.json" \
           "$HOME/.gemini/antigravity-cli/.keybindings.json.nix-managed"
       '';

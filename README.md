@@ -170,7 +170,7 @@ task cliproxy-status # CLIProxyAPI の稼働状態と公開モデル一覧を確
 
 ## MCP 運用方針（デフォルト無効）
 
-- Codex (`codex/.codex/config.toml`) の MCP は必要最小限のみ有効にする方針です。追加する MCP は原則
+- Codex (`codex/config.toml`) の MCP は必要最小限のみ有効にする方針です。追加する MCP は原則
   `enabled = false` を既定にし、実行時オーバーライドで有効化してください。
 - ただし `notion` は例外で **デフォルト有効** です。`shared/skills/common/notion-task` スキルが
   会話の途中で呼ばれる前提のため、起動し直さずに使える必要があります。
@@ -187,7 +187,7 @@ codex -c mcp_servers.notion.enabled=false
 ```
 
 - Claude Code 側は `--scope project` を基本にし、個人限定用途は `--scope local` / `--scope user` を使い分けてください。
-- Claude Code プラグイン (`claude/.claude/settings.json`) もデフォルト無効です。必要時のみ有効化してください。
+- Claude Code プラグイン (`claude/settings.json`) もデフォルト無効です。必要時のみ有効化してください。
 
 ```bash
 # Claude: プロジェクト限定でプラグインを有効化
@@ -222,9 +222,9 @@ ccw
 
 ## takt 運用方針
 
-`takt/.takt/config.yaml` はステップの役割（tags）ごとにプロバイダを割り当てます。
+`takt/config.yaml` はステップの役割（tags）ごとにプロバイダを割り当てます。
 
-- 実装・テスト（`coding` / `testing`）: Codex（`codex/.codex/config.toml` の `gpt-5.6-sol`）
+- 実装・テスト（`coding` / `testing`）: Codex（`codex/config.toml` の `gpt-5.6-sol`）
 - 計画・レビュー・最終判定（`plan` / `review` / `final-gate` など）: Claude（`opus`）
 
 ビルトインワークフローはステップに `provider:` を書いていないため、`provider_routing.tags` の指定が
@@ -275,7 +275,7 @@ gtr は `git worktree list` ベースで worktree を列挙するため、takt �
 自動判定されますが、明示するとブランチ存在チェックが走り、`master` を使うリポジトリでエラーになります。
 
 その他「既定のまま使う」と判断した項目（`auto_pr`、`observability` など）は
-`takt/.takt/config.yaml` の末尾に理由付きで列挙しています。
+`takt/config.yaml` の末尾に理由付きで列挙しています。
 
 ## Worktree 補助コマンド
 
@@ -355,10 +355,10 @@ wt ai task/codex-trust
 ~/.config/opencode/opencode.json → dotfiles/config/.config/opencode/opencode.json
 ~/.config/nvim       → dotfiles/config/.config/nvim
 ~/.config/git        → dotfiles/config/.config/git
-~/.claude/CLAUDE.md   → dotfiles/claude/.claude/CLAUDE.md
-~/.codex/AGENTS.md    → dotfiles/codex/.codex/AGENTS.md
-~/.gemini/AGENTS.md  → dotfiles/gemini/.gemini/AGENTS.md
-~/.takt/config.yaml   → dotfiles/takt/.takt/config.yaml
+~/.claude/CLAUDE.md   → dotfiles/claude/CLAUDE.md
+~/.codex/AGENTS.md    → dotfiles/codex/AGENTS.md
+~/.gemini/AGENTS.md  → dotfiles/gemini/AGENTS.md
+~/.takt/config.yaml   → dotfiles/takt/config.yaml
 ~/Dropbox/.../workflows/user.workflow.C9692AD7-... → dotfiles/alfred/Open-VS-or-IT
 ~/Dropbox/.../workflows/user.workflow.D644F268-... → dotfiles/alfred/audio-output
 ~/Dropbox/.../workflows/user.workflow.455DAC0F-... → dotfiles/alfred/post
@@ -377,7 +377,7 @@ task adopt-settings TARGET=all
 - CLAUDE.md / AGENTS.md の実体は `shared/agents/` に集約
   - `core.md`: 全エージェント共通ルール（唯一の編集対象）
   - `diff-claude.md` / `diff-codex.md` / `diff-gemini.md`: CLI 固有の差分
-- Claude Code: `claude/.claude/CLAUDE.md` が `@import` で core + diff を参照（生成不要）
+- Claude Code: `claude/CLAUDE.md` が `@import` で core + diff を参照（生成不要）
 - Codex / Gemini: `task sync-agents` で core + diff を連結して各 AGENTS.md を生成
 - リポジトリルートの `AGENTS.md` は当リポジトリ固有ルールのみ（`CLAUDE.md` は `@AGENTS.md` で橋渡し）
 - core.md / diff-*.md を編集したら `task sync-agents` を実行すること
@@ -385,7 +385,7 @@ task adopt-settings TARGET=all
 ### Skills の一元管理
 
 - スキル本体は `shared/skills/` に集約
-- `claude/.claude/skills`、`codex/.codex/skills`、`gemini/.gemini/config/skills` は相対シンボリックリンクで参照
+- `claude/skills`、`codex/skills`、`gemini/config/skills` は相対シンボリックリンクで参照
 - Antigravity のグローバルスキルは `~/.gemini/config/skills/<skill-folder>/SKILL.md` として解決されます
 - リンク更新は `task sync-skills` で実行
 

@@ -94,9 +94,9 @@
     # vendored / 生成物。.gitignore 済みで treefmt の git walk では
     # 元々スキャン対象外だが、意図を明示するためここにも書いておく
     "config/.config/tmux/plugins/**"
-    "codex/.codex/skills/.system/**"
+    "codex/skills/.system/**"
     "shared/skills/codex-only/.system/**"
-    "takt/.takt/runtime.yaml"
+    "takt/runtime.yaml"
 
     # ROADMAP.md（Phase 3-2, l.328-329, l.419）記載の「アプリが書き戻す
     # 要注意 5 件」。home-manager の mkOutOfStoreSymlink でリポジトリ内の
@@ -106,7 +106,7 @@
     #   - karabiner.json / lazy-lock.json → 拡張子 *.json exclude で既にカバー済み
     #   - flake.lock → enableDefaultExcludes の "*.lock" で既にカバー済み
     #   - 以下2件は toml/yaml のため個別に除外が必要
-    "codex/.codex/config.toml"
+    "codex/config.toml"
     "config/.config/mise/config.toml"
     # gh 自身が書き込む設定ファイル（上記5件と同じ理由で追加）
     "config/.config/gh/config.yml"

@@ -26,5 +26,5 @@ tasks:
           echo "generated: $out"
         }
 
-        gen diff-codex.md  "$root/codex/.codex/AGENTS.md"
-        gen diff-gemini.md "$root/gemini/.gemini/AGENTS.md"
+        gen diff-codex.md  "$root/codex/AGENTS.md"
+        gen diff-gemini.md "$root/gemini/AGENTS.md"

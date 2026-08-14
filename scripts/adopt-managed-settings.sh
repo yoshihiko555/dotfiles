@@ -56,26 +56,26 @@ adopt() {
 
 case "$target" in
   all)
-    adopt claude "$HOME/.claude/settings.json" "$repo_root/claude/.claude/settings.json"
+    adopt claude "$HOME/.claude/settings.json" "$repo_root/claude/settings.json"
     adopt antigravity-settings \
       "$HOME/.gemini/antigravity-cli/settings.json" \
-      "$repo_root/gemini/.gemini/antigravity-cli/settings.json"
+      "$repo_root/gemini/antigravity-cli/settings.json"
     adopt antigravity-keybindings \
       "$HOME/.gemini/antigravity-cli/keybindings.json" \
-      "$repo_root/gemini/.gemini/antigravity-cli/keybindings.json"
+      "$repo_root/gemini/antigravity-cli/keybindings.json"
     ;;
   claude)
-    adopt claude "$HOME/.claude/settings.json" "$repo_root/claude/.claude/settings.json"
+    adopt claude "$HOME/.claude/settings.json" "$repo_root/claude/settings.json"
     ;;
   antigravity-settings)
     adopt antigravity-settings \
       "$HOME/.gemini/antigravity-cli/settings.json" \
-      "$repo_root/gemini/.gemini/antigravity-cli/settings.json"
+      "$repo_root/gemini/antigravity-cli/settings.json"
     ;;
   antigravity-keybindings)
     adopt antigravity-keybindings \
       "$HOME/.gemini/antigravity-cli/keybindings.json" \
-      "$repo_root/gemini/.gemini/antigravity-cli/keybindings.json"
+      "$repo_root/gemini/antigravity-cli/keybindings.json"
     ;;
   *)
     echo "usage: task adopt-settings TARGET=all|claude|antigravity-settings|antigravity-keybindings" >&2

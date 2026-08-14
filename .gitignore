@@ -14,7 +14,7 @@ __pycache__/
 .cache/
 
 # Codex auto-generated system skills
-codex/.codex/skills/.system
+codex/skills/.system
 shared/skills/codex-only/.system/
 
 # Local backups
@@ -33,6 +33,6 @@ config/.config/tmux/plugins/
 ANALYSIS.md
 
 # takt のランタイム生成物（ログ・分析イベント）
-takt/.takt/logs/
-takt/.takt/analytics/
-takt/.takt/runtime.yaml
+takt/logs/
+takt/analytics/
+takt/runtime.yaml

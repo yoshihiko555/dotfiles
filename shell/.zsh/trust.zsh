@@ -5,7 +5,7 @@
 # Codex trust 設定を操作
 trust() {
   local repo_root="$DOTFILES"
-  local repo_config="$DOTFILES/codex/.codex/config.toml"
+  local repo_config="$DOTFILES/codex/config.toml"
   local home_config="$HOME/.codex/config.toml"
   local manager="$repo_root/scripts/codex-trust-manage.sh"
   local auditor="$repo_root/scripts/codex-trust-audit.sh"

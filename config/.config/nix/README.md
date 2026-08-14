@@ -87,7 +87,7 @@ mutable 実ファイル方式は、アプリ本体が atomic write（temp → re
 symlink を実ファイルに置換してしまう問題への対処。正は repo 側のまま保つ。
 
 - **drift**（アプリが書き込んで repo と乖離した状態）の検知は 3 箇所のみ:
-  ① switch の activation ② Claude Code の Stop hook（`claude/.claude/hooks/check-settings-drift.sh`）
+  ① switch の activation ② Claude Code の Stop hook（`claude/hooks/check-settings-drift.sh`）
   ③ `task status`
 - 判定は `jq -S` で正規化してから比較するため、キー順の入れ替えは drift 扱いにしない
 - 回収は `task adopt-settings TARGET=claude|antigravity-settings|antigravity-keybindings|all`。
