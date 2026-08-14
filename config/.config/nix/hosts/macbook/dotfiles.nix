@@ -34,7 +34,7 @@ in
       # CLI が生成する履歴・認証情報・キャッシュは各ディレクトリに残し、
       # リポジトリで管理するエントリだけを個別に配線する。
       home.file = {
-        ".editorconfig".source = mkLink "editorconfig/.editorconfig";
+        ".editorconfig".source = mkLink "home/editorconfig";
 
         ".claude/.mcp.json".source = mkLink "claude/.mcp.json";
         ".claude/CLAUDE.md".source = mkLink "claude/CLAUDE.md";

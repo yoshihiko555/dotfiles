@@ -22,7 +22,7 @@
 
   programs.shfmt = {
     enable = true;
-    # .editorconfig（editorconfig/.editorconfig）はリポジトリ直下に無く
+    # .editorconfig（home/editorconfig）はリポジトリ直下に無く
     # CI からは参照できないため、useEditorConfig には頼らず明示指定する
     # （indent 2 は .editorconfig の [*] 既定値と揃えている）
     indent_size = 2;
