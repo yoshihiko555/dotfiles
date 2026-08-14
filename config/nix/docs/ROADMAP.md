@@ -594,7 +594,7 @@ hermes が pull 型で設定に自動追従する。
 | flake templates | `nix flake init -t` でプロジェクト雛形 |
 | `nh`（nix helper） | rebuild の UX 改善・差分表示（ryoppippi 採用） |
 
-### 4-8: セキュリティ / OS 設定の宣言管理 — `[~]` MBP 適用済み・hermes 適用待ち（2026-08-14）
+### 4-8: セキュリティ / OS 設定の宣言管理 — `[~]` hermes 完了・MBP は Touch ID の動作確認待ち（2026-08-14）
 
 ゲストログイン無効・画面ロック・Touch ID sudo（MBP 向け）等を
 `system.defaults` / `security.pam` で宣言化する。検証は hermes で行う。
@@ -602,7 +602,7 @@ hermes が pull 型で設定に自動追従する。
 - [x] MBP 向けに `security.pam.services.sudo_local.touchIdAuth` を準備 → **適用済み**
       （`hosts/macbook/security.nix`。`reattach = true` も併せて有効化し tmux 内でも効くようにした）
 - [x] hermes で安全な項目（loginwindow / screensaver 等）を宣言（`hosts/hermes/security.nix`）
-- [ ] hermes へ適用して挙動確認（switch 待ち）
+- [x] hermes へ適用して挙動確認 → **意図しないサービス断なし**（下記検証結果）
 - [-] アプリケーションファイアウォールは**要設計** → hermes 分は**解決**（下記実施記録）。
       MBP は現在無効で、有効化は実挙動の変化を伴うため**今回スコープ外**とした
       （常用ネットワークサービスの洗い出しが先。別途再検討）
@@ -624,12 +624,30 @@ hermes が pull 型で設定に自動追従する。
   同モジュールは全オプションが `nullOr bool` の既定 `null` で、activation script が
   `lib.optionalString (cfg.X != null)` でガードされているため、**未宣言なら
   `setblockall` は一度も呼ばれない**（pin 済み rev の実ソースで確認）
-- **既知の要検証事項**: `screensaver.askForPassword` / `askForPasswordDelay` は
-  最近の macOS でロック画面のポリシーが別の場所へ移っており、**宣言しても効かない可能性**がある。
-  activation script に `defaults write` が正しく生成されることは生成物で確認済みだが、
-  OS 側が読むかは別問題。適用後に実挙動を確認する
 - hermes への適用は **tmux 内で実行**すること。`switch` のたびに `socketfilterfw` が
   再実行されるため、適用の瞬間に SSH が切れうる（切れても tmux 内の処理は継続する）
+  → 実際には SSH 断は発生しなかった
+
+#### 検証結果（2026-08-14、hermes 適用後）
+
+**per-app 許可は壊れないことを実証した。** 事前の懸念（宣言管理がアプリ個別の
+許可設定を消すのではないか）は杞憂で、モジュール実装の読みどおりだった。
+
+| 項目 | 適用後の実測値 |
+|---|---|
+| `--getglobalstate` | `Firewall is enabled. (State = 1)` — 維持 |
+| `--getstealthmode` | `stealth mode is on` — 維持 |
+| `--listapps` | miniserve **2 件とも `Allow incoming connections`**（nix store 版 / brew Cellar 版） |
+| miniserve の稼働 | `*:18080 (LISTEN)`、MBP からの `curl` は 200 |
+| `GuestEnabled` | 0 |
+| `askForPassword` / `askForPasswordDelay` | 1 / 0（**効いた**。要検証としていた懸念は解消） |
+
+**判明したこと: `system.defaults` のユーザー単位設定は `system.primaryUser` にしか入らない。**
+hermes で `defaults read com.apple.screensaver askForPassword` を **admin ユーザー**で
+実行すると「does not exist」になるが、`agent`（= primaryUser）では `1` が返る。
+screensaver / dock / finder 等のユーザー単位設定を今後増やすときに効いてくる性質。
+複数ユーザーが居るホストで「全ユーザーに効かせたい」場合は別の手段が要る
+（hermes はヘッドレスかつ運用は agent なので実害なし）
 
 ### 4-9: Nix store の自動 GC — `[x]` 完了（2026-08-02）
 
