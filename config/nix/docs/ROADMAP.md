@@ -118,7 +118,7 @@ Phase 3 全体は WSL2（3-3）が実稼働待ちのため `[~]` のまま残し
 ### 目標構成（2026-08-01 に層設計を確定、ADR-0004）
 
 ```
-config/.config/nix/
+config/nix/
 ├── flake.nix              # darwinConfigurations + homeConfigurations の 2 系統
 ├── darwin/                # darwin ホスト共通のシステム層（WSL2 は通らない）
 ├── home/                  # 全ホスト共通のユーザー層（dotfiles 配線・CLI パッケージ）
@@ -239,9 +239,10 @@ macOS のため学習が MacBook Pro に転用でき、ヘッドレスで GUI �
 - 初回のみの儀式: `/etc/zshenv` `/etc/zshrc` `/etc/zprofile` を `*.before-nix-darwin` へ退避
   してから初回 switch（mozumasu の README と同じ手順）
 - 初回 switch コマンド:
-  `sudo -H /nix/var/nix/profiles/default/bin/nix run github:nix-darwin/nix-darwin/master#darwin-rebuild -- switch --flake <repo>/config/.config/nix#hermes`。
-  2回目以降は `sudo darwin-rebuild switch --flake <repo>/config/.config/nix#hermes`
+  `sudo -H /nix/var/nix/profiles/default/bin/nix run github:nix-darwin/nix-darwin/master#darwin-rebuild -- switch --flake <repo>/config/nix#hermes`。
+  2回目以降は `sudo darwin-rebuild switch --flake <repo>/config/nix#hermes`
   （`darwin-rebuild` が `/run/current-system/sw/bin` に入るため）
+  ※ 実施当時のパスは `config/.config/nix` だった。2026-08-14 のフラット化後のパスに書き換えている
 
 ### Phase 3-1b: hermes の完全 Nix 化 — `[x]` 完了（2026-08-01）
 
@@ -480,7 +481,7 @@ hermes をビルドマシンにし、MacBook Pro のビルド負荷を逃がす�
 
 **完了条件**: `, <command>` で未インストールのコマンドが実行できる。
 
-### 4-3: `nix flake check` + CI — `[~]` 実装済み・CI 初回実行待ち（2026-08-14）
+### 4-3: `nix flake check` + CI — `[x]` 完了（2026-08-14）
 
 設定自体の検証。リポジトリに `.github` が無く **CI 未設定のため純増**。
 `link-tmux` の腐敗は CI があれば検出できていた。
@@ -488,10 +489,9 @@ hermes をビルドマシンにし、MacBook Pro のビルド負荷を逃がす�
 - [x] `nix flake check` が通る状態にする（`checks.<system>.formatting` を追加）
 - [x] treefmt-nix でフォーマッタを統合（mozumasu 採用）
 - [x] GitHub Actions で `nix flake check` を実行（`.github/workflows/nix-check.yml`）
-- [ ] 初回 CI が緑になることを確認（push 後）
+- [x] 初回 CI が緑になることを確認（`ubuntu-latest` で通過。macos runner は不要だった）
 
-**完了条件**: push 時に設定の破綻が自動検出される。
-→ ローカル検証は完了。**実際に CI が通るかは初回 push まで未確定**のため `[~]` のまま残す。
+**完了条件**: push 時に設定の破綻が自動検出される。→ 達成。
 
 #### 実施記録（2026-08-14）
 
@@ -514,13 +514,13 @@ hermes をビルドマシンにし、MacBook Pro のビルド負荷を逃がす�
   赤くなるため。Phase 3-2 の「要注意 5 件」と全件突合し、`codex/config.toml` /
   `mise/config.toml` を個別に除外（`karabiner.json` / `lazy-lock.json` は `*.json`、
   `flake.lock` は既定の `*.lock` で既にカバー済み）。同じ理由で gh が書き込む
-  `config/.config/gh/config.yml` も除外
-- `config/.config/aerospace/layouts/*.sh` も除外。`move_app_to_workspace 'id'  'M1'` の
+  `config/gh/config.yml` も除外
+- `config/aerospace/layouts/*.sh` も除外。`move_app_to_workspace 'id'  'M1'` の
   **引数列の桁揃えが意図的**（どのアプリがどの画面へ行くか一覧できる）で、
   shfmt が単一スペースへ潰すため
-- **`self` が `config/.config/nix` サブツリーにしかスコープされない制約が判明した。**
+- **`self` が `config/nix` サブツリーにしかスコープされない制約が判明した。**
   flake がリポジトリ直下ではなくサブディレクトリにあるため
-  `git+file://...?dir=config/.config/nix` として解決され、`self.outPath` に
+  `git+file://...?dir=config/nix` として解決され、`self.outPath` に
   `scripts/` や `shared/` が含まれない。このため `checks.formatting` の検査対象は
   実質 nix サブツリーのみになる。**リポジトリ全体のフォーマット崩れ検出は
   CI 側の独立ステップ**（`nix run .#formatter -- --ci`、ライブチェックアウト全体が対象）が担う
