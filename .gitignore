@@ -36,3 +36,15 @@ ANALYSIS.md
 takt/logs/
 takt/analytics/
 takt/runtime.yaml
+
+# sops-nix: 暗号化前の平文秘匿ファイル（誤コミット防止、Phase 4-5）
+# 暗号化後の *.yaml（ENC[...] のみ）は git 管理対象。平文は作業中のみ
+# この命名で作り、暗号化後は必ず削除する
+*.dec.yaml
+*.plain.yaml
+config/nix/secrets/*.dec.yaml
+config/nix/secrets/*.plain.yaml
+
+# nix build の出力 symlink（--no-link を付け忘れたときに生まれる）
+/result
+/result-*
