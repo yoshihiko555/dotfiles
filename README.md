@@ -1,91 +1,34 @@
 # dotfiles
 
-個人用の設定ファイル管理リポジトリ
+個人用の設定ファイル管理リポジトリ。
+**nix-darwin + home-manager** で MacBook Pro と Mac mini（hermes）を宣言的に管理する。
 
 ## 構成
 
 ```
 dotfiles/
-├── shell/                  # シェル設定（→ ~）
-│   ├── zshrc
-│   └── zprofile
-│
-├── config/                 # XDG_CONFIG_HOME 系（→ ~/.config）
-│   ├── wezterm/            # ターミナル (WezTerm)
-│   ├── ghostty/            # ターミナル (Ghostty)
-│   ├── tmux/               # ターミナルマルチプレクサ
-│   ├── starship/           # プロンプト
-│   ├── mise/               # ランタイム管理
-│   ├── sheldon/            # zsh プラグイン
-│   ├── karabiner/          # キーリマッピング
-│   ├── aerospace/          # ウィンドウマネージャー (タイリング)
-│   ├── lazygit/            # Git TUI
-│   ├── opencode/           # OpenCode CLI
-│   ├── nvim/               # エディタ (Neovim)
-│   ├── zed/                # エディタ (Zed)
-│   ├── gh/                 # GitHub CLI
-│   └── git/                # git 設定 (global ignore 等)
-│
-├── home/                   # $HOME 直下に置く単体ファイル（→ ~）
-│   └── editorconfig
-│
-├── claude/                 # Claude CLI（→ ~/.claude）
-│   ├── CLAUDE.md           # shared/agents を @import で参照
-│   ├── settings.json
-│   ├── agents/             # エージェント定義
-│   ├── hooks/              # フック
-│   ├── rules/              # ルール
-│   ├── templates/          # テンプレート
-│   └── skills/             # → shared/skills へのリンク
-│
-├── codex/                  # Codex CLI（→ ~/.codex）
-│   ├── AGENTS.md           # 生成物（task sync-agents）
-│   ├── config.toml
-│   ├── prompts/            # カスタムプロンプト
-│   ├── skills/             # → shared/skills へのリンク
-│   └── codex_message.sh
-│
-├── gemini/                 # Gemini CLI（→ ~/.gemini）
-│   ├── AGENTS.md           # 生成物（task sync-agents）
-│   ├── settings.json
-│   ├── config/
-│   │   └── skills/         # → shared/skills へのリンク
-│   └── antigravity-cli/
-│       ├── settings.json
-│       └── keybindings.json
-│
-├── takt/                   # takt CLI（→ ~/.takt）
-│   └── config.yaml
-│
-├── shared/                 # 共通データ
-│   ├── agents/             # CLAUDE.md / AGENTS.md の実体（core + diff）
-│   ├── mcp.template.json   # MCP 設定テンプレート（最小構成）
-│   ├── notify_message.sh   # 通知スクリプト
-│   └── skills/             # AI エージェント向けスキルの実体
-│       ├── common/         # 共通スキル
-│       ├── claude-only/    # Claude 専用スキル
-│       ├── codex-only/     # Codex 専用スキル
-│       ├── antigravity-only/ # Antigravity 専用スキル
-│       └── work/           # 会社アカウントでも使うことを明示したスキル
-│
-├── alfred/                 # Alfred ワークフロー（→ ~/Dropbox/...へリンク）
-│   ├── Open-VS-or-IT/      # お気に入りフォルダを開くワークフロー
-│   ├── audio-output/       # オーディオ出力デバイスを切り替えるワークフロー
-│   └── post/               # コンテンツ投稿サイトを一括で開くワークフロー
-│
-├── Taskfile.yml            # エントリポイント（taskfiles/ を読み込む）
-├── taskfiles/
-│   ├── agents.yml
-│   ├── cliproxy.yml
-│   ├── dotfiles.yml
-│   ├── skills.yml
-│   └── util.yml
-├── scripts/
-│   ├── adopt-managed-settings.sh
-│   ├── install-brew.sh
-│   └── clean-claude.sh
-└── README.md
+├── shell/        # zsh 設定（zshenv / zprofile / zshrc + zsh/ 分割）→ shell/zsh/README.md
+├── config/       # XDG_CONFIG_HOME 系（→ ~/.config）
+│   ├── nix/      # nix-darwin + home-manager の実体 → config/nix/README.md
+│   ├── nvim/     # エディタ（Neovim）→ config/nvim/docs/README.md
+│   └── ...       # wezterm, ghostty, tmux, starship, mise, sheldon, karabiner,
+│                 # aerospace, lazygit, opencode, zed, gh, git
+├── ssh/          # ~/.ssh/config（IP・ホスト名のみ。秘匿情報は含めない）
+├── home/         # $HOME 直下に置く単体ファイル（editorconfig）
+├── claude/       # Claude Code（→ ~/.claude）
+├── codex/        # Codex CLI（→ ~/.codex）
+├── gemini/       # Gemini / Antigravity CLI（→ ~/.gemini）→ gemini/README.md
+├── takt/         # takt CLI（→ ~/.takt）→ takt/README.md
+├── shared/       # 共通データの実体（agents / skills / 各種テンプレート）
+├── alfred/       # Alfred ワークフロー → alfred/README.md
+├── taskfiles/    # Taskfile.yml から読み込むタスク定義
+├── scripts/      # タスクから呼ぶシェルスクリプト
+└── .github/      # CI（nix-check.yml）
 ```
+
+各 CLI ディレクトリの中身（`agents/` `hooks/` `rules/` `skills/` 等）と、`shared/` の
+`agents/` `skills/` の役割は [Agent コンテキストファイルの一元管理](#agent-コンテキストファイルの一元管理)
+以降を参照。
 
 ## 必要なツール
 
@@ -125,16 +68,20 @@ task --list
 sudo ./result/sw/bin/darwin-rebuild switch --flake ./config/nix#macbook
 ```
 
+ホスト名（`macbook` / `hermes`）ごとの管理範囲と、日常の反映コマンド（`nxs` / `hxs` 等の
+エイリアス）は [config/nix/README.md](config/nix/README.md) と
+[config/nix/docs/CHEATSHEET.md](config/nix/docs/CHEATSHEET.md) を参照。
+
 ## Taskfile コマンド（日常運用）
 
 ```bash
 task --list        # タスク一覧
-task adopt-settings # mutable 設定の drift を repo へ回収
+task status        # home-manager の配線と mutable 設定の drift を確認
+task adopt-settings # アプリが変更した mutable 設定を repo へ回収
 task sync-skills   # shared/skills のリンクを更新
 task sync-agents   # shared/agents から Codex/Gemini の AGENTS.md を生成
 task claude-work-init # 会社用 Claude Code 設定ディレクトリを初期化
 task sync-claude-work-skills # 会社用 Claude Code の work スキルを同期
-task status        # 現在のリンク状態を確認
 task edit          # VS Code で開く
 task mcp-init      # 最小構成の .mcp.json をコピー
 task mcp-show      # 最小構成テンプレートの内容を表示
@@ -147,24 +94,47 @@ task cliproxy-setup  # CLIProxyAPI を導入しテンプレートから設定を
 task cliproxy-status # CLIProxyAPI の稼働状態と公開モデル一覧を確認
 ```
 
-## Neovim LSP（TypeScript / Go / Python）
+push 時は GitHub Actions（[.github/workflows/nix-check.yml](.github/workflows/nix-check.yml)）が
+`nix flake check` 相当を実行する。ローカルでは `task nix-check` / `task nix-fmt` で先に確認する。
 
-- `config/nvim/init.lua` と `config/nvim/lua/lsp.lua` で最小構成の LSP を有効化
-- 対象サーバー: `gopls` / `pyright-langserver` / `typescript-language-server`
-- 前提: home-manager が `gopls`, `pyright`, `typescript`, `typescript-language-server` を導入済み
+## home-manager の配線
 
-主なキーマップ:
+配線の定義そのものが正典で、README にパス一覧は持たない。
 
-- `gd` 定義へジャンプ
-- `gD` 宣言へジャンプ
-- `gr` 参照一覧
-- `gi` 実装へジャンプ
-- `K` ホバー
-- `<leader>rn` リネーム
-- `<leader>ca` コードアクション
-- `[d` / `]d` 診断の前後移動
+| ファイル | 役割 |
+|---|---|
+| [config/nix/home/dotfiles.nix](config/nix/home/dotfiles.nix) | 2 台以上で使う共通配線（zsh, git, mise, nvim, starship, tmux） |
+| [config/nix/hosts/macbook/dotfiles.nix](config/nix/hosts/macbook/dotfiles.nix) | MacBook 固有（GUI 系 config, AI CLI, ssh, Alfred） |
+| [config/nix/hosts/hermes/dotfiles.nix](config/nix/hosts/hermes/dotfiles.nix) | hermes 固有 |
 
-補完は挿入モードで `Ctrl-x Ctrl-o`（omnifunc）を使用。
+通常の設定は `mkOutOfStoreSymlink` で配線するため、repo 内の編集が即時反映される。
+Claude Code と Antigravity CLI が置換書き込みする JSON だけは実ファイルとして生成し、
+前回 switch 時の参照コピーとの差分を検知する。drift は次で回収する。
+
+```bash
+task status                  # 配線と drift の確認
+task adopt-settings TARGET=all
+```
+
+### Agent コンテキストファイルの一元管理
+
+- CLAUDE.md / AGENTS.md の実体は `shared/agents/` に集約
+  - `core.md`: 全エージェント共通ルール（唯一の編集対象）
+  - `diff-claude.md` / `diff-codex.md` / `diff-gemini.md`: CLI 固有の差分
+- Claude Code: `claude/CLAUDE.md` が `@import` で core + diff を参照（生成不要）
+- Codex / Gemini: `task sync-agents` で core + diff を連結して各 AGENTS.md を生成
+- リポジトリルートの `AGENTS.md` は当リポジトリ固有ルールのみ（`CLAUDE.md` は `@AGENTS.md` で橋渡し）
+- core.md / diff-*.md を編集したら `task sync-agents` を実行すること
+
+### Skills の一元管理
+
+- スキル本体は `shared/skills/` に集約
+  - `common/`: 共通スキル（個人用・会社用の両方で使う）
+  - `claude-only/` / `codex-only/` / `antigravity-only/`: CLI 専用スキル
+  - `work/`: 会社アカウントでも使うことを明示したスキル
+- `claude/skills`、`codex/skills`、`gemini/config/skills` は相対シンボリックリンクで参照
+- Antigravity のグローバルスキルは `~/.gemini/config/skills/<skill-folder>/SKILL.md` として解決されます
+- リンク更新は `task sync-skills` で実行
 
 ## MCP 運用方針（デフォルト無効）
 
@@ -178,7 +148,7 @@ task cliproxy-status # CLIProxyAPI の稼働状態と公開モデル一覧を確
 
 ```bash
 # 無効化している MCP を一時的に有効化する例
-codex -c mcp_servers.context7.enabled=true
+codex -c mcp_servers.computer-use.enabled=true
 
 # 逆に Notion を一時的に無効化したい場合
 codex -c mcp_servers.notion.enabled=false
@@ -218,175 +188,6 @@ ccw
 - `shared/skills/work/` は会社用に追加したいスキル置き場です。
 - `task sync-claude-work-skills` は `shared/skills/common/*` と `shared/skills/work/*` を `~/.claude-work/skills/` にリンクします。
 
-## takt 運用方針
-
-`takt/config.yaml` はステップの役割（tags）ごとにプロバイダを割り当てます。
-
-- 実装・テスト（`coding` / `testing`）: Codex（`codex/config.toml` の `gpt-5.6-sol`）
-- 計画・レビュー・最終判定（`plan` / `review` / `final-gate` など）: Claude（`opus`）
-
-ビルトインワークフローはステップに `provider:` を書いていないため、`provider_routing.tags` の指定が
-全ワークフローに横断で効きます（優先度は `provider_routing.tags` = 5 > `workflow` = 9 で、数値が小さいほど強い）。
-実行時に `takt --provider claude` のように上書きする方法が最優先（= 0）です。
-
-```bash
-# 個人アカウント
-takt
-
-# 会社アカウント（Claude 側のステップのみ ~/.claude-work を使う）
-taktw
-```
-
-- `taktw` は `CLAUDE_CONFIG_DIR` を渡すだけなので、Codex / OpenCode のステップは影響を受けません。
-- 環境変数はプロセス単位で効くため、同一実行内で Claude アカウントを混在させることはできません。
-- API キー（`anthropic_api_key` など）は config.yaml に書かず、`TAKT_ANTHROPIC_API_KEY` 等の環境変数を使います。
-
-### worktree の配置
-
-`worktree_dir: .worktrees` で、takt の worktree を gtr（`wt` コマンド）と同じ場所に寄せています。
-gtr は `git worktree list` ベースで worktree を列挙するため、takt が作った worktree も
-`gtr list` / `gtr go` / `gtr rm` から扱えます。
-
-- 既定のままだと `<project>/../takt-worktrees` に作られ、ghq 構成では `~/ghq/github.com/<user>/` が汚れます。
-- takt を使うプロジェクトでは `.gitignore` に `.worktrees/` を追加してください（未追加だと gtr が警告します）。
-
-### 権限モード
-
-`provider_profiles` は claude / codex とも `edit` です。takt の権限モードは Claude Code の
-`--permission-mode` に対応します。
-
-| takt | Claude Code | 備考 |
-|---|---|---|
-| `readonly` | `default` | 書き込み禁止ではなく都度確認。headless では応答できず停止しうる |
-| `edit` | `acceptEdits` | |
-| `full` | `bypassPermissions` | 全許可のため使いません |
-
-編集の可否はワークフロー側の `edit` フラグ（`plan` は `edit: false`）が制御するので、
-プロバイダ側で `readonly` に二重に絞っていません。
-
-### 実行制御
-
-- `concurrency: 2` — 同時実行タスク数（既定 1）
-- `auto_requeue_max_attempts: 1` — 一時的な失敗を 1 回だけ拾い直す（既定 0）
-
-`base_branch` は**意図的に設定していません**。未設定なら `origin/HEAD` → `main` → `master` の順で
-自動判定されますが、明示するとブランチ存在チェックが走り、`master` を使うリポジトリでエラーになります。
-
-その他「既定のまま使う」と判断した項目（`auto_pr`、`observability` など）は
-`takt/config.yaml` の末尾に理由付きで列挙しています。
-
-## Worktree 補助コマンド
-
-`git gtr` をそのまま使いつつ、よく使う作成・削除だけ `wt` で短縮できます。
-
-```bash
-wt new nvim lsp
-# => 例: task/nvim-lsp を自動生成して git gtr new
-
-wt new fix hook tweak -- --from-current -e
-# => ブランチ名は自動生成しつつ、gtr のオプションをそのまま渡す
-
-wt rm
-# => fzf で今の repo の worktree/branch を選んで削除
-
-wt rm task/nvim-lsp --yes
-wt done task/nvim-lsp --yes
-# => どちらも git gtr rm ... --delete-branch
-```
-
-基本形:
-
-```bash
-wt new [topic...]
-wt new [topic...] -- [git gtr new options...]
-wt rm <branch...> [git gtr rm options...]
-wt rm [--yes|--force]
-wt done <branch...> [git gtr rm options...]
-wt <git gtr command...>
-```
-
-- `wt new` は既定で `task/<slug>` 形式のブランチ名を生成します。
-- `topic` の先頭が `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `release`, `task` などの既知 prefix なら、その値をブランチ種別として使います。
-- `topic` を省略した場合だけ `task/worktree-YYYYMMDD-HHMMSS` を使います。
-- 同じブランチ名が既に存在する場合は `-2`, `-3` を末尾に付けて衝突を避けます。
-- `wt new` で `git gtr new` のオプションも渡したい場合は、`--` 以降をそのまま `gtr` に渡します。
-- `wt rm` / `wt done` は常に `--delete-branch` を付けます。
-- `wt rm` を引数なしで実行すると、現在の repo の worktree 一覧を `fzf` で選択して削除できます。
-- picker では現在いる worktree は候補から除外し、複数選択もできます。
-- それ以外のサブコマンドは `wt list`, `wt cd`, `wt ai` のように `git gtr` へ透過的に委譲します。
-
-よく使う例:
-
-```bash
-wt new
-# => 例: task/worktree-20260329-143210
-
-wt new codex trust
-# => 例: task/codex-trust
-
-wt new fix review -- --from-current -e
-# => 例: fix/review
-# => 現在のブランチから作成し、作成後に editor を開く
-
-wt rm
-# => fzf で削除対象を選ぶ
-
-wt rm --yes
-# => fzf で選んだ対象を確認なしで削除
-
-wt list
-wt cd
-wt ai task/codex-trust
-```
-
-## home-manager の配線
-
-```
-~/.zshrc             → dotfiles/shell/zshrc
-~/.zprofile          → dotfiles/shell/zprofile
-~/.config/wezterm    → dotfiles/config/wezterm
-~/.config/ghostty    → dotfiles/config/ghostty
-~/.config/starship   → dotfiles/config/starship
-~/.config/mise       → dotfiles/config/mise
-~/.config/sheldon    → dotfiles/config/sheldon
-~/.config/karabiner  → dotfiles/config/karabiner
-~/.config/opencode/opencode.json → dotfiles/config/opencode/opencode.json
-~/.config/nvim       → dotfiles/config/nvim
-~/.config/git        → dotfiles/config/git
-~/.claude/CLAUDE.md   → dotfiles/claude/CLAUDE.md
-~/.codex/AGENTS.md    → dotfiles/codex/AGENTS.md
-~/.gemini/AGENTS.md  → dotfiles/gemini/AGENTS.md
-~/.takt/config.yaml   → dotfiles/takt/config.yaml
-~/Dropbox/.../workflows/user.workflow.C9692AD7-... → dotfiles/alfred/Open-VS-or-IT
-~/Dropbox/.../workflows/user.workflow.D644F268-... → dotfiles/alfred/audio-output
-~/Dropbox/.../workflows/user.workflow.455DAC0F-... → dotfiles/alfred/post
-```
-
-通常の設定は `mkOutOfStoreSymlink` で配線するため、repo 内の編集が即時反映される。
-Claude Code と Antigravity CLI が置換書き込みする JSON だけは実ファイルとして生成し、
-前回 switch 時の参照コピーとの差分を検知する。drift は次で回収する。
-
-```bash
-task adopt-settings TARGET=all
-```
-
-### Agent コンテキストファイルの一元管理
-
-- CLAUDE.md / AGENTS.md の実体は `shared/agents/` に集約
-  - `core.md`: 全エージェント共通ルール（唯一の編集対象）
-  - `diff-claude.md` / `diff-codex.md` / `diff-gemini.md`: CLI 固有の差分
-- Claude Code: `claude/CLAUDE.md` が `@import` で core + diff を参照（生成不要）
-- Codex / Gemini: `task sync-agents` で core + diff を連結して各 AGENTS.md を生成
-- リポジトリルートの `AGENTS.md` は当リポジトリ固有ルールのみ（`CLAUDE.md` は `@AGENTS.md` で橋渡し）
-- core.md / diff-*.md を編集したら `task sync-agents` を実行すること
-
-### Skills の一元管理
-
-- スキル本体は `shared/skills/` に集約
-- `claude/skills`、`codex/skills`、`gemini/config/skills` は相対シンボリックリンクで参照
-- Antigravity のグローバルスキルは `~/.gemini/config/skills/<skill-folder>/SKILL.md` として解決されます
-- リンク更新は `task sync-skills` で実行
-
 ## Alfred ワークフロー
 
 home-manager が Dropbox 配下へシンボリックリンクを作成して管理する。
@@ -420,15 +221,14 @@ Alfredから指定ディレクトリをWezTermで3分割ペインレイアウト
 
 詳細は [alfred/README.md](alfred/README.md) を参照。
 
-## Release 共通基盤
+## 関連ドキュメント
 
-release 運用の共通資材は [`yoshihiko555/.github`](https://github.com/yoshihiko555/.github) で管理:
-
-| 資材 | 配置先 | 役割 |
-|------|--------|------|
-| reusable workflow | `.github/workflows/release.yml` | tag push → GitHub Release 作成 |
-| release タスク | `taskfiles/release.yml` | version bump, preflight, tag 作成・push |
-| Rulesets JSON | `rulesets/` | branch / tag 保護の共通設定 |
-| 運用ドキュメント | `docs/` | Git/release 方針、Rulesets 手順 |
-
-各 repo は caller workflow と `CHANGELOG.md` を置き、Taskfile から `.github` repo の release タスクをローカル参照する。
+| ドキュメント | 内容 |
+|---|---|
+| [config/nix/README.md](config/nix/README.md) | nix-darwin + home-manager の構成・管理対象ホスト |
+| [config/nix/docs/](config/nix/docs/) | BOOTSTRAP / CHEATSHEET / GUIDE / ROADMAP / ADR |
+| [config/nvim/docs/README.md](config/nvim/docs/README.md) | Neovim のプラグイン一覧・キーバインドチートシート・練習問題・ADR |
+| [shell/zsh/README.md](shell/zsh/README.md) | zsh 分割設定と `wt` / `repo` などの自作コマンド |
+| [takt/README.md](takt/README.md) | takt のプロバイダ割り当て・権限モード・作業ディレクトリ配置 |
+| [gemini/README.md](gemini/README.md) | Gemini / Antigravity CLI の設定と権限設計 |
+| [alfred/README.md](alfred/README.md) | Alfred ワークフロー詳細 |
