@@ -30,6 +30,13 @@
       # --- 新規導入 ---
       resvg # SVG→PNG ラスタライザ。logo-design スキルの export.sh が最優先で検出する
 
+      # sops / age（Phase 4-5）。secrets は現状ゼロだが、載せるとしたら MBP 起点に
+      # なるためここに置く。2 台以上で使い始めたら home/packages.nix へ昇格する
+      # （ADR-20260801-0004 ルール 3）。共通層に置くと hermes にも 69 MiB 入るだけで
+      # 使い道が無い
+      age
+      sops
+
       # --- 野良インストールから移行（宣言なし 9 件の解消）---
       antigravity-cli # agy。公式 curl インストーラ → nixpkgs へ（要 allowUnfree、上記）
       golangci-lint # mise から移送（境界違反の解消）

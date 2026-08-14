@@ -8,7 +8,6 @@
   # 絶対パス参照の調査が済むまで brew 残留、hosts/hermes 参照）。
   # 言語ランタイムは mise の担当（mise 本体はここで導入する）。
   home.packages = with pkgs; [
-    age
     d2
     fd
     fzf
@@ -20,7 +19,6 @@
     mise
     neovim
     ripgrep
-    sops
     starship
     tmux
     tree
