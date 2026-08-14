@@ -21,10 +21,17 @@ Phase 3 全体は WSL2（3-3）が実稼働待ちのため `[~]` のまま残し
 
 下記「目的」の 3 項目はいずれも達成済み。
 
-**2026-08-14 に Phase 4 の 4 項目（4-3 / 4-1 / 4-8 / 4-5）へ着手した。**
-4-3（flake check + CI）と 4-1（remote builders）は完了。
-4-8 は MBP 適用済み・hermes 適用待ち。4-5 は方針検討中。
-4-9 の GC 初回発動確認は 2026-09 上旬。
+**2026-08-14 に Phase 4 の 4 項目（4-3 / 4-1 / 4-8 / 4-5）を実施し、いずれも決着した。**
+
+| 項目 | 結果 |
+|---|---|
+| 4-3 flake check + CI | 完了。treefmt-nix + GitHub Actions（`ubuntu-latest` で通過） |
+| 4-1 Remote builders | 完了。hermes への委譲を実測で確認 |
+| 4-8 セキュリティ宣言管理 | 完了。ただし **Touch ID sudo は macOS 側の要因で不採用** |
+| 4-5 sops-nix | 基盤のみ導入し**管理対象ゼロで待機**。`~/.ssh/config` は平文配線に変更 |
+
+残る能動タスクは 4-9 の GC 初回発動確認（2026-09 上旬）のみ。
+他はトリガー待ちか任意着手。
 
 > ホストごとの構成・運用ルールは [../README.md](../README.md) を参照。
 > このファイルは**進捗と判断の履歴**、README は**現在の管理方法**と役割を分ける。
@@ -568,13 +575,68 @@ hermes が pull 型で設定に自動追従する。
 
 **前提**: Phase 3-1 完了
 
-### 4-5: sops-nix — `[ ]` 優先度: 中
+### 4-5: sops-nix — `[~]` 基盤のみ導入・管理対象ゼロで待機（2026-08-14）
 
 秘匿情報を暗号化したままコミットする。
-現状は `shared/cliproxyapi.conf.tmpl` のテンプレート化と
-`~/.claude-work`（git 管理外）で回避しており、**秘匿情報だけリポジトリの外**にある。
 
-**着手トリガー**: 3 台目が実稼働し、各マシンへの手動配置が負担になったとき。
+**当初の「着手トリガー」（3 台目が実稼働し、各マシンへの手動配置が負担になったとき）は
+点灯していないが、明示的な指示により前倒しで検証した。**
+結果、**現時点で sops に載せるべき秘密は存在しない**と判明したため、
+仕組みだけ導入して管理対象ゼロで待機させている。
+
+- [x] `sops-nix` を flake input に追加し home-manager の `sharedModules` へ配線
+- [x] `age` / `sops` を共通 CLI に追加、`.sops.yaml` と age 鍵を用意
+- [x] `.gitignore` に平文の誤コミット防止パターンを追加
+- [-] `~/.ssh/config` の暗号化管理 → **不採用**（下記）。平文で `ssh/config` に配線した
+
+#### 棚卸しの結果: 配るべき静的な秘密が無い（2026-08-14）
+
+| 候補 | 実態 | sops 向きか |
+|---|---|---|
+| `shared/cliproxyapi.conf.tmpl` の API キー | `task cliproxy-setup` が**各マシンで `openssl rand` により生成**。マシン内に閉じる | ✗ 配る必要がない設計 |
+| cliproxyapi の OAuth（`codex-*.json` / `claude-*.json`） | `--codex-login` 等で対話ログイン、期限付きで自動リフレッシュ | ✗ 配っても即陳腐化 |
+| `~/.claude-work` | 秘匿ストアではなく**会社アカウント用の Claude Code 設定ディレクトリ一式**。認証は `ccw` 実行時のログインで生成 | ✗ 静的な秘密ではない |
+| `TAKT_ANTHROPIC_API_KEY` | `takt/config.yaml` のコメントに変数名のみ。**実体はどこにも未設定** | ○ 唯一の候補だが現在未使用 |
+| SSH 秘密鍵 | 用途別に使い分け（`id_ed25519` / `id_ed25519_macmini` / `github_anvil`） | △ マシンごとに別鍵の方が漏洩時の影響を限定できる |
+
+**参考: mozumasu の用途**（同じ構造を借りている先）は 6 件すべてが
+「**対話ログインもその場生成もできない固定トークン**」だった
+（GitHub Models API / GitHub Packages / 社内 MCP / OTel / カレンダー連携 / private marketplace 定義）。
+当リポジトリはキーをその場生成・認証を対話ログインで賄う設計のため、**同じ需要が発生していない**。
+
+#### `~/.ssh/config` を sops で管理しなかった理由
+
+当初は「内部 IP を public リポジトリに晒さない」ことを動機に暗号化を試みたが、
+以下 2 点で撤回した。
+
+1. **動機が崩れた**: Phase 4-1 で `hosts/macbook/nix-builders.nix` に同じ IP を平文で
+   コミットしている。`nix.buildMachines.hostName` は**評価時に必要な値**であり、
+   sops（実行時にファイルを復号する仕組み）では**原理的に隠せない**。
+   片方だけ暗号化しても意味がない
+2. **macOS では dangling symlink の窓が構造的に避けられない**: sops-install-secrets の
+   macOS 実装は `secretsMountPoint` に何を指定しても **RAM ディスクを強制マウント**する
+   （`hdiutil attach ram://` + `newfs_hfs` + `mount`）。復号済み平文がディスクに一切
+   触れない強い特性の裏返しとして、**再起動すれば復号先は 100% 消える**。
+   ログイン時に launchd agent（`RunAtLoad`）が復元するが順序保証は無く、
+   その間 `~/.ssh/config` が壊れうる。`sops.templates` も同じ symlink 機構を通るため回避不可
+
+`~/.ssh/config` の中身は 44 行・5 エントリで、実質 `192.168.1.100`（公開済み）と
+`github.com`（公開情報）のみ。RAM ディスク級の保護に見合わないと判断した。
+
+**将来の着手トリガー**: GitHub Packages のトークンのように、**対話ログインも
+その場生成もできない固定シークレット**を複数マシンで共有したくなったとき。
+`.sops.yaml` に 1 行足せば載せられる状態にしてある。
+
+**その時の設計結論**（今回の調査で確定済み、再調査不要）:
+- 鍵は age 鍵ファイル方式（`sops.age.keyFile`）。macOS の既定パスは
+  `~/Library/Application Support/sops/age/keys.txt`（`XDG_CONFIG_HOME` 未設定時）
+- **darwin モジュールではなく home-manager モジュールを使う。**
+  nix-darwin 版は `owner` の既定が `root` でユーザー所有のファイルを置けない。
+  home-manager 版は macOS 専用の launchd agent を実装済みで、
+  「home-manager は systemd 前提で macOS では動かない」という情報は**誤り**
+- WSL2（Phase 3-3）では Linux なので同じ home-manager モジュールがそのまま使える
+- **age 秘密鍵を失うと復号不能**。`~/Library/Application Support/sops/age/keys.txt` は
+  リポジトリ外（パスワードマネージャー等）にバックアップすること
 
 ### 4-6: `specialisation` — `[ ]` 優先度: 低
 
@@ -594,20 +656,48 @@ hermes が pull 型で設定に自動追従する。
 | flake templates | `nix flake init -t` でプロジェクト雛形 |
 | `nh`（nix helper） | rebuild の UX 改善・差分表示（ryoppippi 採用） |
 
-### 4-8: セキュリティ / OS 設定の宣言管理 — `[~]` hermes 完了・MBP は Touch ID の動作確認待ち（2026-08-14）
+### 4-8: セキュリティ / OS 設定の宣言管理 — `[x]` 完了（2026-08-14）
 
 ゲストログイン無効・画面ロック・Touch ID sudo（MBP 向け）等を
 `system.defaults` / `security.pam` で宣言化する。検証は hermes で行う。
 
-- [x] MBP 向けに `security.pam.services.sudo_local.touchIdAuth` を準備 → **適用済み**
-      （`hosts/macbook/security.nix`。`reattach = true` も併せて有効化し tmux 内でも効くようにした）
 - [x] hermes で安全な項目（loginwindow / screensaver 等）を宣言（`hosts/hermes/security.nix`）
 - [x] hermes へ適用して挙動確認 → **意図しないサービス断なし**（下記検証結果）
+- [x] MBP の loginwindow / screensaver を宣言（`hosts/macbook/security.nix`）
+- [-] **Touch ID sudo は不採用**（下記「Touch ID sudo の顛末」）。
+      `security.pam.services.sudo_local.touchIdAuth` は宣言しない
 - [-] アプリケーションファイアウォールは**要設計** → hermes 分は**解決**（下記実施記録）。
       MBP は現在無効で、有効化は実挙動の変化を伴うため**今回スコープ外**とした
       （常用ネットワークサービスの洗い出しが先。別途再検討）
 
-**完了条件**: hermes のセキュリティ設定が宣言で再現でき、意図しないサービス断が無い。
+**完了条件**: hermes のセキュリティ設定が宣言で再現でき、意図しないサービス断が無い。→ 達成。
+
+#### Touch ID sudo の顛末（2026-08-14、不採用）
+
+**nix 側は正しく動作していたが、macOS 26.5.2 側で Touch ID が発動しなかった。**
+
+確認できたこと（すべて実機）:
+
+| 項目 | 結果 |
+|---|---|
+| `/etc/pam.d/sudo_local` の生成 | `pam_tid.so` が正しく書かれる |
+| `/etc/pam.d/sudo` | `auth include sudo_local` を先頭に持つ（macOS 14+ の既定） |
+| Touch ID の登録 | 有効（`bioutil -r` で `Effective biometrics for unlock: 1`） |
+| 本体の状態 | 開いた状態（クラムシェルではない） |
+| `SUDO_ASKPASS` 等 | 未設定 |
+| **実際の挙動** | **指紋を求められない。** Authorization Services の認可ダイアログ（パスワード入力欄のみ）が出て、Touch ID センサーに触れても無反応 |
+| `pam_reattach` の関与 | **無関係。** `reattach = false` にして switch し直しても同じ挙動 |
+
+Apple は macOS 15.4 で `sudo` を Rust 実装へ置き換えており、その過程で PAM の扱いが
+変わった可能性があるが、`/usr/bin/sudo` は setuid（`-r-s--x--x`）で読めず未確認。
+
+**不採用の理由**: 指紋が使えない以上、GUI ダイアログはマウス操作を強いるぶん
+CLI でのパスワード入力より不便なだけ。宣言を外すと `sudo_local` は 0 バイトの
+空ファイルとして生成され（nix-darwin は宣言の有無に関わらずこのファイルを管理する）、
+`pam_opendirectory` によるターミナル内の `Password:` 入力に戻る。
+
+将来 OS 側で挙動が変わったら再検討する。`hosts/macbook/security.nix` に
+経緯をコメントで残してあるので、再訪時に同じ検証を繰り返さずに済む。
 
 #### 実施記録（2026-08-14）
 

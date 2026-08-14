@@ -1,20 +1,26 @@
 { ... }:
 {
-  # --- 単位 A: Touch ID sudo（MBP 専用） ---------------------------------
-  # MBP はビルトインの Touch ID を持つが hermes はヘッドレスで生体認証デバイスが
-  # 無いため、共通層（darwin/）へは昇格せずホスト固有層に留める（ADR-20260801-0004）。
+  # --- 単位 A: Touch ID sudo（不採用、2026-08-14）------------------------
+  # `security.pam.services.sudo_local.touchIdAuth` は**意図的に宣言しない**。
   #
-  # 適用後は sudo 実行時に Touch ID プロンプトが出るようになる。パスワード入力は
-  # 引き続きフォールバックとして機能する。Phase 4-1（remote builders）で発生する
-  # 多数の sudo 作業が楽になるため最優先で導入する。
+  # 2026-08-14 に導入を試み、宣言・生成物ともに正常であることを確認した:
+  #   - /etc/pam.d/sudo_local に pam_tid.so が生成される
+  #   - /etc/pam.d/sudo は auth include sudo_local を先頭に持つ（macOS 14+ の既定）
+  #   - Touch ID は登録済み・有効（bioutil -r で確認）
+  #   - 本体を開いた状態（クラムシェルではない）で検証
   #
-  # reattach（pam_reattach）を有効化し、tmux / screen のセッション内でも Touch ID が
-  # 効くようにする。無効のままだと、バックグラウンドプロセスが bootstrap セッション
-  # から切り離されているため Touch ID 認証が反応しない。
-  security.pam.services.sudo_local = {
-    touchIdAuth = true;
-    reattach = true;
-  };
+  # にもかかわらず **macOS 26.5.2 では sudo が指紋を要求しない**。代わりに
+  # Authorization Services の認可ダイアログ（パスワード入力欄のみ、Touch ID
+  # センサーに触れても無反応）が出る。pam_reattach の有無は無関係であることを
+  # 実機で切り分け済み（外しても同じ挙動）。
+  #
+  # Apple は macOS 15.4 で sudo を Rust 実装へ置き換えており、その過程で PAM の
+  # 扱いが変わった可能性があるが、/usr/bin/sudo は setuid で読めず未確認。
+  #
+  # 指紋が使えない以上、GUI ダイアログはマウス操作を強いるぶん CLI での
+  # パスワード入力より不便なだけなので、宣言を外して従来の挙動に戻す
+  # （pam_opendirectory によるターミナル内の Password: 入力）。
+  # 将来 OS 側で挙動が変わったら再検討する。
 
   # --- 単位 C: loginwindow / screensaver ---------------------------------
   # hermes（hosts/hermes/security.nix, 単位 B）で検証済みの値を移植。
