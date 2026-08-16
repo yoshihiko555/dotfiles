@@ -40,8 +40,22 @@ nxbd() {
 }
 
 # flake input（nixpkgs / takt 等）のピンを進める。実行後は nxbd で差分確認 → nxs
+#
+# flake.nix は repo 直下ではなく config/nix 配下にあるため、cwd に依存する形
+# （素の `nix flake update`）は repo ルートや任意のディレクトリから叩くと
+#   error: path "..." is not part of a flake
+# で落ちる。--flake で対象を明示して cwd 非依存にしている。
+#
+# 引数は「更新する input 名」として nix にそのまま渡す（Nix 2.19 以降の仕様。
+# 位置引数は flake のパスではなく input 名である点に注意）:
+#   nxu            全 input を更新
+#   nxu takt       takt だけ更新
+#   nxu nixpkgs darwin  複数指定も可
+#
+# flake.lock は git 管理下なので、戻したいときは
+#   git -C "$DOTFILES" checkout -- config/nix/flake.lock
 nxu() {
-  (cd "$NIX_FLAKE" && nix flake update)
+  nix flake update --flake "$NIX_FLAKE" "$@"
 }
 
 # 適用。sudo が要る（hermes では admin ユーザーで実行すること）
@@ -49,6 +63,43 @@ alias nxs='sudo darwin-rebuild switch --flake "$NIX_FLAKE#$NIX_HOST"'
 
 alias nxg='sudo darwin-rebuild --list-generations'
 alias nxrb='sudo darwin-rebuild switch --rollback'
+
+# --------------------------------------------
+# Homebrew（nix-darwin 管理下だがバージョン更新は別系統）
+# --------------------------------------------
+# darwin/homebrew.nix の onActivation.upgrade は既定の false のままなので、
+# nxs（switch）で反映されるのは宣言の「追加・削除」だけで、既に入っている
+# formula / cask のバージョンは上がらない。更新はこのコマンドで行う。
+#
+# nix 側と違い brew は build → diff → 適用に分けられず upgrade がそのまま
+# 適用になるため、先に brew outdated で対象を見せて確認を取る。
+#
+# 注意: 自動更新を持つ cask（claude-code@latest, wezterm@nightly 等）は
+# 既定でスキップされる。強制したい場合のみ `brew upgrade --greedy` を手で叩く
+# （アプリ側の自動更新と競合しうるので既定には入れない）。
+bxu() {
+  brew update || return 1
+
+  local outdated
+  outdated="$(brew outdated --verbose)"
+  if [ -z "$outdated" ]; then
+    echo '更新対象はありません'
+    return 0
+  fi
+
+  echo
+  echo '── 更新対象 ──'
+  echo "$outdated"
+  echo
+
+  local reply
+  printf 'upgrade しますか？ [y/N]: '
+  read -r reply
+  case "$reply" in
+    [yY] | [yY][eE][sS]) brew upgrade ;;
+    *) echo 'キャンセルしました' ;;
+  esac
+}
 
 # --------------------------------------------
 # hermes リモート（MBP から実行する）

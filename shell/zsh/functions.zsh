@@ -48,12 +48,15 @@ cheat() {
 
 ── Nix (nix-darwin) ────────────────────────
   nx*       ローカル実行 (ホスト自動判定: hermes/macbook)
-  nxu       flake update (ピンを進める)
+  nxu       flake update (ピンを進める, cwd 非依存)
+            nxu takt のように input 名を指定すると個別更新
   nxb       ビルドのみ (適用なし, sudo 不要)
   nxd       現行世代との差分   nxbd  build→diff
   nxs       switch で適用
   更新の流れ: nxu → nxbd → nxs
   nxg       世代一覧           nxrb  ロールバック
+  bxu       Homebrew 更新 (outdated 確認 → upgrade)
+            nxs では既存 cask/formula のバージョンは上がらない
   hx*       MBP から hermes へリモート実行
   hxd       差分だけ見る (出力が空なら宣言=実機)
   hxb       pull→build→差分    hxp   pull のみ

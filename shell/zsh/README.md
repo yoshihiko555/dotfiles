@@ -14,7 +14,7 @@
 | `cc-interrupt.zsh` | Claude Code 中断証跡ロガー (cc_interrupt) |
 | `claude.zsh` | Claude Code 会社アカウント切替 (ccw) / CLIProxyAPI 切替 (ccx) |
 | `takt.zsh` | takt 会社アカウント切替 (taktw) |
-| `nix.zsh` | nix-darwin 反映コマンド (nxb, nxs, nxg 等) / hermes リモート反映 (hxb, hxs, hxg 等) |
+| `nix.zsh` | nix-darwin 反映コマンド (nxb, nxs, nxg 等) / Homebrew 更新 (bxu) / hermes リモート反映 (hxb, hxs, hxg 等) |
 
 ## Worktree 補助コマンド (`wt`)
 

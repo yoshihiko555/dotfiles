@@ -30,6 +30,8 @@ ssh -t macmini-admin 'sudo darwin-rebuild switch --flake /Users/agent/hermes-wor
 
 | ローカル | リモート | 内容 |
 | --- | --- | --- |
+| `nxu` | — | flake input のピンを進める（`nxu takt` で個別指定） |
+| `bxu` | — | Homebrew の update → outdated 確認 → upgrade |
 | `nxb` | — | 適用せずビルドのみ（sudo 不要） |
 | `nxd` | `hxd` | 現行世代とビルド結果の差分を表示 |
 | `nxbd` | `hxb` | build → diff（`hxb` は `git pull` 込み） |
@@ -39,6 +41,9 @@ ssh -t macmini-admin 'sudo darwin-rebuild switch --flake /Users/agent/hermes-wor
 | `nxrb` | `hxrb` | 1 つ前の世代へロールバック |
 
 - 差分確認は `hxd` が最短。**出力が空なら「宣言 = 実機」で一致**している。
+- `nxu` は `--flake` で対象を明示しているので**どのディレクトリからでも叩ける**。
+  素の `nix flake update` は cwd の flake を探すため、リポジトリルートで実行すると
+  `path "..." is not part of a flake` で落ちる（`flake.nix` は `config/nix/` にある）。
 - `darwin-rebuild build` は `--out-link` を持たず cwd に `result` を作るため、
   alias は `/tmp/nix-build-hermes` で実行してリポジトリを汚さない。
 - 差分表示は `nvd` ではなく Nix 標準の `nix store diff-closures` を使用（`nvd` は未導入）。
@@ -81,13 +86,27 @@ nix develop ~/.config/nix             # リポジトリの devShell（git/jq/rip
 
 ```sh
 # MacBook Pro 側で実行し、flake.lock の変更を commit → push する
-nix flake update --flake ./config/nix
-nix build ./config/nix#darwinConfigurations.hermes.system --no-link  # ビルド確認
+nxu                                    # = nix flake update --flake "$DOTFILES/config/nix"
+nxu takt                               # input を指定して個別更新（複数指定も可）
+nxbd                                   # build → 現行世代との差分確認
+nxs                                    # 問題なければ適用
+nix build ./config/nix#darwinConfigurations.hermes.system --no-link  # hermes 側のビルド確認
 # → hermes で pull + switch すると全パッケージが lock 通りに更新される
 ```
 
 > brew の「随時 upgrade」と違い、**lock ファイルの更新 = 更新の実行**。
 > いつ何が上がったか git 履歴に残り、問題があれば lock を戻せば環境も戻る。
+> 更新を取り消したいときは `git checkout -- config/nix/flake.lock` で元のピンに戻す。
+
+Homebrew は別系統。`onActivation.upgrade` を有効にしていないため、`nxs` で反映
+されるのは宣言の**追加・削除だけ**で、既存 cask / formula のバージョンは上がらない。
+
+```sh
+bxu                                    # brew update → outdated 表示 → 確認して upgrade
+```
+
+> 自動更新を持つ cask（`claude-code@latest`, `wezterm@nightly` 等）は既定でスキップ
+> される。強制したいときだけ `brew upgrade --greedy` を手で叩く。
 
 ## 調べる
 
