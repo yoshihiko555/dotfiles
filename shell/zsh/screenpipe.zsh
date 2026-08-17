@@ -15,6 +15,20 @@ _sp_loaded() {
   launchctl print "gui/$(id -u)/$SP_LABEL" >/dev/null 2>&1
 }
 
+# plist が指している実行ファイルのパス（node のバージョン付き絶対パスが焼かれている）
+_sp_program() {
+  /usr/libexec/PlistBuddy -c "Print :ProgramArguments:0" "$SP_PLIST" 2>/dev/null
+}
+
+# plist の実行ファイルが消えていないか。
+# screenpipe は mise の node の npm グローバルとして入っており、npm パッケージは
+# node のバージョンごとに独立しているため、node の更新や `mise prune` で実体が消える。
+_sp_program_ok() {
+  local prog
+  prog="$(_sp_program)"
+  [[ -n "$prog" && -x "$prog" ]]
+}
+
 # 一時停止する。
 # plist の RunAtLoad により次回ログイン時には再び起動するため、
 # 恒久的に止めたい場合は `screenpipe service uninstall` を使う。
@@ -48,6 +62,12 @@ spon() {
     echo "spon: $SP_PLIST が見つからない (screenpipe service install が必要)" >&2
     return 1
   fi
+  # 実体が消えたまま bootstrap すると KeepAlive で起動失敗を繰り返すため事前に弾く
+  if ! _sp_program_ok; then
+    echo "spon: plist の実行ファイルが消えている (spfix で復旧)" >&2
+    echo "  $(_sp_program)" >&2
+    return 1
+  fi
   launchctl bootstrap "gui/$(id -u)" "$SP_PLIST" || return 1
   echo "screenpipe: 再開した"
 }
@@ -61,4 +81,44 @@ sps() {
   else
     echo "screenpipe: 停止中"
   fi
+  if ! _sp_program_ok; then
+    echo "  警告: plist の実行ファイルが消えている (spfix で復旧)" >&2
+    echo "  $(_sp_program)" >&2
+  fi
+}
+
+# node の更新等で消えた実体を入れ直し、plist のパスを貼り直す。
+# 引数でバージョンを固定できる (例: spfix 0.4.26)。省略時は npm の最新版が入る。
+spfix() {
+  local pkg="screenpipe${1:+@$1}"
+  if [[ ! -f "$SP_PLIST" ]]; then
+    echo "spfix: $SP_PLIST が見つからない (screenpipe service install が必要)" >&2
+    return 1
+  fi
+
+  local old_prog old_ver
+  old_prog="$(_sp_program)"
+  [[ -x "$old_prog" ]] && old_ver="$("$old_prog" -V 2>/dev/null)"
+
+  echo "spfix: $pkg を入れ直す"
+  npm i -g "$pkg" || return 1
+
+  # mise のレイアウトを直書きせず、現在の node の npm グローバル root から解決する
+  local root new_prog
+  root="$(npm root -g)" || return 1
+  new_prog="$root/screenpipe/node_modules/@screenpipe/cli-darwin-arm64/bin/screenpipe"
+  if [[ ! -x "$new_prog" ]]; then
+    echo "spfix: $new_prog が実行できない (npm パッケージの構成が変わった?)" >&2
+    return 1
+  fi
+
+  # `screenpipe service install` は plist を再生成できるが、既定の --record-args が
+  # `--disable-vision --disable-audio` (記録なし) のため、--ignored-windows や
+  # --retention-days といった既存の記録設定を失う。実行ファイルのパスだけ差し替える。
+  cp "$SP_PLIST" "$SP_PLIST.bak" || return 1
+  /usr/libexec/PlistBuddy -c "Set :ProgramArguments:0 $new_prog" "$SP_PLIST" || return 1
+
+  echo "spfix: ${old_ver:-なし} -> $("$new_prog" -V 2>/dev/null) (旧 plist は $SP_PLIST.bak)"
+  spoff >/dev/null || return 1
+  spon
 }
