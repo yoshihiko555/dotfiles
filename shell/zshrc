@@ -71,6 +71,7 @@ source ~/.zsh/cc-interrupt.zsh
 source ~/.zsh/claude.zsh
 source ~/.zsh/takt.zsh
 source ~/.zsh/nix.zsh
+source ~/.zsh/screenpipe.zsh
 
 # --------------------------------------------
 # 5. Local Config (machine-specific)

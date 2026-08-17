@@ -15,6 +15,7 @@
 | `claude.zsh` | Claude Code 会社アカウント切替 (ccw) / CLIProxyAPI 切替 (ccx) |
 | `takt.zsh` | takt 会社アカウント切替 (taktw) |
 | `nix.zsh` | nix-darwin 反映コマンド (nxb, nxs, nxg 等) / Homebrew 更新 (bxu) / hermes リモート反映 (hxb, hxs, hxg 等) |
+| `screenpipe.zsh` | screenpipe の一時停止 / 再開 / 状態確認 (spoff, spon, sps) |
 
 ## Worktree 補助コマンド (`wt`)
 
