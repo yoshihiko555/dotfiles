@@ -7,6 +7,38 @@
 NIX_FLAKE="$DOTFILES/config/nix"
 NIX_HERMES_DOTFILES="/Users/agent/hermes-workspace/ghq/github.com/yoshihiko555/dotfiles"
 
+# --------------------------------------------
+# WSL2 / Linux（standalone home-manager）
+# --------------------------------------------
+# WSL は nix-darwin ではなく standalone home-manager（flake の
+# homeConfigurations.wsl）。darwin-rebuild が存在しないため、この分岐では
+# nx* 系を home-manager CLI ベースで定義し、以降の darwin 用定義
+# （whoami 判定・darwin-rebuild・Homebrew・hermes リモート hx*）へは進まない。
+if [ "$(uname -s)" = "Linux" ]; then
+  NIX_HOST="wsl"
+
+  # 適用せずビルドのみ。activationPackage を作るだけで sudo 不要。構文・依存の検証用。
+  nxb() {
+    nix build "$NIX_FLAKE#homeConfigurations.${NIX_HOST}.activationPackage"
+  }
+
+  # 適用。standalone は sudo 不要。-b backup で既存ファイル衝突を *.backup へ自動退避する
+  #（初回 bootstrap の .zshrc 衝突対策。darwin 側の backupFileExtension に相当）。
+  alias nxs='home-manager switch -b backup --flake "$NIX_FLAKE#wsl"'
+
+  # 世代一覧。darwin の nxg（darwin-rebuild --list-generations）に相当。
+  alias nxg='home-manager generations'
+
+  # flake input（nixpkgs 等）のピンを進める。OS 非依存なので darwin 側と同一実装。
+  # 実行後は nxb で確認 → nxs。戻したいときは
+  #   git -C "$DOTFILES" checkout -- config/nix/flake.lock
+  nxu() {
+    nix flake update --flake "$NIX_FLAKE" "$@"
+  }
+
+  return
+fi
+
 # nx* 系の対象ホストをユーザー名で自動判定する。
 # hermes はリポジトリ所有者が agent ユーザーという設計（Phase 3-1）のため、
 # ホスト名より whoami の方が判定として安定する
