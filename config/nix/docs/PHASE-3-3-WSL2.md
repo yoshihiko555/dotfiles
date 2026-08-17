@@ -28,6 +28,57 @@ WSL2 側には dotfiles リポジトリをクローン済みで、参照可能�
 - 実例: [mozumasu/dotfiles](https://github.com/mozumasu/dotfiles) の `hosts/robusta/home.nix`
   が同一構成（Windows の WSL/Ubuntu 上の standalone home-manager）
 
+### 着手時に必ず対応が要る既知の障害（2026-08-17 調査）
+
+いずれも**実装を始めてから詰まる**箇所。作業手順 2 に入る前に方式を決めておく。
+
+#### B1: 共通層の `homeDirectory` が macOS パス固定
+
+`home/default.nix:9` が `home.homeDirectory = lib.mkForce "/Users/${hostSpec.username}"` と
+なっており、**`mkForce` のため `hosts/wsl/` 側からの通常の上書きが効かない**。
+WSL2 では `/home/<user>` が必要なため、共通層である `home/default.nix` 自体に手を入れる。
+
+方式の候補:
+
+- (a) `home/default.nix` で `pkgs.stdenv.isDarwin` により分岐する
+- (b) `modules/hostSpec.nix` に `homeDirectory` オプションを追加し、各ホストが宣言する
+
+**(b) を推す。** ADR-0004 の「共通層は薄く保ち、ホスト差分は hostSpec で表現する」方針に沿い、
+macOS 2 台側の記述も明示的になる。
+
+#### B2: `hostSpec` の受け渡しが nix-darwin の `config` に依存している
+
+`flake.nix:84` の `extraSpecialArgs = { hostSpec = config.hostSpec; }` は
+**nix-darwin システム設定の `config` から値を取っている**ため、standalone home-manager では
+その `config` が存在せず成立しない。`homeConfigurations.wsl` では別方式が要る。
+
+方式の候補:
+
+- (a) `extraSpecialArgs` に `hostSpec` の値を直接渡す
+- (b) `modules/hostSpec.nix` を home-manager モジュールとして直接 import し、home 設定側で完結させる
+
+あわせて、**`hosts/hermes/` `hosts/macbook/` をそのまま雛形にはできない**点に注意する。
+両者の `dotfiles.nix` は `home-manager.users.<user> = { ... }` という**入れ子**で書かれており、
+これは `commonModules` が `home-manager.darwinModules.home-manager` を読み込んでいるために
+成立している構文である。standalone にはこの入れ子先が無いため、
+**`home/dotfiles.nix`（入れ子なしの平モジュール）の方が構造的に近い雛形**になる。
+`hosts/wsl/default.nix` の「hostSpec + imports の目次」という形だけは
+`hosts/macbook/default.nix` を踏襲してよい。
+
+ADR-0004 は「WSL2（`hosts/wsl`）の内部構成の詳細は Phase 3-3 着手時に改訂する」（同 ADR 97 行目）
+として、この点を意図的に未確定のまま残している。**方式を決めたら ADR-0004 を改訂すること。**
+
+#### B3: standalone home-manager の switch コマンドが未文書化
+
+`darwin-rebuild switch` に相当する**初回のブートストラップ呼び出しが
+[BOOTSTRAP.md](BOOTSTRAP.md) / [CHEATSHEET.md](CHEATSHEET.md) のいずれにも無い**
+（BOOTSTRAP.md は冒頭で「対象は macOS のみ」と明示しており、WSL2 を扱っていない）。
+
+`home/default.nix:15` で `programs.home-manager.enable = true` を有効化しているため
+2 回目以降は `home-manager switch` で足りると見込まれるが、
+**初回コマンドはリポジトリ内に根拠が無い**。home-manager 公式ドキュメントで確認してから
+手順化する。手順 5 で確定したら CHEATSHEET.md に Linux 用として追記する。
+
 ---
 
 ## 事前に判明している移植阻害要因
