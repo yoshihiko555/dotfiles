@@ -15,6 +15,16 @@
       description = "ログインユーザー名";
     };
 
+    homeDirectory = lib.mkOption {
+      type = lib.types.str;
+      description = ''
+        ホームディレクトリの絶対パス。
+        macOS は `/Users/<user>`、Linux（WSL2）は `/home/<user>` と規約が異なるため、
+        共通層（home/default.nix）でハードコードせずここで宣言する。
+        dotfilesDir と同様、デフォルト値を持たせず各ホストで必ず指定する。
+      '';
+    };
+
     dotfilesDir = lib.mkOption {
       type = lib.types.str;
       description = ''

@@ -20,6 +20,7 @@
   hostSpec = {
     hostName = "macbook";
     username = "yoshihiko";
+    homeDirectory = "/Users/yoshihiko";
     dotfilesDir = "/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles";
   };
 }

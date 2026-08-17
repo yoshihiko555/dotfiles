@@ -18,6 +18,7 @@
   hostSpec = {
     hostName = "hermes";
     username = "agent";
+    homeDirectory = "/Users/agent";
     dotfilesDir = "/Users/agent/hermes-workspace/ghq/github.com/yoshihiko555/dotfiles";
   };
 }
