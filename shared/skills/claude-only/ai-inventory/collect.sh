@@ -39,8 +39,8 @@ trap 'rm -rf "$WORKDIR"' EXIT
 
 ASSETS_ND="$WORKDIR/assets.ndjson"
 WASTE_ND="$WORKDIR/waste.ndjson"
-: > "$ASSETS_ND"
-: > "$WASTE_ND"
+: >"$ASSETS_ND"
+: >"$WASTE_ND"
 
 TODAY="$(date +%F)"
 
@@ -69,7 +69,7 @@ emit_asset() {
     '{id:$id, display_name:$display_name, type:$type, origin:$origin, scope:$scope,
       targets:$targets, path:$path, usage_this_month:$usage, usage_measurable:$measurable,
       last_modified:$last_modified, notes:$notes}' \
-    >> "$ASSETS_ND"
+    >>"$ASSETS_ND"
 }
 
 # emit_waste <path> <size_mb:number|null> <reason>
@@ -78,7 +78,7 @@ emit_waste() {
   local size_arg
   if [ "$size_mb" = "null" ] || [ -z "$size_mb" ]; then size_arg='null'; else size_arg="$size_mb"; fi
   jq -n --arg path "$path" --argjson size_mb "$size_arg" --arg reason "$reason" \
-    '{path:$path, size_mb:$size_mb, reason:$reason}' >> "$WASTE_ND"
+    '{path:$path, size_mb:$size_mb, reason:$reason}' >>"$WASTE_ND"
 }
 
 size_mb_of() {
@@ -128,38 +128,41 @@ log "=== フェーズA: 利用実績の集計テーブルを構築 ==="
 # 続く形でしか本物が出現しないため、同様にアンカーする。
 PROJECTS_DIR="$HOME/.claude/projects"
 FILELIST="$WORKDIR/jsonl_files.txt"
-: > "$FILELIST"
+: >"$FILELIST"
 if [ -d "$PROJECTS_DIR" ]; then
-  find "$PROJECTS_DIR" -name "*.jsonl" -mtime -30 2>/dev/null > "$FILELIST"
+  find "$PROJECTS_DIR" -name "*.jsonl" -mtime -30 2>/dev/null >"$FILELIST"
 fi
-FILE_COUNT="$(wc -l < "$FILELIST" | tr -d ' ')"
+FILE_COUNT="$(wc -l <"$FILELIST" | tr -d ' ')"
 log "利用実績の対象ファイル数（直近30日）: $FILE_COUNT"
 
 SKILLTOOL_RAW="$WORKDIR/skilltool_raw.txt"
 SLASHCMD_RAW="$WORKDIR/slashcmd_raw.txt"
 SUBAGENT_RAW="$WORKDIR/subagent_raw.txt"
 MCP_RAW="$WORKDIR/mcp_raw.txt"
-: > "$SKILLTOOL_RAW"; : > "$SLASHCMD_RAW"; : > "$SUBAGENT_RAW"; : > "$MCP_RAW"
+: >"$SKILLTOOL_RAW"
+: >"$SLASHCMD_RAW"
+: >"$SUBAGENT_RAW"
+: >"$MCP_RAW"
 
 if [ "$FILE_COUNT" -gt 0 ]; then
   # Skillツール呼び出し: "id":"toolu_...","name":"Skill","input":{"skill":"<name>"
-  tr '\n' '\0' < "$FILELIST" | xargs -0 "$GREP" -oh \
+  tr '\n' '\0' <"$FILELIST" | xargs -0 "$GREP" -oh \
     '"id":"toolu_[^"]*","name":"Skill","input":{"skill":"[^"]*"' 2>/dev/null \
-    | sed -E 's/.*"skill":"([^"]*)"$/\1/' > "$SKILLTOOL_RAW"
+    | sed -E 's/.*"skill":"([^"]*)"$/\1/' >"$SKILLTOOL_RAW"
 
   # スラッシュコマンド: 本物の招待タグのみ（"content":"<command-name>... または
   # </command-message>\n に続く <command-name>...）を対象にする。
-  tr '\n' '\0' < "$FILELIST" | xargs -0 "$GREP" -Eoh \
+  tr '\n' '\0' <"$FILELIST" | xargs -0 "$GREP" -Eoh \
     '("content":"|</command-message>\\n)<command-name>/[^<]*</command-name>' 2>/dev/null \
-    | sed -E 's#.*<command-name>/([^<]*)</command-name>#\1#' > "$SLASHCMD_RAW"
+    | sed -E 's#.*<command-name>/([^<]*)</command-name>#\1#' >"$SLASHCMD_RAW"
 
   # subagent_type の出現（Task ツールの input）
-  tr '\n' '\0' < "$FILELIST" | xargs -0 "$GREP" -oh '"subagent_type":"[^"]*"' 2>/dev/null \
-    | sed -E 's/"subagent_type":"([^"]*)"/\1/' > "$SUBAGENT_RAW"
+  tr '\n' '\0' <"$FILELIST" | xargs -0 "$GREP" -oh '"subagent_type":"[^"]*"' 2>/dev/null \
+    | sed -E 's/"subagent_type":"([^"]*)"/\1/' >"$SUBAGENT_RAW"
 
   # MCP ツール呼び出し名 (mcp__<server>__<tool>)
-  tr '\n' '\0' < "$FILELIST" | xargs -0 "$GREP" -oh '"name":"mcp__[a-zA-Z0-9_.-]*"' 2>/dev/null \
-    | sed -E 's/"name":"(.*)"/\1/' > "$MCP_RAW"
+  tr '\n' '\0' <"$FILELIST" | xargs -0 "$GREP" -oh '"name":"mcp__[a-zA-Z0-9_.-]*"' 2>/dev/null \
+    | sed -E 's/"name":"(.*)"/\1/' >"$MCP_RAW"
 else
   log "警告: 直近30日の transcript が見つかりません。利用実績はすべて0として扱います。"
 fi
@@ -167,13 +170,16 @@ fi
 SKILLTOOL_TSV="$WORKDIR/skilltool_usage.tsv"
 SLASHCMD_TSV="$WORKDIR/slashcmd_usage.tsv"
 SUBAGENT_TSV="$WORKDIR/subagent_usage.tsv"
-sort "$SKILLTOOL_RAW" | uniq -c | awk '{print $2"\t"$1}' > "$SKILLTOOL_TSV"
-sort "$SLASHCMD_RAW"  | uniq -c | awk '{print $2"\t"$1}' > "$SLASHCMD_TSV"
-sort "$SUBAGENT_RAW"  | uniq -c | awk '{print $2"\t"$1}' > "$SUBAGENT_TSV"
+sort "$SKILLTOOL_RAW" | uniq -c | awk '{print $2"\t"$1}' >"$SKILLTOOL_TSV"
+sort "$SLASHCMD_RAW" | uniq -c | awk '{print $2"\t"$1}' >"$SLASHCMD_TSV"
+sort "$SUBAGENT_RAW" | uniq -c | awk '{print $2"\t"$1}' >"$SUBAGENT_TSV"
 
 get_tsv_count() {
   local file="$1" name="$2"
-  [ -s "$file" ] || { echo 0; return; }
+  [ -s "$file" ] || {
+    echo 0
+    return
+  }
   awk -F'\t' -v n="$name" '$1==n{print $2; f=1} END{if(!f) print 0}' "$file"
 }
 get_skill_usage() {
@@ -186,7 +192,10 @@ get_command_usage() { get_tsv_count "$SLASHCMD_TSV" "$1"; }
 get_subagent_usage() { get_tsv_count "$SUBAGENT_TSV" "$1"; }
 get_mcp_usage() {
   local server="$1" c
-  [ -s "$MCP_RAW" ] || { echo 0; return; }
+  [ -s "$MCP_RAW" ] || {
+    echo 0
+    return
+  }
   c="$("$GREP" -c "^mcp__${server}__" "$MCP_RAW" 2>/dev/null)"
   echo "${c:-0}"
 }
@@ -277,7 +286,8 @@ declare_context() {
   local file="$1" name="$2" targets="$3"
   [ -f "$file" ] || return
   local relpath="${file#"$DOTFILES_ROOT"/}"
-  local lm; lm="$(git_last_modified "$DOTFILES_ROOT" "$relpath")"
+  local lm
+  lm="$(git_last_modified "$DOTFILES_ROOT" "$relpath")"
   # @ 参照の整合性チェック（このファイル自身の中に @path があれば実在確認）
   local refnote="@参照なし"
   local refs
@@ -287,8 +297,8 @@ declare_context() {
     while IFS= read -r r; do
       local p="${r#@}"
       p="${p/#\~/$HOME}"
-      if [ -e "$p" ]; then ok=$((ok+1)); else ng=$((ng+1)); fi
-    done <<< "$refs"
+      if [ -e "$p" ]; then ok=$((ok + 1)); else ng=$((ng + 1)); fi
+    done <<<"$refs"
     refnote="@参照 ${ok}件OK/${ng}件NG"
   fi
   emit_asset "dotfiles:context:$name" "$name" "context" "自作" "dotfiles" "$targets" \
@@ -343,7 +353,12 @@ for n in "${CLAUDE_MCP_NAMES[@]:-}" "${CLAUDE_MCP_BROKEN[@]:-}" "${CODEX_MCP_NAM
   [ "$found" -eq 0 ] && ALL_DOTFILES_MCP+=("$n")
 done
 
-in_list() { local needle="$1"; shift; for x in "$@"; do [ "$x" = "$needle" ] && return 0; done; return 1; }
+in_list() {
+  local needle="$1"
+  shift
+  for x in "$@"; do [ "$x" = "$needle" ] && return 0; done
+  return 1
+}
 
 for n in "${ALL_DOTFILES_MCP[@]:-}"; do
   targets=""
@@ -454,10 +469,10 @@ GHQ_ROOT="$HOME/ghq"
 EXCLUDE_REPOS_RE='/ai-valification/reference/(claude-code-harness|claude-code-orchestra|everything-claude-code|multi-agent-shogun)$'
 
 ALL_GIT_DIRS="$WORKDIR/all_git_dirs.txt"
-find "$GHQ_ROOT" -mindepth 1 -maxdepth 6 -type d -name ".git" 2>/dev/null | sed 's|/\.git$||' | sort > "$ALL_GIT_DIRS"
+find "$GHQ_ROOT" -mindepth 1 -maxdepth 6 -type d -name ".git" 2>/dev/null | sed 's|/\.git$||' | sort >"$ALL_GIT_DIRS"
 
 REPO_LIST="$WORKDIR/repo_list.txt"
-: > "$REPO_LIST"
+: >"$REPO_LIST"
 while IFS= read -r repo; do
   [ -z "$repo" ] && continue
   case "$repo" in
@@ -472,16 +487,18 @@ while IFS= read -r repo; do
     emit_waste "${repo#"$HOME"/}" "$size" "ai-valification/reference 配下の参照リポジトリ（削除候補としてレポートに記録、台帳対象外）"
     continue
   fi
-  echo "$repo" >> "$REPO_LIST"
-done < "$ALL_GIT_DIRS"
+  echo "$repo" >>"$REPO_LIST"
+done <"$ALL_GIT_DIRS"
 
-REPO_COUNT="$(wc -l < "$REPO_LIST" | tr -d ' ')"
+REPO_COUNT="$(wc -l <"$REPO_LIST" | tr -d ' ')"
 log "project スコープの走査対象リポジトリ数: $REPO_COUNT"
 
 PROJ_AGENTS_TSV="$WORKDIR/proj_agents.tsv"
 PROJ_SKILLS_TSV="$WORKDIR/proj_skills.tsv"
 PROJ_COMMANDS_TSV="$WORKDIR/proj_commands.tsv"
-: > "$PROJ_AGENTS_TSV"; : > "$PROJ_SKILLS_TSV"; : > "$PROJ_COMMANDS_TSV"
+: >"$PROJ_AGENTS_TSV"
+: >"$PROJ_SKILLS_TSV"
+: >"$PROJ_COMMANDS_TSV"
 
 now_epoch="$(date +%s)"
 
@@ -497,14 +514,14 @@ while IFS= read -r repo; do
         [ "$base" = ".DS_Store" ] && continue
         n="$(get_frontmatter_name "$af")"
         [ -z "$n" ] && n="${base%.md}"
-        printf '%s\t%s\n' "$n" "$repo" >> "$PROJ_AGENTS_TSV"
+        printf '%s\t%s\n' "$n" "$repo" >>"$PROJ_AGENTS_TSV"
       done < <(find "$claudedir/agents" -maxdepth 1 -name "*.md" 2>/dev/null)
     fi
     if [ -d "$claudedir/skills" ]; then
       while IFS= read -r sf; do
         n="$(get_frontmatter_name "$sf")"
         [ -z "$n" ] && n="$(basename "$(dirname "$sf")")"
-        printf '%s\t%s\n' "$n" "$repo" >> "$PROJ_SKILLS_TSV"
+        printf '%s\t%s\n' "$n" "$repo" >>"$PROJ_SKILLS_TSV"
       done < <(find "$claudedir/skills" -mindepth 2 -maxdepth 2 -name "SKILL.md" 2>/dev/null)
     fi
     if [ -d "$claudedir/commands" ]; then
@@ -512,13 +529,13 @@ while IFS= read -r repo; do
         base="$(basename "$cf")"
         [ "$base" = ".DS_Store" ] && continue
         n="${base%.*}"
-        printf '%s\t%s\n' "$n" "$repo" >> "$PROJ_COMMANDS_TSV"
+        printf '%s\t%s\n' "$n" "$repo" >>"$PROJ_COMMANDS_TSV"
       done < <(find "$claudedir/commands" -maxdepth 1 -type f 2>/dev/null)
     fi
   done < <(find "$repo" \
     \( -name node_modules -o -name .venv -o -name vendor -o -name .git -o -name .worktrees \
-       -o -path "*/reference/claude-code-harness" -o -path "*/reference/claude-code-orchestra" \
-       -o -path "*/reference/everything-claude-code" -o -path "*/reference/multi-agent-shogun" \) -prune \
+    -o -path "*/reference/claude-code-harness" -o -path "*/reference/claude-code-orchestra" \
+    -o -path "*/reference/everything-claude-code" -o -path "*/reference/multi-agent-shogun" \) -prune \
     -o -type d -name ".claude" -print 2>/dev/null)
 
   # repo単位の context (root の CLAUDE.md / AGENTS.md のみ)
@@ -530,7 +547,8 @@ while IFS= read -r repo; do
   if [ -n "$ctx_file" ]; then
     lm="$(git -C "$repo" log -1 --format=%cs 2>/dev/null)"
     # @ 参照の整合性チェック（CLAUDE.md/AGENTS.md それぞれ）
-    ok=0; ng=0
+    ok=0
+    ng=0
     for f in $(echo "$ctx_file" | tr ',' ' '); do
       refs="$($GREP -oE '^@[^[:space:]]+' "$f" 2>/dev/null)"
       [ -z "$refs" ] && continue
@@ -541,8 +559,8 @@ while IFS= read -r repo; do
           *) p="$repo/$p" ;;
         esac
         p="${p/#\~/$HOME}"
-        if [ -e "$p" ]; then ok=$((ok+1)); else ng=$((ng+1)); fi
-      done <<< "$refs"
+        if [ -e "$p" ]; then ok=$((ok + 1)); else ng=$((ng + 1)); fi
+      done <<<"$refs"
     done
     refnote="整合性チェック: @参照 ${ok}件OK/${ng}件NG"
     relctx="${ctx_file//$repo\//}"
@@ -553,13 +571,13 @@ while IFS= read -r repo; do
   # 6か月以上コミットが無いリポジトリはAI資産をwaste候補として記録
   last_commit_epoch="$(git -C "$repo" log -1 --format=%ct 2>/dev/null)"
   if [ -n "$last_commit_epoch" ]; then
-    age_days=$(( (now_epoch - last_commit_epoch) / 86400 ))
+    age_days=$(((now_epoch - last_commit_epoch) / 86400))
     if [ "$age_days" -ge 183 ] && [ -d "$repo/.claude" ]; then
       size="$(size_mb_of "$repo/.claude")"
       emit_waste "${repo#"$HOME"/}/.claude" "$size" "${age_days}日間コミットなし。AI資産の陳腐化リスクあり"
     fi
   fi
-done < "$REPO_LIST"
+done <"$REPO_LIST"
 
 # ユニーク名で project:agent / project:skill / project:command を集約
 emit_unique_project_assets() {
@@ -583,7 +601,7 @@ emit_unique_project_assets() {
         command) this_lm="$(git_last_modified "$r" ".claude/commands")" ;;
       esac
       if [ -n "$this_lm" ] && { [ -z "$lm" ] || [ "$this_lm" \> "$lm" ]; }; then lm="$this_lm"; fi
-    done <<< "$repos"
+    done <<<"$repos"
     local note=""
     [ "$count" -gt 1 ] && note="${count}リポジトリに重複"
     # id のプレフィックスは設計書の例 (project:agent:code-reviewer) に合わせて
@@ -598,7 +616,7 @@ emit_unique_project_assets() {
     esac
     emit_asset "project:${type}:$n" "$n" "$out_type" "自作" "project" "Claude" "$path" \
       "$usage" "true" "$lm" "$note"
-  done <<< "$names"
+  done <<<"$names"
 }
 emit_unique_project_assets "$PROJ_AGENTS_TSV" "agent"
 emit_unique_project_assets "$PROJ_SKILLS_TSV" "skill"

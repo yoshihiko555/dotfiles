@@ -32,17 +32,17 @@ section "ディスク全体"
 df -h /System/Volumes/Data 2>/dev/null | tail -1 | awk '{printf "使用中: %s / 全体: %s / 空き: %s (使用率 %s)\n", $3, $2, $4, $5}'
 
 section "safe カテゴリ（承認なしで prune 対象）"
-row "~/.cache/uv (uv cache dir)"      "$(size_of "$HOME/.cache/uv")"
-row "~/.npm"                          "$(size_of "$HOME/.npm")"
-row "~/Library/pnpm (pnpm store)"     "$(size_of "$HOME/Library/pnpm")"
-row "go build cache (GOCACHE, go clean -cache)"  "$(size_of "$(go env GOCACHE 2>/dev/null)")"
-row "~/Library/Caches/Homebrew"       "$(size_of "$HOME/Library/Caches/Homebrew")"
-row "~/.cache/pre-commit"             "$(size_of "$HOME/.cache/pre-commit")"
+row "~/.cache/uv (uv cache dir)" "$(size_of "$HOME/.cache/uv")"
+row "~/.npm" "$(size_of "$HOME/.npm")"
+row "~/Library/pnpm (pnpm store)" "$(size_of "$HOME/Library/pnpm")"
+row "go build cache (GOCACHE, go clean -cache)" "$(size_of "$(go env GOCACHE 2>/dev/null)")"
+row "~/Library/Caches/Homebrew" "$(size_of "$HOME/Library/Caches/Homebrew")"
+row "~/.cache/pre-commit" "$(size_of "$HOME/.cache/pre-commit")"
 
 section "gray カテゴリ（毎回サイズを見せて承認を取る）"
 row "OrbStack 実データ (Group Containers)" "$(size_of "$HOME/Library/Group Containers/HUAQ24HBR6.dev.orbstack")"
-row "~/.cache/huggingface"                  "$(size_of "$HOME/.cache/huggingface")"
-row "~/.cargo/registry"                     "$(size_of "$HOME/.cargo/registry")"
+row "~/.cache/huggingface" "$(size_of "$HOME/.cache/huggingface")"
+row "~/.cargo/registry" "$(size_of "$HOME/.cargo/registry")"
 row "go module cache (GOMODCACHE, go clean -modcache)" "$(size_of "$(go env GOMODCACHE 2>/dev/null)")"
 
 echo
@@ -55,14 +55,14 @@ if [ -d "$HOME/ghq" ]; then
     last_commit_epoch="$(git -C "$repo_root" log -1 --format=%ct 2>/dev/null)"
     [ -z "$last_commit_epoch" ] && continue
     now_epoch="$(date +%s)"
-    age_days=$(( (now_epoch - last_commit_epoch) / 86400 ))
+    age_days=$(((now_epoch - last_commit_epoch) / 86400))
     if [ "$age_days" -ge 90 ]; then
       found_any=1
       size="$(size_of "$dep_dir")"
       row "  [${age_days}日前] $dep_dir" "$size"
     fi
-  # .worktrees 配下は takt セクションで別途扱うのでここでは除外し、
-  # node_modules / .venv はヒットしたら中を再帰しない（入れ子の二重列挙を防ぐ）
+    # .worktrees 配下は takt セクションで別途扱うのでここでは除外し、
+    # node_modules / .venv はヒットしたら中を再帰しない（入れ子の二重列挙を防ぐ）
   done < <(find "$HOME/ghq" -maxdepth 6 -type d \( -name .worktrees -prune \) -o -type d \( -name node_modules -o -name .venv \) -prune -print 2>/dev/null)
   [ "$found_any" -eq 0 ] && echo "  該当なし"
 else
@@ -85,7 +85,7 @@ fi
 
 section "スコープ外（レポートのみ、削除はこのスキルの対象外）"
 row "~/.screenpipe" "$(size_of "$HOME/.screenpipe")"
-row "~/.ollama"     "$(size_of "$HOME/.ollama")"
+row "~/.ollama" "$(size_of "$HOME/.ollama")"
 
 section "Nix 自動GC"
 if [ -f "/Library/LaunchDaemons/org.nixos.nix-gc.plist" ]; then
