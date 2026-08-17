@@ -145,7 +145,7 @@ brew の node は他 formula の依存としてのみ存在し npm 実行には�
 
 | バイナリ | 役割 | 宣言 | 備考 |
 |---|---|---|---|
-| `baton` | AI セッション管理（自作、tmux 連携。ADR: config/.config/tmux/docs/decisions/003） | **未宣言** | GOBIN 側は go バージョンアップで消失リスク。`~/.local/bin/baton` のコピーが実質本体 |
+| `baton` | AI セッション管理（自作、tmux 連携。ADR: config/tmux/docs/decisions/003-baton-vs-claude-squad.md） | **未宣言** | GOBIN 側は go バージョンアップで消失リスク。`~/.local/bin/baton` のコピーが実質本体 |
 
 ### 8-4. uv tool（2 件）
 

@@ -80,7 +80,8 @@ WSL2 において Nix が担うのは次の 3 点に限る:
 
 ### D2: flake は現在地のまま、pure eval の制約は D1 で回避する
 
-`flake.nix` は `config/.config/nix/` にある（[ADR-20260424-0001](adr/ADR-20260424-0001-nix-layout.md)）。
+`flake.nix` は `config/nix/` にある（[ADR-20260424-0001](adr/ADR-20260424-0001-nix-layout.md)。
+2026-08-14 のフラット化で `config/.config/nix/` から改名、[ADR-20260814-0006](adr/ADR-20260814-0006-flatten-repo-layout.md)）。
 リポジトリ上位の `shell/.zshrc` を相対パスで参照すると **flake root の外になり pure eval で弾かれる**。
 
 D1 の `mkOutOfStoreSymlink` は文字列としてパスを扱うためこの制約を受けない。
@@ -103,7 +104,8 @@ Nix 側で表現するのは **パッケージ集合とリンク対象ファイ�
 | `functions.zsh` | 要分岐 | `mdopen` は既に `xdg-open` fallback あり |
 | `tmux.zsh` / `docker.zsh` / `wt.zsh` / `repo.zsh` | 共通 | dotfiles 絶対パスの変数化が望ましい |
 | `trust.zsh` | 共通 | Codex trust 管理。リポジトリパスを直書き |
-| `claude.zsh` / `takt.zsh` / `cc-interrupt.zsh` | **保留** | 下記「保留事項」の Q1 次第。`claude.zsh` は `HOMEBREW_PREFIX` 依存あり |
+| `claude.zsh` / `cc-interrupt.zsh` | 要分岐 | Q1 で確定（2026-08-17、下記「保留事項」参照）。移植対象。`claude.zsh` は `HOMEBREW_PREFIX` 依存の除去が必要。`ccw` / `taktw` の会社アカウント切替部分は WSL2 では不要 |
+| `takt.zsh` | **移植対象外** | Q1 で確定（2026-08-17）。WSL2 では takt を使わない |
 | `.zshenv` の `/opt/homebrew` | macOS 専用 | Linux では不要 |
 | `.zprofile` の OrbStack | macOS 専用 | |
 | aerospace / karabiner / wezterm / ghostty / zed | macOS 専用 | GUI |
@@ -118,8 +120,8 @@ Nix 側で表現するのは **パッケージ集合とリンク対象ファイ�
 | # | 作業 | 内容 |
 |---|---|---|
 | 0 | 現状調査 | ディストロ種別 / systemd の有効可否 / 既存 zsh 設定 / dotfiles クローン先 / `uname -m`（system 文字列の確定）/ 既存 apt パッケージ |
-| 1 | Nix インストール | Determinate installer（macOS と同じ）。`nix.conf` で `experimental-features = nix-command flakes` |
-| 2 | flake を multi-host 構造へ拡張 | `hosts/wsl.nix` + `home/common.nix` + `home/linux.nix` を新設。macOS 2 台分はプレースホルダで置く |
+| 1 | Nix インストール | [`NixOS/nix-installer`](https://github.com/NixOS/nix-installer)（macOS 2 台と同じ**素の Nix**。[BOOTSTRAP.md](BOOTSTRAP.md) / [ADR-20260802-0005](adr/ADR-20260802-0005-upstream-nix-migration.md) 参照）。**Determinate 系インストーラは使わない**（2026-01-01 に upstream Nix の選択肢が撤去され、必ず Determinate Nix が入るため）。`nix.conf` で `experimental-features = nix-command flakes` |
+| 2 | flake へ WSL ホストを追加 | `hosts/wsl/` を新設し `homeConfigurations` を追加。**macOS 2 台は既に本実装済みのためプレースホルダ不要**。ADR-0004 のレイヤー構成（`darwin/` / `home/` / `hosts/<host>/`）に従う |
 | 3 | `home.packages` を定義 | `hermes/Brewfile` の 18 個が出発点（`fd` `fzf` `gh` `ghq` `git` `lazygit` `neovim` `ripgrep` `starship` `tmux` `tree` `zoxide` `glow` `d2` `yazi` 等）。`git gtr` は Linux 対応を確認の上で判断 |
 | 4 | `home.file` で配線 | starship / git / tmux / sheldon / `.zsh/*` を `mkOutOfStoreSymlink` でリンク |
 | 5 | `home-manager switch` | 動作確認 |
@@ -133,8 +135,18 @@ Nix 側で表現するのは **パッケージ集合とリンク対象ファイ�
 ## 保留事項（次回の会話で確定する）
 
 - **Q1: WSL2 で AI CLI（Claude Code / Codex / takt / Gemini）を使うか**
-  → `claude.zsh` / `takt.zsh` / `cc-interrupt.zsh` の移植可否と、会社アカウント切替（`ccw` / `taktw`、`~/.claude-work`）の扱いが変わる。
-  現時点の設計では **Phase 3-1 の初回スコープから外し、Phase 3-1b として分離**する。
+  → **A1: 確定（2026-08-17）**。WSL2 で使う AI CLI は **Codex と Claude Code のみ**（両方ともインストール済み）。
+  Claude Code は**会社アカウントのみ**を入れており、**個人／会社の切替を行う予定は無い**。
+  - **`takt` / Gemini CLI は WSL2 では使わない**。`takt.zsh` は移植対象外
+  - `ccw` / `taktw` による会社アカウント切替（`~/.claude-work`）は **WSL2 では移植不要**
+  - `claude.zsh` / `cc-interrupt.zsh` は移植対象。ただし `claude.zsh` は `HOMEBREW_PREFIX` 依存が
+    あるため Linux 向けのガードが要る
+  - Codex / Claude Code は既に WSL2 上へ導入済みのため、Nix で宣言し直すか
+    現状の導入方法（apt / npm 等）を残すかは手順 0 の調査結果を見て判断する
+
+  AI CLI 関連の移植は **Phase 3-3 の初回スコープからは外し、後続の別タスクとして
+  新規フェーズ番号を採番する**（Phase 3-1b は
+  [PHASE-3-1B-HERMES-DAEMONS.md](PHASE-3-1B-HERMES-DAEMONS.md) で消費済みのため転用しない）。
   どちらの結論でも手戻りが出ない構成にしてある
 - **Q2: WSL2 のパッケージ管理を Nix に寄せるか、apt と併用するか**
   → 手順 0 の調査結果を見て確定する。既定は「開発用 CLI は Nix、apt は OS 基盤のみ」
