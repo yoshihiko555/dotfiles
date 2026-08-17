@@ -117,6 +117,29 @@
         };
       };
 
+      # WSL2（会社支給 Windows の Ubuntu）は **standalone home-manager**。
+      # darwin/ 層を通らず home/ 層のみを共有する非対称ホスト（ADR-0004）。
+      # 作業計画は docs/PHASE-3-3-WSL2.md。
+      #
+      # darwinConfigurations と構造が異なる点（同計画書の B2）:
+      # - commonModules は再利用しない。`extraSpecialArgs.hostSpec = config.hostSpec` が
+      #   nix-darwin システム設定の config に依存しており standalone では成立しないため、
+      #   hostSpec の値は ./hosts/wsl/hostSpec.nix から直接渡す
+      # - sops-nix は読み込まない。管理対象がゼロ（ROADMAP 4-5 節）で、
+      #   Linux では復号先の扱いが darwin と異なるため、必要になった時点で入れる
+      #
+      # system は WSL2 実機の `uname -m`（x86_64）で確定した値。
+      homeConfigurations.wsl = home-manager.lib.homeManagerConfiguration {
+        pkgs = import nixpkgs { system = "x86_64-linux"; };
+        extraSpecialArgs = {
+          hostSpec = import ./hosts/wsl/hostSpec.nix;
+        };
+        modules = [
+          ./home
+          ./hosts/wsl
+        ];
+      };
+
       # `nix fmt`。projectRootFile（.git/config）を上方向へ探索するため、
       # リポジトリ内のどこから呼んでもリポジトリ全体が対象になる
       formatter = eachFormatterSystem (s: treefmtEval.${s}.config.build.wrapper);
