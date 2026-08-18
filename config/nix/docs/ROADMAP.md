@@ -117,7 +117,7 @@ Nix の学習度合いに合わせて、小さく動かしながら進める。
 
 ---
 
-## Phase 3: nix-darwin + home-manager 導入 — `[~]` 現在地
+## Phase 3: nix-darwin + home-manager 導入 — `[x]` 完了（2026-08-18）
 
 3 ホストを 1 つの flake で宣言的に管理する。**nix-darwin を最初から使う**
 （理由は `homebrew.onActivation.cleanup = "zap"` による腐敗の構造的防止）。
@@ -520,7 +520,7 @@ brew は GUI / cask と nixpkgs 未収録パッケージ専用になる。
 
 ---
 
-## Phase 4: 付加機能の順次導入 — `[ ]`
+## Phase 4: 付加機能の順次導入 — `[~]` 現在地
 
 > 各項目の「何が嬉しいか・コスト」の比較は [USECASES.md](USECASES.md) を参照。
 > Phase 3 の完了を待たず、**タイミングが来たものから個別に導入する**。
