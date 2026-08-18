@@ -7,13 +7,15 @@
 
 WSL2 側には dotfiles リポジトリをクローン済みで、参照可能な状態にある。
 
-> **ステータス: 条件付き（実稼働待ち）**
+> **ステータス: 完了（2026-08-18）**
 >
 > 本フェーズは当初 Phase 3-1（最初の着手対象）だったが、WSL2 が予備機であり
 > 現状は稼働プロジェクトがなく日常的に使用していないことが判明したため、
 > **最後（Phase 3-3）に変更した**。
 >
-> **着手トリガー**: 会社の業務プロジェクトが動き始め、WSL2 を日常的に使うようになったとき。
+> **当初の着手トリガー**: 会社の業務プロジェクトが動き始め、WSL2 を日常的に使うようになったとき。
+> このトリガーは点灯していないが、明示的な指示により前倒しで実施し、2026-08-18 に完了した。
+> 実施内容は [ROADMAP.md](ROADMAP.md) Phase 3-3 の「実施記録（2026-08-18）」に集約されている。
 >
 > 順序変更の理由（ADR-20260730-0003）:
 > - 投資先が日常的に使わない端末になり、学習のフィードバックループが回らない
@@ -46,6 +48,10 @@ WSL2 では `/home/<user>` が必要なため、共通層である `home/default
 **(b) を推す。** ADR-0004 の「共通層は薄く保ち、ホスト差分は hostSpec で表現する」方針に沿い、
 macOS 2 台側の記述も明示的になる。
 
+**解消済み（2026-08-18）**: (b) を採用した。`modules/hostSpec.nix` に `homeDirectory`
+オプションを追加し、`home/default.nix` から macOS パスのハードコードを除去した
+（コミット `b865a9a` / `3f261d9`）。
+
 #### B2: `hostSpec` の受け渡しが nix-darwin の `config` に依存している
 
 `flake.nix:84` の `extraSpecialArgs = { hostSpec = config.hostSpec; }` は
@@ -68,6 +74,11 @@ macOS 2 台側の記述も明示的になる。
 ADR-0004 は「WSL2（`hosts/wsl`）の内部構成の詳細は Phase 3-3 着手時に改訂する」（同 ADR 97 行目）
 として、この点を意図的に未確定のまま残している。**方式を決めたら ADR-0004 を改訂すること。**
 
+**解消済み（2026-08-18）**: hostSpec の値は `hosts/wsl/hostSpec.nix` に plain attrset として
+分離し、`flake.nix` が `import` して `extraSpecialArgs` へ直接渡す方式を採用した
+（候補 (a) の変形）。`commonModules` は再利用していない。
+ADR-0004 は「改訂（2026-08-18）」節で改訂済み。
+
 #### B3: standalone home-manager の switch コマンドが未文書化
 
 `darwin-rebuild switch` に相当する**初回のブートストラップ呼び出しが
@@ -78,6 +89,13 @@ ADR-0004 は「WSL2（`hosts/wsl`）の内部構成の詳細は Phase 3-3 着手
 2 回目以降は `home-manager switch` で足りると見込まれるが、
 **初回コマンドはリポジトリ内に根拠が無い**。home-manager 公式ドキュメントで確認してから
 手順化する。手順 5 で確定したら CHEATSHEET.md に Linux 用として追記する。
+
+**解消済み（2026-08-18）**: 初回は
+`nix run home-manager/master -- switch -b backup --flake <repo>/config/nix#wsl`、
+2 回目以降は `home-manager switch -b backup --flake <repo>/config/nix#wsl` で確定した。
+`-b backup` は standalone home-manager 固有の必須フラグ（darwin 側の
+`home-manager.backupFileExtension` は standalone には効かない）。
+[CHEATSHEET.md](CHEATSHEET.md) に Linux 用の節を追加済み。
 
 ---
 
@@ -200,6 +218,10 @@ Nix 側で表現するのは **パッケージ集合とリンク対象ファイ�
   [PHASE-3-1B-HERMES-DAEMONS.md](PHASE-3-1B-HERMES-DAEMONS.md) で消費済みのため転用しない）。
   どちらの結論でも手戻りが出ない構成にしてある
 - **Q2: WSL2 のパッケージ管理を Nix に寄せるか、apt と併用するか**
-  → 手順 0 の調査結果を見て確定する。既定は「開発用 CLI は Nix、apt は OS 基盤のみ」
+  → **A2: 確定（2026-08-18）**。開発用 CLI は Nix（共通層の 16 パッケージ）。
+  既にインストール済みだった Codex / Claude Code は Nix 外のまま維持し、宣言し直さない。
+  詳細は [ROADMAP.md](ROADMAP.md) Phase 3-3 の「実施記録（2026-08-18）」を参照
 - **Q3: `git gtr` の Linux 対応可否**
-  → 非対応なら WSL2 では `wt.zsh` 側の worktree ヘルパーで代替できるか検討する
+  → **A3: 確定（2026-08-18）、不採用**。formula は純シェル実装で Linux でも動く見込みだが
+  nixpkgs に無く自前 derivation か手動配置が必要で、WSL2 では使わないと判断した。
+  詳細は [ROADMAP.md](ROADMAP.md) Phase 3-3 の「実施記録（2026-08-18）」を参照

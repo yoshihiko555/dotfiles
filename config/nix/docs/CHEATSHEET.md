@@ -141,6 +141,27 @@ nix store optimise                     # 重複ファイルのハードリンク
 > **注意**: 古い世代を消すと、その世代への rollback はできなくなる。
 > 「切り戻し先として残したい世代があるうちは GC しない」が原則。
 
+## WSL2 / Linux 運用（standalone home-manager）
+
+ここまでは nix-darwin（macOS）向け。**WSL2 は `homeConfigurations.wsl` の
+standalone home-manager**で、初回・2 回目以降ともコマンド体系が異なる。
+darwin 用の `nx*` alias とは混同しないこと。詳細は [PHASE-3-3-WSL2.md](PHASE-3-3-WSL2.md) を参照。
+
+```sh
+# 初回
+nix run home-manager/master -- switch -b backup --flake "$DOTFILES/config/nix#wsl"
+
+# 2 回目以降
+home-manager switch -b backup --flake "$DOTFILES/config/nix#wsl"
+```
+
+- **`-b backup` は必須。** darwin 側の `home-manager.backupFileExtension = "backup"`
+  （`flake.nix`）は nix-darwin モジュール版のオプションで、standalone home-manager には効かない。
+  付け忘れると既存 dotfiles との衝突で switch が失敗する
+- **`--flake` は 2 回目以降も毎回必須。** flake が `~/.config/home-manager/` ではなく
+  dotfiles リポジトリ内にあるため、引数なしの `home-manager switch` では自動検出されない
+- `#wsl` は `homeConfigurations.wsl` に解決される（`#homeConfigurations.wsl` ではない）
+
 ## トラブル時
 
 ```sh

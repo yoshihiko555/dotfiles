@@ -3,7 +3,8 @@
 **これが「まっさらな Mac から環境を復元する手順」の正典。** 他のドキュメント（ルート
 [README.md](../../../README.md)、[../README.md](../README.md)）はここへ誘導する形にしている。
 
-対象は macOS（`aarch64-darwin`）のみ。WSL2 は対象外（[PHASE-3-3-WSL2.md](PHASE-3-3-WSL2.md) 参照）。
+対象は macOS（`aarch64-darwin`）のみ。WSL2 は対象外
+（手順は [PHASE-3-3-WSL2.md](PHASE-3-3-WSL2.md) を参照。2026-08-18 に完了済み）。
 
 日常運用（2 回目以降の `switch`）は [../README.md](../README.md) の「常用コマンド」と
 [CHEATSHEET.md](CHEATSHEET.md) を参照。このドキュメントは初回のみ。
@@ -59,9 +60,23 @@ Determinate 系のインストーラは使わない（[ADR-0005](adr/ADR-2026080
 シェル版インストーラが `/etc/fstab` 書き込みに失敗する事象は **Determinate 版インストーラ固有**
 で、`NixOS/nix-installer` では発生しない）。
 
-> **要確認**: 実行したインストールコマンド行の記録が残っていない。推測で断定せず、
-> [GitHub のリリースページ](https://github.com/NixOS/nix-installer/releases)の手順に従い、
-> `--enable-flakes`（flakes 有効化）が必要であることだけを踏まえて実行すること。
+> **要確認**: **hermes / macbook 導入当時に実際に実行したコマンド行の記録は、今も残っていない。**
+> この点は未解決のまま。
+>
+> 一方で、**現在の正しい入口コマンドは `NixOS/nix-installer` の README で確認済み**（2026-08-18）:
+>
+> ```sh
+> curl -sSfL https://artifacts.nixos.org/nix-installer | sh -s -- install --enable-flakes
+> ```
+>
+> （`--enable-flakes` が flakes 有効化フラグ）。ただしこれは「現在の正しいコマンドが判明した」
+> という事実にとどまり、「hermes / macbook で当時実際に実行した行が判明した」わけではない。
+> 両者を混同しないこと。
+>
+> **WSL2（Phase 3-3、2026-08-18）ではこのコマンドが実機で実際に通った。** WSL2 は
+> `NixOS/nix-installer` の公式サポート対象で、README のプラットフォーム表に
+> `✓ (via systemd)` として記載されている。詳細は
+> [PHASE-3-3-WSL2.md](PHASE-3-3-WSL2.md) を参照。
 >
 > 既知の事実: hermes では **Nix 2.35.1 を macOS Tahoe 26.4.1 で導入し、動作確認済み**
 > （[ADR-0005](adr/ADR-20260802-0005-upstream-nix-migration.md) 検証節）。

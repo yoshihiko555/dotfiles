@@ -9,15 +9,14 @@ Nix の学習度合いに合わせて、小さく動かしながら進める。
 
 ## 現在地
 
-**主要 2 ホストの移行（Phase 3-0 〜 3-2）は 2026-08-07 に完了した。**
-Phase 3 全体は WSL2（3-3）が実稼働待ちのため `[~]` のまま残している。
+**Phase 3（3-0 〜 3-3）は 2026-08-18 に全ホストで完了した。**
 実質的には Phase 4 を「タイミングが来たものから個別に」進める運用フェーズに入っている（一気に進めない）。
 
 | ホスト | 状態 |
 |---|---|
 | MacBook Pro | `[x]` 管理下（2026-08-07）。CLI / cask / dotfiles を宣言管理し、stow は廃止 |
 | Mac mini (hermes) | `[x]` 管理下（2026-07-31）。CLI・LLM 基盤・launchd デーモンまで宣言管理済みで、brew 残留は cask 7 個 + git-gtr（+依存）のみ。2026-08-02 に素の Nix へ移行（3-1c） |
-| 会社 Windows (WSL2) | `[?]` 未着手（実稼働待ち）。`flake.nix` の `system` は `aarch64-darwin` 固定で、**WSL2 に適用されている出力は現時点で無い**（Phase 0 の最小 devShell も darwin 用）。Phase 3-3 で `homeConfigurations` を追加する |
+| 会社 Windows (WSL2) | `[x]` 管理下（2026-08-18）。`flake.nix` に `homeConfigurations.wsl` を追加し、standalone home-manager で導入。予備機のため実稼働（日常利用）はまだ先。詳細は Phase 3-3 実施記録を参照 |
 
 下記「目的」の 3 項目はいずれも達成済み。
 
@@ -438,17 +437,86 @@ darwin 共通層の `"zap"` に復帰。switch で宣言外 formula が自動削
 **完了条件**: メイン機の CLI + dotfiles が home-manager 管理下に入り、
 brew は GUI / cask と nixpkgs 未収録パッケージ専用になる。
 
-### Phase 3-3: WSL2 — `[?]` 条件付き（実稼働待ち）
+### Phase 3-3: WSL2 — `[x]` 完了（2026-08-18）
 
-**着手トリガー**: 会社の業務プロジェクトが動き始め、WSL2 を日常的に使うようになったとき。
+**当初の着手トリガー**（会社の業務プロジェクトが動き始め、WSL2 を日常的に使うようになったとき）は
+点灯していないが、明示的な指示により前倒しで実施した。
 
-詳細な作業計画・設計: [PHASE-3-3-WSL2.md](PHASE-3-3-WSL2.md)
+詳細な作業計画・設計: [PHASE-3-3-WSL2.md](PHASE-3-3-WSL2.md)。
+内部構成の確定は [ADR-20260801-0004](adr/ADR-20260801-0004-module-layer-design.md) の
+「改訂（2026-08-18）」節にも反映済み。
 
-- `targets.genericLinux.enable = true` が必要
-- flake の出力が `homeConfigurations` 系統になる（nix-darwin とは独立）
-- `git gtr` は Homebrew 専用 tap のため Linux 対応を要確認
+- [x] `targets.genericLinux.enable = true` を設定
+- [x] flake の出力に `homeConfigurations.wsl` を追加（nix-darwin とは独立）
+- [x] `git gtr` の Linux 対応可否を確認 → **不採用**。formula は純シェル実装で動作見込みだが
+      nixpkgs に無く、WSL2 では使わないと判断したため対応不要
 
-**完了条件**: WSL2 上で `home-manager switch` により zsh / starship / git が再現できる。
+**完了条件**: WSL2 上で `home-manager switch` により zsh / starship / git が再現できる。→ 達成。
+
+#### 実施記録（2026-08-18）
+
+**実機の情報**
+
+| 項目 | 値 |
+|---|---|
+| system | `x86_64-linux`（`uname -m` → x86_64） |
+| username | `stakizawa`（macOS 側の yoshihiko とは異なる会社アカウント） |
+| homeDirectory | `/home/stakizawa` |
+| dotfiles clone 先 | 当初 `~/src/dotfiles` だったが、macOS 2 台と揃えるため `~/ghq/github.com/yoshihiko555/dotfiles` へ移動した |
+
+**実装内容**（コミット `b865a9a` / `3f261d9`）
+
+- `modules/hostSpec.nix` に `homeDirectory` オプションを追加し、`home/default.nix` から
+  macOS パスのハードコード（`lib.mkForce "/Users/${hostSpec.username}"`）を除去した（B1 の解消）
+- `flake.nix` に `homeConfigurations.wsl` を追加。**`commonModules` は再利用していない**。
+  理由は `extraSpecialArgs = { hostSpec = config.hostSpec; }` が nix-darwin システム設定の
+  `config` に依存しており standalone では成立しないため（B2）
+- hostSpec の値は `hosts/wsl/hostSpec.nix` に plain attrset として分離し、`flake.nix` が
+  `import` して `extraSpecialArgs` へ直接渡す方式を採用した
+- `hosts/wsl/default.nix` は `targets.genericLinux.enable = true` のみの最小構成
+- **sops-nix は読み込まない**。管理対象がゼロで、Linux では復号先の扱いが darwin と異なるため
+
+**実機での作業手順（実際に通ったもの）**
+
+1. `/etc/wsl.conf` に `[boot] systemd = true` / `[interop] appendWindowsPath = false` /
+   `[automount] options = "metadata"` を設定し、Windows 側から `wsl --shutdown` で反映
+2. Nix インストール: `curl -sSfL https://artifacts.nixos.org/nix-installer | sh -s -- install --enable-flakes`。
+   systemd を有効にしてあるため planner が multi-user（nix-daemon あり）を選ぶ
+3. 初回 switch:
+   `nix run home-manager/master -- switch -b backup --flake ~/ghq/github.com/yoshihiko555/dotfiles/config/nix#wsl`
+
+**新たに判明した知見**
+
+- **`-b backup` フラグが必須。** darwin 側は `flake.nix` で
+  `home-manager.backupFileExtension = "backup"` を設定しているが、これは nix-darwin モジュール版の
+  オプションで **standalone home-manager には効かない**。standalone では CLI の
+  `-b/--backup-extension` で指定する。付け忘れると既存 dotfiles との衝突で switch が失敗する
+- **`--flake` は 2 回目以降も毎回必須。** flake が `~/.config/home-manager/` ではなく dotfiles
+  リポジトリ内にあるため、引数なしの `home-manager switch` では自動検出されない
+- `#wsl` は `homeConfigurations.wsl` に解決される（`#homeConfigurations.wsl` ではない）。
+  home-manager CLI の `setFlakeAttribute()` 実装による
+- **ghq は clone に不要。** ghq はパス規約だけのツールで既存ディレクトリをそのまま認識するため、
+  Nix 未導入の初期状態でも素の `git clone` で ghq 構造のパスへ置けばよい。
+  ブートストラップの順序は破綻しない
+- 共通層（`home/`）は Linux でもそのまま成立した。macOS 上で
+  `nix eval .#homeConfigurations.wsl.activationPackage.drvPath` が通ることを事前確認済み
+
+**スコープの決着**
+
+- **Q1（AI CLI）**: 既に記録済み（Codex / Claude Code のみ、takt / Gemini は使わない。
+  詳細は [PHASE-3-3-WSL2.md](PHASE-3-3-WSL2.md) の保留事項参照）
+- **Q2（Nix と apt の併用方針）**: 開発用 CLI は Nix（共通層の 16 パッケージ）。
+  既にインストール済みだった Codex / Claude Code は Nix 外のまま維持し、宣言し直さない
+- **Q3（git gtr の Linux 対応）**: **不採用**。formula は純シェル実装で Linux でも動く見込みだが
+  nixpkgs に無く自前 derivation か手動配置が必要で、WSL2 では使わないと判断
+- **`sheldon` は入れない判断**。共通層に無く `hosts/macbook/packages.nix` にホスト固有として
+  置かれているため、WSL2 では zsh プラグインなしの素の状態になる。`.zshrc` の
+  `eval "$(sheldon source)"` は Phase 3-0 のガードで黙ってスキップされエラーは出ない。
+  不便を感じたら `hosts/wsl/packages.nix` を作って 1 行足す
+- 手順 5（`hosts/wsl/packages.nix`）と手順 6（クリップボード連携 / `wsl-open`）は
+  **追加機能のため今回は実施しない**。win32yank は nixpkgs に無く、`wslu` は 2026-04-09 に
+  nixpkgs から削除済み（upstream アーカイブ）で後継は `wsl-open`、という調査結果は
+  将来の参考として残す
 
 ---
 

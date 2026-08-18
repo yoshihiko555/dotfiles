@@ -89,10 +89,37 @@ switch 不要で、hermes には git pull のみで配布した。
 - Phase 3-2 / 3-3 のホスト追加は本規約に従う（macbook / wsl ディレクトリは
   着手時に作成する。未使用スケルトンは宣言と実態のズレになるため事前に置かない）
 
+## 改訂（2026-08-18）: WSL2（hosts/wsl）内部構成の確定
+
+- ステータス: 反映済み
+- 経緯: Phase 3-3 着手時点で本 ADR が「未確定事項」としていた WSL2 の内部構成を、
+  実装・実機導入（コミット `b865a9a` / `3f261d9`）を経て確定した。
+  調査の詳細な経緯は [PHASE-3-3-WSL2.md](../PHASE-3-3-WSL2.md) の B1〜B3 節を参照。
+
+### 決定（追記）
+
+1. **`modules/hostSpec.nix` に `homeDirectory` オプションを追加**し、`home/default.nix` から
+   macOS パスのハードコード（`lib.mkForce "/Users/${hostSpec.username}"`）を除去した
+   （PHASE-3-3-WSL2.md の B1、候補 (b) を採用）。
+2. **`flake.nix` に `homeConfigurations.wsl` を追加**。**`commonModules` は再利用しない**。
+   `extraSpecialArgs = { hostSpec = config.hostSpec; }` が nix-darwin システム設定の `config` に
+   依存しており standalone では成立しないため（同 B2）、hostSpec の値は
+   `hosts/wsl/hostSpec.nix` に plain attrset として分離し、`flake.nix` が `import` して
+   `extraSpecialArgs` へ直接渡す方式にした。
+3. `hosts/wsl/default.nix` は `targets.genericLinux.enable = true` のみの最小構成とする。
+4. **sops-nix は読み込まない**。管理対象がゼロで、Linux では復号先の扱いが darwin と異なるため。
+
+### 理由
+
+- 決定 1・2 はいずれも本 ADR の設計規約（決定 2「共通層は薄く保ち、ホスト差分は
+  hostSpec で表現する」）に沿う。standalone home-manager 特有の制約（`config` に
+  依存できない）は `hosts/<host>/hostSpec.nix` を plain attrset にして flake から直接
+  渡す方式で吸収し、`darwin/` 層や `commonModules` の構造には手を入れていない。
+
 ## 未確定事項（将来の ADR で扱う）
 
 - 会社/個人の homebrew 分離（mozumasu の personal / work 相当）の要否 — Phase 3-2 で判断
 - `modules/` へのオプション化（mkOption / mkIf による機能モジュール化）を
   導入する基準 — hosts が「薄く保てなくなった」ときに検討
-- WSL2（hosts/wsl）の内部構成の詳細 — Phase 3-3 着手時に
-  [PHASE-3-3-WSL2.md](../PHASE-3-3-WSL2.md) を本規約に合わせて改訂する
+- ~~WSL2（hosts/wsl）の内部構成の詳細~~ → **2026-08-18 解消**。
+  上記「改訂（2026-08-18）」節、および [PHASE-3-3-WSL2.md](../PHASE-3-3-WSL2.md) を参照
