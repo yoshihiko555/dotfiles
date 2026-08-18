@@ -14,3 +14,9 @@ fi
 if command -v mise &>/dev/null; then
   eval "$(mise activate zsh)"
 fi
+
+# ユーザーローカルの実行ファイル（claude code の native install 等）
+# 3 台共通。WSL2 は uv 未導入で ~/.local/bin/env が無く、
+# .zshrc 末尾の source 頼みだと PATH に載らないためここで通す。
+typeset -U path PATH
+path=("$HOME/.local/bin" $path)
