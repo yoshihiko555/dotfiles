@@ -87,6 +87,9 @@ provider_profiles:
 #       steps: に書くと fix 系まで claude に引き戻してしまうので書かないこと。
 # NOTE: codex へ振るエントリは model を必ず書く。省略するとトップレベルの opus が渡る。
 #       ~/.codex/config.toml の model は takt が model を明示指定するため効かない。
+# NOTE: reasoning_effort は high。xhigh から下げたのはトークン消費を抑えるためで、
+#       モデルティア (sol) は維持している。消費の主要因は effort 側なので、
+#       まだ重いときは terra へ落とす前に effort を medium にする方を先に試す。
 provider_routing:
   tags:
     plan: claude
@@ -100,13 +103,13 @@ provider_routing:
       model: gpt-5.6-sol
       provider_options:
         codex:
-          reasoning_effort: xhigh
+          reasoning_effort: high
     test-planning:
       provider: codex
       model: gpt-5.6-sol
       provider_options:
         codex:
-          reasoning_effort: xhigh
+          reasoning_effort: high
 
 # claude がレートリミットに当たったとき codex へ退避して実行を継続する。
 # switch_chain のエントリは provider / model のみ (provider_options は書けない) なので、

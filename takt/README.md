@@ -10,7 +10,7 @@ Git 管理外（`.gitignore` 済み）。
 
 ステップの役割（tags）ごとにプロバイダを割り当てる。
 
-- 実装・テスト（`coding` / `test-planning`）: Codex（`gpt-5.6-sol`, reasoning_effort `xhigh`）
+- 実装・テスト（`coding` / `test-planning`）: Codex（`gpt-5.6-sol`, reasoning_effort `high`）
 - 計画・レビュー・最終判定（`plan` / `review` / `merge-readiness` / `final-gate` / `supervise` / `leader`）: Claude（`opus`）
 
 ビルトインワークフローはステップに `provider:` を書いていないため、`provider_routing.tags` の指定が
@@ -22,6 +22,8 @@ Git 管理外（`.gitignore` 済み）。
 - Codex へ振るエントリには `model` を必ず併記します。省略するとトップレベルの `opus` が
   そのまま Codex に渡ります（model の解決は provider 一致で絞り込まれないため）。
 - レートリミット時は `rate_limit_fallback` で Codex（`gpt-5.6-sol`）へ退避して実行を継続します。
+  `switch_chain` は `provider_options` を書けないため、この経路の reasoning_effort は
+  `~/.codex/config.toml` の `xhigh` に従います（`provider_routing` 側の `high` は効きません）。
 
 ## アカウント切替
 
