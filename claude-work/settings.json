@@ -1,0 +1,72 @@
+{
+  "env": {
+    "CLAUDE_CODE_SHELL": "bash",
+    "AI_ORCHESTRA_DIR": "/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra",
+    "CLAUDE_AFK_TIMEOUT_MS": "3600000",
+    "NODE_OPTIONS": "--use-env-proxy"
+  },
+  "permissions": {
+    "allow": [
+      "Read",
+      "Search",
+      "Glob",
+      "Grep",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(git *)",
+      "Bash(find *)",
+      "Bash(wc *)",
+      "Bash(codex *)",
+      "Bash(gemini *)",
+      "Bash(agy *)",
+      "WebFetch(domain:api.github.com)",
+      "mcp__pencil"
+    ],
+    "additionalDirectories": [
+      "//tmp/claude-501",
+      "//private/tmp/claude-501"
+    ]
+  },
+  "model": "opus[1m]",
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude-work/hooks/check-settings-drift.sh"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude-work/claude_message.sh notification"
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "$HOME/.claude-work/statusline.py"
+  },
+  "enabledPlugins": {
+    "typescript-lsp@claude-plugins-official": true
+  },
+  "language": "日本語",
+  "effortLevel": "high",
+  "advisorModel": "fable",
+  "tui": "fullscreen",
+  "autoDreamEnabled": true,
+  "skipWorkflowUsageWarning": true,
+  "theme": "dark-ansi",
+  "skipAutoPermissionPrompt": true
+}

@@ -35,6 +35,10 @@ adopt() {
   local label="$1"
   local current="$2"
   local source="$3"
+  # 第4引数: public リポジトリへ載せないトップレベルキー（省略可）。
+  # 会社用の autoMode は Claude Code が環境から自動生成するため回収しない。
+  local exclude="${4:-}"
+  local staged
 
   if [[ ! -f "$current" ]]; then
     echo "error: $label の実ファイルがありません: $current" >&2
@@ -44,12 +48,22 @@ adopt() {
     echo "error: $label は不正な JSON のため回収しません: $current" >&2
     return 1
   fi
-  if json_equal "$current" "$source"; then
+
+  staged="$(mktemp)"
+  if [[ -n "$exclude" ]]; then
+    jq "del(.${exclude})" "$current" >"$staged"
+  else
+    cp "$current" "$staged"
+  fi
+
+  if json_equal "$staged" "$source"; then
     echo "$label: drift なし"
+    rm -f "$staged"
     return 0
   fi
 
-  install -m 0644 "$current" "$source"
+  install -m 0644 "$staged" "$source"
+  rm -f "$staged"
   adopted=1
   echo "$label: repo へ回収しました -> ${source#"$repo_root"/}"
 }
@@ -57,6 +71,10 @@ adopt() {
 case "$target" in
   all)
     adopt claude "$HOME/.claude/settings.json" "$repo_root/claude/settings.json"
+    adopt claude-work \
+      "$HOME/.claude-work/settings.json" \
+      "$repo_root/claude-work/settings.json" \
+      autoMode
     adopt antigravity-settings \
       "$HOME/.gemini/antigravity-cli/settings.json" \
       "$repo_root/gemini/antigravity-cli/settings.json"
@@ -66,6 +84,12 @@ case "$target" in
     ;;
   claude)
     adopt claude "$HOME/.claude/settings.json" "$repo_root/claude/settings.json"
+    ;;
+  claude-work)
+    adopt claude-work \
+      "$HOME/.claude-work/settings.json" \
+      "$repo_root/claude-work/settings.json" \
+      autoMode
     ;;
   antigravity-settings)
     adopt antigravity-settings \
@@ -78,7 +102,7 @@ case "$target" in
       "$repo_root/gemini/antigravity-cli/keybindings.json"
     ;;
   *)
-    echo "usage: task adopt-settings TARGET=all|claude|antigravity-settings|antigravity-keybindings" >&2
+    echo "usage: task adopt-settings TARGET=all|claude|claude-work|antigravity-settings|antigravity-keybindings" >&2
     exit 2
     ;;
 esac

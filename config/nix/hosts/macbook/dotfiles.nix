@@ -53,6 +53,15 @@ in
         ".claude/statusline.py".source = mkLink "claude/statusline.py";
         ".claude/templates".source = mkLink "claude/templates";
 
+        # 会社アカウント用（ccw / CLAUDE_CONFIG_DIR=~/.claude-work）。
+        # statusline.py と claude_message.sh は ~/.claude 非依存のため実体を共有する。
+        # skills は task sync-claude-work-skills が管理するのでここでは触らない。
+        ".claude-work/CLAUDE.md".source = mkLink "claude-work/CLAUDE.md";
+        ".claude-work/rules".source = mkLink "claude-work/rules";
+        ".claude-work/claude_message.sh".source = mkLink "claude/claude_message.sh";
+        ".claude-work/hooks".source = mkLink "claude/hooks";
+        ".claude-work/statusline.py".source = mkLink "claude/statusline.py";
+
         ".codex/AGENTS.md".source = mkLink "codex/AGENTS.md";
         ".codex/codex_message.sh".source = mkLink "codex/codex_message.sh";
         ".codex/config.toml".source = mkLink "codex/config.toml";
@@ -81,11 +90,13 @@ in
         json_equal() {
           left="$1"
           right="$2"
+          # 第3引数: 比較前に適用する jq フィルタ（省略時は全体を比較）
+          filter="''${3:-.}"
           left_normalized="$(${pkgs.coreutils}/bin/mktemp)"
           right_normalized="$(${pkgs.coreutils}/bin/mktemp)"
 
-          if ${pkgs.jq}/bin/jq -S . "$left" > "$left_normalized" 2>/dev/null \
-            && ${pkgs.jq}/bin/jq -S . "$right" > "$right_normalized" 2>/dev/null; then
+          if ${pkgs.jq}/bin/jq -S "$filter" "$left" > "$left_normalized" 2>/dev/null \
+            && ${pkgs.jq}/bin/jq -S "$filter" "$right" > "$right_normalized" 2>/dev/null; then
             if ${pkgs.diffutils}/bin/cmp -s "$left_normalized" "$right_normalized"; then
               equal=0
             else
@@ -106,6 +117,15 @@ in
           source="$2"
           target="$3"
           reference="$4"
+          # 第5引数: repo では管理せず実ファイル側の値を引き継ぐトップレベルキー。
+          # Claude Code が自動生成する autoMode のように、public リポジトリへ
+          # 載せたくない内容を drift 比較からも除外する用途で使う。
+          preserve="''${5:-}"
+
+          compare_filter="."
+          if [ -n "$preserve" ]; then
+            compare_filter="del(.$preserve)"
+          fi
 
           if ! ${pkgs.jq}/bin/jq -e . "$source" >/dev/null 2>&1; then
             echo "warning: $label: repo 側が不正な JSON のため更新を拒否しました: $source" >&2
@@ -119,23 +139,38 @@ in
             return 0
           fi
 
-          if [ -f "$target" ] && [ -f "$reference" ] && ! json_equal "$target" "$reference"; then
-            if ! json_equal "$target" "$source"; then
+          if [ -f "$target" ] && [ -f "$reference" ] \
+            && ! json_equal "$target" "$reference" "$compare_filter"; then
+            if ! json_equal "$target" "$source" "$compare_filter"; then
               echo "warning: $label の drift を検出。上書きしません。" >&2
               echo "warning: task adopt-settings TARGET=$label で repo へ回収してから再度 switch してください。" >&2
               return 0
             fi
-          elif [ -f "$target" ] && [ ! -f "$reference" ] && ! json_equal "$target" "$source"; then
+          elif [ -f "$target" ] && [ ! -f "$reference" ] \
+            && ! json_equal "$target" "$source" "$compare_filter"; then
             echo "warning: $label: 初回管理時の既存内容が repo と異なるため上書きしません。" >&2
             echo "warning: 内容を確認し、task adopt-settings TARGET=$label で回収してください。" >&2
             return 0
           fi
 
+          # 引き継ぎは target を消す前に済ませる
+          generated="$source"
+          if [ -n "$preserve" ] && [ -f "$target" ] \
+            && ${pkgs.jq}/bin/jq -e --arg k "$preserve" 'has($k)' "$target" >/dev/null 2>&1; then
+            generated="$(${pkgs.coreutils}/bin/mktemp)"
+            ${pkgs.jq}/bin/jq -s --arg k "$preserve" '.[0] + { ($k): .[1][$k] }' \
+              "$source" "$target" > "$generated"
+          fi
+
           if [ -L "$target" ]; then
             ${pkgs.coreutils}/bin/rm -f "$target"
           fi
-          ${pkgs.coreutils}/bin/install -m 0644 "$source" "$target"
-          ${pkgs.coreutils}/bin/install -m 0644 "$source" "$reference"
+
+          ${pkgs.coreutils}/bin/install -m 0644 "$generated" "$target"
+          ${pkgs.coreutils}/bin/install -m 0644 "$generated" "$reference"
+          if [ "$generated" != "$source" ]; then
+            ${pkgs.coreutils}/bin/rm -f "$generated"
+          fi
         }
 
         manage_mutable_json \
@@ -143,6 +178,12 @@ in
           "${dotfilesDir}/claude/settings.json" \
           "$HOME/.claude/settings.json" \
           "$HOME/.claude/.settings.json.nix-managed"
+        manage_mutable_json \
+          claude-work \
+          "${dotfilesDir}/claude-work/settings.json" \
+          "$HOME/.claude-work/settings.json" \
+          "$HOME/.claude-work/.settings.json.nix-managed" \
+          autoMode
         manage_mutable_json \
           antigravity-settings \
           "${dotfilesDir}/gemini/antigravity-cli/settings.json" \

@@ -80,7 +80,7 @@ config/nix/
 | 系統 | 対象 | 仕組み | 反映タイミング |
 |---|---|---|---|
 | **symlink**（原則） | 大半の dotfiles | `mkOutOfStoreSymlink` で store 経由リポジトリの実体を指す | **repo を編集した時点で即反映**。switch が要るのは配線を増減したときだけ |
-| **mutable 実ファイル**（例外） | `~/.claude/settings.json`、Antigravity の `settings.json` / `keybindings.json` の 3 件（`hosts/macbook/dotfiles.nix` で定義） | activation が repo からコピーし、`.nix-managed` の参照コピーも保存 | **switch のときだけ**。drift 検出中は上書きを拒否 |
+| **mutable 実ファイル**（例外） | `~/.claude/settings.json`、`~/.claude-work/settings.json`、Antigravity の `settings.json` / `keybindings.json` の 4 件（`hosts/macbook/dotfiles.nix` で定義） | activation が repo からコピーし、`.nix-managed` の参照コピーも保存 | **switch のときだけ**。drift 検出中は上書きを拒否 |
 | **パッケージ** | CLI / cask | `flake.lock` でバージョンを固定 | **switch のときだけ** |
 
 mutable 実ファイル方式は、アプリ本体が atomic write（temp → rename）で
@@ -90,8 +90,11 @@ symlink を実ファイルに置換してしまう問題への対処。正は re
   ① switch の activation ② Claude Code の Stop hook（`claude/hooks/check-settings-drift.sh`）
   ③ `task status`
 - 判定は `jq -S` で正規化してから比較するため、キー順の入れ替えは drift 扱いにしない
-- 回収は `task adopt-settings TARGET=claude|antigravity-settings|antigravity-keybindings|all`。
+- 回収は `task adopt-settings TARGET=claude|claude-work|antigravity-settings|antigravity-keybindings|all`。
   home 側の内容を repo へ取り込み、`git diff` で確認してから commit → switch
+- `claude-work` だけは `autoMode` を除外する。Claude Code が起動環境から自動生成するキーで、
+  社内情報を含みうるため public な当リポジトリには載せない。比較・回収の両方から外し、
+  switch 時は実ファイル側の値を引き継ぐ（`manage_mutable_json` の第 5 引数）
 
 > **ロールバック（`nxrb`）が戻すのはパッケージと配線だけ。**
 > symlink 先も activation の参照元も `dotfilesDir` の生パスであり store のスナップショットではないため、

@@ -170,8 +170,9 @@ claude plugin disable --all --scope local
 
 ## Claude Code 会社アカウント運用
 
-会社アカウント用の Claude Code 設定は Git 管理しません。`ccw` は
-`CLAUDE_CONFIG_DIR=~/.claude-work` を付けて Claude Code を起動します。
+`ccw` は `CLAUDE_CONFIG_DIR=~/.claude-work` を付けて Claude Code を起動します。
+設定ファイル（`settings.json` / `CLAUDE.md` / `rules`）は個人用と同じく home-manager が
+配線します。認証情報・履歴・plugin 状態は Git に含めません。
 
 ```bash
 # 初回だけ実行
@@ -182,8 +183,22 @@ ccw
 ```
 
 - 個人用: `claude` / `cc` / `ccp`（通常の `~/.claude`）
-- 会社用: `ccw`（Git 管理外の `~/.claude-work`）
-- 会社用の `settings.json`、認証情報、履歴、plugin 状態は Git に含めません。
+- 会社用: `ccw`（`~/.claude-work`）
+- 配布物は `claude-work/` 配下（`settings.json` / `CLAUDE.md` / `rules`）。
+  `statusline.py` / `claude_message.sh` / `hooks/` は `claude/` の実体を共有します。
+- `settings.json` は個人用と同じ mutable 実ファイル方式です。drift は `task status` で確認し、
+  `task adopt-settings TARGET=claude-work` で repo へ回収します。
+- `autoMode` は Claude Code が起動環境から自動生成し社内情報を含みうるため、repo には載せません。
+  drift 比較から除外し、switch 時は実ファイル側の値をそのまま引き継ぎます。
+- 会社用の認証情報、履歴、plugin 状態は Git に含めません。
+- **`statusLine` と hooks は現状動きません。** 会社アカウントには管理設定
+  `allowManagedHooksOnly: true` が配信されており、Claude Code は `statusLine` /
+  `fileSuggestion` / `subagentStatusLine` と hooks を managed 設定のものだけに絞ります
+  （[公式ドキュメント](https://code.claude.com/docs/en/hooks)）。管理設定側にこれらの定義は
+  無いため、ユーザー設定の指定は無視されます。ポリシーが変われば記述はそのまま有効になるので
+  `claude-work/settings.json` には残しています。
+- 上記のため、会社用の drift 検出は `task status` と switch 時の警告の 2 経路です
+  （個人用は Stop hook を含めた 3 経路）。
 - `shared/skills/common/` は個人用・会社用の両方で使ってよい共通スキル置き場です。
 - `shared/skills/work/` は会社用に追加したいスキル置き場です。
 - `task sync-claude-work-skills` は `shared/skills/common/*` と `shared/skills/work/*` を `~/.claude-work/skills/` にリンクします。

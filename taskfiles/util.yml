@@ -29,14 +29,16 @@ tasks:
           label="$1"
           current="$2"
           reference="$3"
+          # 第4引数: 比較前に適用する jq フィルタ（dotfiles.nix の preserve と揃える）
+          filter="${4:-.}"
           if [ ! -f "$current" ] || [ ! -f "$reference" ]; then
             echo "❌ $label: mutable file or reference is missing"
             return
           fi
           current_normalized=$(mktemp)
           reference_normalized=$(mktemp)
-          jq -S . "$current" > "$current_normalized"
-          jq -S . "$reference" > "$reference_normalized"
+          jq -S "$filter" "$current" > "$current_normalized"
+          jq -S "$filter" "$reference" > "$reference_normalized"
           if cmp -s "$current_normalized" "$reference_normalized"; then
             echo "✅ $label: managed real file (no drift)"
           else
@@ -50,6 +52,8 @@ tasks:
         show_link "Tmux" ~/.config/tmux
         show_link "Claude" ~/.claude/CLAUDE.md
         show_mutable "Claude settings" ~/.claude/settings.json ~/.claude/.settings.json.nix-managed
+        show_link "Claude work" ~/.claude-work/CLAUDE.md
+        show_mutable "Claude work settings" ~/.claude-work/settings.json ~/.claude-work/.settings.json.nix-managed 'del(.autoMode)'
         show_link "Codex" ~/.codex/config.toml
         show_link "Gemini" ~/.gemini/AGENTS.md
         show_mutable "Antigravity settings" ~/.gemini/antigravity-cli/settings.json ~/.gemini/antigravity-cli/.settings.json.nix-managed
