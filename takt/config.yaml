@@ -51,17 +51,22 @@ branch_name_strategy: ai
 worktree_dir: .worktrees
 
 # プロバイダごとの既定権限。takt の抽象モードは各 CLI に次のように写される:
-#            claude            codex
-#   readonly default           read-only
-#   edit     acceptEdits       workspace-write
-#   full     bypassPermissions danger-full-access (使わない)
+#            claude            codex              opencode (ツール単位の permission)
+#   readonly default           read-only          read/glob/grep のみ allow
+#   edit     acceptEdits       workspace-write    read/glob/grep/edit/write/bash/todowrite/web* allow, question deny
+#   full     bypassPermissions danger-full-access 全 allow (使わない)
 # codex は takt が approvalPolicy: never を強制するため、サンドボックスモードが唯一の砦になる。
 # 編集の可否はワークフロー側の edit フラグ (plan は edit: false) が既に制御しているため、
 # ここで readonly に二重に絞らず edit で揃える。
+# NOTE: opencode を未設定にすると permission mode が未解決のまま 'ask' 相当に落ちる
+#       (dist/infra/opencode/types.js の buildPermissionMap の最終分岐)。
+#       headless では ask に応答できず停止しうるため、他 2 つと同じく明示する。
 provider_profiles:
   claude:
     default_permission_mode: edit
   codex:
+    default_permission_mode: edit
+  opencode:
     default_permission_mode: edit
 
 # takt_providers.assistant は設定しない。
@@ -81,10 +86,17 @@ provider_profiles:
 #       ja ビルトイン 62 本の tag 全集合は以下の 8 種で、それ以外は空振りする:
 #         plan / coding / test-planning / review / merge-readiness / final-gate / supervise / leader
 #       policy: や knowledge: の値 (architecture, testing, unit-testing ...) は tag ではない。
-# NOTE: ai-antipattern-* は step 名であって tag ではないが、steps: に書く必要はない。
-#       review 系 (-review / -1st / -2nd / -no-fix) は tag review、
-#       fix 系 (-fix / -fix-parallel) は tag coding を持つので下の tags で解決される。
-#       steps: に書くと fix 系まで claude に引き戻してしまうので書かないこと。
+# NOTE: ai-antipattern-* は step 名であって tag ではない。tags: に書いても空振りする。
+#       review 系は tag review、fix 系 (-fix / -fix-parallel) は tag coding を持つため、
+#       指定しなければ tags 側で claude / codex に解決される。
+#       review 側だけ別プロバイダへ振りたい場合は steps: を使う (優先度 3 > tags 4)。
+#       step 名単位なので fix 系は tag coding のまま codex に残る。
+# NOTE: provider/model の優先度 (数値が小さいほど強い / dist/core/workflow/provider-resolution.js):
+#         0 cli, env        2 step             4 provider_routing.tags   6 persona_providers
+#         1 promotion       3 provider_routing.steps  5 provider_routing.personas
+#         8 capabilities    9 project         10 global / runtime-v1     11 default (トップレベル)
+#       personas は tags より弱いので、tags.review: claude がある状態で
+#       personas.ai-antipattern-reviewer を書いても効かない。steps を使うこと。
 # NOTE: codex へ振るエントリは model を必ず書く。省略するとトップレベルの opus が渡る。
 #       ~/.codex/config.toml の model は takt が model を明示指定するため効かない。
 # NOTE: reasoning_effort は high。xhigh から下げたのはトークン消費を抑えるためで、
@@ -110,6 +122,23 @@ provider_routing:
       provider_options:
         codex:
           reasoning_effort: high
+  # step 名単位の割り当て (優先度 3 = tags より強い)。
+  # AI アンチパターン検出の review だけ opencode-go に出し、claude / codex の枠を使わずに回す。
+  # キーは完全一致のみ (ワイルドカード無し)。`<workflow>/<step>` 形式で限定もできる。
+  # 0.60.0 の ja ビルトインに存在する ai-antipattern-* の step 名は以下の 3 つで、
+  # ここで指定するのは review の 1 つだけ。fix 系は tag coding のまま codex に残す。
+  #   ai-antipattern-review-2nd  tag review  (mini-core / review-takt-default / terraform)
+  #   ai-antipattern-fix         tag coding  (mini-core / terraform)
+  #   ai-antipattern-fix-parallel tag coding (terraform)
+  # 再確認: builtins/ja/workflows/*.yaml を name: ai-antipattern で grep する。
+  # モデルは opencode-go の一覧から選ぶ (`opencode models opencode-go`)。
+  # kimi-k3: context 1,048,576 / max output 131,072 / in $3 out $15 per M tokens。
+  # 一覧中で最も高価だが、消費するのは opencode-go の契約枠で claude / codex 側は使わない。
+  # 使用量は `opencode stats --models` でモデル別に確認できる。
+  steps:
+    ai-antipattern-review-2nd:
+      provider: opencode
+      model: opencode-go/kimi-k3
 
 # claude がレートリミットに当たったとき codex へ退避して実行を継続する。
 # switch_chain のエントリは provider / model のみ (provider_options は書けない) なので、
@@ -119,20 +148,23 @@ rate_limit_fallback:
     - provider: codex
       model: gpt-5.6-sol
 
-# opencode を第三のプロバイダとして使う場合の書き方 (現状は未使用)。
-# tags の値は文字列 (プロバイダ名) だけでなく {provider, model} も取れるので、
-# トップレベルの model: opus に引きずられず opencode 用のモデルを指定できる。
-#
-#   ai-antipattern:
-#     provider: opencode
-#     model: opencode-go/glm-5.2
-#
-# 注意点:
-# - opencode は model が必ず "provider/model" 形式である必要がある。
-#   モデル名だけを渡すと "requires model in 'provider/model' format" で落ちる。
-# - 認証は opencode 側 (~/.local/share/opencode/auth.json) に完全依存し、
-#   takt の *_api_key 設定は肩代わりしない (opencode_api_key は opencode zen 用)。
-#   現在の認証は opencode-go のみ。使えるモデルは `opencode models` で確認する。
+# opencode プロバイダ (上の provider_routing.steps で使用中) の注意点。
+# takt のプロバイダ名は opencode。opencode-go はプロバイダ名ではなくモデル名の前半。
+# - model は必ず "provider/model" 形式。モデル名だけを渡すと
+#   "requires model in 'provider/model' format" で落ちる。
+# - 認証は opencode 側 (~/.local/share/opencode/auth.json) に完全依存。
+#   takt の opencode_api_key / TAKT_OPENCODE_API_KEY は opencode zen (opencode/*) 用で、
+#   provider.opencode.options.apiKey に注入されるだけなので opencode-go には効かない。
+#   使えるモデルは `opencode models` で確認する。
+# - takt は @opencode-ai/sdk の createOpencode で 127.0.0.1 のランダムポートに
+#   サーバを立て、config (model / small_model / permission / takt 専用 agent) を自前で組む。
+#   ~/.config/opencode 側の agent 設定には依存しない。
+# - reasoning effort に相当するツマミが無い。provider_options.opencode で渡せるのは
+#   network_access / variant / allowed_tools / guards.* のみ。
+# - wall-clock 上限は既定 60 分。超える可能性のあるステップは
+#   provider_options.opencode.guards.call_timeout_ms を明示する (最大 86,400,000)。
+# - 構造化出力は StructuredOutput 疑似ツールで回収する設計のため、指示追従が弱いモデルだと
+#   "returned no structured output" で失敗しうる。安価モデルを実装ステップに使わない理由。
 # - Gemini / Antigravity CLI (agy) は takt のプロバイダ enum に無いため直接は使えない。
 #   使うとすれば opencode に Google 認証を足して opencode 経由で回す形になる。
 
