@@ -18,6 +18,7 @@ in
         llama-cpp
         llama-swap
         miniserve
+        rclone # Google Drive バックアップ（hermes-managements の ops-runbook 参照）
       ];
 
       # llama-swap の設定。cmd の llama-server は裸のコマンド名で書き、
