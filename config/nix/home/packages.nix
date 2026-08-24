@@ -22,6 +22,7 @@
     starship
     tmux
     tree
+    tree-sitter # nvim-treesitter（main branch）の grammar ビルドに必須。brew の tree-sitter-cli 相当
     yazi
     zoxide
   ];

@@ -23,7 +23,6 @@
       pyright
       sheldon
       switchaudio-osx
-      tree-sitter # brew の tree-sitter-cli 相当（CLI 同梱。nvim-treesitter の grammar ビルド用）
       typescript
       typescript-language-server
 
