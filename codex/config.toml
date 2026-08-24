@@ -70,6 +70,9 @@ trust_level = "trusted"
 [projects."/Users/yoshihiko/Documents/Codex/2026-07-25/realtime-voice-chat"]
 trust_level = "trusted"
 
+[projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/learno/.worktrees/20260824T1058-expand-auth-guard-routes-384010ae66067131"]
+trust_level = "trusted"
+
 # END managed-trust-projects
 
 # ---- 機能フラグ（手動管理） ----
@@ -101,9 +104,13 @@ NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "028a14b6eaa6d98dac2aae00764345ab9f24
 NODE_REPL_TRUSTED_CODE_PATHS = "/Users/yoshihiko/.codex"
 
 # ---- MCPサーバー（手動管理） ----
+# アプリのバンドル名は Pen.app（旧 Pencil.app）。パスが切れると codex mcp list 上は
+# enabled のまま起動時にだけ失敗するため、アプリ更新時はここの実在を確認する。
+# takt の implement ステップ（tag coding → codex）が .pen を編集するのに使う。
+# 接続先の Pencil アプリが起動している必要があり、ヘッドレスモードは無い。
 [mcp_servers.pencil]
-command = "/Applications/Pencil.app/Contents/Resources/app.asar.unpacked/out/mcp-server-darwin-arm64"
-args = ["--app", "desktop"]
+command = "/Applications/Pen.app/Contents/Resources/app.asar.unpacked/out/mcp-server-darwin-arm64"
+args = ["--app", "desktop", "--agent", "codexCLI"]
 
 [mcp_servers.openaiDeveloperDocs]
 url = "https://developers.openai.com/mcp"
