@@ -61,6 +61,7 @@
   "toolPermission": "proceed-in-sandbox",
   "trustedWorkspaces": [
     "/Users/yoshihiko/ghq/github.com/yoshihiko555/digital-garden",
-    "/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles"
+    "/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles",
+    "/Users/yoshihiko"
   ]
 }

@@ -190,5 +190,6 @@
       "**Org-specific CLIs**: None configured — routine repo-local tooling observed: task, takt, mise, nix, stow, agy (used repeatedly in this project's transcripts)",
       "routine under yoshihiko555/dotfiles/ prefix: task, nix, mise, takt, stow operations are part of normal repo workflow"
     ]
-  }
+  },
+  "agentPushNotifEnabled": true
 }
