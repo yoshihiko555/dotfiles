@@ -1,0 +1,101 @@
+# =============================================================================
+# CLIProxyAPI 設定テンプレート (dotfiles 管理)
+# =============================================================================
+# 実体: `task cliproxy-setup` が $(brew --prefix)/etc/cliproxyapi.conf を生成する。
+# 実体は Git 管理外なので、変更は必ずこのテンプレート側で行って再生成する。
+# api-keys のプレースホルダはセットアップ時にランダム生成キーへ置換される。
+# 書いていない項目は CLIProxyAPI のデフォルト値。全項目は同ディレクトリの
+# cliproxyapi.conf.default を参照。
+#
+# 構成:
+#   1. サーバ           待ち受け先
+#   2. 認証             OAuth 保存先とクライアント認証キー
+#   3. モデル名の見せ方  /model ピッカーに何をどんな名前で並べるか
+#   4. 公開モデルの取捨  fork エイリアスと除外
+#   5. 外部プロバイダ    別ファイル (openai-compat) へ分離
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# 1. サーバ
+# -----------------------------------------------------------------------------
+# ローカル専用。外部公開しないので 127.0.0.1 に固定する。
+host: "127.0.0.1"
+port: 8317
+
+
+# -----------------------------------------------------------------------------
+# 2. 認証
+# -----------------------------------------------------------------------------
+# OAuth 認証情報の保存先。cliproxyapi --codex-login / --claude-login が生成する。
+# アクセストークンには期限があり、切れると 503 auth_unavailable になるため、
+# 症状が出たら該当の login を再実行して brew services restart cliproxyapi する。
+auth-dir: "~/.cli-proxy-api"
+
+# クライアント認証キー。ccx が起動時にこの conf から読み出して
+# ANTHROPIC_AUTH_TOKEN に流し込むので、dotfiles 側に秘匿値は置かない。
+api-keys:
+  - "__CLIPROXY_API_KEY__"
+
+
+# -----------------------------------------------------------------------------
+# 3. モデル名の見せ方
+# -----------------------------------------------------------------------------
+# CLIProxyAPI は既定で、非 Claude 系モデルの ID を Anthropic 形式のモデル一覧向けに
+# 「クローク」する。実体は claude-fable-5-dd-<上流IDの逆順> という機械的な名前で、
+# 例えば gpt-5.6-sol は claude-fable-5-dd-los-6.5-tpg になる。
+# Claude Code の /model ピッカーがこれで埋まって判読不能になるため無効化する。
+# 無効化すると非 Claude 系は素の ID (gpt-5.6-sol 等) で出るが、ピッカーの
+# gateway model discovery は claude/anthropic 始まりしか拾わないので、
+# 使いたいものは下の 4 で明示的に claude- エイリアスを付けて公開する。
+claude-code:
+  disable-cloaking-model-list: true
+
+
+# -----------------------------------------------------------------------------
+# 4. 公開モデルの取捨
+# -----------------------------------------------------------------------------
+# GPT-5.6 系に claude- 接頭辞のエイリアスを追加して /model ピッカーに並べる。
+#   fork: true          上流の素の ID も残したまま、別名として追加公開する
+#   force-mapping: true レスポンス中のモデル名をエイリアス側へ書き戻す
+# 注意: oauth-model-alias が効くのは OAuth 系チャネルのみ。openai-compatibility
+# には適用されないので、そちらのエイリアスは provider の models[].alias で指定する。
+oauth-model-alias:
+  codex:
+    - name: "gpt-5.6-sol"
+      alias: "claude-gpt-5.6-sol"
+      fork: true
+      force-mapping: true
+    - name: "gpt-5.6-terra"
+      alias: "claude-gpt-5.6-terra"
+      fork: true
+      force-mapping: true
+    - name: "gpt-5.6-luna"
+      alias: "claude-gpt-5.6-luna"
+      fork: true
+      force-mapping: true
+
+# /model ピッカーを最新世代だけに絞る。除外モデルはルーティングからも消えるため、
+# 古いモデルを使いたくなったらここから外して task cliproxy-setup を再実行する。
+# 残すもの: claude-fable-5 / claude-opus-4-8 / claude-sonnet-5 / claude-haiku-4-5
+# (haiku-4-5 はバックグラウンド処理用の haiku エイリアス解決先なので除外しない)
+oauth-excluded-models:
+  claude:
+    - "claude-3-*"
+    - "claude-opus-4-20250514"
+    - "claude-opus-4-1-20250805"
+    - "claude-opus-4-5-20251101"
+    - "claude-opus-4-6"
+    - "claude-opus-4-7"
+    - "claude-sonnet-4-20250514"
+    - "claude-sonnet-4-5-20250929"
+    - "claude-sonnet-4-6"
+
+
+# -----------------------------------------------------------------------------
+# 5. 外部プロバイダ (OpenAI 互換)
+# -----------------------------------------------------------------------------
+# OpenRouter / DeepSeek / Groq / 社内ゲートウェイ / ローカル vLLM などは
+# shared/cliproxyapi/openai-compat.tmpl に分離してある。
+# ~/.config/cliproxyapi/secrets.env (Git 管理外) を用意すると、
+# task cliproxy-setup が名前・base-url・api-key を展開してこの conf の末尾へ追記する。

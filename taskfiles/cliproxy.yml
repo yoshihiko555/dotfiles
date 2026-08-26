@@ -10,7 +10,9 @@ tasks:
       - |
         set -euo pipefail
         CONF="$(brew --prefix)/etc/cliproxyapi.conf"
-        TMPL="{{.ROOT_DIR}}/shared/cliproxyapi.conf.tmpl"
+        TMPL="{{.ROOT_DIR}}/shared/cliproxyapi/conf.tmpl"
+        FRAG="{{.ROOT_DIR}}/shared/cliproxyapi/openai-compat.tmpl"
+        SECRETS="${XDG_CONFIG_HOME:-$HOME/.config}/cliproxyapi/secrets.env"
 
         command -v cliproxyapi >/dev/null || brew install cliproxyapi
 
@@ -22,6 +24,36 @@ tasks:
         case "$KEY" in ""|your-api-key-*|__CLIPROXY_API_KEY__) KEY=$(openssl rand -hex 24);; esac
         sed "s/__CLIPROXY_API_KEY__/$KEY/" "$TMPL" > "$CONF"
         echo "✅ 設定を生成: $CONF"
+
+        # OpenAI 互換プロバイダ: secrets.env がある場合のみ雛形を展開して追記
+        if [ -f "$SECRETS" ]; then
+          set -a; . "$SECRETS"; set +a
+          # コピペで混入しがちなゼロ幅文字・CR・前後空白を除去する。
+          # (U+200B 混入で上流が 401 → auth_unavailable になる事故があったため)
+          MISSING=""
+          for v in OPENAI_COMPAT_NAME OPENAI_COMPAT_BASE_URL OPENAI_COMPAT_API_KEY; do
+            eval "val=\${$v:-}"
+            clean=$(printf '%s' "$val" | perl -CSD -pe 's/[\x{200B}-\x{200F}\x{FEFF}\x{2060}\r]//g; s/^\s+|\s+$//g')
+            if [ "$val" != "$clean" ]; then
+              echo "⚠️  $v に不可視文字/余分な空白を検出したため除去した ($SECRETS も直すこと)"
+              eval "$v=\$clean"
+            fi
+            [ -n "$clean" ] || MISSING="$MISSING $v"
+          done
+          if [ -n "$MISSING" ]; then
+            echo "⚠️  $SECRETS の未設定項目:$MISSING → openai-compatibility はスキップ"
+          else
+            printf '\n' >> "$CONF"
+            sed -e "s|__OPENAI_COMPAT_NAME__|$OPENAI_COMPAT_NAME|" \
+                -e "s|__OPENAI_COMPAT_BASE_URL__|$OPENAI_COMPAT_BASE_URL|" \
+                -e "s|__OPENAI_COMPAT_API_KEY__|$OPENAI_COMPAT_API_KEY|" \
+                "$FRAG" >> "$CONF"
+            echo "✅ openai-compatibility を追記: $OPENAI_COMPAT_NAME"
+          fi
+        else
+          echo "ℹ️  $SECRETS が無いため openai-compatibility はスキップ"
+          echo "    使う場合: cp shared/cliproxyapi/secrets.env.example \"$SECRETS\" && chmod 600 \"$SECRETS\""
+        fi
 
         ls ~/.cli-proxy-api/codex-*.json  >/dev/null 2>&1 || echo "⚠️  Codex 未認証:  cliproxyapi --codex-login"
         ls ~/.cli-proxy-api/claude-*.json >/dev/null 2>&1 || echo "⚠️  Claude 未認証: cliproxyapi --claude-login"

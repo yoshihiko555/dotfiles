@@ -1,0 +1,37 @@
+# OpenAI 互換プロバイダ設定テンプレート (dotfiles 管理)
+# ---------------------------------------------------------------------------
+# `task cliproxy-setup` が cliproxyapi.conf の末尾へ追記する。
+# 追記されるのは ~/.config/cliproxyapi/secrets.env が存在する場合のみで、
+# __OPENAI_COMPAT_*__ は secrets.env の値へ置換される (実体 conf は Git 管理外)。
+#
+# secrets.env の書式 (雛形: shared/cliproxyapi/secrets.env.example / chmod 600 推奨):
+#   OPENAI_COMPAT_NAME=openrouter
+#   OPENAI_COMPAT_BASE_URL=https://openrouter.ai/api/v1
+#   OPENAI_COMPAT_API_KEY=sk-or-v1-xxxxxxxx
+#
+# models は秘匿値ではないのでこのファイルを直接編集する。
+# alias を claude- 始まりにしているのは、Claude Code の /model ピッカー
+# (gateway model discovery) が claude/anthropic 始まりの ID しか拾わないため。
+# oauth-model-alias は openai-compatibility には効かないので、エイリアスは
+# 必ず models[].alias 側で指定する。
+openai-compatibility:
+  - name: "__OPENAI_COMPAT_NAME__"
+    base-url: "__OPENAI_COMPAT_BASE_URL__"
+    api-key-entries:
+      - api-key: "__OPENAI_COMPAT_API_KEY__"
+    # prefix を付けると "oc/<alias>" 形式の指名呼び出しが必須になる。
+    # /model ピッカーから素の alias で選びたいうちは付けない。
+    # prefix: "oc"
+    models:
+      # name: 上流の実モデル名 / alias: Claude Code から見える ID
+      # alias は claude- 始まりにする。conf 側でクローク表示を無効にしてあるため、
+      # claude/anthropic 始まり以外は /model ピッカーに出てこない。
+      - name: "qwen38"
+        alias: "cosmo-code"
+        display-name: "Cosmo (qwen38)"
+        thinking:
+          levels: ["low", "medium", "high"]
+      # 同じ alias を複数の name に繰り返すと内部プールになり、
+      # ラウンドロビン + 出力前に失敗したら次の上流へフェイルオーバーする。
+      # - name: "REPLACE-ME-upstream-model-2"
+      #   alias: "claude-oc-model-1"

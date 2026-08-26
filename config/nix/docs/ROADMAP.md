@@ -661,7 +661,7 @@ hermes が pull 型で設定に自動追従する。
 
 | 候補 | 実態 | sops 向きか |
 |---|---|---|
-| `shared/cliproxyapi.conf.tmpl` の API キー | `task cliproxy-setup` が**各マシンで `openssl rand` により生成**。マシン内に閉じる | ✗ 配る必要がない設計 |
+| `shared/cliproxyapi/conf.tmpl` の API キー | `task cliproxy-setup` が**各マシンで `openssl rand` により生成**。マシン内に閉じる | ✗ 配る必要がない設計 |
 | cliproxyapi の OAuth（`codex-*.json` / `claude-*.json`） | `--codex-login` 等で対話ログイン、期限付きで自動リフレッシュ | ✗ 配っても即陳腐化 |
 | `~/.claude-work` | 秘匿ストアではなく**会社アカウント用の Claude Code 設定ディレクトリ一式**。認証は `ccw` 実行時のログインで生成 | ✗ 静的な秘密ではない |
 | `TAKT_ANTHROPIC_API_KEY` | `takt/config.yaml` のコメントに変数名のみ。**実体はどこにも未設定** | ○ 唯一の候補だが現在未使用 |
