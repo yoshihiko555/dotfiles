@@ -19,6 +19,15 @@
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # comma（`, <command>`）+ nix-index 用のビルド済み DB（Phase 4-2）。
+    # ローカルで `nix-index` を回すと数十分かかるため、nix-community が週次で
+    # ビルド・公開している DB を使う。DB の更新は手動運用ではなく
+    # 「flake.lock 更新時にこの input の rev が上がり新しい DB が入る」仕組み
+    # （`nix flake update` / `nix flake lock` で追従）。docs/ROADMAP.md 4-2 節参照
+    nix-index-database = {
+      url = "github:nix-community/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     # 秘匿情報を暗号化したままコミットするための復号基盤（Phase 4-5）。
     # 2026-08-14 時点で sops.secrets を宣言しているホストは無い（管理対象ゼロ）。
     # ~/.ssh/config は中身が秘匿情報でないため平文配線（hosts/macbook/dotfiles.nix）
@@ -40,6 +49,7 @@
       home-manager,
       takt,
       treefmt-nix,
+      nix-index-database,
       sops-nix,
       ...
     }:
@@ -87,7 +97,15 @@
               # 2026-08-14 時点で sops.secrets を宣言しているホストは無い
               # （管理対象ゼロ。経緯は docs/ROADMAP.md 4-5 節）。宣言が無い限り
               # launchd agent 等は一切生成されない（sops.secrets = {} のため）
-              sharedModules = [ sops-nix.homeManagerModules.sops ];
+              #
+              # nix-index-database: comma + nix-index 用の home-manager モジュール
+              # （Phase 4-2）。WSL 側は homeConfigurations.wsl の modules に同じものを
+              # 直接足しており、ここに置くのは darwin 2 台（hermes / macbook）向け。
+              # オプション設定（programs.nix-index.enable 等）は home/nix-index.nix
+              sharedModules = [
+                sops-nix.homeManagerModules.sops
+                nix-index-database.homeModules.nix-index
+              ];
               users.${config.hostSpec.username} = import ./home;
             };
           }
@@ -137,6 +155,9 @@
         modules = [
           ./home
           ./hosts/wsl
+          # darwin 側は commonModules の sharedModules 経由で読み込むが、standalone
+          # home-manager はその層を通らないためここで直接足す（Phase 4-2）
+          nix-index-database.homeModules.nix-index
         ];
       };
 

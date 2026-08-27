@@ -2,6 +2,7 @@
 {
   imports = [
     ./dotfiles.nix
+    ./nix-index.nix
     ./packages.nix
   ];
 

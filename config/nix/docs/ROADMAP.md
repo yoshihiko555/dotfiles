@@ -574,14 +574,30 @@ hermes をビルドマシンにし、MacBook Pro のビルド負荷を逃がす�
 内側にあるため、**エラーも警告も出ずに無視される**）。この制約が Phase 3-1c の
 素の Nix 移行を決めた主因のひとつであり、現在は `nix.buildMachines` がそのまま使える。
 
-### 4-2: `comma`（`,` コマンド）— `[ ]` 優先度: 高
+### 4-2: `comma`（`,` コマンド）— `[x]` 完了（2026-08-27）
 
 インストールせずコマンドを即実行する。導入コストがほぼゼロ。
 
-- [ ] `comma` と `nix-index` を導入
-- [ ] `nix-index` データベースの定期更新を設定
+- [x] `comma` と `nix-index` を導入
+- [x] `nix-index` データベースの定期更新を設定
 
 **完了条件**: `, <command>` で未インストールのコマンドが実行できる。
+
+#### 実施記録（2026-08-27）
+
+- **採用方式は `nix-index-database`**（`[ryo]` と同じ）。ローカルで `nix-index` を
+  回すと数十分かかるため、nix-community が週次でビルド・公開しているビルド済み DB を使う
+- **DB の定期更新は `flake.lock` の更新に同期**する仕組み。`nix-index-database` input の
+  rev が上がれば `nix flake update` / `nix flake lock` で新しい DB が自動的に入る。
+  cron 等の別経路は用意していない（flake.lock の更新運用に乗せているだけ）
+- 配線は 3 ホスト共通の `home/` 層（`home/nix-index.nix` で `programs.nix-index.enable` /
+  `programs.nix-index-database.comma.enable` を設定）+ `flake.nix`（darwin 2 台は
+  `commonModules` の `sharedModules`、wsl は `homeConfigurations.wsl` の `modules` に
+  それぞれ `nix-index-database.homeModules.nix-index` を追加）。ホスト別の重複配線はしていない
+- **制約: command-not-found フックは効かない。** `programs.nix-index.enable` が注入する
+  シェルフックは home-manager 管理の `programs.zsh` 前提だが、当リポジトリは生の `.zshrc` を
+  `home.file` でリンクしているため発火しない。「コマンド名を打ち間違えたら提供元パッケージを
+  提案する」体験は無く、`, <command>` の明示実行のみが対象（完了条件には影響なし）
 
 ### 4-3: `nix flake check` + CI — `[x]` 完了（2026-08-14）
 
