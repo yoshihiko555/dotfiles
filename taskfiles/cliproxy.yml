@@ -61,13 +61,63 @@ tasks:
         brew services restart cliproxyapi
         echo "✅ サービス再起動完了。ccx で利用できます"
 
+  cliproxy-auth-prune:
+    desc: 新しい認証に置き換わって不要になった失効ファイルを削除 (既定は確認のみ)
+    silent: true
+    cmds:
+      - "{{.ROOT_DIR}}/scripts/cliproxy-auth-prune.sh {{.CLI_ARGS}}"
+
   cliproxy-status:
-    desc: CLIProxyAPI の稼働状態と公開モデル一覧を確認
+    desc: CLIProxyAPI の稼働状態・OAuth 期限・公開モデルを確認
+    silent: true
     cmds:
       - |
-        brew services info cliproxyapi
         CONF="$(brew --prefix)/etc/cliproxyapi.conf"
         KEY=$(sed -n '/^api-keys:/{n;s/.*"\(.*\)".*/\1/p;}' "$CONF")
+
+        echo "── サービス ──────────────────────────────"
+        brew services info cliproxyapi | sed 's/^/  /'
+
+        # 認証の期限。Running でも OAuth が切れていると 503 auth_unavailable になるため、
+        # モデル一覧より先にここを見る。
         echo ""
-        curl -sf -m 3 http://127.0.0.1:8317/v1/models -H "Authorization: Bearer $KEY" \
-          | jq -r '.data[].id' | sort || echo "⚠️  プロキシに接続できません"
+        echo "── OAuth 認証 ────────────────────────────"
+        expired_any=0
+        shopt -s nullglob 2>/dev/null || true
+        for f in "$HOME"/.cli-proxy-api/*.json; do
+          [ -e "$f" ] || continue
+          kind=$(jq -r '.type // "?"' "$f")
+          exp=$(jq -r '.expired // empty' "$f")
+          name=$(basename "$f" .json)
+          if [ -z "$exp" ]; then
+            printf '  ?  %-6s %-44s 期限情報なし\n' "$kind" "$name"
+            continue
+          fi
+          left=$(python3 -c 'import sys,datetime;d=datetime.datetime.fromisoformat(sys.argv[1]);print(round((d-datetime.datetime.now(d.tzinfo)).total_seconds()/86400))' "$exp" 2>/dev/null)
+          when="${exp%%T*} $(printf '%s' "${exp#*T}" | cut -c1-5)"
+          if [ -z "$left" ]; then
+            printf '  ?  %-6s %-44s %s (日数を計算できず)\n' "$kind" "$name" "$when"
+          elif [ "$left" -lt 0 ]; then
+            expired_any=1
+            printf '  ✘  %-6s %-44s %s に失効 (%s日前)\n' "$kind" "$name" "$when" "${left#-}"
+          else
+            printf '  ✔  %-6s %-44s %s まで有効 (残り%s日)\n' "$kind" "$name" "$when" "$left"
+          fi
+        done
+        if [ "$expired_any" = 1 ]; then
+          echo ""
+          echo "  ✘ の認証は cliproxyapi --<type>-login で再取得する。"
+          echo "  再ログインで別名のファイルが作られることがあり、古い方が残っていると"
+          echo "  プロキシがそれを掴んで 503 になる。不要な失効ファイルは削除すること。"
+          echo "  再ログイン後は brew services restart cliproxyapi が必要。"
+        fi
+
+        # /v1/models はヘッダ次第で内容が変わる。ここでは素の全件を出す。
+        # Claude Code の /model ピッカーに並ぶのは claude/anthropic 始まりだけ。
+        echo ""
+        echo "── 公開モデル (★ = /model ピッカーに出る) ──"
+        if ! curl -sf -m 3 http://127.0.0.1:8317/v1/models -H "Authorization: Bearer $KEY" \
+             | jq -r '.data[].id' | sort \
+             | sed -E -e 's/^(claude|anthropic)/★ &/' -e 's/^([^★])/  \1/'; then
+          echo "  ⚠️  プロキシに接続できません"
+        fi
