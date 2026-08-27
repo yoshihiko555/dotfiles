@@ -26,7 +26,8 @@ if [ ! -d "$DIR" ]; then
 fi
 
 # 各ファイルを "PRUNE|KEEP<TAB>path<TAB>type<TAB>期限日" に分類する。
-decisions=$(python3 - "$DIR" <<'PY'
+decisions=$(
+  python3 - "$DIR" <<'PY'
 import datetime, glob, json, os, sys
 
 now = datetime.datetime.now(datetime.timezone.utc)
@@ -65,7 +66,7 @@ while IFS=$'\t' read -r verdict path kind day; do
       echo "  削除候補: $base ($day に失効、有効な $kind が別にある)"
     fi
   fi
-done <<< "$decisions"
+done <<<"$decisions"
 
 if [ "$found" = 0 ]; then
   echo "  不要な失効ファイルはありません"
