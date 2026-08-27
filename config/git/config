@@ -9,3 +9,8 @@
 	dir = .worktrees
 [gtr "editor"]
 	default = zed
+
+# dotfiles リポジトリ専用の設定（pre-commit フックの有効化）。
+# 末尾のスラッシュにより、git worktree の gitdir（<repo>/.git/worktrees/*）も一致する。
+[includeIf "gitdir:~/ghq/github.com/yoshihiko555/dotfiles/"]
+	path = dotfiles.config

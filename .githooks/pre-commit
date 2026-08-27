@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+#
+# ステージ済みファイルの treefmt 整形崩れを commit 前に検出する。
+#
+# 目的: 整形漏れだけで CI（.github/workflows/nix-check.yml の
+# "repo-wide formatting check"）が赤くなるのを手元で防ぐ。
+#
+# 方針:
+#   - 検査のみ。作業ツリーもインデックスも書き換えない
+#     （整形以外の変更をコミットに混ぜないため）
+#   - 検査対象はインデックスの内容。作業ツリーではなく実際にコミットされる
+#     中身を見るので、git add -p の部分ステージでも CI と結果が一致する
+#   - ベストエフォート。nix が PATH に無い環境（GUI クライアント等）では
+#     警告して通す。最終的な保証は CI 側が担う
+#   - bash 3.2（macOS 同梱）でも動く書き方に留める（mapfile -d 等は使わない）
+#
+# 有効化: config/git/dotfiles.config（includeIf でこのリポジトリにのみ
+# core.hooksPath = .githooks を適用）。clone 直後の追加設定は不要。
+set -eo pipefail
+
+root=$(git rev-parse --show-toplevel)
+
+# treefmt が対象にしている拡張子のみを拾う（生成される treefmt.toml の
+# includes と対応。lua / md / json は対象外なので素通しする）。
+staged=()
+while IFS= read -r -d '' file; do
+  staged+=("$file")
+done < <(
+  git diff --cached --name-only --diff-filter=ACMR -z \
+    -- '*.nix' '*.sh' '*.bash' '*.envrc' '*.envrc.*' '*.toml' '*.yaml' '*.yml'
+)
+
+if [ ${#staged[@]} -eq 0 ]; then
+  exit 0
+fi
+
+if ! command -v nix >/dev/null 2>&1; then
+  echo "⚠️  pre-commit: nix が無いためフォーマット検査をスキップしました（CI で検査されます）" >&2
+  exit 0
+fi
+
+# インデックスの内容だけを一時ディレクトリへ取り出して、そこで整形を試す。
+# treefmt には検査専用モード（dry-run）が無く必ず書き戻すため、
+# 「作業ツリーを触らない」を成立させるにはこのコピーが必要。
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+
+# nix fmt のラッパは --tree-root-file=.git/config 固定で root を探す。
+# 空の .git/config を置くことで、この一時ディレクトリが tree root と
+# 認識され、treefmt.nix の excludes（リポジトリ相対のグロブ）も
+# そのまま効く（パス構成をリポジトリと同じに保っているため）。
+mkdir -p "$work/.git"
+: >"$work/.git/config"
+git checkout-index --prefix="$work/" -- "${staged[@]}"
+
+# --no-cache + --fail-on-change（= --ci 相当）。
+# --walk filesystem: 一時ディレクトリは git リポジトリではないため明示する。
+if output=$(cd "$root/config/nix" &&
+  nix fmt --no-warn-dirty -- \
+    --no-cache --fail-on-change --walk filesystem -C "$work" 2>&1); then
+  exit 0
+fi
+
+echo "❌ pre-commit: 整形されていないファイルがあります" >&2
+echo "$output" | sed -n 's/.*path=\([^ ]*\).*/   - \1/p' >&2
+echo >&2
+echo "   → task nix-fmt を実行し、整形結果を git add し直してください" >&2
+echo "   （どうしても今すぐコミットしたい場合は git commit --no-verify）" >&2
+exit 1
