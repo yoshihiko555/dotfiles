@@ -55,14 +55,24 @@ git checkout-index --prefix="$work/" -- "${staged[@]}"
 
 # --no-cache + --fail-on-change（= --ci 相当）。
 # --walk filesystem: 一時ディレクトリは git リポジトリではないため明示する。
-if output=$(cd "$root/config/nix" &&
+if output=$( { cd "$root/config/nix" &&
   nix fmt --no-warn-dirty -- \
-    --no-cache --fail-on-change --walk filesystem -C "$work" 2>&1); then
+    --no-cache --fail-on-change --walk filesystem -C "$work"; } 2>&1); then
+  exit 0
+fi
+
+# treefmt は変更したファイルを "path=<file>" 付きで報告する。
+# その行が無い＝整形以外の失敗（flake の評価エラー、オフライン初回評価など）。
+# その場合は整形の問題と誤認させず、素の出力を見せて通す（ベストエフォート方針）。
+files=$(echo "$output" | sed -n 's/.*path=\([^ ]*\).*/   - \1/p')
+if [ -z "$files" ]; then
+  echo "⚠️  pre-commit: フォーマット検査を実行できませんでした（CI で検査されます）" >&2
+  echo "$output" >&2
   exit 0
 fi
 
 echo "❌ pre-commit: 整形されていないファイルがあります" >&2
-echo "$output" | sed -n 's/.*path=\([^ ]*\).*/   - \1/p' >&2
+echo "$files" >&2
 echo >&2
 echo "   → task nix-fmt を実行し、整形結果を git add し直してください" >&2
 echo "   （どうしても今すぐコミットしたい場合は git commit --no-verify）" >&2
