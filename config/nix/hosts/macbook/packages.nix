@@ -29,6 +29,10 @@
       # --- 新規導入 ---
       resvg # SVG→PNG ラスタライザ。logo-design スキルの export.sh が最優先で検出する
 
+      # PDF 処理 CLI（pdftotext / pdfimages 等）。2026-08-02 に brew から削除したが
+      # その後手動で brew 再導入されていた（drift）。Nix 管理へ移す。
+      poppler-utils
+
       # sops / age（Phase 4-5）。secrets は現状ゼロだが、載せるとしたら MBP 起点に
       # なるためここに置く。2 台以上で使い始めたら home/packages.nix へ昇格する
       # （ADR-20260801-0004 ルール 3）。共通層に置くと hermes にも 69 MiB 入るだけで

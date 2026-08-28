@@ -86,7 +86,7 @@ brew 管理下の全アイテムを「役割・宣言状態・今後の行き先
 |---|---|---|---|---|
 | `ffmpeg` | 動画変換（tap: homebrew-ffmpeg のカスタム版） | 宣言済（隠れ※） | 2026-06 | **削除方針**（2026-08-02。デジタルガーデンの YouTube 自動投稿（第 1〜2 回）で使った名残。以降の用途なし。tap `homebrew-ffmpeg/ffmpeg` も連動削除） |
 | `switchaudio-osx` | オーディオデバイス切替 CLI | 宣言済 | 2026-06 | nix新規（1.2.2 一致。proxy-audio-device と併用と推測） |
-| `poppler` | PDF 処理 CLI 群（pdftotext 等） | **未宣言** | 2026-07 | **削除確定**（2026-08-02。使っていない） |
+| `poppler` | PDF 処理 CLI 群（pdftotext 等） | **未宣言** | 2026-07 | ~~削除確定（2026-08-02。使っていない）~~ → **nix新規**（2026-08-28。削除後に brew で手動再導入されていたため、`poppler-utils` として hosts/macbook/packages.nix へ移管） |
 | `libass` | 字幕レンダリングライブラリ | **未宣言** | 2026-07 | **削除方針**（同上、YouTube 自動投稿の名残） |
 | `libomp` | OpenMP ランタイム（LLVM の並列計算ライブラリ。単体で使うものではなくビルド時依存） | 宣言済 | 2026-07 | **削除方針**（依存ゼロ。Brewfile への追加はコミット `8ee8645`「実環境に同期」= 意図的導入ではなく実態の写し。YouTube 自動投稿期のビルド依存の名残と推測） |
 
@@ -177,7 +177,8 @@ brew 管理下の全アイテムを「役割・宣言状態・今後の行き先
 > 2026-08-07 追記: Phase 3-2 の dotfiles 移行完了に伴い、stow と Makefile は廃止した。
 
 - `gemini-cli` は削除（Antigravity CLI へ置き換わり済み。Google の方針としても gemini-cli は廃止方向）
-- `poppler` は削除（未使用）
+- `poppler` は削除（未使用）→ 2026-08-28 に方針変更。用途が再発生したため
+  `poppler-utils` を Nix（MBP 固有層）で管理する
 - `ffmpeg` / `libass` / `libomp` は削除（デジタルガーデンの YouTube 自動投稿
   第 1〜2 回で使った名残。以降の用途なし）
 - `ollama` は削除（未使用。hermes の llama.cpp/llama-swap が LLM 基盤を担う）
