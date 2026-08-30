@@ -45,6 +45,10 @@ takt/runtime.yaml
 config/nix/secrets/*.dec.yaml
 config/nix/secrets/*.plain.yaml
 
+# Alfred がワークフロー設定（Configure Workflow）の値を書き込むファイル。
+# Notion トークンなどの秘匿値がここに入るため public リポジトリには載せない
+alfred/*/prefs.plist
+
 # nix build の出力 symlink（--no-link を付け忘れたときに生まれる）
 /result
 /result-*

@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.yoshihiko555.fast-notion</string>
+	<key>connections</key>
+	<dict>
+		<key>8F792C8D-24F0-4A73-A377-DA1484E9380A</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>335019E8-ED71-4E2C-B91A-578491CE0B6E</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>yoshihiko</string>
+	<key>description</key>
+	<string>Notion のタスクDB（T A S K）へタスクを素早く追加する。プロジェクトの紐づけも同じ画面で選べる。</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Fast Notion Alfred</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string># ネットワークの問題でエラーが出る場合は下記のコメントアウトを外してください
+# require 'resolv-replace'
+
+require "net/http"
+require "uri"
+require "json"
+
+# TOKEN は Alfred の Workflow Configuration（右上の [x] ボタン）で設定する。
+# public リポジトリへ載せないため info.plist には保存しない。
+MY_NOTION_TOKEN = ENV["TOKEN"].to_s
+DATABASE_ID = ENV["DATABASE_ID"].to_s
+TEMPLATE_ID = ENV["TEMPLATE_ID"].to_s
+
+# Script Filter で選んだプロジェクトのページ ID。「プロジェクトなしで追加」なら空。
+PROJECT_ID = ENV["PROJECT_ID"].to_s
+
+if MY_NOTION_TOKEN.empty?
+  STDERR.print "Notion のトークンが未設定です。\nAlfred の Configure Workflow で TOKEN を設定してください。\n"
+  exit 1
+end
+
+def send_notion(title)
+  properties = {
+    "title" =&gt; {
+      "title" =&gt; [
+        {
+          "text" =&gt; {
+            "content" =&gt; title.to_s
+          }
+        }
+      ]
+    }
+  }
+
+  # プロジェクト（TASK DB 側のリレーション名は「プロジェクト名」）。
+  # このプロパティは PROJECT DB が integration に共有されていないと
+  # API から見えず、指定しても無視されるので注意。
+  unless PROJECT_ID.empty?
+    properties["プロジェクト名"] = {
+      "relation" =&gt; [{ "id" =&gt; PROJECT_ID }]
+    }
+  end
+
+  body = {
+    "parent" =&gt; {
+      "database_id" =&gt; DATABASE_ID
+    },
+    "properties" =&gt; properties
+  }
+
+  # タスクテンプレート（アイコン checkmark-square / 優先度=低）を適用する。
+  # 公式ドキュメントに記載は無いが実際に効く。ただし適用は非同期で、
+  # 作成レスポンスにはまだ反映されていないため、レスポンスだけを見て
+  # 「効いていない」と判断しないこと（2026-08-30 実測）
+  unless TEMPLATE_ID.empty?
+    body["template"] = {
+      "type" =&gt; "template_id",
+      "template_id" =&gt; TEMPLATE_ID
+    }
+  end
+
+  uri = URI.parse("https://api.notion.com/v1/pages")
+  request = Net::HTTP::Post.new(uri)
+  request.content_type = "application/json"
+  request["Authorization"] = "Bearer #{MY_NOTION_TOKEN}"
+  request["Notion-Version"] = "2022-06-28"
+  request.body = JSON.dump(body)
+
+  response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
+    http.request(request)
+  end
+
+  # エラー時（200 以外）の場合のみエラー内容を表示する
+  unless response.code == "200"
+    STDERR.print "Error!\n#{response.body}\n"
+  end
+end
+
+send_notion(ARGV[0])</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>2</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>335019E8-ED71-4E2C-B91A-578491CE0B6E</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>fna</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Notion からプロジェクト一覧を取得中…</string>
+				<key>script</key>
+				<string># ネットワークの問題でエラーが出る場合は下記のコメントアウトを外してください
+# require 'resolv-replace'
+
+require "net/http"
+require "uri"
+require "json"
+require "fileutils"
+
+MY_NOTION_TOKEN = ENV["TOKEN"].to_s
+PROJECT_DB_ID = ENV["PROJECT_DB_ID"].to_s
+
+# プロジェクト一覧のキャッシュ有効期間（秒）。Script Filter は1打鍵ごとに
+# 走るため、キャッシュが無いと打鍵のたびに Notion API を叩くことになる。
+CACHE_TTL = 600
+
+# タスク名とプロジェクト絞り込みの区切り。`fna タスク名 @cli` のように使う。
+DELIMITER = "@"
+
+def emit(items)
+  print JSON.generate({ "items" =&gt; items })
+  exit 0
+end
+
+def emit_message(title, subtitle)
+  emit([{ "title" =&gt; title, "subtitle" =&gt; subtitle, "valid" =&gt; false }])
+end
+
+def cache_file
+  dir = ENV["alfred_workflow_cache"].to_s
+  return nil if dir.empty?
+  FileUtils.mkdir_p(dir)
+  File.join(dir, "projects.json")
+end
+
+def read_cache(path)
+  return nil if path.nil? || !File.exist?(path)
+  JSON.parse(File.read(path))
+rescue StandardError
+  nil
+end
+
+def fresh_cache(path)
+  return nil if path.nil? || !File.exist?(path)
+  return nil if Time.now - File.mtime(path) &gt; CACHE_TTL
+  read_cache(path)
+end
+
+def write_cache(path, projects)
+  return if path.nil?
+  File.write(path, JSON.generate(projects))
+rescue StandardError
+  nil
+end
+
+def plain_text(parts)
+  (parts || []).map { |t| t["plain_text"] }.join
+end
+
+# 完了・中断したプロジェクトは候補に出しても意味がないので除外する。
+def fetch_projects
+  projects = []
+  cursor = nil
+
+  loop do
+    uri = URI.parse("https://api.notion.com/v1/databases/#{PROJECT_DB_ID}/query")
+    request = Net::HTTP::Post.new(uri)
+    request.content_type = "application/json"
+    request["Authorization"] = "Bearer #{MY_NOTION_TOKEN}"
+    request["Notion-Version"] = "2022-06-28"
+
+    body = {
+      "page_size" =&gt; 100,
+      "filter" =&gt; {
+        "and" =&gt; [
+          { "property" =&gt; "ステータス", "status" =&gt; { "does_not_equal" =&gt; "完了" } },
+          { "property" =&gt; "ステータス", "status" =&gt; { "does_not_equal" =&gt; "中断" } }
+        ]
+      }
+    }
+    body["start_cursor"] = cursor if cursor
+    request.body = JSON.dump(body)
+
+    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
+      http.request(request)
+    end
+    raise "#{response.code} #{response.body}" unless response.code == "200"
+
+    data = JSON.parse(response.body)
+    data["results"].each do |page|
+      props = page["properties"] || {}
+      name = plain_text((props["プロジェクト名"] || {})["title"])
+      next if name.empty?
+
+      projects &lt;&lt; {
+        "id" =&gt; page["id"],
+        "name" =&gt; name,
+        "category" =&gt; ((props["カテゴリ"] || {})["select"] || {})["name"].to_s,
+        "status" =&gt; ((props["ステータス"] || {})["status"] || {})["name"].to_s,
+        "value" =&gt; plain_text((props["管理値"] || {})["rich_text"])
+      }
+    end
+
+    cursor = data["next_cursor"]
+    break unless data["has_more"]
+  end
+
+  projects
+end
+
+if MY_NOTION_TOKEN.empty?
+  emit_message("Notion のトークンが未設定です",
+               "Alfred の Configure Workflow で TOKEN を設定してください")
+end
+
+query = ARGV[0].to_s
+title_part, filter_part = if query.include?(DELIMITER)
+                            query.split(DELIMITER, 2)
+                          else
+                            [query, ""]
+                          end
+title_part = title_part.strip
+filter_part = filter_part.to_s.strip.downcase
+
+emit_message("タスク名を入力してください", "例: fna ロゴを差し替える #{DELIMITER}cli") if title_part.empty?
+
+path = cache_file
+projects = fresh_cache(path)
+
+if projects.nil?
+  begin
+    projects = fetch_projects
+    write_cache(path, projects)
+  rescue StandardError =&gt; e
+    # 取得に失敗したら期限切れキャッシュで代替する。それも無ければ諦める。
+    projects = read_cache(path)
+    if projects.nil?
+      emit_message("プロジェクト一覧を取得できませんでした", e.message.to_s[0, 120])
+    end
+  end
+end
+
+matched = projects.select do |p|
+  next true if filter_part.empty?
+  "#{p['name']} #{p['category']} #{p['value']}".downcase.include?(filter_part)
+end
+
+items = []
+
+# 絞り込み中は候補を邪魔しないよう「プロジェクトなし」を出さない。
+if filter_part.empty?
+  items &lt;&lt; {
+    "uid" =&gt; "fast-notion-no-project",
+    "title" =&gt; "プロジェクトなしで追加",
+    "subtitle" =&gt; "「#{title_part}」",
+    "arg" =&gt; title_part,
+    "variables" =&gt; { "PROJECT_ID" =&gt; "" }
+  }
+end
+
+matched.each do |p|
+  detail = [p["category"], p["value"], p["status"]].reject { |v| v.to_s.empty? }.join(" · ")
+  items &lt;&lt; {
+    "uid" =&gt; p["id"],
+    "title" =&gt; p["name"],
+    "subtitle" =&gt; "「#{title_part}」を追加  ·  #{detail}",
+    "arg" =&gt; title_part,
+    "variables" =&gt; { "PROJECT_ID" =&gt; p["id"] }
+  }
+end
+
+if items.empty?
+  emit_message("該当するプロジェクトがありません",
+               "#{DELIMITER} のあとの絞り込みを変えてください")
+end
+
+emit(items)</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>タスク名 [@プロジェクト絞り込み]</string>
+				<key>title</key>
+				<string>Fast Notion Alfred</string>
+				<key>type</key>
+				<integer>2</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>8F792C8D-24F0-4A73-A377-DA1484E9380A</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string>`fna タスク名` で Notion のタスクDB（T A S K）へタスクを追加する。
+入力すると下にプロジェクト候補が並ぶので、紐づけたいものを選ぶ。
+`fna タスク名 @cli` のように `@` 以降を書くとプロジェクトを絞り込める。
+
+Notion Integration のトークンは Configure Workflow（右上の [x] ボタン）で設定する。
+リポジトリ（public）に載せないため info.plist には保存されない。
+
+PROJECT DB を integration に共有していないとプロジェクト候補が取得できない。
+Notion で PROJECT DB を開き「…」→「接続」から integration を追加すること。</string>
+	<key>uidata</key>
+	<dict>
+		<key>335019E8-ED71-4E2C-B91A-578491CE0B6E</key>
+		<dict>
+			<key>xpos</key>
+			<real>295</real>
+			<key>ypos</key>
+			<real>215</real>
+		</dict>
+		<key>8F792C8D-24F0-4A73-A377-DA1484E9380A</key>
+		<dict>
+			<key>xpos</key>
+			<real>95</real>
+			<key>ypos</key>
+			<real>215</real>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>ntn_...</string>
+				<key>required</key>
+				<true/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Notion Integration Token。リポジトリには保存されない。</string>
+			<key>label</key>
+			<string>Notion Token</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>TOKEN</string>
+		</dict>
+	</array>
+	<key>variables</key>
+	<dict>
+		<key>DATABASE_ID</key>
+		<string>1316d81aac5281d0bb64ed21cae0a9f0</string>
+		<key>PROJECT_DB_ID</key>
+		<string>1316d81aac5281f09480fb4e388fd882</string>
+		<key>TEMPLATE_ID</key>
+		<string>1316d81aac5281fea86afce74cbd7667</string>
+	</dict>
+	<key>variablesdontexport</key>
+	<array>
+		<string>TOKEN</string>
+	</array>
+	<key>version</key>
+	<string>1.1.0</string>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>

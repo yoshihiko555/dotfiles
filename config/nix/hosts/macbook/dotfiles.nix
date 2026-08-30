@@ -81,6 +81,11 @@ in
           mkLink "alfred/audio-output";
         "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.455DAC0F-6957-4573-9A95-565C76C88D28".source =
           mkLink "alfred/post";
+        # Notion トークンは info.plist ではなく Alfred の Workflow Configuration
+        # （workflow ディレクトリ内の prefs.plist）に置く。public リポジトリなので
+        # 当該ファイルは .gitignore で除外している
+        "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.CC5F7378-77EC-4037-B0BD-499DBF07983D".source =
+          mkLink "alfred/fast-notion";
       };
 
       # Claude Code / Antigravity CLI は JSON を rename で置換するため、symlink では
