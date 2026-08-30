@@ -10,6 +10,11 @@
 [gtr "editor"]
 	default = zed
 
+# 会社（Anvil）リポジトリの HTTPS URL を専用鍵の SSH エイリアスへ書き換える。
+# ~/.ssh/config の Host github-anvil（IdentityFile ~/.ssh/github_anvil）を使う。
+[url "ssh://git@github-anvil/Anvil-Co-Ltd/"]
+	insteadOf = https://github.com/Anvil-Co-Ltd/
+
 # dotfiles リポジトリ専用の設定（pre-commit フックの有効化）。
 # 末尾のスラッシュにより、git worktree の gitdir（<repo>/.git/worktrees/*）も一致する。
 [includeIf "gitdir:~/ghq/github.com/yoshihiko555/dotfiles/"]
