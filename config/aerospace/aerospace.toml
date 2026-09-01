@@ -39,8 +39,13 @@ ctrl-9 = 'workspace M4'
 # BTT 版はウィンドウを物理的に動かすだけで AeroSpace のワークスペース把握とズレるため、
 # こちらへ寄せた。BTT 側の同キー設定は削除すること（両方生きていると二重に発火する）。
 # 最大化・左右半分スナップは AeroSpace に相当機能が無いため BTT に残している。
-alt-shift-left = 'move-node-to-monitor next'
-alt-shift-right = 'move-node-to-monitor prev'
+# 物理配置は左から 本体 → メイン DELL → サブ DELL。
+# next/prev はトレイアイコンの並び順で物理方向と一致しないため left/right を使う。
+# --focus-follows-window が無いとフォーカスが元のワークスペースに残り、
+# 続けて押したときに別のウィンドウが動いてしまう。
+# --wrap-around は端で止まらず反対側へ回り込む（BTT 版の挙動に合わせる）。
+alt-shift-left = 'move-node-to-monitor --focus-follows-window --wrap-around left'
+alt-shift-right = 'move-node-to-monitor --focus-follows-window --wrap-around right'
 
 ctrl-shift-1 = 'exec-and-forget ~/.config/aerospace/layouts/default.sh'
 ctrl-shift-2 = 'exec-and-forget ~/.config/aerospace/layouts/dev.sh'
