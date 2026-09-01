@@ -7,12 +7,12 @@ claude_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 current="$claude_dir/settings.json"
 reference="$claude_dir/.settings.json.nix-managed"
 
-# 会社アカウント（~/.claude-work）の autoMode は repo で管理しないため比較から除く。
-# 除外キーは dotfiles.nix の manage_mutable_json の preserve 引数と揃える。
+# 会社アカウント（~/.claude-work）の autoMode / modelSettings は repo で管理しないため
+# 比較から除く。除外キーは dotfiles.nix の manage_mutable_json の preserve 引数と揃える。
 case "$claude_dir" in
   */.claude-work)
     label="claude-work"
-    filter='del(.autoMode)'
+    filter='del(.autoMode,.modelSettings)'
     ;;
   *)
     label="claude"

@@ -35,8 +35,8 @@ adopt() {
   local label="$1"
   local current="$2"
   local source="$3"
-  # 第4引数: public リポジトリへ載せないトップレベルキー（省略可）。
-  # 会社用の autoMode は Claude Code が環境から自動生成するため回収しない。
+  # 第4引数: public リポジトリへ載せないトップレベルキー（空白区切り・省略可）。
+  # 会社用の autoMode / modelSettings は Claude Code が自動生成するため回収しない。
   local exclude="${4:-}"
   local staged
 
@@ -51,7 +51,13 @@ adopt() {
 
   staged="$(mktemp)"
   if [[ -n "$exclude" ]]; then
-    jq "del(.${exclude})" "$current" >"$staged"
+    local del_args=""
+    local key
+    for key in $exclude; do
+      [[ -n "$del_args" ]] && del_args="${del_args},"
+      del_args="${del_args}.${key}"
+    done
+    jq "del(${del_args})" "$current" >"$staged"
   else
     cp "$current" "$staged"
   fi
@@ -74,7 +80,7 @@ case "$target" in
     adopt claude-work \
       "$HOME/.claude-work/settings.json" \
       "$repo_root/claude-work/settings.json" \
-      autoMode
+      "autoMode modelSettings"
     adopt antigravity-settings \
       "$HOME/.gemini/antigravity-cli/settings.json" \
       "$repo_root/gemini/antigravity-cli/settings.json"
@@ -89,7 +95,7 @@ case "$target" in
     adopt claude-work \
       "$HOME/.claude-work/settings.json" \
       "$repo_root/claude-work/settings.json" \
-      autoMode
+      "autoMode modelSettings"
     ;;
   antigravity-settings)
     adopt antigravity-settings \

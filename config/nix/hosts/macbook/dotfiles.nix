@@ -125,13 +125,24 @@ in
           target="$3"
           reference="$4"
           # 第5引数: repo では管理せず実ファイル側の値を引き継ぐトップレベルキー。
-          # Claude Code が自動生成する autoMode のように、public リポジトリへ
-          # 載せたくない内容を drift 比較からも除外する用途で使う。
+          # 空白区切りで複数指定できる。Claude Code が自動生成する autoMode や
+          # modelSettings のように、public リポジトリへ載せたくない・端末側で
+          # 書き換わる内容を drift 比較からも除外する用途で使う。
           preserve="''${5:-}"
 
           compare_filter="."
+          preserve_keys_json="[]"
           if [ -n "$preserve" ]; then
-            compare_filter="del(.$preserve)"
+            del_args=""
+            for key in $preserve; do
+              if [ -n "$del_args" ]; then
+                del_args="$del_args,"
+              fi
+              del_args="$del_args.$key"
+            done
+            compare_filter="del($del_args)"
+            preserve_keys_json="$(printf '%s\n' $preserve \
+              | ${pkgs.jq}/bin/jq -R . | ${pkgs.jq}/bin/jq -s -c .)"
           fi
 
           if ! ${pkgs.jq}/bin/jq -e . "$source" >/dev/null 2>&1; then
@@ -162,10 +173,10 @@ in
 
           # 引き継ぎは target を消す前に済ませる
           generated="$source"
-          if [ -n "$preserve" ] && [ -f "$target" ] \
-            && ${pkgs.jq}/bin/jq -e --arg k "$preserve" 'has($k)' "$target" >/dev/null 2>&1; then
+          if [ -n "$preserve" ] && [ -f "$target" ]; then
             generated="$(${pkgs.coreutils}/bin/mktemp)"
-            ${pkgs.jq}/bin/jq -s --arg k "$preserve" '.[0] + { ($k): .[1][$k] }' \
+            ${pkgs.jq}/bin/jq -s --argjson keys "$preserve_keys_json" \
+              '.[0] + (.[1] | with_entries(select(.key as $k | $keys | index($k) != null)))' \
               "$source" "$target" > "$generated"
           fi
 
@@ -190,7 +201,7 @@ in
           "${dotfilesDir}/claude-work/settings.json" \
           "$HOME/.claude-work/settings.json" \
           "$HOME/.claude-work/.settings.json.nix-managed" \
-          autoMode
+          "autoMode modelSettings"
         manage_mutable_json \
           antigravity-settings \
           "${dotfilesDir}/gemini/antigravity-cli/settings.json" \
