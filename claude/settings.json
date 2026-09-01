@@ -36,8 +36,8 @@
       "Read(.env)"
     ],
     "additionalDirectories": [
-      "//tmp/claude-501",
-      "//private/tmp/claude-501"
+      "/tmp/claude-501",
+      "/private/tmp/claude-501"
     ]
   },
   "model": "opus[1m]",
