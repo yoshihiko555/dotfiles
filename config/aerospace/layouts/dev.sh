@@ -25,6 +25,9 @@ move_app_to_workspace 'com.google.Chrome'       'M4'
 
 # Sub Monitor
 move_app_to_workspace 'notion.id'               'S1'
+move_app_to_workspace 'com.apple.systempreferences' 'S3'
+move_app_to_workspace 'com.apple.ActivityMonitor'   'S3'
+move_app_to_workspace 'com.coteditor.CotEditor'     'S3'
 
 # Mac Built-in（デフォルトと同じ）
 move_app_to_workspace 'com.tinyspeck.slackmacgap' 'B1'
@@ -32,8 +35,5 @@ move_app_to_workspace 'com.hnc.Discord'           'B1'
 move_app_to_workspace 'com.microsoft.teams2'      'B1'
 move_app_to_workspace 'com.apple.mail'            'B2'
 move_app_to_workspace 'com.cron.electron'         'B2'
-move_app_to_workspace 'com.apple.systempreferences' 'B3'
-move_app_to_workspace 'com.apple.ActivityMonitor'   'B3'
-move_app_to_workspace 'com.coteditor.CotEditor'     'B3'
 
 aerospace workspace M3

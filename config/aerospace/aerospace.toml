@@ -12,7 +12,7 @@ start-at-login = false
 exec-on-workspace-change = ['/bin/bash', '-c', '~/.config/aerospace/scripts/follow-overlay.sh']
 
 # ウィンドウが無くても残すワークスペース（v1 では自動推論されていた）
-persistent-workspaces = ['M1', 'M2', 'M3', 'M4', 'S1', 'S2', 'B1', 'B2', 'B3']
+persistent-workspaces = ['M1', 'M2', 'M3', 'M4', 'S1', 'S2', 'S3', 'B1', 'B2']
 
 default-root-container-layout = 'tiles'
 default-root-container-orientation = 'auto'
@@ -31,9 +31,9 @@ ctrl-2 = 'workspace M2'
 ctrl-3 = 'workspace M3'
 ctrl-4 = 'workspace S1'
 ctrl-5 = 'workspace S2'
-ctrl-6 = 'workspace B1'
-ctrl-7 = 'workspace B2'
-ctrl-8 = 'workspace B3'
+ctrl-6 = 'workspace S3'
+ctrl-7 = 'workspace B1'
+ctrl-8 = 'workspace B2'
 ctrl-9 = 'workspace M4'
 # ウィンドウを隣のモニターへ移動（BetterTouchTool から移管、2026-09-02）
 # BTT 版はウィンドウを物理的に動かすだけで AeroSpace のワークスペース把握とズレるため、
@@ -63,8 +63,8 @@ run = ['layout floating']
 #
 # 配置方針:
 #   M 系（メイン DELL）= 常時見るもの（ブラウザ・ターミナル）
-#   S 系（サブ DELL）  = 参照・開発
-#   B 系（本体）       = コミュニケーションと雑務
+#   S 系（サブ DELL）  = 参照・開発・雑務
+#   B 系（本体）       = コミュニケーション
 #
 # Claude Desktop は意図的にルールを持たない（開いた場所に留める、2026-09-02）
 
@@ -101,6 +101,21 @@ run = ['move-node-to-workspace S2']
 if.app-id = 'com.tinyapp.TablePlus'
 run = ['move-node-to-workspace S2']
 
+# S3: 雑アプリ・一時ウィンドウ
+# 元は本体側の B3 に置いていたが、本体の画面が小さく確認しづらいため
+# サブ DELL へ移設した（2026-09-02）。B3 は廃止。
+[[on-window-detected]]
+if.app-id = 'com.apple.systempreferences'
+run = ['move-node-to-workspace S3']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.ActivityMonitor'
+run = ['move-node-to-workspace S3']
+
+[[on-window-detected]]
+if.app-id = 'com.coteditor.CotEditor'
+run = ['move-node-to-workspace S3']
+
 # --- B 系: Mac 本体 ---
 # B1: チャット
 [[on-window-detected]]
@@ -124,19 +139,6 @@ run = ['move-node-to-workspace B2']
 if.app-id = 'com.cron.electron'
 run = ['move-node-to-workspace B2']
 
-# B3: 雑アプリ・一時ウィンドウ
-[[on-window-detected]]
-if.app-id = 'com.apple.systempreferences'
-run = ['move-node-to-workspace B3']
-
-[[on-window-detected]]
-if.app-id = 'com.apple.ActivityMonitor'
-run = ['move-node-to-workspace B3']
-
-[[on-window-detected]]
-if.app-id = 'com.coteditor.CotEditor'
-run = ['move-node-to-workspace B3']
-
 # ルールにないアプリは現在フォーカス中のワークスペースに留まる
 # (catch-all の move を削除し、デフォルト動作に任せる)
 
@@ -151,6 +153,6 @@ M3 = 2
 M4 = 2
 S1 = 3
 S2 = 3
+S3 = 3
 B1 = 1
 B2 = 1
-B3 = 1

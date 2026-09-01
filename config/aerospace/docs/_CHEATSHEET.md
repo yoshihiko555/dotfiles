@@ -10,12 +10,15 @@
 | `ctrl-9` | M4 | メインDELL | （空き枠。Hermes の画面共有等） |
 | `ctrl-4` | S1 | サブDELL | Notion |
 | `ctrl-5` | S2 | サブDELL | Zed / VS Code / TablePlus |
-| `ctrl-6` | B1 | Mac本体 | Slack / Discord / Teams |
-| `ctrl-7` | B2 | Mac本体 | Mail / Notion Calendar |
-| `ctrl-8` | B3 | Mac本体 | システム設定 / Activity Monitor / CotEditor |
+| `ctrl-6` | S3 | サブDELL | システム設定 / Activity Monitor / CotEditor |
+| `ctrl-7` | B1 | Mac本体 | Slack / Discord / Teams |
+| `ctrl-8` | B2 | Mac本体 | Mail / Notion Calendar |
 
-配置方針は M 系＝常時見るもの、S 系＝参照・開発、B 系＝コミュニケーションと雑務。
-M4 と B3 は後から足したため、既存の手なじみを壊さないようキーは末尾に付けている。
+配置方針は M 系＝常時見るもの、S 系＝参照・開発・雑務、B 系＝コミュニケーション。
+キーは M → S → B の並び順どおりに `ctrl-1`〜`8` を割り当てている。
+M4 だけは空き枠のため末尾の `ctrl-9` に置いている。
+雑アプリは当初 Mac 本体側の B3 に置いていたが、本体の画面が小さく確認しづらいため
+サブ DELL の S3 へ移し、B3 は廃止した（2026-09-02）。
 
 上記アプリは起動時に `on-window-detected` ルールで自動配置される。
 ルールに無いアプリは、その時フォーカス中のワークスペースに留まる（catch-all は意図的に置いていない）。
@@ -36,8 +39,8 @@ AeroSpace には sticky window（全ワークスペース表示）が無く（Gi
 
 | 操作 | キー |
 |---|---|
-| ワークスペース切り替え | `ctrl-1` 〜 `7` |
-| ウィンドウを別WSに移動 | `ctrl-alt-1` 〜 `7` |
+| ワークスペース切り替え | `ctrl-1` 〜 `9` |
+| ウィンドウを別WSに移動 | （未設定。下記「未設定のウィンドウ操作」を参照） |
 
 ### ウィンドウ操作
 
@@ -68,7 +71,7 @@ BTT 版はフローティングウィンドウや AeroSpace 管理外のウィ�
 **このリポジトリでは意図的に設定していない**（2026-09-02 に判断）。
 
 未対応の穴として、**M4 はルールを持たない空き枠のため、ウィンドウをそこへ送る手段が
-CLI しかない**。必要になったら `ctrl-alt-1`〜`9` に `move-node-to-workspace` を割り当てる。
+CLI しかない**（他ワークスペースへの手動移動も同様に未設定）。必要になったら `ctrl-alt-1`〜`9` に `move-node-to-workspace` を割り当てる。
 
 | 操作 | 公式デフォルト | 未設定の理由 |
 |---|---|---|
@@ -130,9 +133,9 @@ M3 = 2
 M4 = 2
 S1 = 3  # DELL G2422HS（サブ）
 S2 = 3
+S3 = 3
 B1 = 1  # Built-in Retina Display（本体）
 B2 = 1
-B3 = 1
 ```
 
 モニター番号は `aerospace list-monitors` で確認できる。
