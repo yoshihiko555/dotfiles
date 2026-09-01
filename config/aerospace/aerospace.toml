@@ -1,3 +1,8 @@
+# config-version = 2 の変更点は persistent-workspaces の扱いのみ。
+# v1 はキーバインドの右辺からワークスペースを推論していたが（公式いわく error-prone）、
+# v2 では明示指定が必要になったため下で列挙する。
+config-version = 2
+
 after-login-command = []
 after-startup-command = ['exec-and-forget ~/.config/aerospace/layouts/default.sh']
 start-at-login = false
@@ -5,6 +10,9 @@ start-at-login = false
 # ワークスペース切替時にオーバーレイ系アプリを追従させる
 # （AeroSpace に sticky window が無いための回避策。詳細は scripts/follow-overlay.sh）
 exec-on-workspace-change = ['/bin/bash', '-c', '~/.config/aerospace/scripts/follow-overlay.sh']
+
+# ウィンドウが無くても残すワークスペース（v1 では自動推論されていた）
+persistent-workspaces = ['M1', 'M2', 'M3', 'M4', 'S1', 'S2', 'B1', 'B2', 'B3']
 
 default-root-container-layout = 'tiles'
 default-root-container-orientation = 'auto'
@@ -25,6 +33,15 @@ ctrl-4 = 'workspace S1'
 ctrl-5 = 'workspace S2'
 ctrl-6 = 'workspace B1'
 ctrl-7 = 'workspace B2'
+ctrl-8 = 'workspace B3'
+ctrl-9 = 'workspace M4'
+# ウィンドウを隣のモニターへ移動（BetterTouchTool から移管、2026-09-02）
+# BTT 版はウィンドウを物理的に動かすだけで AeroSpace のワークスペース把握とズレるため、
+# こちらへ寄せた。BTT 側の同キー設定は削除すること（両方生きていると二重に発火する）。
+# 最大化・左右半分スナップは AeroSpace に相当機能が無いため BTT に残している。
+alt-shift-left = 'move-node-to-monitor next'
+alt-shift-right = 'move-node-to-monitor prev'
+
 ctrl-shift-1 = 'exec-and-forget ~/.config/aerospace/layouts/default.sh'
 ctrl-shift-2 = 'exec-and-forget ~/.config/aerospace/layouts/dev.sh'
 
@@ -38,6 +55,15 @@ if.app-id = 'com.electron.aqua-voice'
 run = ['layout floating']
 
 # アプリ自動配置
+#
+# 配置方針:
+#   M 系（メイン DELL）= 常時見るもの（ブラウザ・ターミナル）
+#   S 系（サブ DELL）  = 参照・開発
+#   B 系（本体）       = コミュニケーションと雑務
+#
+# Claude Desktop は意図的にルールを持たない（開いた場所に留める、2026-09-02）
+
+# --- M 系: メイン DELL ---
 [[on-window-detected]]
 if.app-id = 'com.google.Chrome'
 run = ['move-node-to-workspace M1']
@@ -50,33 +76,61 @@ run = ['move-node-to-workspace M2']
 if.app-id = 'com.github.wez.wezterm'
 run = ['move-node-to-workspace M3']
 
+# M4 は Hermes の画面共有などに使う空き枠。自動配置ルールは置かない。
+
+# --- S 系: サブ DELL ---
 [[on-window-detected]]
 if.app-id = 'notion.id'
 run = ['move-node-to-workspace S1']
+
+# S2 はエディタ / DB 枠。同時に開くことは稀なので 1 ワークスペースに同居させる。
+[[on-window-detected]]
+if.app-id = 'dev.zed.Zed'
+run = ['move-node-to-workspace S2']
 
 [[on-window-detected]]
 if.app-id = 'com.microsoft.VSCode'
 run = ['move-node-to-workspace S2']
 
 [[on-window-detected]]
-if.app-id = 'dev.zed.Zed'
+if.app-id = 'com.tinyapp.TablePlus'
 run = ['move-node-to-workspace S2']
 
+# --- B 系: Mac 本体 ---
+# B1: チャット
 [[on-window-detected]]
-if.app-id = 'com.anthropic.claudefordesktop'
+if.app-id = 'com.tinyspeck.slackmacgap'
 run = ['move-node-to-workspace B1']
+
+[[on-window-detected]]
+if.app-id = 'com.hnc.Discord'
+run = ['move-node-to-workspace B1']
+
+[[on-window-detected]]
+if.app-id = 'com.microsoft.teams2'
+run = ['move-node-to-workspace B1']
+
+# B2: メール・予定
+[[on-window-detected]]
+if.app-id = 'com.apple.mail'
+run = ['move-node-to-workspace B2']
+
+[[on-window-detected]]
+if.app-id = 'com.cron.electron'
+run = ['move-node-to-workspace B2']
+
+# B3: 雑アプリ・一時ウィンドウ
+[[on-window-detected]]
+if.app-id = 'com.apple.systempreferences'
+run = ['move-node-to-workspace B3']
 
 [[on-window-detected]]
 if.app-id = 'com.apple.ActivityMonitor'
-run = ['move-node-to-workspace B1']
+run = ['move-node-to-workspace B3']
 
 [[on-window-detected]]
 if.app-id = 'com.coteditor.CotEditor'
-run = ['move-node-to-workspace B2']
-
-[[on-window-detected]]
-if.app-id = 'com.apple.systempreferences'
-run = ['move-node-to-workspace B2']
+run = ['move-node-to-workspace B3']
 
 # ルールにないアプリは現在フォーカス中のワークスペースに留まる
 # (catch-all の move を削除し、デフォルト動作に任せる)
@@ -89,7 +143,9 @@ run = ['move-node-to-workspace B2']
 M1 = 2
 M2 = 2
 M3 = 2
+M4 = 2
 S1 = 3
 S2 = 3
 B1 = 1
 B2 = 1
+B3 = 1

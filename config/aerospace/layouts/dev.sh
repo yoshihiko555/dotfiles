@@ -1,10 +1,9 @@
 #!/bin/bash
 # Layout 2: 開発モード
-# Chrome → B1 に移動、B2 に Claude Code Desktop + Activity Monitor をタイリング
-#
-# デフォルトとの違い:
-#   - Chrome が M1 → B1 に移動（Mac本体でブラウザ参照）
-#   - B2 に開発系ツールをタイリング配置
+# デフォルトとの違いはメインモニターの使い方だけ:
+#   - Chrome を M1 から M4 へ退避し、M1 に Zed / TablePlus を持ってくる
+#   - メイン DELL で「エディタ・DB・ターミナル」を並べて見られる状態にする
+# B 系（コミュニケーション）はデフォルトと同じ。
 
 move_app_to_workspace() {
   local app_id="$1"
@@ -16,17 +15,25 @@ move_app_to_workspace() {
       done
 }
 
-# Main Monitor（Chrome なし）
-move_app_to_workspace 'company.thebrowser.dia'   'M2'
-move_app_to_workspace 'com.github.wez.wezterm'   'M3'
+# Main Monitor: 開発向けに入れ替え
+move_app_to_workspace 'dev.zed.Zed'             'M1'
+move_app_to_workspace 'com.microsoft.VSCode'    'M1'
+move_app_to_workspace 'com.tinyapp.TablePlus'   'M1'
+move_app_to_workspace 'company.thebrowser.dia'  'M2'
+move_app_to_workspace 'com.github.wez.wezterm'  'M3'
+move_app_to_workspace 'com.google.Chrome'       'M4'
 
 # Sub Monitor
-move_app_to_workspace 'notion.id'                'S1'
-move_app_to_workspace 'com.microsoft.VSCode'     'S2'
+move_app_to_workspace 'notion.id'               'S1'
 
-# Mac Built-in: B1 に Chrome、B2 に開発ツール群（タイリング）
-move_app_to_workspace 'com.google.Chrome'              'B1'
-move_app_to_workspace 'com.anthropic.claudefordesktop' 'B2'
-move_app_to_workspace 'com.apple.ActivityMonitor'      'B2'
+# Mac Built-in（デフォルトと同じ）
+move_app_to_workspace 'com.tinyspeck.slackmacgap' 'B1'
+move_app_to_workspace 'com.hnc.Discord'           'B1'
+move_app_to_workspace 'com.microsoft.teams2'      'B1'
+move_app_to_workspace 'com.apple.mail'            'B2'
+move_app_to_workspace 'com.cron.electron'         'B2'
+move_app_to_workspace 'com.apple.systempreferences' 'B3'
+move_app_to_workspace 'com.apple.ActivityMonitor'   'B3'
+move_app_to_workspace 'com.coteditor.CotEditor'     'B3'
 
-aerospace workspace B2
+aerospace workspace M3

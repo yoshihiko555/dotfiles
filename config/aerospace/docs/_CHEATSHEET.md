@@ -4,13 +4,18 @@
 
 | キー | WS | モニター | アプリ |
 |---|---|---|---|
-| `ctrl-1` | M1 | メイン | Google Chrome |
-| `ctrl-2` | M2 | メイン | Dia |
-| `ctrl-3` | M3 | メイン | WezTerm |
-| `ctrl-4` | S1 | サブ | Notion |
-| `ctrl-5` | S2 | サブ | VS Code |
-| `ctrl-6` | B1 | Mac本体 | Claude Desktop / Activity Monitor |
-| `ctrl-7` | B2 | Mac本体 | CotEditor / システム設定（雑アプリ置き場） |
+| `ctrl-1` | M1 | メインDELL | Google Chrome |
+| `ctrl-2` | M2 | メインDELL | Dia |
+| `ctrl-3` | M3 | メインDELL | WezTerm |
+| `ctrl-9` | M4 | メインDELL | （空き枠。Hermes の画面共有等） |
+| `ctrl-4` | S1 | サブDELL | Notion |
+| `ctrl-5` | S2 | サブDELL | Zed / VS Code / TablePlus |
+| `ctrl-6` | B1 | Mac本体 | Slack / Discord / Teams |
+| `ctrl-7` | B2 | Mac本体 | Mail / Notion Calendar |
+| `ctrl-8` | B3 | Mac本体 | システム設定 / Activity Monitor / CotEditor |
+
+配置方針は M 系＝常時見るもの、S 系＝参照・開発、B 系＝コミュニケーションと雑務。
+M4 と B3 は後から足したため、既存の手なじみを壊さないようキーは末尾に付けている。
 
 上記アプリは起動時に `on-window-detected` ルールで自動配置される。
 ルールに無いアプリは、その時フォーカス中のワークスペースに留まる（catch-all は意図的に置いていない）。
@@ -36,37 +41,60 @@ AeroSpace には sticky window（全ワークスペース表示）が無く（Gi
 
 ### ウィンドウ操作
 
-| 操作 | キー |
-|---|---|
-| フォーカス移動 | `alt-h/j/k/l` (左/下/上/右) |
-| ウィンドウ入れ替え | `alt-shift-h/j/k/l` |
-| フルスクリーン | `alt-f` |
-| フローティング切り替え | `alt-shift-f` |
+| 操作 | キー | 備考 |
+|---|---|---|
+| 隣のモニターへ移動 | `shift-alt-←` | BetterTouchTool から移管（2026-09-02） |
+| 前のモニターへ移動 | `shift-alt-→` | 同上 |
 
-### レイアウト
+BTT に残している機能（AeroSpace に相当コマンドが無い）:
 
-| 操作 | キー |
-|---|---|
-| tiles 切り替え (水平↔垂直) | `alt-/` |
-| accordion 切り替え | `alt-,` |
+| 操作 | キー | 理由 |
+|---|---|---|
+| ウインドウを最大化 | `alt-↑` | AeroSpace の `fullscreen` でも代替可だが BTT に残置 |
+| 左半分に最大化 | `alt-←` | **相当コマンドが存在しない**。タイル型は絶対座標スナップの概念を持たない |
+| 右半分に最大化 | `alt-→` | 同上 |
 
-- **tiles**: ウィンドウを分割して並べる。同一WS内に複数ウィンドウがある場合に有効
-- **accordion**: 1つをフル表示し、`alt-h/l` で前後のウィンドウに切り替え
+BTT 版はフローティングウィンドウや AeroSpace 管理外のウィンドウにも効くため、
+役割分担として残す方が安全。
 
-### リサイズモード
+なお Karabiner が `ctrl-b/f/n/p` を方向キーへ変換している
+（`optional: any` なので他の修飾キーと併用しても変換される）。
+`alt-←` は `ctrl-alt-b` と押しても同じ。
 
-1. `alt-r` でリサイズモードに入る
-2. `h/j/k/l` でサイズ調整（50px単位）
-3. `esc` or `enter` で通常モードに戻る
+### 未設定のウィンドウ操作
 
-## レイアウトプリセット
+**AeroSpace は設定ファイルがあると `[mode.main.binding]` がデフォルトを完全に置き換える。**
+書いていないバインドは存在しない。以下は AeroSpace 公式のデフォルトだが、
+**このリポジトリでは意図的に設定していない**（2026-09-02 に判断）。
+
+未対応の穴として、**M4 はルールを持たない空き枠のため、ウィンドウをそこへ送る手段が
+CLI しかない**。必要になったら `ctrl-alt-1`〜`9` に `move-node-to-workspace` を割り当てる。
+
+| 操作 | 公式デフォルト | 未設定の理由 |
+|---|---|---|
+| フォーカス移動 | `alt-h/j/k/l` | tmux の smart-splits ペイン移動と衝突 |
+| ウィンドウ入れ替え | `alt-shift-h/j/k/l` | tmux のペインリサイズと衝突 |
+| ワークスペース切替 | `alt-1`〜`9` | tmux のウィンドウ切替と衝突 |
+| フルスクリーン | `alt-f` | （未検討） |
+| フローティング切替 | `alt-shift-f` | （未検討） |
+| リサイズモード | `alt-r` | （未検討） |
+
+AeroSpace はキーを Accessibility API でグローバルに横取りするため、alt 系を取ると
+WezTerm 上の tmux が使えなくなる。tmux 側の定義は `config/tmux/conf/smart-splits.conf`
+と `config/tmux/conf/session.conf` を参照。
+
+空いている修飾キー領域は `ctrl-alt-*`（tmux / WezTerm / Karabiner のいずれも未使用）。
+
+## レイアウトプリセット## レイアウトプリセット
 
 シェルスクリプトでアプリ配置を一括切り替え。
 
 | キー | プリセット | 内容 |
 |---|---|---|
-| `ctrl-shift-1` | デフォルト | Chrome→M1、B1にその他まとめ |
-| `ctrl-shift-2` | 開発モード | Chrome→B1、B2にClaude Code Desktop+Activity Monitor |
+| `ctrl-shift-1` | デフォルト | `on-window-detected` と同じ対応表を既存ウィンドウへ一括適用 |
+| `ctrl-shift-2` | 開発モード | Chrome を M4 へ退避し、M1 に Zed / TablePlus を置く |
+
+開発モードはメインモニターの使い方だけを変える。B 系（コミュニケーション）は共通。
 
 ### プリセットの追加方法
 
@@ -99,10 +127,12 @@ aerospace layout tiles horizontal
 M1 = 2  # DELL U2720QM（メイン）
 M2 = 2
 M3 = 2
+M4 = 2
 S1 = 3  # DELL G2422HS（サブ）
 S2 = 3
 B1 = 1  # Built-in Retina Display（本体）
 B2 = 1
+B3 = 1
 ```
 
 モニター番号は `aerospace list-monitors` で確認できる。
