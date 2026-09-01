@@ -86,6 +86,8 @@ in
         # 当該ファイルは .gitignore で除外している
         "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.CC5F7378-77EC-4037-B0BD-499DBF07983D".source =
           mkLink "alfred/fast-notion";
+        "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.5B4C6E9B-E7D8-4A26-BDE6-653EFD05231D".source =
+          mkLink "alfred/github-repo";
       };
 
       # Claude Code / Antigravity CLI は JSON を rename で置換するため、symlink では

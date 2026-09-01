@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.yoshihiko555.github-repo</string>
+	<key>category</key>
+	<string>Tools</string>
+	<key>connections</key>
+	<dict>
+		<key>B8ECECF2-061E-478D-9D37-EAC9834E24A1</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>C2408A56-A906-4F39-893A-4BFE4F3F4C7D</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>yoshihiko</string>
+	<key>description</key>
+	<string>GitHub のリポジトリを検索してブラウザで開く。</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>GitHub Repo</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<true/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>gh</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>GitHub からリポジトリ一覧を取得中…</string>
+				<key>script</key>
+				<string>require "json"
+require "fileutils"
+
+# 一覧のキャッシュ有効期間（秒）。Alfred 側でフィルタさせる設定にしているため
+# 通常は打鍵ごとに走らないが、キーワードを打ち直すたびの再取得は避けたい。
+CACHE_TTL = 600
+
+# Alfred の Script Filter は最小 PATH で起動するため、gh は絶対パスで探す。
+GH_CANDIDATES = [
+  ENV["GH_BIN"].to_s,
+  "/etc/profiles/per-user/#{ENV['USER']}/bin/gh",
+  "/run/current-system/sw/bin/gh",
+  "#{ENV['HOME']}/.nix-profile/bin/gh",
+  "/opt/homebrew/bin/gh",
+  "/usr/local/bin/gh"
+].reject(&amp;:empty?)
+
+REPOS_API = "/user/repos?per_page=100" \
+            "&amp;affiliation=owner,collaborator,organization_member" \
+            "&amp;sort=pushed"
+
+def emit(items)
+  print JSON.generate({ "items" =&gt; items })
+  exit 0
+end
+
+def emit_message(title, subtitle)
+  emit([{ "title" =&gt; title, "subtitle" =&gt; subtitle, "valid" =&gt; false }])
+end
+
+def gh_bin
+  GH_CANDIDATES.find { |path| File.executable?(path) }
+end
+
+def cache_file
+  dir = ENV["alfred_workflow_cache"].to_s
+  return nil if dir.empty?
+
+  FileUtils.mkdir_p(dir)
+  File.join(dir, "repos.json")
+end
+
+def read_cache(path)
+  return nil if path.nil? || !File.exist?(path)
+
+  JSON.parse(File.read(path))
+rescue StandardError
+  nil
+end
+
+def fresh_cache(path)
+  return nil if path.nil? || !File.exist?(path)
+  return nil if Time.now - File.mtime(path) &gt; CACHE_TTL
+
+  read_cache(path)
+end
+
+def write_cache(path, repos)
+  return if path.nil?
+
+  File.write(path, JSON.generate(repos))
+rescue StandardError
+  nil
+end
+
+# --jq で1行1オブジェクトに整形して受け取る。--paginate があるので
+# 100 件を超えても全ページ分が連結されて返る。
+def fetch_repos(bin)
+  jq = ".[] | {full_name, description, html_url, private, archived, fork}"
+  output = IO.popen([bin, "api", "--paginate", REPOS_API, "--jq", jq], err: [:child, :out], &amp;:read)
+  raise output.to_s.lines.first.to_s.strip unless $?.success?
+
+  output.each_line.map do |line|
+    line = line.strip
+    next nil if line.empty?
+
+    JSON.parse(line)
+  end.compact
+end
+
+bin = gh_bin
+if bin.nil?
+  emit_message("gh コマンドが見つかりません",
+               "Workflow Configuration の GH_BIN に gh の絶対パスを設定してください")
+end
+
+path = cache_file
+repos = fresh_cache(path)
+
+if repos.nil?
+  begin
+    repos = fetch_repos(bin)
+    write_cache(path, repos)
+  rescue StandardError =&gt; e
+    # 取得に失敗したら期限切れキャッシュで代替する。それも無ければ諦める。
+    repos = read_cache(path)
+    if repos.nil?
+      emit_message("リポジトリ一覧を取得できませんでした", e.message.to_s[0, 120])
+    end
+  end
+end
+
+items = repos.map do |repo|
+  full_name = repo["full_name"].to_s
+  owner, name = full_name.split("/", 2)
+
+  badges = []
+  badges &lt;&lt; "🔒 private" if repo["private"]
+  badges &lt;&lt; "🗄 archived" if repo["archived"]
+  badges &lt;&lt; "🍴 fork" if repo["fork"]
+  subtitle = (badges + [repo["description"].to_s]).reject { |v| v.to_s.empty? }.join("  ·  ")
+
+  {
+    "uid" =&gt; full_name,
+    "title" =&gt; full_name,
+    "subtitle" =&gt; subtitle,
+    # owner だけ / リポジトリ名だけ、どちらの打鍵でも当たるようにする。
+    "match" =&gt; "#{full_name} #{owner} #{name}",
+    "arg" =&gt; repo["html_url"],
+    "quicklookurl" =&gt; repo["html_url"],
+    "text" =&gt; { "copy" =&gt; repo["html_url"], "largetype" =&gt; full_name }
+  }
+end
+
+emit_message("リポジトリがありません", "gh auth status で認証状態を確認してください") if items.empty?
+
+emit(items)
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>リポジトリ名 / オーナー名で絞り込む</string>
+				<key>title</key>
+				<string>GitHub Repo</string>
+				<key>type</key>
+				<integer>2</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>B8ECECF2-061E-478D-9D37-EAC9834E24A1</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>browser</key>
+				<string></string>
+				<key>skipqueryencode</key>
+				<true/>
+				<key>skipvarencode</key>
+				<true/>
+				<key>spaces</key>
+				<string></string>
+				<key>url</key>
+				<string>{query}</string>
+				<key>utf8</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.openurl</string>
+			<key>uid</key>
+			<string>C2408A56-A906-4F39-893A-4BFE4F3F4C7D</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string>`gh` でアクセスできる GitHub リポジトリを一覧・絞り込みし、ブラウザで開く。
+
+対象は gh CLI の認証ユーザーが所有・参加している全リポジトリ（own / collaborator / org）。
+並び順は最終 push 順で、Alfred の使用頻度学習で上に上がる。
+
+一覧は 10 分キャッシュする。認証は gh CLI の keyring を使うため、
+このワークフロー側にトークンを保存しない。事前に `gh auth login` を済ませておくこと。
+
+gh が標準的な場所に無い環境では Configure Workflow で GH_BIN に絶対パスを設定する。</string>
+	<key>uidata</key>
+	<dict>
+		<key>B8ECECF2-061E-478D-9D37-EAC9834E24A1</key>
+		<dict>
+			<key>xpos</key>
+			<integer>95</integer>
+			<key>ypos</key>
+			<integer>215</integer>
+		</dict>
+		<key>C2408A56-A906-4F39-893A-4BFE4F3F4C7D</key>
+		<dict>
+			<key>xpos</key>
+			<integer>315</integer>
+			<key>ypos</key>
+			<integer>215</integer>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>/opt/homebrew/bin/gh</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>gh の絶対パス。空なら一般的な場所から自動検出する。</string>
+			<key>label</key>
+			<string>gh binary path</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>GH_BIN</string>
+		</dict>
+	</array>
+	<key>variables</key>
+	<dict/>
+	<key>version</key>
+	<string>1.0.0</string>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>
