@@ -9,10 +9,21 @@
 | `ctrl-3` | M3 | メイン | WezTerm |
 | `ctrl-4` | S1 | サブ | Notion |
 | `ctrl-5` | S2 | サブ | VS Code |
-| `ctrl-6` | B1 | Mac本体 | その他 |
-| `ctrl-7` | B2 | Mac本体 | Claude Code Desktop + Activity Monitor 等 |
+| `ctrl-6` | B1 | Mac本体 | Claude Desktop / Activity Monitor |
+| `ctrl-7` | B2 | Mac本体 | CotEditor / システム設定（雑アプリ置き場） |
 
 上記アプリは起動時に `on-window-detected` ルールで自動配置される。
+ルールに無いアプリは、その時フォーカス中のワークスペースに留まる（catch-all は意図的に置いていない）。
+
+## オーバーレイ系アプリの追従
+
+Aqua Voice の音声入力オーバーレイは、`exec-on-workspace-change` から
+`scripts/follow-overlay.sh` を呼んでフォーカス中のワークスペースへ追従させている。
+
+AeroSpace には sticky window（全ワークスペース表示）が無く（GitHub Issue #2、未実装）、
+`layout floating` はタイリングエンジンから外すだけでワークスペース束縛は解けないため
+（2026-09-02 実測）、この回避策が必要。追従対象は `follow-overlay.sh` の
+`FOLLOW_APP_IDS` に bundle ID を足して増やせる。
 
 ## キーバインド一覧
 
@@ -81,27 +92,20 @@ aerospace workspace <WS>
 aerospace layout tiles horizontal
 ```
 
-## モニター固定（未設定）
-
-ワークスペースを特定モニターに固定するには:
-
-```bash
-# モニター番号の確認
-aerospace list-monitors
-```
-
-`aerospace.toml` 末尾のコメントを外して設定:
+## モニター固定（設定済み）
 
 ```toml
 [workspace-to-monitor-force-assignment]
-M1 = 1
-M2 = 1
-M3 = 1
-S1 = 2
-S2 = 2
-B1 = 'secondary'
-B2 = 'secondary'
+M1 = 2  # DELL U2720QM（メイン）
+M2 = 2
+M3 = 2
+S1 = 3  # DELL G2422HS（サブ）
+S2 = 3
+B1 = 1  # Built-in Retina Display（本体）
+B2 = 1
 ```
+
+モニター番号は `aerospace list-monitors` で確認できる。
 
 ## 設定ファイルの場所
 
@@ -111,8 +115,10 @@ B2 = 'secondary'
 ├── layouts/
 │   ├── default.sh       # プリセット1: デフォルト
 │   └── dev.sh           # プリセット2: 開発モード
+├── scripts/
+│   └── follow-overlay.sh # オーバーレイ追従（exec-on-workspace-change）
 └── docs/
-    └── CHEATSHEET.md    # このファイル
+    └── _CHEATSHEET.md   # このファイル
 ```
 
 dotfiles では `config/aerospace/` で管理。out-of-store link のため編集は即時反映される。

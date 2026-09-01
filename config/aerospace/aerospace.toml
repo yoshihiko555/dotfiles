@@ -2,6 +2,10 @@ after-login-command = []
 after-startup-command = ['exec-and-forget ~/.config/aerospace/layouts/default.sh']
 start-at-login = false
 
+# ワークスペース切替時にオーバーレイ系アプリを追従させる
+# （AeroSpace に sticky window が無いための回避策。詳細は scripts/follow-overlay.sh）
+exec-on-workspace-change = ['/bin/bash', '-c', '~/.config/aerospace/scripts/follow-overlay.sh']
+
 default-root-container-layout = 'tiles'
 default-root-container-orientation = 'auto'
 
@@ -23,6 +27,15 @@ ctrl-6 = 'workspace B1'
 ctrl-7 = 'workspace B2'
 ctrl-shift-1 = 'exec-and-forget ~/.config/aerospace/layouts/default.sh'
 ctrl-shift-2 = 'exec-and-forget ~/.config/aerospace/layouts/dev.sh'
+
+# オーバーレイ系アプリをタイル管理から除外
+# Aqua Voice の音声入力オーバーレイがタイルに組み込まれてリサイズされるのを防ぐ。
+# 注意: これはタイリングエンジンからの除外のみで、ワークスペース束縛は解けない
+# （2026-09-02 に実測で確認）。ワークスペースをまたいで見え続けさせる処理は
+# exec-on-workspace-change → scripts/follow-overlay.sh が担当する。
+[[on-window-detected]]
+if.app-id = 'com.electron.aqua-voice'
+run = ['layout floating']
 
 # アプリ自動配置
 [[on-window-detected]]
@@ -56,6 +69,14 @@ run = ['move-node-to-workspace B1']
 [[on-window-detected]]
 if.app-id = 'com.apple.ActivityMonitor'
 run = ['move-node-to-workspace B1']
+
+[[on-window-detected]]
+if.app-id = 'com.coteditor.CotEditor'
+run = ['move-node-to-workspace B2']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.systempreferences'
+run = ['move-node-to-workspace B2']
 
 # ルールにないアプリは現在フォーカス中のワークスペースに留まる
 # (catch-all の move を削除し、デフォルト動作に任せる)
