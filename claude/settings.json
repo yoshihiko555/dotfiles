@@ -164,6 +164,7 @@
   "skipWorkflowUsageWarning": true,
   "theme": "dark-ansi",
   "skipAutoPermissionPrompt": true,
+  "autoContinueAtUsageLimit": true,
   "autoMode": {
     "environment": [
       "### Org-wide",
