@@ -53,21 +53,31 @@ AeroSpace には sticky window（全ワークスペース表示）が無く（Gi
 |---|---|---|
 | 隣のモニターへ移動 | `shift-alt-←` | BetterTouchTool から移管（2026-09-02） |
 | 前のモニターへ移動 | `shift-alt-→` | 同上 |
+| ワークスペース全域に広げる | `alt-↑` | `fullscreen` トグル。BTT から移管（2026-09-02） |
+| 分割方式を切替 | `ctrl-alt-a` | `tiles` ⇄ `accordion` トグル |
+
+同じアプリの別ウィンドウ（Chrome のプロファイル別など）が分割表示されたときの使い分け:
+
+- **一時的に片方だけ見たい** → `alt-↑`。ただし**同じワークスペース内の別ウィンドウに
+  フォーカスを移すと自動解除される**（AeroSpace の仕様）。見比べながらの切り替えには向かない。
+- **常に片方を広く使いたい** → `ctrl-alt-a` で accordion に切替。非アクティブ側が端に
+  細く畳まれ、フォーカスを移すと入れ替わる。戻すときはもう一度 `ctrl-alt-a`。
 
 BTT に残している機能（AeroSpace に相当コマンドが無い）:
 
 | 操作 | キー | 理由 |
 |---|---|---|
-| ウインドウを最大化 | `alt-↑` | AeroSpace の `fullscreen` でも代替可だが BTT に残置 |
 | 左半分に最大化 | `alt-←` | **相当コマンドが存在しない**。タイル型は絶対座標スナップの概念を持たない |
 | 右半分に最大化 | `alt-→` | 同上 |
+
+**BTT 側の `alt-↑`（最大化）は削除すること。** 両方生きていると二重に発火する。
 
 BTT 版はフローティングウィンドウや AeroSpace 管理外のウィンドウにも効くため、
 役割分担として残す方が安全。
 
 なお Karabiner が `ctrl-b/f/n/p` を方向キーへ変換している
 （`optional: any` なので他の修飾キーと併用しても変換される）。
-`alt-←` は `ctrl-alt-b` と押しても同じ。
+`alt-←` は `ctrl-alt-b` と押しても同じ。同様に `alt-↑` は `ctrl-alt-p` でも発火する。
 
 ### 未設定のウィンドウ操作
 
@@ -80,16 +90,19 @@ BTT 版はフローティングウィンドウや AeroSpace 管理外のウィ�
 | フォーカス移動 | `alt-h/j/k/l` | tmux の smart-splits ペイン移動と衝突 |
 | ウィンドウ入れ替え | `alt-shift-h/j/k/l` | tmux のペインリサイズと衝突 |
 | ワークスペース切替 | `alt-1`〜`9` | tmux のウィンドウ切替と衝突（`ctrl-1`〜`9` で代替） |
-| フルスクリーン | `alt-f` | （未検討） |
+| フルスクリーン | `alt-f` | `alt-↑` で実装済み（`alt-f` は Karabiner が `ctrl-f`→`→` を横取りするため不採用） |
 | フローティング切替 | `alt-shift-f` | （未検討） |
 | リサイズモード | `alt-r` | （未検討） |
+| レイアウト切替 | `alt-slash` / `alt-comma` | `ctrl-alt-a`（tiles ⇄ accordion）で実装済み |
 
 AeroSpace はキーを Accessibility API でグローバルに横取りするため、alt 系を取ると
 WezTerm 上の tmux が使えなくなる。tmux 側の定義は `config/tmux/conf/smart-splits.conf`
 と `config/tmux/conf/session.conf` を参照。
 
 `ctrl-alt-*` は tmux / WezTerm / Karabiner のいずれも未使用のため、
-ウィンドウ移動（`ctrl-alt-1`〜`9`）に割り当てた（2026-09-02）。
+ウィンドウ移動（`ctrl-alt-1`〜`9`）とレイアウト切替（`ctrl-alt-a`）に割り当てた（2026-09-02）。
+ただし Karabiner が横取りする `b` / `f` / `h` / `n` / `p` / `q` / `space` は
+`ctrl-alt-*` でも変換されるため使えない。
 
 ## レイアウトプリセット
 

@@ -63,6 +63,21 @@ ctrl-alt-9 = 'move-node-to-workspace M4'
 alt-shift-left = 'move-node-to-monitor --focus-follows-window --wrap-around left'
 alt-shift-right = 'move-node-to-monitor --focus-follows-window --wrap-around right'
 
+# アクティブなウィンドウをワークスペース全域に広げる（トグル、2026-09-02 追加）
+# 同じアプリの別ウィンドウ（Chrome のプロファイル別など）が分割表示されたときに、
+# 見たい方だけ一時的に広げる用途。BTT の alt-↑（最大化）から移管したため、
+# BTT 側の同キー設定は削除すること（両方生きていると二重に発火する）。
+# Karabiner の ctrl-p → ↑ 変換により ctrl-alt-p でも同じバインドが発火する。
+# 仕様: 同じワークスペース内の別ウィンドウにフォーカスを移すと自動的に解除される
+# （AeroSpace 公式ドキュメント記載）。常に片方を広く使いたいなら下の accordion を使う。
+alt-up = 'fullscreen'
+
+# 分割の仕方を tiles ⇄ accordion で切り替える（トグル）
+# accordion は非アクティブ側を端に細く畳むので、常に片方を広く使いたいとき向け。
+# 一時的に広げたいだけなら上の alt-↑ を使う。
+# a = accordion。Karabiner が横取りする b/f/h/n/p/q/space を避けた選択。
+ctrl-alt-a = 'layout accordion tiles'
+
 ctrl-shift-1 = 'exec-and-forget ~/.config/aerospace/layouts/default.sh'
 ctrl-shift-2 = 'exec-and-forget ~/.config/aerospace/layouts/dev.sh'
 
