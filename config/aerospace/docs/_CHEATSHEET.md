@@ -95,7 +95,7 @@ WezTerm 上の tmux が使えなくなる。tmux 側の定義は `config/tmux/co
 | キー | プリセット | 内容 |
 |---|---|---|
 | `ctrl-shift-1` | デフォルト | `on-window-detected` と同じ対応表を既存ウィンドウへ一括適用 |
-| `ctrl-shift-2` | 開発モード | Chrome を M4 へ退避し、M1 に Zed / TablePlus を置く |
+| `ctrl-shift-2` | 開発モード | Chrome を M4 へ退避し、M1 に Zed / VS Code を置く（TablePlus は S2 のまま） |
 
 開発モードはメインモニターの使い方だけを変える。B 系（コミュニケーション）は共通。
 
