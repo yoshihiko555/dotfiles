@@ -172,6 +172,31 @@ mise の trust が switch の副作用で外れることがある
 （[ADR-0005](adr/ADR-20260802-0005-upstream-nix-migration.md) 影響節）。
 言語ランタイムが読み込まれない場合は `mise trust` を再実行する。
 
+### Homebrew の tap trust
+
+**手動作業は不要。** Homebrew 6.0 から非公式 tap は明示的に信頼するまでロードされず、
+`brew info --cask aerospace` のような対話コマンドが以下で落ちる。
+
+```
+Error: Refusing to load cask nikitabobko/tap/aerospace from untrusted tap nikitabobko/tap.
+```
+
+`switch` の home-manager activation（`darwin/homebrew.nix` の `brewTapTrust`）が
+宣言済み tap を `brew trust --tap` へ流し込むため、初回 `switch` の完了時点で
+`~/.homebrew/trust.json` が生成されている。`brew trust` を手で叩く必要はない。
+
+信頼状況の確認:
+
+```sh
+brew trust           # 信頼済みの tap / formula / cask / command を一覧
+cat ~/.homebrew/trust.json
+```
+
+補足: `brew bundle`（switch 内の cask/formula 導入）は
+`HOMEBREW_NO_REQUIRE_TAP_TRUST=1` で trust を迂回している。activation の順序は
+brew bundle → home-manager なので、初回 `switch` の bundle 時点では trust.json が
+まだ存在せず、この迂回設定は引き続き必要。
+
 ## host 一覧
 
 `flake.nix` の `darwinConfigurations` より。

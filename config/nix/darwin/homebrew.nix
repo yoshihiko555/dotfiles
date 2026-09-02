@@ -1,4 +1,4 @@
-{ ... }:
+{ config, lib, ... }:
 {
   homebrew.enable = true;
 
@@ -30,4 +30,38 @@
   # （ADR-0004 ルール 3: 共通層に置くのは 2 台以上で使うものだけ）。
   homebrew.taps = [ ];
   homebrew.brews = [ ];
+
+  # 対話利用の brew（switch 経路ではない）は Homebrew 6.0 の tap trust に従うため、
+  # ~/.homebrew/trust.json に信頼済み tap が無いと `brew info --cask aerospace` 等が
+  # "Refusing to load cask ... from untrusted tap" で落ちる。上の
+  # HOMEBREW_NO_REQUIRE_TAP_TRUST は brew bundle の env にしか効かないので、
+  # 新規端末では手で `brew trust` を叩き直す必要があった。それを switch に取り込む。
+  #
+  # trust.json は brew が所有者・パーミッションを検証したうえで 0600 の実ファイルとして
+  # 原子的に書き換える（symlink 先が /nix/store だと書き込み拒否）ため、home.file では
+  # 配線できない。宣言済み tap を毎 switch で `brew trust --tap` に流し込み、実ファイル側を
+  # 宣言へ追従させる方式を採る。
+  #
+  # - 追加のみ。宣言から消えた tap の untrust はしない（手動 trust を巻き込んで剥がすため）
+  # - 既に信頼済みなら brew 側が no-op を返すので毎回実行してよい
+  # - home-manager の activation は brew bundle より後に走る。初回 switch の bundle は
+  #   trust.json がまだ無い状態で動くので、上の HOMEBREW_NO_REQUIRE_TAP_TRUST は残す
+  # - tap 未宣言のホスト（hermes）では中身が空になり実質 no-op
+  home-manager.users.${config.hostSpec.username} =
+    { lib, ... }:
+    {
+      home.activation.brewTapTrust = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        brew_bin="${config.homebrew.prefix}/bin/brew"
+        declared_taps=( ${lib.escapeShellArgs (map (tap: tap.name) config.homebrew.taps)} )
+
+        if [ -x "$brew_bin" ] && [ ''${#declared_taps[@]} -gt 0 ]; then
+          for tap in "''${declared_taps[@]}"; do
+            # --quiet で「Trusted / Already trusted」の定型出力だけを落とす（失敗時の
+            # stderr は残す）。失敗しても switch 全体は止めない。
+            run --quiet "$brew_bin" trust --tap "$tap" \
+              || echo "brewTapTrust: $tap の trust に失敗しました" >&2
+          done
+        fi
+      '';
+    };
 }
