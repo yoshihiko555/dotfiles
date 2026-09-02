@@ -68,6 +68,5 @@
   "autoDreamEnabled": true,
   "skipWorkflowUsageWarning": true,
   "theme": "dark-ansi",
-  "skipAutoPermissionPrompt": true,
   "autoContinueAtUsageLimit": true
 }
