@@ -17,12 +17,14 @@ customCommands:
         exit 1
       fi
 
+      AGY_MODEL="${AGY_MODEL:-Gemini 3.6 Flash (Low)}"
+
       echo ""
       echo "  ╭─────────────────────────────────────────────╮"
       echo "  │  Generating commit message with Antigravity │"
       echo "  ╰─────────────────────────────────────────────╯"
       echo ""
-      echo "  Model : Gemini 3.5 Flash (Low)"
+      echo "  Model : $AGY_MODEL"
       echo "  Staged: $(git diff --cached --stat | tail -1)"
       echo ""
       echo "  ── Usage ──────────────────────────────────────"
@@ -42,11 +44,19 @@ customCommands:
         git diff --cached
       )"
 
-      MSG="$("$AGY_BIN" --model "Gemini 3.5 Flash (Low)" -p "$PROMPT_CONTENT" </dev/null 2>/dev/null)"
+      AGY_ERR="$(mktemp -t lazygit-agy)"
+      MSG="$("$AGY_BIN" --model "$AGY_MODEL" -p "$PROMPT_CONTENT" </dev/null 2>"$AGY_ERR")"
 
       if [ -z "$MSG" ]; then
         echo "Antigravity did not return a commit message."
+        if [ -s "$AGY_ERR" ]; then
+          echo ""
+          echo "  ── agy stderr ─────────────────────────────────"
+          cat "$AGY_ERR"
+        fi
+        rm -f "$AGY_ERR"
         exit 1
       fi
+      rm -f "$AGY_ERR"
 
       git commit -e -m "$MSG"
