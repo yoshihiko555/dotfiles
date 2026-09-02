@@ -40,7 +40,28 @@ AeroSpace には sticky window（全ワークスペース表示）が無く（Gi
 | 操作 | キー |
 |---|---|
 | ワークスペース切り替え | `ctrl-1` 〜 `9` |
+| 同じモニター内で次のWSへ | `ctrl-→` |
+| 同じモニター内で前のWSへ | `ctrl-←` |
 | アクティブなウィンドウを別WSに移動 | `ctrl-alt-1` 〜 `9` |
+
+`ctrl-←` / `ctrl-→` は macOS の「スペースを左右に移動」の操作感を再現したもの（2026-09-02 追加）。
+巡回対象は**フォーカス中のモニターに割り当てられた WS だけ**で、端まで行くと反対側へ回り込む。
+
+| フォーカス中のモニター | 巡回順 |
+|---|---|
+| メインDELL | M1 → M2 → M3 → M4 →（M1へ戻る） |
+| サブDELL | S1 → S2 → S3 →（S1へ戻る） |
+| Mac本体 | B1 → B2 →（B1へ戻る） |
+
+AeroSpace 標準の `workspace next|prev` は全 9 WS をアルファベット順
+（B1→B2→M1→…→S3）に回るため、3 回押すごとにフォーカスが別モニターへ飛ぶ。
+そこで `workspace --stdin` に `list-workspaces --monitor focused` の出力を渡す
+`scripts/workspace-cycle.sh` を経由させている。BTT のスワイプも同じスクリプトを呼ぶ。
+
+macOS 側の `ctrl-←` / `ctrl-→`（Mission Control のスペース移動）は
+symbolichotkeys 79 / 81 を無効化済みのため衝突しない。
+Karabiner の `ctrl-b` / `ctrl-f` → `←` / `→` 変換は ctrl を落として素の矢印を送るので、
+ターミナルでの `ctrl-b` / `ctrl-f` がここに誤爆することもない。
 
 移動先の割り当ては `ctrl-N`（切替）と同じ並び。`ctrl-alt-9` で空き枠の M4 へ送れる。
 フォーカスは元のワークスペースに留まる（`--focus-follows-window` を意図的に付けていない）。
@@ -75,6 +96,33 @@ BTT に残している機能（AeroSpace に相当コマンドが無い）:
 BTT 版はフローティングウィンドウや AeroSpace 管理外のウィンドウにも効くため、
 役割分担として残す方が安全。
 
+### トラックパッドのスワイプ（BTT 側で設定）
+
+仮想デスクトップ切り替えのスワイプ操作を AeroSpace へ移管する手順。
+BTT の設定はリポジトリ管理外なので、手作業での設定が必要。
+
+1. BTT →「Trackpad」タブ → 対象デバイスを選択
+2. 既存の `3 Finger Swipe Left` / `Right` を探す
+   （旧設定は `Move Left a Space` / `Move Right a Space` を割り当てていた。
+   native Space が 1 つになった今は何も起きない）
+3. **ジェスチャは作り直さず、アクションだけ差し替える**。
+   Action を `Execute Terminal Command (Async, non-blocking)` に変更し、以下を設定:
+
+   | ジェスチャ | コマンド |
+   |---|---|
+   | 3 Finger Swipe Left | `/Users/yoshihiko/.config/aerospace/scripts/workspace-cycle.sh next` |
+   | 3 Finger Swipe Right | `/Users/yoshihiko/.config/aerospace/scripts/workspace-cycle.sh prev` |
+
+   指を左へ払う＝画面が左へ流れる＝次の WS、という macOS の慣習に合わせている
+   （キーボードの `ctrl-→` と同じ向き）。
+
+4. スワイプが効かない場合は macOS 標準ジェスチャと競合している。
+   システム設定 → トラックパッド → その他のジェスチャ →
+   「フルスクリーンアプリケーション間をスワイプ」を **4本指に変更 or オフ**。
+
+スクリプトは PATH に依存しないよう `/opt/homebrew/bin/aerospace` を直接叩いている
+（BTT から起動されるシェルは PATH が最小限のため）。
+
 なお Karabiner が `ctrl-b/f/n/p` を方向キーへ変換している
 （`optional: any` なので他の修飾キーと併用しても変換される）。
 `alt-←` は `ctrl-alt-b` と押しても同じ。同様に `alt-↑` は `ctrl-alt-p` でも発火する。
@@ -90,6 +138,7 @@ BTT 版はフローティングウィンドウや AeroSpace 管理外のウィ�
 | フォーカス移動 | `alt-h/j/k/l` | tmux の smart-splits ペイン移動と衝突 |
 | ウィンドウ入れ替え | `alt-shift-h/j/k/l` | tmux のペインリサイズと衝突 |
 | ワークスペース切替 | `alt-1`〜`9` | tmux のウィンドウ切替と衝突（`ctrl-1`〜`9` で代替） |
+| WS の次/前へ | `alt-tab` 等 | `ctrl-←`/`ctrl-→` で実装済み（標準の `workspace next` はモニターを跨ぐため不採用） |
 | フルスクリーン | `alt-f` | `alt-↑` で実装済み（`alt-f` は Karabiner が `ctrl-f`→`→` を横取りするため不採用） |
 | フローティング切替 | `alt-shift-f` | （未検討） |
 | リサイズモード | `alt-r` | （未検討） |
@@ -165,7 +214,8 @@ B2 = 1
 │   ├── default.sh       # プリセット1: デフォルト
 │   └── dev.sh           # プリセット2: 開発モード
 ├── scripts/
-│   └── follow-overlay.sh # オーバーレイ追従（exec-on-workspace-change）
+│   ├── follow-overlay.sh   # オーバーレイ追従（exec-on-workspace-change）
+│   └── workspace-cycle.sh  # モニター内WS巡回（ctrl-←/→ と BTT スワイプ）
 └── docs/
     └── _CHEATSHEET.md   # このファイル
 ```

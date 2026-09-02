@@ -36,6 +36,18 @@ ctrl-7 = 'workspace B1'
 ctrl-8 = 'workspace B2'
 ctrl-9 = 'workspace M4'
 
+# 同じモニター内でワークスペースを左右に巡回（2026-09-02 追加）
+# macOS の「スペースを左右に移動」（ctrl-←/→）の操作感を再現するもの。
+# その ctrl-←/→ は symbolichotkeys 79/81 を無効化済みなので空いている。
+# Karabiner の ctrl-b/f → ←/→ 変換は ctrl を落として素の矢印を送るため、
+# ターミナルでの ctrl-b / ctrl-f が誤ってここに当たることはない。
+# 標準の `workspace next|prev` は全 9 WS をアルファベット順に回り
+# 3 回押すごとにフォーカスが別モニターへ飛ぶため、スクリプトで
+# 「今いるモニターの WS だけ」に絞っている（詳細は scripts/workspace-cycle.sh）。
+# BTT のトラックパッドスワイプからも同じスクリプトを呼ぶ。
+ctrl-left = 'exec-and-forget ~/.config/aerospace/scripts/workspace-cycle.sh prev'
+ctrl-right = 'exec-and-forget ~/.config/aerospace/scripts/workspace-cycle.sh next'
+
 # アクティブなウィンドウを指定ワークスペースへ移動（2026-09-02 追加）
 # キー割り当ては上の workspace 切替（ctrl-N）と同じ並びに揃えている。
 # --focus-follows-window は意図的に付けていない。ウィンドウだけ退避して
