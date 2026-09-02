@@ -1,0 +1,466 @@
+[
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTIsPureAction": true,
+        "BTTOrder": 6,
+        "BTTPredefinedActionName": "ウインドウを最大化",
+        "BTTPredefinedActionType": 21,
+        "BTTTriggerParentUUID": "1134B234-2082-447B-8E71-B33311E2B8EE",
+        "BTTUUID": "FBDA25B6-BEE7-41CF-9E58-425EB2185166"
+      }
+    ],
+    "BTTAdditionalConfiguration": "8912928",
+    "BTTAutoAdaptToKeyboardLayout": 0,
+    "BTTBelongsToApp": "Global",
+    "BTTEnabled": 0,
+    "BTTLayoutIndependentChar": "UP",
+    "BTTOrder": 2,
+    "BTTShortcutAdvancedModifierKeys": "8912928",
+    "BTTShortcutKeyCode": 126,
+    "BTTShortcutKeyboardType": 0,
+    "BTTShortcutModifierKeys": 8912896,
+    "BTTTriggerClass": "BTTTriggerTypeKeyboardShortcut",
+    "BTTTriggerOnDown": 1,
+    "BTTTriggerType": 0,
+    "BTTUUID": "1134B234-2082-447B-8E71-B33311E2B8EE"
+  },
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTIsPureAction": true,
+        "BTTOrder": 1,
+        "BTTPredefinedActionName": "",
+        "BTTPredefinedActionType": 264,
+        "BTTShortcutToSend": "55,13",
+        "BTTTriggerBelongsToPreset": "Default",
+        "BTTTriggerParentUUID": "31D2934E-997C-463A-92BB-01B3FA88C533",
+        "BTTUUID": "8403DD32-BBEF-4A1D-B871-BD8EB89F6150"
+      }
+    ],
+    "BTTBelongsToApp": "Dia",
+    "BTTOrder": 0,
+    "BTTTriggerBelongsToPreset": "Default",
+    "BTTTriggerClass": "BTTTriggerTypeTouchpadAll",
+    "BTTTriggerType": 113,
+    "BTTTriggerTypeDescriptionReadOnly": "TipTap左（1本指固定）",
+    "BTTUUID": "31D2934E-997C-463A-92BB-01B3FA88C533"
+  },
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTIsPureAction": true,
+        "BTTOrder": 7,
+        "BTTPredefinedActionName": "ウインドウを左半分に最大化",
+        "BTTPredefinedActionType": 19,
+        "BTTTriggerBelongsToPreset": "Default",
+        "BTTTriggerParentUUID": "3E834485-08E2-4E95-9FE9-6EA330DABE57",
+        "BTTUUID": "16390D58-FBD5-4B75-B023-1059CF9830A2"
+      }
+    ],
+    "BTTAdditionalConfiguration": "8912928",
+    "BTTAutoAdaptToKeyboardLayout": 0,
+    "BTTBelongsToApp": "Global",
+    "BTTLayoutIndependentChar": "LEFT",
+    "BTTOrder": 3,
+    "BTTShortcutAdvancedModifierKeys": "8912928",
+    "BTTShortcutKeyCode": 123,
+    "BTTShortcutKeyboardType": 0,
+    "BTTShortcutModifierKeys": 8912896,
+    "BTTTriggerBelongsToPreset": "Default",
+    "BTTTriggerClass": "BTTTriggerTypeKeyboardShortcut",
+    "BTTTriggerOnDown": 1,
+    "BTTTriggerType": 0,
+    "BTTUUID": "3E834485-08E2-4E95-9FE9-6EA330DABE57"
+  },
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTActionMoveResizeConfig": "{\"BTTDirectionToMove\":1,\"BTTScreenOrigin\":0,\"BTTActiveOrHoveredWindow\":0,\"BTTScreensToMove\":1,\"BTTChangeXOriginRelative\":1,\"BTTOriginToUse\":0,\"BTTChangeYOriginRelative\":0,\"BTTOriginDisplay\":1,\"BTTUseVisibleFrame\":true,\"BTTCareForStageManager\":false}",
+        "BTTActionMoveResizeName": "next monitor",
+        "BTTIsPureAction": true,
+        "BTTOrder": 0,
+        "BTTPredefinedActionName": "ウインドウのカスタム移動 or サイズ変更",
+        "BTTPredefinedActionType": 251,
+        "BTTTriggerParentUUID": "40AF5963-3477-47E6-97FF-1137B45023DD",
+        "BTTUUID": "2D3A0772-44E7-45DC-8829-9A604310D5F3"
+      }
+    ],
+    "BTTAdditionalConfiguration": "9044002",
+    "BTTAutoAdaptToKeyboardLayout": 0,
+    "BTTBelongsToApp": "Global",
+    "BTTEnabled": 0,
+    "BTTLayoutIndependentChar": "LEFT",
+    "BTTOrder": 0,
+    "BTTShortcutAdvancedModifierKeys": "9044002",
+    "BTTShortcutKeyCode": 123,
+    "BTTShortcutKeyboardType": 0,
+    "BTTShortcutModifierKeys": 9043968,
+    "BTTTriggerClass": "BTTTriggerTypeKeyboardShortcut",
+    "BTTTriggerOnDown": 1,
+    "BTTTriggerType": 0,
+    "BTTUUID": "40AF5963-3477-47E6-97FF-1137B45023DD"
+  },
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTIsPureAction": true,
+        "BTTLayoutIndependentActionChar": "",
+        "BTTOrder": 4,
+        "BTTPredefinedActionName": "",
+        "BTTPredefinedActionType": 264,
+        "BTTShortcutToSend": "55,13",
+        "BTTTriggerBelongsToPreset": "Default",
+        "BTTTriggerParentUUID": "51AEAEFD-F012-4C67-9326-06C8B74D165F",
+        "BTTUUID": "B540C9E3-A274-4C04-88AB-91D7171B9D02"
+      }
+    ],
+    "BTTBelongsToApp": "Finder",
+    "BTTOrder": 0,
+    "BTTTriggerBelongsToPreset": "Default",
+    "BTTTriggerClass": "BTTTriggerTypeTouchpadAll",
+    "BTTTriggerType": 113,
+    "BTTTriggerTypeDescriptionReadOnly": "TipTap左（1本指固定）",
+    "BTTUUID": "51AEAEFD-F012-4C67-9326-06C8B74D165F"
+  },
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTAdditionalActionData": {},
+        "BTTIsPureAction": true,
+        "BTTLayoutIndependentActionChar": "ᛠ",
+        "BTTOrder": 7,
+        "BTTPredefinedActionName": "",
+        "BTTPredefinedActionType": 264,
+        "BTTShortcutToSend": "56,55,30",
+        "BTTTriggerBelongsToPreset": "Default",
+        "BTTTriggerParentUUID": "5E1577B6-51C6-40C8-A455-5F86B2596059",
+        "BTTUUID": "977D37FD-1B9F-4C3E-B505-CD0A827D8814"
+      }
+    ],
+    "BTTBelongsToApp": "Dia",
+    "BTTOrder": 3,
+    "BTTTriggerBelongsToPreset": "Default",
+    "BTTTriggerClass": "BTTTriggerTypeTouchpadAll",
+    "BTTTriggerType": 133,
+    "BTTTriggerTypeDescriptionReadOnly": "TipTap右（2本指固定）",
+    "BTTUUID": "5E1577B6-51C6-40C8-A455-5F86B2596059"
+  },
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTActionMoveResizeConfig": "{\"BTTDirectionToMove\":2,\"BTTScreenOrigin\":0,\"BTTActiveOrHoveredWindow\":0,\"BTTScreensToMove\":1,\"BTTChangeXOriginRelative\":0,\"BTTOriginToUse\":0,\"BTTChangeYOriginRelative\":0,\"BTTOriginDisplay\":1,\"BTTUseVisibleFrame\":false,\"BTTCareForStageManager\":false}",
+        "BTTActionMoveResizeName": "prev monitor",
+        "BTTIsPureAction": true,
+        "BTTOrder": 5,
+        "BTTPredefinedActionName": "ウインドウのカスタム移動 or サイズ変更",
+        "BTTPredefinedActionType": 251,
+        "BTTTriggerParentUUID": "65282CC3-C5B9-4F5F-B99E-45D14354A088",
+        "BTTUUID": "F53DFE1F-9CFB-451C-943E-42B4325608B2"
+      }
+    ],
+    "BTTAdditionalConfiguration": "9044002",
+    "BTTAutoAdaptToKeyboardLayout": 0,
+    "BTTBelongsToApp": "Global",
+    "BTTEnabled": 0,
+    "BTTLayoutIndependentChar": "RIGHT",
+    "BTTOrder": 1,
+    "BTTShortcutAdvancedModifierKeys": "9044002",
+    "BTTShortcutKeyCode": 124,
+    "BTTShortcutKeyboardType": 0,
+    "BTTShortcutModifierKeys": 9043968,
+    "BTTTriggerClass": "BTTTriggerTypeKeyboardShortcut",
+    "BTTTriggerOnDown": 1,
+    "BTTTriggerType": 0,
+    "BTTUUID": "65282CC3-C5B9-4F5F-B99E-45D14354A088"
+  },
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTIsPureAction": true,
+        "BTTOrder": 1,
+        "BTTPredefinedActionName": "",
+        "BTTPredefinedActionType": 264,
+        "BTTShortcutToSend": "55,13",
+        "BTTTriggerBelongsToPreset": "Default",
+        "BTTTriggerParentUUID": "674C1AC5-5F9E-4B25-AA21-85B3047F7485",
+        "BTTUUID": "967D1C27-B256-4615-A2DD-48242A178C47"
+      }
+    ],
+    "BTTBelongsToApp": "Browsers",
+    "BTTOrder": 0,
+    "BTTTriggerBelongsToPreset": "Default",
+    "BTTTriggerClass": "BTTTriggerTypeTouchpadAll",
+    "BTTTriggerType": 113,
+    "BTTTriggerTypeDescriptionReadOnly": "TipTap左（1本指固定）",
+    "BTTUUID": "674C1AC5-5F9E-4B25-AA21-85B3047F7485"
+  },
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTIsPureAction": true,
+        "BTTLayoutIndependentActionChar": "TAB",
+        "BTTOrder": 6,
+        "BTTPredefinedActionName": "",
+        "BTTPredefinedActionType": 264,
+        "BTTShortcutToSend": "59,56,48",
+        "BTTTriggerBelongsToPreset": "Default",
+        "BTTTriggerParentUUID": "731E9415-F1EA-4977-9FC4-B6141754FDF2",
+        "BTTUUID": "2130734F-63EF-41A0-8786-B8689C0FCBF5"
+      }
+    ],
+    "BTTBelongsToApp": "Browsers",
+    "BTTOrder": 2,
+    "BTTTriggerBelongsToPreset": "Default",
+    "BTTTriggerClass": "BTTTriggerTypeTouchpadAll",
+    "BTTTriggerType": 132,
+    "BTTTriggerTypeDescriptionReadOnly": "TipTap左（2本指固定）",
+    "BTTUUID": "731E9415-F1EA-4977-9FC4-B6141754FDF2"
+  },
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTIsPureAction": true,
+        "BTTLayoutIndependentActionChar": "䥠",
+        "BTTOrder": 3,
+        "BTTPredefinedActionName": "",
+        "BTTPredefinedActionType": 264,
+        "BTTShortcutToSend": "55,12",
+        "BTTTriggerBelongsToPreset": "Default",
+        "BTTTriggerParentUUID": "734858E7-1054-4C94-8F74-E10587B0CF68",
+        "BTTUUID": "C89D1986-9ECC-4A9D-AA8B-D2AA56BBB3B3"
+      }
+    ],
+    "BTTBelongsToApp": "Global",
+    "BTTOrder": 0,
+    "BTTTriggerBelongsToPreset": "Default",
+    "BTTTriggerClass": "BTTTriggerTypeTouchpadAll",
+    "BTTTriggerType": 142,
+    "BTTTriggerTypeDescriptionReadOnly": "TipSwipe左指下（2本指固定）",
+    "BTTUUID": "734858E7-1054-4C94-8F74-E10587B0CF68"
+  },
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTIsPureAction": true,
+        "BTTLayoutIndependentActionChar": "TAB",
+        "BTTOrder": 7,
+        "BTTPredefinedActionName": "",
+        "BTTPredefinedActionType": 264,
+        "BTTShortcutToSend": "59,48",
+        "BTTTriggerBelongsToPreset": "Default",
+        "BTTTriggerParentUUID": "80B4FE66-8220-4621-8DF4-0F28099B85AE",
+        "BTTUUID": "B6B1475A-167B-4565-AF85-522AB339B6B5"
+      }
+    ],
+    "BTTBelongsToApp": "Browsers",
+    "BTTOrder": 3,
+    "BTTTriggerBelongsToPreset": "Default",
+    "BTTTriggerClass": "BTTTriggerTypeTouchpadAll",
+    "BTTTriggerType": 133,
+    "BTTTriggerTypeDescriptionReadOnly": "TipTap右（2本指固定）",
+    "BTTUUID": "80B4FE66-8220-4621-8DF4-0F28099B85AE"
+  },
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTAdditionalActionData": {},
+        "BTTIsPureAction": true,
+        "BTTOrder": 10,
+        "BTTPredefinedActionName": "ターミナルコマンドを実行（非同期、ノンブロッキング）",
+        "BTTPredefinedActionType": 137,
+        "BTTTerminalCommand": "/Users/yoshihiko/.config/aerospace/scripts/workspace-cycle.sh next",
+        "BTTTriggerBelongsToPreset": "Default",
+        "BTTTriggerParentUUID": "8594525E-0336-45BA-A86B-5F397A2B246B",
+        "BTTUUID": "21820094-CE85-44CA-86D7-974EB8170540"
+      }
+    ],
+    "BTTBelongsToApp": "Global",
+    "BTTOrder": 2,
+    "BTTTriggerBelongsToPreset": "Default",
+    "BTTTriggerClass": "BTTTriggerTypeTouchpadAll",
+    "BTTTriggerType": 101,
+    "BTTTriggerTypeDescriptionReadOnly": "3本指で右にスワイプ",
+    "BTTUUID": "8594525E-0336-45BA-A86B-5F397A2B246B"
+  },
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTIsPureAction": true,
+        "BTTLayoutIndependentActionChar": "\u0002",
+        "BTTOrder": 9,
+        "BTTPredefinedActionName": "",
+        "BTTPredefinedActionType": 264,
+        "BTTShortcutToSend": "55,30",
+        "BTTTriggerBelongsToPreset": "Default",
+        "BTTTriggerParentUUID": "87AD91C2-7E83-4619-96A9-A167ECFB8934",
+        "BTTUUID": "53615627-0ADA-4A58-A3BE-C7F0A4288BFC"
+      }
+    ],
+    "BTTBelongsToApp": "Notion",
+    "BTTOrder": 1,
+    "BTTTriggerBelongsToPreset": "Default",
+    "BTTTriggerClass": "BTTTriggerTypeTouchpadAll",
+    "BTTTriggerType": 133,
+    "BTTTriggerTypeDescriptionReadOnly": "TipTap右（2本指固定）",
+    "BTTUUID": "87AD91C2-7E83-4619-96A9-A167ECFB8934"
+  },
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTIsPureAction": true,
+        "BTTOrder": 2,
+        "BTTPredefinedActionName": "",
+        "BTTPredefinedActionType": 264,
+        "BTTShortcutToSend": "55,17",
+        "BTTTriggerBelongsToPreset": "Default",
+        "BTTTriggerParentUUID": "89DE2F07-32BD-4F5C-ABCE-F68DE853D3E8",
+        "BTTUUID": "B19178D4-1D9A-44E1-ACEF-B9E413517034"
+      }
+    ],
+    "BTTBelongsToApp": "Dia",
+    "BTTOrder": 2,
+    "BTTTriggerBelongsToPreset": "Default",
+    "BTTTriggerClass": "BTTTriggerTypeTouchpadAll",
+    "BTTTriggerType": 114,
+    "BTTTriggerTypeDescriptionReadOnly": "TipTap右（1本指固定）",
+    "BTTUUID": "89DE2F07-32BD-4F5C-ABCE-F68DE853D3E8"
+  },
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTIsPureAction": true,
+        "BTTLayoutIndependentActionChar": "圐",
+        "BTTOrder": 5,
+        "BTTPredefinedActionName": "",
+        "BTTPredefinedActionType": 264,
+        "BTTShortcutToSend": "55,45",
+        "BTTTriggerBelongsToPreset": "Default",
+        "BTTTriggerParentUUID": "AD574757-42A9-401E-AC48-5471716FEFDC",
+        "BTTUUID": "E852B490-8AD9-4CC2-B3FB-8AD265A6C923"
+      }
+    ],
+    "BTTBelongsToApp": "Finder",
+    "BTTOrder": 1,
+    "BTTTriggerBelongsToPreset": "Default",
+    "BTTTriggerClass": "BTTTriggerTypeTouchpadAll",
+    "BTTTriggerType": 114,
+    "BTTTriggerTypeDescriptionReadOnly": "TipTap右（1本指固定）",
+    "BTTUUID": "AD574757-42A9-401E-AC48-5471716FEFDC"
+  },
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTIsPureAction": true,
+        "BTTLayoutIndependentActionChar": "\u0002",
+        "BTTOrder": 8,
+        "BTTPredefinedActionName": "",
+        "BTTPredefinedActionType": 264,
+        "BTTShortcutToSend": "55,33",
+        "BTTTriggerBelongsToPreset": "Default",
+        "BTTTriggerParentUUID": "AE14E146-1BEB-4691-BE7B-2377B8E6D69E",
+        "BTTUUID": "AD95FDA6-B50E-4FDC-885E-048352DCC95F"
+      }
+    ],
+    "BTTBelongsToApp": "Notion",
+    "BTTOrder": 0,
+    "BTTTriggerBelongsToPreset": "Default",
+    "BTTTriggerClass": "BTTTriggerTypeTouchpadAll",
+    "BTTTriggerType": 132,
+    "BTTTriggerTypeDescriptionReadOnly": "TipTap左（2本指固定）",
+    "BTTUUID": "AE14E146-1BEB-4691-BE7B-2377B8E6D69E"
+  },
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTAdditionalActionData": {},
+        "BTTIsPureAction": true,
+        "BTTOrder": 10,
+        "BTTPredefinedActionName": "ターミナルコマンドを実行（非同期、ノンブロッキング）",
+        "BTTPredefinedActionType": 137,
+        "BTTTerminalCommand": "/Users/yoshihiko/.config/aerospace/scripts/workspace-cycle.sh prev",
+        "BTTTriggerBelongsToPreset": "Default",
+        "BTTTriggerParentUUID": "CDB46F93-9E15-438A-A5A7-B458DF8DD9DA",
+        "BTTUUID": "D8730A0A-9D9C-4C21-B09B-116C145820DC"
+      }
+    ],
+    "BTTBelongsToApp": "Global",
+    "BTTOrder": 1,
+    "BTTTriggerBelongsToPreset": "Default",
+    "BTTTriggerClass": "BTTTriggerTypeTouchpadAll",
+    "BTTTriggerType": 100,
+    "BTTTriggerTypeDescriptionReadOnly": "3本指で左にスワイプ",
+    "BTTUUID": "CDB46F93-9E15-438A-A5A7-B458DF8DD9DA"
+  },
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTAdditionalActionData": {},
+        "BTTIsPureAction": true,
+        "BTTLayoutIndependentActionChar": "\u0002",
+        "BTTOrder": 6,
+        "BTTPredefinedActionName": "",
+        "BTTPredefinedActionType": 264,
+        "BTTShortcutToSend": "56,55,33",
+        "BTTTriggerBelongsToPreset": "Default",
+        "BTTTriggerParentUUID": "CE38202C-8B72-4F6E-A91E-A7016013C801",
+        "BTTUUID": "9A0304F2-BDA1-4E9E-8CAD-747E2B69FE81"
+      }
+    ],
+    "BTTBelongsToApp": "Dia",
+    "BTTOrder": 1,
+    "BTTTriggerBelongsToPreset": "Default",
+    "BTTTriggerClass": "BTTTriggerTypeTouchpadAll",
+    "BTTTriggerType": 132,
+    "BTTTriggerTypeDescriptionReadOnly": "TipTap左（2本指固定）",
+    "BTTUUID": "CE38202C-8B72-4F6E-A91E-A7016013C801"
+  },
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTIsPureAction": true,
+        "BTTOrder": 8,
+        "BTTPredefinedActionName": "ウインドウを右半分に最大化",
+        "BTTPredefinedActionType": 20,
+        "BTTTriggerBelongsToPreset": "Default",
+        "BTTTriggerParentUUID": "E5A45FD3-1BC5-45E6-88F3-B6EC38C4C119",
+        "BTTUUID": "9A22879B-EE09-4DFE-BAB7-83FF8C6DE285"
+      }
+    ],
+    "BTTAdditionalConfiguration": "8912928",
+    "BTTAutoAdaptToKeyboardLayout": 0,
+    "BTTBelongsToApp": "Global",
+    "BTTLayoutIndependentChar": "RIGHT",
+    "BTTOrder": 4,
+    "BTTShortcutAdvancedModifierKeys": "8912928",
+    "BTTShortcutKeyCode": 124,
+    "BTTShortcutKeyboardType": 0,
+    "BTTShortcutModifierKeys": 8912896,
+    "BTTTriggerBelongsToPreset": "Default",
+    "BTTTriggerClass": "BTTTriggerTypeKeyboardShortcut",
+    "BTTTriggerOnDown": 1,
+    "BTTTriggerType": 0,
+    "BTTUUID": "E5A45FD3-1BC5-45E6-88F3-B6EC38C4C119"
+  },
+  {
+    "BTTActionsToExecute": [
+      {
+        "BTTIsPureAction": true,
+        "BTTOrder": 2,
+        "BTTPredefinedActionName": "",
+        "BTTPredefinedActionType": 264,
+        "BTTShortcutToSend": "55,17",
+        "BTTTriggerBelongsToPreset": "Default",
+        "BTTTriggerParentUUID": "EC3BE6CA-34AF-4D98-B149-CD4E4FB1DA6C",
+        "BTTUUID": "5FE39C3F-1BCC-4486-B1E1-C13B115EECF6"
+      }
+    ],
+    "BTTBelongsToApp": "Browsers",
+    "BTTOrder": 1,
+    "BTTTriggerBelongsToPreset": "Default",
+    "BTTTriggerClass": "BTTTriggerTypeTouchpadAll",
+    "BTTTriggerType": 114,
+    "BTTTriggerTypeDescriptionReadOnly": "TipTap右（1本指固定）",
+    "BTTUUID": "EC3BE6CA-34AF-4D98-B149-CD4E4FB1DA6C"
+  }
+]

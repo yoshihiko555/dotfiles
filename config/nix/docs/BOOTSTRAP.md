@@ -197,6 +197,33 @@ cat ~/.homebrew/trust.json
 brew bundle → home-manager なので、初回 `switch` の bundle 時点では trust.json が
 まだ存在せず、この迂回設定は引き続き必要。
 
+### BetterTouchTool の設定
+
+**新規マシンでは手動作業が要る。** BTT の設定実体は SQLite（ファイル名にバージョン
+番号が入る `btt_data_store.version_*`）なので symlink では管理できず、AppleScript
+API 経由で `config/btt/triggers.json` を流し込む方式を取っている
+（`hosts/macbook/dotfiles.nix` の `bttSync` → `scripts/btt-sync.sh`）。
+
+初回 `switch` の時点では以下が揃っていないため、activation は警告を出してスキップする。
+順に済ませてから `task btt-apply` を実行する。
+
+1. **BTT のインストールとライセンス投入**（`MANUAL-APPS.md` の管理外アプリ）
+2. **BTT の起動**（未起動なら activation はスキップ）
+3. **Automation の許可**。初回に「ターミナルが BetterTouchTool を制御しようとしています」
+   のダイアログが出るので許可する
+4. **アプリスコープのグループを GUI で作る**。`Finder` / `Browsers` / `Notion` / `Dia`
+   といったスコープは、`triggers.json` には**名前の文字列しか入っていない**
+   （bundle ID の一覧は BTT 側のグループ定義が持っていて API から取れない）。
+   グループが無い状態で apply するとスコープが解決されない
+
+Global スコープのトリガー（キーボードショートカット、3 本指スワイプ）は
+グループ無しでそのまま復元できる。
+
+```sh
+task btt-apply     # repo → 実機
+task btt-export    # 実機 → repo（GUI で変更したものの回収）
+```
+
 ## host 一覧
 
 `flake.nix` の `darwinConfigurations` より。

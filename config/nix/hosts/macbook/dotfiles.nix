@@ -213,5 +213,17 @@ in
           "$HOME/.gemini/antigravity-cli/keybindings.json" \
           "$HOME/.gemini/antigravity-cli/.keybindings.json.nix-managed"
       '';
+
+      # BetterTouchTool の設定実体は SQLite（ファイル名にバージョン番号が入る）
+      # なので symlink でも実ファイル生成でも管理できない。AppleScript API 経由で
+      # repo の JSON を流し込む。判定ロジックは task btt-apply と共有したいので
+      # ここではスクリプトを呼ぶだけに留める。
+      #
+      # BTT 未起動・未インストール時はスクリプト側が警告して抜けるため switch は
+      # 止まらない。新規マシンでは初回に Automation の許可ダイアログが出る。
+      home.activation.bttSync = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        JQ=${pkgs.jq}/bin/jq \
+          ${pkgs.bash}/bin/bash "${dotfilesDir}/scripts/btt-sync.sh" apply || true
+      '';
     };
 }

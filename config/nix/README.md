@@ -117,6 +117,8 @@ symlink を実ファイルに置換してしまう問題への対処。正は re
 
 - 原則 **`mkOutOfStoreSymlink`**（編集即反映）。例外は `home.activation` とし、
   **理由コメント必須**
+  - `mutableDotfiles`: アプリが rename で JSON を置換する（Claude Code / Antigravity CLI）
+  - `bttSync`: 設定実体が SQLite で symlink 不可（BetterTouchTool）
 - 設定内容を Nix 言語へ書き直す全面移行（`programs.*`）はしない
 
 ### パッケージの置き場

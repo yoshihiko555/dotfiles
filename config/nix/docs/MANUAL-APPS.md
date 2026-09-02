@@ -22,7 +22,7 @@ Nix（home-manager）/ Homebrew（nix-darwin `homebrew.*` 宣言）のいずれ�
 | `alt-tab` | ウィンドウ切替 | |
 | `amical` | | |
 | `appcleaner` | アンインストーラ | |
-| `bettertouchtool` | トラックパッド/ジェスチャ拡張 | |
+| `bettertouchtool` | トラックパッド/ジェスチャ拡張 | アプリ本体は管理外。トリガー設定のみ `config/btt/triggers.json` + `scripts/btt-sync.sh` で管理（`BOOTSTRAP.md` 参照） |
 | `chatgpt` | | |
 | `claude` | Claude デスクトップアプリ | |
 | `coteditor` | テキストエディタ | |

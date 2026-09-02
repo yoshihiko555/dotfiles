@@ -99,7 +99,9 @@ BTT 版はフローティングウィンドウや AeroSpace 管理外のウィ�
 ### トラックパッドのスワイプ（BTT 側で設定）
 
 仮想デスクトップ切り替えのスワイプ操作を AeroSpace へ移管する手順。
-BTT の設定はリポジトリ管理外なので、手作業での設定が必要。
+設定済み。以下は新規マシンで GUI から作り直すときの手順として残す
+（BTT の設定自体は `config/btt/triggers.json` で管理下にあり、
+`task btt-apply` で流し込める。`task btt-export` で回収する）。
 
 1. BTT →「Trackpad」タブ → 対象デバイスを選択
 2. 既存の `3 Finger Swipe Left` / `Right` を探す

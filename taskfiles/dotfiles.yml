@@ -7,3 +7,13 @@ tasks:
       TARGET: '{{default "all" .TARGET}}'
     cmds:
       - bash "{{.ROOT_DIR}}/scripts/adopt-managed-settings.sh" "{{.TARGET}}"
+
+  btt-export:
+    desc: BetterTouchTool の現在のトリガー設定を repo へ回収
+    cmds:
+      - bash "{{.ROOT_DIR}}/scripts/btt-sync.sh" export
+
+  btt-apply:
+    desc: repo の BetterTouchTool 設定を実機へ適用（switch でも自動実行される）
+    cmds:
+      - bash "{{.ROOT_DIR}}/scripts/btt-sync.sh" apply
