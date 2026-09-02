@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ config, ... }:
 {
   homebrew.enable = true;
 
@@ -14,10 +14,15 @@
     extraEnv = {
       HOMEBREW_NO_UPDATE_REPORT_NEW = "1";
       HOMEBREW_NO_ENV_HINTS = "1";
-      # sudo 経由の activation ではユーザーの tap trust 情報が参照できず、
-      # サードパーティ tap（coderabbitai/tap 等）の formula ロードが
+      # サードパーティ tap（coderabbitai/tap 等）の formula / cask ロードが
       # "untrusted tap" エラーで拒否されるため無効化する（mozumasu も同様の対応）。
       # hermes 実機で発生を確認済み（2026-07-31）。
+      #
+      # 2026-09-02 追記: 下の brewTapTrust で ~/.homebrew/trust.json を宣言に
+      # 追従させるようにしたが、activation の順序は brew bundle → home-manager の
+      # ため、初回 switch の bundle 時点ではまだ trust.json が無い。よってこの
+      # 迂回設定は残す（brew bundle は `sudo --user=<user> --set-home` で走るので、
+      # 2 回目以降は trust.json 側でも通る状態にはなっている）。
       HOMEBREW_NO_REQUIRE_TAP_TRUST = "1";
     };
   };
@@ -58,7 +63,10 @@
           for tap in "''${declared_taps[@]}"; do
             # --quiet で「Trusted / Already trusted」の定型出力だけを落とす（失敗時の
             # stderr は残す）。失敗しても switch 全体は止めない。
-            run --quiet "$brew_bin" trust --tap "$tap" \
+            # ~/.homebrew と trust.json は brew 側が 0700 / 0600 で自前に作るため、
+            # ここでディレクトリを用意する必要はない（実測確認済み）。
+            run --quiet env HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_ENV_HINTS=1 \
+              "$brew_bin" trust --tap "$tap" \
               || echo "brewTapTrust: $tap の trust に失敗しました" >&2
           done
         fi
