@@ -56,7 +56,9 @@ btt_add_new_trigger() {
 #
 #   BTTLastUpdatedAt はトリガーを触らなくても BTT 側で更新されるため全階層で
 #   落とす。BTTUUID でソートして出力順のゆらぎも吸収する。
-#   BTTOrder は保存しておく（apply で送り返す必要がある）。比較からだけ外す。
+#   BTTOrder（GUI の並び順）は落とさない。落とすと apply が古い並び順を
+#   送り返して GUI での並べ替えが黙って巻き戻るため、他の項目と同様に
+#   「変えたら drift、export で回収」で扱う。
 normalize() {
   "$JQ" -S '
     [ .[] ]
@@ -65,23 +67,17 @@ normalize() {
   '
 }
 
-# drift 比較用。BTTOrder は GUI の並べ替えだけで変わり挙動に影響しないので、
-# 残すと並べ替えのたびに drift 扱いになってしまう。比較時のみ落とす。
-compare_form() {
-  "$JQ" -S '
-    walk(if type == "object" then del(.BTTOrder) else . end)
-  ' "$1"
-}
-
-same_config() {
-  local a b result
-  a="$(mktemp)"
-  b="$(mktemp)"
-  compare_form "$1" >"$a"
-  compare_form "$2" >"$b"
-  if cmp -s "$a" "$b"; then result=0; else result=1; fi
-  rm -f "$a" "$b"
-  return "$result"
+# 初回管理時（参照コピーが無い）の安全判定。
+#
+#   削除はしない方針なので、実機にしか無いトリガーは放置されるし、repo に
+#   しか無いものは追加されるだけ。危険なのは「同じ UUID が両側にあって中身が
+#   違う」場合（repo が実機の未回収の変更を潰す）だけなので、そこだけ見る。
+#   全体一致を要求すると、まっさらな新規マシンで必ず拒否されてしまう。
+first_run_safe() {
+  "$JQ" -n -e --slurpfile c "$1" --slurpfile r "$2" '
+    ($c[0] | map({ key: .BTTUUID, value: . }) | from_entries) as $cm
+    | all($r[0][]; ($cm[.BTTUUID] == null) or (. == $cm[.BTTUUID]))
+  ' >/dev/null 2>&1
 }
 
 # 実機の現況を親トリガーの配列として取り出す。
@@ -156,7 +152,7 @@ cmd_export() {
   current="$(mktemp)"
   collect_current >"$current"
 
-  if [ -f "$triggers_json" ] && same_config "$current" "$triggers_json"; then
+  if [ -f "$triggers_json" ] && cmp -s "$current" "$triggers_json"; then
     echo "btt: drift なし"
     rm -f "$current"
     return 0
@@ -191,15 +187,15 @@ cmd_apply() {
     # 参照コピーと現況が食い違う = GUI で触られている。ただし現況が repo と
     # 一致していれば task btt-export で回収済みなので、そのまま適用へ進んで
     # 参照コピーを追いつかせる（ここで弾くと回収後も警告が出続ける）。
-    if ! same_config "$current" "$reference_json" \
-      && ! same_config "$current" "$triggers_json"; then
+    if ! cmp -s "$current" "$reference_json" \
+      && ! cmp -s "$current" "$triggers_json"; then
       echo "warning: btt の drift を検出。上書きしません。" >&2
       echo "warning: task btt-export で repo へ回収してから再度 switch してください。" >&2
       rm -f "$current"
       return 0
     fi
-  elif ! same_config "$current" "$triggers_json"; then
-    # 初回管理時に repo と実機が食い違う場合、どちらが正か判断できないので触らない
+  elif ! first_run_safe "$current" "$triggers_json"; then
+    # 初回管理時、両側にある UUID の中身が食い違うならどちらが正か判断できない
     echo "warning: btt: 初回管理時の実機の内容が repo と異なるため適用しません。" >&2
     echo "warning: 内容を確認し、task btt-export で回収してください。" >&2
     rm -f "$current"
