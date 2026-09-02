@@ -35,6 +35,22 @@ ctrl-6 = 'workspace S3'
 ctrl-7 = 'workspace B1'
 ctrl-8 = 'workspace B2'
 ctrl-9 = 'workspace M4'
+
+# アクティブなウィンドウを指定ワークスペースへ移動（2026-09-02 追加）
+# キー割り当ては上の workspace 切替（ctrl-N）と同じ並びに揃えている。
+# --focus-follows-window は意図的に付けていない。ウィンドウだけ退避して
+# 今の画面で作業を続けたいため（モニター移動の alt-shift-←/→ とは方針が異なる）。
+# ctrl-alt-* は tmux / WezTerm / Karabiner のいずれも未使用の空き領域。
+ctrl-alt-1 = 'move-node-to-workspace M1'
+ctrl-alt-2 = 'move-node-to-workspace M2'
+ctrl-alt-3 = 'move-node-to-workspace M3'
+ctrl-alt-4 = 'move-node-to-workspace S1'
+ctrl-alt-5 = 'move-node-to-workspace S2'
+ctrl-alt-6 = 'move-node-to-workspace S3'
+ctrl-alt-7 = 'move-node-to-workspace B1'
+ctrl-alt-8 = 'move-node-to-workspace B2'
+ctrl-alt-9 = 'move-node-to-workspace M4'
+
 # ウィンドウを隣のモニターへ移動（BetterTouchTool から移管、2026-09-02）
 # BTT 版はウィンドウを物理的に動かすだけで AeroSpace のワークスペース把握とズレるため、
 # こちらへ寄せた。BTT 側の同キー設定は削除すること（両方生きていると二重に発火する）。
