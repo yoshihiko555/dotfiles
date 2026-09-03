@@ -26,8 +26,10 @@ if [ ! -x "$GREP" ]; then
   exit 1
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOTFILES_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
+# symlink（~/.claude/skills 経由）で起動されても実体パスを得るため pwd -P を使う。
+# 論理パスのままだと DOTFILES_ROOT が /Users になり推定に失敗する。
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+DOTFILES_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd -P)"
 if [ ! -d "$DOTFILES_ROOT/shared/skills" ]; then
   log "エラー: dotfiles ルートの推定に失敗しました ($DOTFILES_ROOT)"
   exit 1
@@ -445,18 +447,39 @@ if [ -f "$GLOBAL_CLAUDE_JSON" ]; then
 fi
 
 # ---- B. global: memory (~/.claude/projects/*/memory/) -------------------
+# ghq の <host>/<org> ディレクトリからスラッグ接頭辞を組み立てておく。
+# ~/.claude/projects のスラッグは実パスの "/" と "." を "-" に置換したもの
+# （例: /Users/yoshihiko/ghq/github.com/yoshihiko555/ → -Users-yoshihiko-ghq-github-com-yoshihiko555-）。
+# これを最長一致で剥がすことで、host/org が増えても memory の安定IDが repo 名だけになる。
+GHQ_SLUG_PREFIXES=()
+for orgdir in "$HOME"/ghq/*/*/; do
+  [ -d "$orgdir" ] || continue
+  GHQ_SLUG_PREFIXES+=("$(printf '%s' "$orgdir" | tr '/.' '--')")
+done
+
 if [ -d "$PROJECTS_DIR" ]; then
   while IFS= read -r memdir; do
+    file_count="$(find "$memdir" -type f -name "*.md" 2>/dev/null | wc -l | tr -d ' ')"
+    # Claude Code が自動生成した空の memory ディレクトリは資産ではないので拾わない
+    # （拾うと毎月「新規」としてノイズが台帳に流入する）。
+    if [ "$file_count" -eq 0 ]; then
+      continue
+    fi
     projdir="$(dirname "$memdir")"
     slug="$(basename "$projdir")"
     friendly="$slug"
-    friendly="${friendly#-Users-yoshihiko-ghq-github-com-yoshihiko555-}"
-    friendly="${friendly#-Users-yoshihiko-ghq-github-anvil-}"
+    for pfx in "${GHQ_SLUG_PREFIXES[@]}"; do
+      case "$friendly" in
+        "$pfx"*)
+          friendly="${friendly#"$pfx"}"
+          break
+          ;;
+      esac
+    done
     friendly="${friendly#-Users-yoshihiko-}"
     newest_file="$(find "$memdir" -type f -name "*.md" -exec stat -f "%m %N" {} \; 2>/dev/null | sort -rn | head -1 | awk '{print $2}')"
     lm=""
     [ -n "$newest_file" ] && lm="$(stat -f "%Sm" -t "%Y-%m-%d" "$newest_file" 2>/dev/null)"
-    file_count="$(find "$memdir" -type f -name "*.md" 2>/dev/null | wc -l | tr -d ' ')"
     emit_asset "project:memory:$friendly" "$friendly" "memory" "自作" "project" "Claude" \
       "${memdir#"$HOME"/}" "null" "false" "$lm" "MEMORY.md + フィードバック/プロジェクトファイル計${file_count}件"
   done < <(find "$PROJECTS_DIR" -mindepth 2 -maxdepth 2 -type d -name memory 2>/dev/null | sort)
