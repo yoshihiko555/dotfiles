@@ -40,8 +40,6 @@
       "/private/tmp/claude-501"
     ]
   },
-  "model": "opus[1m]",
-  "outputStyle": "Concise",
   "hooks": {
     "PreToolUse": [],
     "Stop": [
@@ -126,6 +124,7 @@
       }
     }
   },
+  "outputStyle": "Concise",
   "language": "日本語",
   "sandbox": {
     "enabled": true,
@@ -163,8 +162,9 @@
   "autoDreamEnabled": true,
   "skipWorkflowUsageWarning": true,
   "theme": "dark-ansi",
-  "skipAutoPermissionPrompt": true,
   "autoContinueAtUsageLimit": true,
+  "agentPushNotifEnabled": true,
+  "skipAutoPermissionPrompt": true,
   "autoMode": {
     "environment": [
       "### Org-wide",
@@ -192,6 +192,5 @@
       "**Org-specific CLIs**: None configured — routine repo-local tooling observed: task, takt, mise, nix, stow, agy (used repeatedly in this project's transcripts)",
       "routine under yoshihiko555/dotfiles/ prefix: task, nix, mise, takt, stow operations are part of normal repo workflow"
     ]
-  },
-  "agentPushNotifEnabled": true
+  }
 }

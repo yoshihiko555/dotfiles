@@ -1,6 +1,7 @@
 {
   "colorScheme": "tokyo night",
   "enableTelemetry": false,
+  "model": "Gemini 3.6 Flash (High)",
   "permissions": {
     "deny": [
       "command(sudo)",
