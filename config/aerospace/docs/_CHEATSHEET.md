@@ -223,3 +223,33 @@ B2 = 1
 ```
 
 dotfiles では `config/aerospace/` で管理。out-of-store link のため編集は即時反映される。
+
+## 新しい Mac での前提設定
+
+`nxs` で `config/nix/hosts/macbook/aerospace.nix` を反映すると、次を設定する。
+
+- 「ディスプレイごとに個別の操作スペース」を OFF
+- Mission Control の「ウインドウをアプリケーションごとにグループ化」を ON
+- AeroSpace と衝突する `ctrl-←` / `ctrl-→` と `ctrl-1`〜`7` を無効化
+
+「ディスプレイごとに個別の操作スペース」は、設定値を反映したあとにログアウトが必要。
+
+native Space の枚数は nix-darwin に対応する option がなく、内部 plist も接続履歴を含む
+動的データなので宣言管理しない。新しい Mac では Mission Control を開き、上端に表示される
+デスクトップのうち不要なものを閉じて **1 枚だけ**にする。
+
+反映後の値は次で確認する。
+
+```sh
+# どちらも 1 なら期待どおり
+defaults read com.apple.spaces spans-displays
+defaults read com.apple.dock expose-group-apps
+
+# 対象 ID がすべて 0 なら期待どおり
+defaults export com.apple.symbolichotkeys - \
+  | plutil -convert json -o - -- - \
+  | jq '.AppleSymbolicHotKeys | with_entries(
+      select(.key == "79" or .key == "81" or
+             ((.key | tonumber) >= 118 and (.key | tonumber) <= 124))
+    ) | map_values(.enabled)'
+```

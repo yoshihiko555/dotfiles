@@ -5,7 +5,7 @@ config-version = 2
 
 after-login-command = []
 after-startup-command = ['exec-and-forget ~/.config/aerospace/layouts/default.sh']
-start-at-login = false
+start-at-login = true
 
 # ワークスペース切替時にオーバーレイ系アプリを追従させる
 # （AeroSpace に sticky window が無いための回避策。詳細は scripts/follow-overlay.sh）
