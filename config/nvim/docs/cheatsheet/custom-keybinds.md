@@ -8,6 +8,8 @@
 |------|--------|------|
 | `jj` | Insert | Normal モードに戻る |
 | `Esc` | Normal | 検索ハイライト解除 |
+| `]<Space>` | Normal | カーソル行の下に空行を挿入（Insert に入らない） |
+| `[<Space>` | Normal | カーソル行の上に空行を挿入（Insert に入らない） |
 
 ## ペイン移動 (smart-splits — Neovim ↔ tmux シームレス)
 

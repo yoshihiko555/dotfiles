@@ -9,6 +9,10 @@ end
 map("n", "<Esc>", "<cmd>nohlsearch<cr>", "検索ハイライトを消す")
 map("i", "jj", "<Esc>", "ノーマルモードへ")
 
+-- 空行挿入（挿入モードに入らずに前後へ空行を足す）
+map("n", "]<Space>", "<cmd>call append(line('.'), '')<cr>", "下に空行を挿入")
+map("n", "[<Space>", "<cmd>call append(line('.') - 1, '')<cr>", "上に空行を挿入")
+
 -- ウィンドウ移動は smart-splits.nvim で管理 (plugins/smart-splits.lua)
 -- Alt+h/j/k/l で Neovim ↔ tmux シームレス移動
 
