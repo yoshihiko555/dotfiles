@@ -42,7 +42,66 @@
     ]
   },
   "hooks": {
-    "PreToolUse": [],
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/baton-hook.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/baton-hook.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/baton-hook.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/baton-hook.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/baton-hook.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "matcher": "",
@@ -54,6 +113,11 @@
           {
             "type": "command",
             "command": "$HOME/.claude/claude_message.sh stop"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/baton-hook.sh",
+            "timeout": 5
           }
         ]
       }
@@ -76,6 +140,11 @@
           {
             "type": "command",
             "command": "$HOME/.claude/claude_message.sh success"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/baton-hook.sh",
+            "timeout": 5
           }
         ]
       }
