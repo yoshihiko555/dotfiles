@@ -29,6 +29,14 @@ return {
     })
   end,
   opts = {
+    default_component_configs = {
+      -- ウィンドウ幅 35 でもサイズ列を表示する（既定は required_width = 64）
+      file_size = {
+        enabled = true,
+        width = 8,
+        required_width = 30,
+      },
+    },
     filesystem = {
       follow_current_file = { enabled = true },
       use_libuv_file_watcher = true,
