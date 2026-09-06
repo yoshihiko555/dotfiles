@@ -59,7 +59,18 @@ alias cc-r='claude --resume'
 # ccx -f から同じ設定を再利用するため、alias ではなく関数にしてある。
 
 # Codex CLI
-alias codex='command codex -c mcp_servers.computer-use.enabled=false'
+# computer-use MCP は Codex アプリ同梱のため、~/.codex/config.toml に
+# [mcp_servers.computer-use] が存在するマシンでのみ無効化フラグを付ける。
+# table が無いマシン（Mac mini 等）で -c を付けると transport の無い不完全な
+# table が生成され、起動時に "invalid transport" で落ちる。
+# 判定は起動ごとに行いたいので alias ではなく関数にしてある。
+codex() {
+  if grep -q '^\[mcp_servers\.computer-use\]' "${CODEX_HOME:-$HOME/.codex}/config.toml" 2>/dev/null; then
+    command codex -c mcp_servers.computer-use.enabled=false "$@"
+  else
+    command codex "$@"
+  fi
+}
 alias cx='codex'
 
 # Gemini CLI
