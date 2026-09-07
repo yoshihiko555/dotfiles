@@ -17,6 +17,24 @@
 | `nix.zsh` | nix-darwin 反映コマンド (nxb, nxs, nxg 等) / Homebrew 更新 (bxu) / hermes リモート反映 (hxb, hxs, hxg 等) |
 | `screenpipe.zsh` | screenpipe の一時停止 / 再開 / 状態確認 / 実体の復旧 (spoff, spon, sps, spfix) |
 
+## 外出時のスリープ防止 (`awake`、macOS 専用)
+
+`awake.zsh` の関数で macOS 標準の `caffeinate -i` を操作する。
+
+```sh
+awake on 4   # 今から4時間、アイドルスリープを防止（1〜168時間）
+awake on     # 手動停止まで防止
+awake status # このコマンドで起動した防止処理の状態（引数省略も同じ）
+awake off    # このコマンドで起動した防止処理だけ解除
+```
+
+- 外出前に電源接続・蓋を開いた状態で開始し、画面をロックする。画面消灯は可能。
+- launchd に一時的なジョブとして預けるのでターミナルを閉じても継続する。
+- `on` を再実行すると指定時間をリセットする。ログアウト・再起動後は自動起動しない。
+- 蓋を閉じる操作や明示的なスリープを防ぐものではない。
+- `off` は他のアプリのスリープ防止を解除しない。全体の確認は `pmset -g assertions`。
+- 再読み込みは `source ~/.zsh/awake.zsh`。新しいターミナルでは自動で読み込まれる。
+
 ## Worktree 補助コマンド (`wt`)
 
 `git gtr` をそのまま使いつつ、よく使う作成・削除だけ `wt` で短縮する（`wt.zsh`）。
