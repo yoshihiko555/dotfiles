@@ -9,6 +9,7 @@
   #   security.nix — Touch ID sudo と loginwindow / screensaver（Phase 4-8）
   #   nix-builders.nix — hermes を distributed build のビルドマシンに登録（Phase 4-1）
   #   nix-gc.nix — Nix store の自動 GC（hermes と同一設定）
+  #   remote-access.nix — モバイルからの接続に使う Tailscale
   imports = [
     ./homebrew.nix
     ./packages.nix
@@ -17,6 +18,7 @@
     ./security.nix
     ./nix-builders.nix
     ./nix-gc.nix
+    ./remote-access.nix
   ];
 
   hostSpec = {
