@@ -17,7 +17,15 @@
       PubkeyAuthentication yes
       PasswordAuthentication no
       KbdInteractiveAuthentication no
-      AllowUsers ${config.hostSpec.username}
+      # Tailscale の IPv4 / IPv6 からのみ公開鍵ログインを許可する。
+      # 端末の所属・到達可否は Tailscale 側のアクセス制御が担う。
+      AllowUsers ${config.hostSpec.username}@100.64.0.0/10 ${config.hostSpec.username}@fd7a:115c:a1e0::/48
+
+      # launchd が待ち受けるため ListenAddress では制限できない。
+      # LAN / localhost 宛ての接続は、接続元にかかわらずログインを拒否する。
+      Match LocalAddress *,!100.64.0.0/10,!fd7a:115c:a1e0::/48
+        DenyUsers *
+      Match all
     '';
   };
 }
