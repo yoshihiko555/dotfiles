@@ -4,10 +4,10 @@
 
 # ---- 基本設定 ----
 # デフォルトで使うモデル
-model = "gpt-5.6-sol"
+model = "gpt-6-astra"
 
 # 推論の深さ（medium: バランス型 / high: より時間をかける）
-model_reasoning_effort = "xhigh"
+model_reasoning_effort = "medium"
 
 # 出力トーン
 personality = "pragmatic"
@@ -71,6 +71,9 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/learno/.worktrees/20260824T1058-expand-auth-guard-routes-384010ae66067131"]
+trust_level = "trusted"
+
+[projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/learno/.worktrees/20260907T1613-add-roadmap-item-generation-99e524289925f71e"]
 trust_level = "trusted"
 
 # END managed-trust-projects
@@ -168,11 +171,10 @@ notification_method = "bel"
 notification_condition = "always"
 status_line = ["model-name", "project-root", "git-branch", "context-remaining", "context-used", "five-hour-limit"]
 
-# Codexが更新するモデル案内の表示状態
 [tui.model_availability_nux]
 "gpt-5.5" = 4
 "gpt-5.6-sol" = 4
-gpt-6-astra = 1
+gpt-6-astra = 4
 
 [marketplaces.openai-bundled]
 last_updated = "2026-08-01T03:18:01Z"
