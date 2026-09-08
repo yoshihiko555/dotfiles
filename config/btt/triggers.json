@@ -269,7 +269,7 @@
         "BTTOrder": 10,
         "BTTPredefinedActionName": "ターミナルコマンドを実行（非同期、ノンブロッキング）",
         "BTTPredefinedActionType": 137,
-        "BTTTerminalCommand": "/Users/yoshihiko/.config/aerospace/scripts/workspace-cycle.sh next",
+        "BTTTerminalCommand": "/Users/yoshihiko/.config/aerospace/scripts/workspace-cycle.sh prev",
         "BTTTriggerBelongsToPreset": "Default",
         "BTTTriggerParentUUID": "8594525E-0336-45BA-A86B-5F397A2B246B",
         "BTTUUID": "21820094-CE85-44CA-86D7-974EB8170540"
@@ -378,7 +378,7 @@
         "BTTOrder": 10,
         "BTTPredefinedActionName": "ターミナルコマンドを実行（非同期、ノンブロッキング）",
         "BTTPredefinedActionType": 137,
-        "BTTTerminalCommand": "/Users/yoshihiko/.config/aerospace/scripts/workspace-cycle.sh prev",
+        "BTTTerminalCommand": "/Users/yoshihiko/.config/aerospace/scripts/workspace-cycle.sh next",
         "BTTTriggerBelongsToPreset": "Default",
         "BTTTriggerParentUUID": "CDB46F93-9E15-438A-A5A7-B458DF8DD9DA",
         "BTTUUID": "D8730A0A-9D9C-4C21-B09B-116C145820DC"
