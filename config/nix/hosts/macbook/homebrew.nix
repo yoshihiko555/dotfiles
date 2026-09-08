@@ -19,12 +19,12 @@
     "morantron/tmux-fingers/tmux-fingers"
   ];
 
-  # GUI cask 13 個（2026-08-02 棚卸しで全件継続と判断。personal/work 分離は不採用）
+  # GUI cask 12 個（2026-08-02 棚卸しで全件継続と判断。personal/work 分離は不採用）
+  # 2026-09-09: cmux をアンインストールしたため宣言を撤去（zap で再導入されないように）
   homebrew.casks = [
     "1password-cli"
     "aerospace"
     "claude-code@latest"
-    "cmux"
     "codex"
     "codexbar"
     "easydict"

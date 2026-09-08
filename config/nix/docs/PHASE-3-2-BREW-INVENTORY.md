@@ -108,7 +108,7 @@ brew 管理下の全アイテムを「役割・宣言状態・今後の行き先
 | `claude-code@latest` | Claude Code | 宣言済 | 2026-07 | brew残留 |
 | `codex` | Codex CLI | 宣言済 | 2026-08 | brew残留 |
 | `codexbar` | Codex メニューバー | **未宣言** | 2026-08 | brew残留 + **宣言追加**（使用中と確認済み、2026-08-02） |
-| `cmux` | ターミナルマルチプレクサ系 | **未宣言** | 2026-07 | brew残留 + **宣言追加**（使用中と確認済み、2026-08-02） |
+| ~~`cmux`~~ | ターミナルマルチプレクサ系 | 宣言済 → 撤去 | 2026-07 | **2026-09-09 にアンインストール**、宣言も撤去 |
 | `aerospace` | タイル型 WM（tap: nikitabobko） | 宣言済 | 2026-03 | brew残留 |
 | `orbstack` | コンテナ/VM（Docker Desktop 代替） | 宣言済 | 2026-06 | brew残留 |
 | `1password-cli` | 1Password CLI | 宣言済 | 2026-08 | brew残留 |
@@ -189,7 +189,8 @@ brew 管理下の全アイテムを「役割・宣言状態・今後の行き先
 - 孤立 rg は現在も動作しており使用中 → nix の ripgrep へ正式移行後に残骸除去
 - cask の personal / work 分離は不採用（業務 Mac 配布予定なし）
 - `yoshihiko555/nudge` tap は残す（宣言追加済み）
-- `cmux` / `codexbar` は両方使用中 → 宣言追加済み
+- `cmux` / `codexbar` は両方使用中 → 宣言追加済み（`cmux` は 2026-09-09 に
+  アンインストールし、宣言も撤去した）
 - `docker-desktop` の Brewfile 宣言は削除（OrbStack が代替稼働中）
 - `~/.config/nvim-dev` のリンク切れ symlink は削除済み
 - **hermes 側も棚卸し実施**（2026-08-02）: cask 7 個は使用実態を確認しすべて継続。
