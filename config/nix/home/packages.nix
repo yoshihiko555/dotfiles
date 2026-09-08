@@ -1,4 +1,15 @@
-{ pkgs, ... }:
+{ pkgs, hostSpec, ... }:
+let
+  # takt / Ink の同期描画中に全画面消去だけが端末へ先行する問題の暫定修正。
+  # 実機で調査した MacBook に限定する。検証・撤回手順は patches/README.md。
+  tmuxPackage =
+    if hostSpec.hostName == "macbook" then
+      pkgs.tmux.overrideAttrs (old: {
+        patches = (old.patches or [ ]) ++ [ ../patches/tmux-sync-clear.patch ];
+      })
+    else
+      pkgs.tmux;
+in
 {
   # 3 台共通の CLI パッケージ。
   # 方針（ROADMAP「既存ツールとの共存方針」）に従い、nixpkgs 収録の CLI は
@@ -20,7 +31,7 @@
     neovim
     ripgrep
     starship
-    tmux
+    tmuxPackage
     tree
     tree-sitter # nvim-treesitter（main branch）の grammar ビルドに必須。brew の tree-sitter-cli 相当
     yazi
