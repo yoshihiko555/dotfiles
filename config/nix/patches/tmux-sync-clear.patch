@@ -1,0 +1,12 @@
+--- a/screen-write.c
++++ b/screen-write.c
+@@ -1952,6 +1952,9 @@
+ 
+ 	screen_write_collect_clear(ctx, 0, sy);
+ 
++	if (s->mode & MODE_SYNC)
++		return;
++
+ 	if (~ttyctx.flags & TTY_CTX_PANE_OBSCURED) {
+ 		tty_write(tty_cmd_clearscreen, &ttyctx);
+ 		return;
