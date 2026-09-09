@@ -93,6 +93,12 @@ ctrl-alt-a = 'layout accordion tiles'
 ctrl-shift-1 = 'exec-and-forget ~/.config/aerospace/layouts/default.sh'
 ctrl-shift-2 = 'exec-and-forget ~/.config/aerospace/layouts/dev.sh'
 
+# アプリを問わず、新規ウィンドウの移動先 WS を枚数に応じて整列する。
+# 後続の floating / move ルールも実行し、スクリプト側で反映を待つ。
+[[on-window-detected]]
+check-further-callbacks = true
+run = ['exec-and-forget /bin/bash ~/.config/aerospace/scripts/auto-grid.sh']
+
 # オーバーレイ系アプリをタイル管理から除外
 # Aqua Voice の音声入力オーバーレイがタイルに組み込まれてリサイズされるのを防ぐ。
 # 注意: これはタイリングエンジンからの除外のみで、ワークスペース束縛は解けない
