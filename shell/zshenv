@@ -20,3 +20,9 @@ fi
 # .zshrc 末尾の source 頼みだと PATH に載らないためここで通す。
 typeset -U path PATH
 path=("$HOME/.local/bin" $path)
+
+# fpath の重複排除。nix の /etc/zshenv がプロファイル階層ごとに同じ
+# ディレクトリを積み上げるため（実測 43 件中ユニーク 21 件）、
+# compinit がダンプを毎回「古い」と判定してフルリビルドしていた
+# （zsh 対話起動 1.5s → 0.25s）。
+typeset -U fpath
