@@ -140,7 +140,6 @@
   },
   "language": "日本語",
   "effortLevel": "high",
-  "advisorModel": "fable",
   "tui": "fullscreen",
   "autoDreamEnabled": true,
   "skipWorkflowUsageWarning": true,
