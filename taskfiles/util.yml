@@ -83,6 +83,16 @@ tasks:
     cmds:
       - cat {{.ROOT_DIR}}/shared/mcp.template.json
 
+  mcp-apply:
+    desc: user scope の MCP をリポジトリの正典（shared/mcp/user-servers.json）から適用
+    cmds:
+      - bash {{.ROOT_DIR}}/scripts/mcp-apply.sh
+
+  mcp-apply-dry:
+    desc: mcp-apply 実行前に適用対象だけ確認する dry-run
+    cmds:
+      - bash {{.ROOT_DIR}}/scripts/mcp-apply.sh --dry-run
+
   clean-claude:
     desc: Claude Code のログ容量を減らしたいときにデバッグログを削除
     cmds:

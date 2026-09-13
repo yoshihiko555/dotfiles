@@ -85,6 +85,8 @@ task sync-claude-work-skills # 会社用 Claude Code の work スキルを同期
 task edit          # VS Code で開く
 task mcp-init      # 最小構成の .mcp.json をコピー
 task mcp-show      # 最小構成テンプレートの内容を表示
+task mcp-apply-dry # user scope MCP 適用の dry-run
+task mcp-apply     # user scope MCP をリポジトリの正典から適用
 task clean-claude-dry # Claude デバッグログ削除の dry-run
 task clean-claude  # Claude デバッグログを削除
 task codex-trust-audit # Codex trust 設定を監査
@@ -155,6 +157,17 @@ codex -c mcp_servers.notion.enabled=false
 ```
 
 - Claude Code 側は `--scope project` を基本にし、個人限定用途は `--scope local` / `--scope user` を使い分けてください。
+- 全プロジェクトで使いたい MCP（Figma など）は **user scope** に置きます。user scope の保存先
+  `~/.claude.json` は履歴を含む mutable state で symlink できないため、リポジトリ側の正典
+  `shared/mcp/user-servers.json` を `task mcp-apply` で流し込む方式にしています。
+  既存定義は skip されるので何度実行しても安全です（上書きしたい場合のみ `--force`）。
+  OAuth が必要な MCP は適用後に Claude Code で `/mcp` を実行して認証してください。
+
+```bash
+task mcp-apply-dry   # 適用対象を確認
+task mcp-apply       # user scope に適用
+```
+
 - Claude Code プラグイン (`claude/settings.json`) もデフォルト無効です。必要時のみ有効化してください。
 
 ```bash
