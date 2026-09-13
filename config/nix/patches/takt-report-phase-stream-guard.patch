@@ -1,0 +1,31 @@
+--- a/dist/infra/claude-headless/headless-spawn.js	2026-09-13 15:27:54
++++ b/dist/infra/claude-headless/headless-spawn.js	2026-09-13 15:27:54
+@@ -164,7 +164,12 @@
+         child.stdout?.on('data', (chunk) => {
+             appendChunk('stdout', chunk);
+             lineBuffer += typeof chunk === 'string' ? chunk : chunk.toString('utf-8');
+-            flushLines(false);
++            try {
++                flushLines(false);
++            }
++            catch (streamError) {
++                rejectOnce(streamError, true);
++            }
+         });
+         child.stderr?.on('data', (chunk) => appendChunk('stderr', chunk));
+         const guardTeardown = guardChildProcessStreams(child, (error, source) => {
+@@ -186,7 +191,13 @@
+             if (settled) {
+                 return;
+             }
+-            flushLines(true);
++            try {
++                flushLines(true);
++            }
++            catch (streamError) {
++                rejectOnce(streamError, true);
++                return;
++            }
+             if (options.abortSignal?.aborted) {
+                 rejectOnce(createExecError(HEADLESS_ABORTED_MESSAGE, {
+                     name: 'AbortError',
