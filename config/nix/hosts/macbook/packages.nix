@@ -5,6 +5,20 @@
   takt,
   ...
 }:
+let
+  # takt の Phase 2（レポート生成）でモデルがツール呼び出しを出すと、
+  # ReportPhaseToolCallError が stdout の data ハンドラから同期 throw され、
+  # Promise の外で uncaught になってワークフロープロセスごと落ちる。
+  # 上流（0.65.0）には retryable_failure として扱う分岐があるが到達不能。
+  # stdout / close ハンドラの flushLines を try/catch で包み reject へ回す。
+  # 詳細・撤回手順は patches/README.md。
+  taktPackage = (takt.packages.${pkgs.stdenv.hostPlatform.system}.default).overrideAttrs (old: {
+    postInstall = (old.postInstall or "") + ''
+      patch -p1 -d "$out/lib/node_modules/takt" \
+        < ${../../patches/takt-report-phase-stream-guard.patch}
+    '';
+  });
+in
 {
   # MBP 固有の CLI パッケージ（棚卸し: PHASE-3-2-CLI-INVENTORY.md）。
   # ADR-0004 ルール 3 に従い、まず使うホストの hosts/macbook/ に置く。
@@ -49,6 +63,7 @@
     ])
     ++ [
       # nixpkgs 未収録だが公式 flake あり（npm -g から移行）
-      takt.packages.${pkgs.stdenv.hostPlatform.system}.default
+      # Phase 2 のツール呼び出しでプロセスが落ちる問題にパッチを当てている（上記 let）
+      taktPackage
     ];
 }
