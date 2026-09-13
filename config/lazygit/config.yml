@@ -60,3 +60,7 @@ customCommands:
       rm -f "$AGY_ERR"
 
       git commit -e -m "$MSG"
+
+gui:
+  # UI を日本語化する。auto は LANG(en_US.UTF-8) を見て英語になるため明示指定。
+  language: ja
