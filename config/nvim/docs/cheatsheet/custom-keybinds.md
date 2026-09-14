@@ -83,6 +83,7 @@ which-key により `<leader>w` が `Ctrl+w` のプロキシとして動作:
 |------|------|
 | `<leader>e` | Neo-tree を開く / 閉じる |
 | `<leader>E` | 現在のファイルを Neo-tree 上で表示 |
+| `Y`（tree 内） | 選択したファイル・フォルダの絶対パスをクリップボードへコピー |
 
 ## ファイル検索 FzfLua (`<leader>f`)
 
@@ -165,6 +166,23 @@ which-key により `<leader>w` が `Ctrl+w` のプロキシとして動作:
 | `<leader>mp` | ブラウザプレビュー開始 |
 | `<leader>mP` | ブラウザプレビュー停止 |
 | `<leader>mr` | エディタ内レンダリング toggle |
+| `<leader>mi` | 画像のフロートプレビュー（現在は無効） |
+
+Snacks の画像表示は残像・位置ずれのため現在は無効。
+画像の確認は tree の `Y` → Alfred に貼り付け → `Shift` を使う。
+以下は `lua/plugins/snacks.lua` の `cond` を `true` に戻して再試用する場合の操作。
+
+画像ファイルは `:edit /path/to/image.png` で開くと Snacks が表示する。
+画像ファイルから別のバッファ・ウィンドウ・tmux ペインへ移ると画像を消し、
+戻ると再表示する（tmux の切り替えはフォーカスイベントが届く場合）。
+Markdown は画像リンク上で `<leader>mi`。WezTerm + tmux では本文への埋め込みと
+自動プレビューを無効にし、手動フロートで試す。画像変換には ImageMagick が必要。
+表示されない場合は `:checkhealth snacks` で端末対応と依存コマンドを確認する。
+手動プレビューはカーソル移動・バッファ移動・フォーカス移動で閉じる。
+残像対策として、プレビューを閉じる際は `:ImageClear` と同じ端末への消去要求を送る。
+同じ端末のほかのペインに画像が表示されている場合、その画像も消えることがある。
+WezTerm + tmux で残像が残った場合は `:ImageClear` で復旧を試す。
+このコマンドは同じ端末に表示中のほかの画像も消去する。
 
 ## Copilot (AI 補完 — Insert モード)
 

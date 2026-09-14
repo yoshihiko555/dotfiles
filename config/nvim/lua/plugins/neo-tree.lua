@@ -55,6 +55,16 @@ return {
       width = 35,
       mappings = {
         ["<space>"] = "none",
+        ["Y"] = {
+          function(state)
+            local node = state.tree:get_node()
+            if not node or (node.type ~= "file" and node.type ~= "directory") then return end
+            local path = vim.fn.fnamemodify(node.path, ":p")
+            vim.fn.setreg("+", path)
+            vim.notify("絶対パスをコピーしました: " .. path)
+          end,
+          desc = "絶対パスをクリップボードにコピー",
+        },
       },
     },
   },

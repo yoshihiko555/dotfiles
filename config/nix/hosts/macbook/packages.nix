@@ -41,6 +41,7 @@ in
       typescript-language-server
 
       # --- 新規導入 ---
+      imagemagick # Neovim の snacks.image で画像の変換・サイズ取得に使用
       resvg # SVG→PNG ラスタライザ。logo-design スキルの export.sh が最優先で検出する
 
       # PDF 処理 CLI（pdftotext / pdfimages 等）。2026-08-02 に brew から削除したが

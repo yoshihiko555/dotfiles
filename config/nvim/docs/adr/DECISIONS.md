@@ -1,6 +1,6 @@
 # Neovim Plugin Decisions
 
-Phase 1〜6 のプラグイン導入に関する意思決定ログ。
+プラグイン導入・運用に関する意思決定ログ。
 
 | ID | タイトル | Status | Date | 判断軸 | カテゴリ |
 |----|---------|--------|------|--------|---------|
@@ -14,3 +14,4 @@ Phase 1〜6 のプラグイン導入に関する意思決定ログ。
 | ADR-20260303-008 | Mermaid対応ブラウザプレビューにselimacerbas/markdown-preview.nvimを採用 | accepted | 2026-03-03 | npm不要 / Mermaid自動SVG / WezTerm互換 | Markdown |
 | ADR-20260313-009 | Gitガターサインにgitsigns.nvimを採用 | accepted | 2026-03-13 | 全部入り / 依存ゼロ / デファクト標準 | Git |
 | ADR-20260313-010 | Diff Viewerにcodediff.nvimを採用、lazygitとの役割分担 | accepted | 2026-03-13 | 文字レベルdiff / 活発メンテ / lazygit併用 | Git |
+| ADR-20260915-011 | 画像確認にパスコピーとAlfredを使い、Snacksの画像表示を休止 | accepted | 2026-09-15 | 残像・位置ずれ / 操作の快適さ / 端末構成維持 | UX |
