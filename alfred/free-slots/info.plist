@@ -1,0 +1,525 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.yoshihiko555.free-slots</string>
+	<key>connections</key>
+	<dict>
+		<key>1D2A9C3E-0A4B-4E27-9B1F-6C0A2F7B5D10</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>3F8B5A61-7C24-4D93-8E15-9A6D4B2C0E77</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>yoshihiko</string>
+	<key>description</key>
+	<string>カレンダーの予定から稼働時間内の空き時間を洗い出してコピーする</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Free Slots</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<false/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>free</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>1</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>カレンダーから空き時間を計算中…</string>
+				<key>script</key>
+				<string>ObjC.import('EventKit');
+ObjC.import('Foundation');
+
+// ---- 設定値（Alfred の Configure Workflow から上書きできる） ----
+function env(name, def) {
+  const v = $.NSProcessInfo.processInfo.environment.objectForKey(name);
+  if (v.isNil()) return def;
+  const s = ObjC.unwrap(v).trim();
+  return s === '' ? def : s;
+}
+const WORK_START = env('WORK_START', '10:00');
+const WORK_END = env('WORK_END', '19:00');
+const MIN_SLOT_MIN = parseInt(env('MIN_SLOT_MIN', '30'), 10);
+const DEFAULT_DAYS = parseInt(env('DEFAULT_DAYS', '7'), 10);
+const SKIP_ALLDAY = env('SKIP_ALLDAY', '1') === '1';
+const SKIP_WEEKENDS = env('SKIP_WEEKENDS', '0') === '1';
+const EXCLUDE_CALENDARS = env('EXCLUDE_CALENDARS', '日本の祝日,日本の休日,誕生日,connpass参加イベント,Google')
+  .split(',').map(function (s) { return s.trim(); }).filter(function (s) { return s !== ''; });
+
+const WDAY = ['日', '月', '火', '水', '木', '金', '土'];
+const MS_MIN = 60000;
+// EKAuthorizationStatusFullAccess は JXA のブリッジに無いため数値で持つ
+const AUTH_FULL_ACCESS = 3;
+// JXA は ObjC の enum を文字列で返すため、比較前に必ず数値化する
+function num(v) { return Number(v); }
+
+function hhmmToMin(s) {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(s);
+  if (!m) return null;
+  return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+}
+
+function atMin(day, minutes) {
+  const d = new Date(day.getTime());
+  d.setHours(0, 0, 0, 0);
+  return new Date(d.getTime() + minutes * MS_MIN);
+}
+
+function fmtTime(d) {
+  return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+}
+
+function fmtDay(d) {
+  return (d.getMonth() + 1) + '/' + d.getDate() + '(' + WDAY[d.getDay()] + ')';
+}
+
+function fmtDur(ms) {
+  const min = Math.round(ms / MS_MIN);
+  const h = Math.floor(min / 60), m = min % 60;
+  if (h === 0) return m + '分';
+  return m === 0 ? h + 'h' : h + 'h' + m + 'm';
+}
+
+// ---- 引数のパース ----
+// 空          -&gt; 今日から DEFAULT_DAYS 日
+// "14d"       -&gt; 今日から 14 日
+// "9/20"      -&gt; その日だけ（過去日なら翌年）
+// "2026-09-20"-&gt; その日だけ
+// "20"        -&gt; 当月 20 日（過ぎていれば翌月）
+// new Date は存在しない日付（9/31 など）を静かに翌月へ繰り上げるため、
+// 組み立てた結果が入力どおりかを確かめる
+function makeDate(y, mo, da) {
+  if (mo &lt; 1 || mo &gt; 12 || da &lt; 1 || da &gt; 31) return null;
+  const d = new Date(y, mo - 1, da);
+  if (d.getFullYear() !== y || d.getMonth() !== mo - 1 || d.getDate() !== da) return null;
+  return d;
+}
+
+function parseQuery(q) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  q = (q || '').trim();
+  if (q === '') return { start: today, days: DEFAULT_DAYS, label: null };
+
+  let m = /^(\d{1,3})\s*d$/i.exec(q);
+  if (m) return { start: today, days: Math.max(1, parseInt(m[1], 10)), label: null };
+
+  m = /^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/.exec(q);
+  if (m) {
+    const d = makeDate(parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10));
+    if (!d) return { error: '存在しない日付です: ' + q };
+    return { start: d, days: 1, label: q };
+  }
+
+  m = /^(\d{1,2})[-\/](\d{1,2})$/.exec(q);
+  if (m) {
+    const mo = parseInt(m[1], 10), da = parseInt(m[2], 10);
+    let d = makeDate(today.getFullYear(), mo, da);
+    if (!d) return { error: '存在しない日付です: ' + q };
+    if (d &lt; today) d = makeDate(today.getFullYear() + 1, mo, da);
+    if (!d) return { error: '存在しない日付です: ' + q };
+    return { start: d, days: 1, label: q };
+  }
+
+  m = /^(\d{1,2})$/.exec(q);
+  if (m) {
+    const da = parseInt(m[1], 10);
+    if (da &lt; 1 || da &gt; 31) return { error: '存在しない日付です: ' + q };
+    // 当月に無い日（2月の 30 日など）や過ぎた日は、その日が存在する先の月まで進める
+    for (let k = 0; k &lt; 13; k++) {
+      const base = new Date(today.getFullYear(), today.getMonth() + k, 1);
+      const d = makeDate(base.getFullYear(), base.getMonth() + 1, da);
+      if (d &amp;&amp; d &gt;= today) return { start: d, days: 1, label: q };
+    }
+    return { error: '存在しない日付です: ' + q };
+  }
+
+  return { error: '日付を解釈できません: ' + q };
+}
+
+// ---- 埋まっている区間を集める ----
+function busyIntervals(store, rangeStart, rangeEnd) {
+  const all = store.calendarsForEntityType($.EKEntityTypeEvent);
+  const targets = [];
+  for (let i = 0; i &lt; all.count; i++) {
+    const c = all.objectAtIndex(i);
+    if (EXCLUDE_CALENDARS.indexOf(ObjC.unwrap(c.title)) === -1) targets.push(c);
+  }
+  if (targets.length === 0) return [];
+
+  const p = store.predicateForEventsWithStartDateEndDateCalendars(
+    $.NSDate.dateWithTimeIntervalSince1970(rangeStart.getTime() / 1000),
+    $.NSDate.dateWithTimeIntervalSince1970(rangeEnd.getTime() / 1000),
+    $(targets)
+  );
+  const evs = store.eventsMatchingPredicate(p);
+
+  const out = [];
+  for (let i = 0; i &lt; evs.count; i++) {
+    const e = evs.objectAtIndex(i);
+    if (SKIP_ALLDAY &amp;&amp; e.isAllDay) continue;
+    if (num(e.availability) === $.EKEventAvailabilityFree) continue;
+    if (num(e.status) === $.EKEventStatusCanceled) continue;
+
+    // 自分が「不参加」で返答した予定は埋まっていないものとして扱う
+    let declined = false;
+    const att = e.attendees;
+    if (!att.isNil()) {
+      for (let j = 0; j &lt; att.count; j++) {
+        const a = att.objectAtIndex(j);
+        if (a.isCurrentUser &amp;&amp; num(a.participantStatus) === $.EKParticipantStatusDeclined) declined = true;
+      }
+    }
+    if (declined) continue;
+
+    out.push({ s: e.startDate.js.getTime(), e: e.endDate.js.getTime() });
+  }
+  return out;
+}
+
+// ---- 窓の中の空き時間を求める ----
+function freeSlots(busy, winStart, winEnd) {
+  const ws = winStart.getTime(), we = winEnd.getTime();
+  const clipped = busy
+    .map(function (b) { return { s: Math.max(b.s, ws), e: Math.min(b.e, we) }; })
+    .filter(function (b) { return b.s &lt; b.e; })
+    .sort(function (a, b) { return a.s - b.s; });
+
+  const merged = [];
+  clipped.forEach(function (b) {
+    const last = merged[merged.length - 1];
+    if (last &amp;&amp; b.s &lt;= last.e) last.e = Math.max(last.e, b.e);
+    else merged.push({ s: b.s, e: b.e });
+  });
+
+  const slots = [];
+  let cur = ws;
+  merged.forEach(function (b) {
+    if (b.s - cur &gt;= MIN_SLOT_MIN * MS_MIN) slots.push({ s: cur, e: b.s });
+    cur = Math.max(cur, b.e);
+  });
+  if (we - cur &gt;= MIN_SLOT_MIN * MS_MIN) slots.push({ s: cur, e: we });
+  return slots;
+}
+
+function item(title, subtitle, arg, valid) {
+  return { title: title, subtitle: subtitle, arg: arg === undefined ? '' : arg, valid: valid !== false };
+}
+
+function run(argv) {
+  const q = parseQuery(argv[0]);
+  if (q.error) return JSON.stringify({ items: [item(q.error, '例: 9/20 / 20 / 2026-09-20 / 14d / 空欄で今日から' + DEFAULT_DAYS + '日', '', false)] });
+
+  const wsMin = hhmmToMin(WORK_START), weMin = hhmmToMin(WORK_END);
+  if (wsMin === null || weMin === null || wsMin &gt;= weMin) {
+    return JSON.stringify({ items: [item('稼働時間の設定が不正です', 'WORK_START=' + WORK_START + ' / WORK_END=' + WORK_END + '（HH:MM 形式で、開始 &lt; 終了）', '', false)] });
+  }
+
+  if (num($.EKEventStore.authorizationStatusForEntityType($.EKEntityTypeEvent)) !== AUTH_FULL_ACCESS) {
+    const store0 = $.EKEventStore.alloc.init;
+    store0.requestFullAccessToEventsWithCompletion(function () {});
+    $.NSRunLoop.currentRunLoop.runModeBeforeDate($.NSDefaultRunLoopMode, $.NSDate.dateWithTimeIntervalSinceNow(3));
+    if (num($.EKEventStore.authorizationStatusForEntityType($.EKEntityTypeEvent)) !== AUTH_FULL_ACCESS) {
+      return JSON.stringify({ items: [item('カレンダーへのアクセスが許可されていません', 'システム設定 &gt; プライバシーとセキュリティ &gt; カレンダー で Alfred を許可してから再実行', '', false)] });
+    }
+  }
+
+  const store = $.EKEventStore.alloc.init;
+  const rangeStart = atMin(q.start, 0);
+  const rangeEnd = atMin(new Date(q.start.getTime() + q.days * 86400000), 0);
+  const busy = busyIntervals(store, rangeStart, rangeEnd);
+
+  const now = new Date();
+  const items = [];
+  const lines = [];
+
+  for (let i = 0; i &lt; q.days; i++) {
+    const day = new Date(q.start.getFullYear(), q.start.getMonth(), q.start.getDate() + i);
+    if (SKIP_WEEKENDS &amp;&amp; (day.getDay() === 0 || day.getDay() === 6)) continue;
+
+    let winStart = atMin(day, wsMin);
+    const winEnd = atMin(day, weMin);
+    // 今日は「今」以降しか押さえられないので、15 分単位で切り上げた現在時刻から始める
+    if (day.toDateString() === now.toDateString() &amp;&amp; now &gt; winStart) {
+      const up = new Date(Math.ceil(now.getTime() / (15 * MS_MIN)) * 15 * MS_MIN);
+      winStart = up;
+    }
+    if (winStart &gt;= winEnd) continue;
+
+    const slots = freeSlots(busy, winStart, winEnd);
+    if (slots.length === 0) continue;
+
+    const dayLabel = fmtDay(day);
+    const texts = slots.map(function (s) { return fmtTime(new Date(s.s)) + '-' + fmtTime(new Date(s.e)); });
+    lines.push(dayLabel + ' ' + texts.join(' / '));
+
+    slots.forEach(function (s) {
+      const text = dayLabel + ' ' + fmtTime(new Date(s.s)) + '-' + fmtTime(new Date(s.e));
+      items.push(item(text, fmtDur(s.e - s.s) + ' 空き', text));
+    });
+  }
+
+  if (lines.length === 0) {
+    const scope = q.days === 1 ? fmtDay(q.start) : fmtDay(q.start) + ' から ' + q.days + '日間';
+    return JSON.stringify({ items: [item('空き時間はありません', scope + ' / ' + WORK_START + '-' + WORK_END + ' / ' + MIN_SLOT_MIN + '分以上', '', false)] });
+  }
+
+  const all = lines.join('\n');
+  const head = item(
+    '全部コピー（' + lines.length + '日 / ' + items.length + '枠）',
+    all.replace(/\n/g, '  ｜  '),
+    all
+  );
+  return JSON.stringify({ items: [head].concat(items) });
+}
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>空欄=今日から7日 / 9/20・20・2026-09-20=その日 / 14d=今日からN日</string>
+				<key>title</key>
+				<string>Free Slots</string>
+				<key>type</key>
+				<integer>7</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>1D2A9C3E-0A4B-4E27-9B1F-6C0A2F7B5D10</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>autopaste</key>
+				<false/>
+				<key>clipboardtext</key>
+				<string>{query}</string>
+				<key>ignoredynamicplaceholders</key>
+				<false/>
+				<key>transient</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.clipboard</string>
+			<key>uid</key>
+			<string>3F8B5A61-7C24-4D93-8E15-9A6D4B2C0E77</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string>カレンダーの予定から稼働時間内の空き時間を洗い出す。
+
+macOS の Calendar.app に登録済みのアカウント（Google / Exchange / iCloud）を
+EventKit でまとめて読む。初回実行時にカレンダーへのアクセス許可を求められる。
+</string>
+	<key>uidata</key>
+	<dict>
+		<key>1D2A9C3E-0A4B-4E27-9B1F-6C0A2F7B5D10</key>
+		<dict>
+			<key>xpos</key>
+			<integer>60</integer>
+			<key>ypos</key>
+			<integer>60</integer>
+		</dict>
+		<key>3F8B5A61-7C24-4D93-8E15-9A6D4B2C0E77</key>
+		<dict>
+			<key>xpos</key>
+			<integer>320</integer>
+			<key>ypos</key>
+			<integer>60</integer>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>10:00</string>
+				<key>placeholder</key>
+				<string>10:00</string>
+				<key>required</key>
+				<true/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>稼働時間の開始。HH:MM 形式。</string>
+			<key>label</key>
+			<string>稼働開始</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>WORK_START</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>19:00</string>
+				<key>placeholder</key>
+				<string>19:00</string>
+				<key>required</key>
+				<true/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>稼働時間の終了。HH:MM 形式で、開始より後にすること。</string>
+			<key>label</key>
+			<string>稼働終了</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>WORK_END</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>30</string>
+				<key>placeholder</key>
+				<string>30</string>
+				<key>required</key>
+				<true/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>これ未満の細切れな空きは表示しない（分）。</string>
+			<key>label</key>
+			<string>最小の空き枠</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>MIN_SLOT_MIN</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>7</string>
+				<key>placeholder</key>
+				<string>7</string>
+				<key>required</key>
+				<true/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>引数なしで実行したときに見る日数。</string>
+			<key>label</key>
+			<string>デフォルトの日数</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>DEFAULT_DAYS</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>日本の祝日,日本の休日,誕生日,connpass参加イベント,Google</string>
+				<key>placeholder</key>
+				<string>日本の祝日,誕生日</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>埋まっている判定に使わないカレンダー名をカンマ区切りで。祝日・誕生日や、他カレンダーと重複するものを入れる。</string>
+			<key>label</key>
+			<string>除外するカレンダー</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>EXCLUDE_CALENDARS</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<true/>
+				<key>required</key>
+				<false/>
+				<key>text</key>
+				<string>終日の予定は無視して空きとして扱う</string>
+			</dict>
+			<key>description</key>
+			<string>オフにすると、終日の予定がある日はその日を丸ごと埋まり扱いにする。</string>
+			<key>label</key>
+			<string>終日の予定</string>
+			<key>type</key>
+			<string>checkbox</string>
+			<key>variable</key>
+			<string>SKIP_ALLDAY</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<false/>
+				<key>required</key>
+				<false/>
+				<key>text</key>
+				<string>土日を対象から外す</string>
+			</dict>
+			<key>description</key>
+			<string>オンにすると土曜・日曜は空き候補に出さない。</string>
+			<key>label</key>
+			<string>土日</string>
+			<key>type</key>
+			<string>checkbox</string>
+			<key>variable</key>
+			<string>SKIP_WEEKENDS</string>
+		</dict>
+	</array>
+	<key>variables</key>
+	<dict/>
+	<key>variablesdontexport</key>
+	<array/>
+	<key>version</key>
+	<string>1.0</string>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>
