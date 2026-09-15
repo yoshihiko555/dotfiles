@@ -1,0 +1,510 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.yoshihiko555.stock-add</string>
+	<key>connections</key>
+	<dict>
+		<key>29EC8143-6B19-4C3C-B9DA-3DC201221D3F</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>5D7C20F9-B07B-40D2-A9FC-F4F1A74D3530</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>5D7C20F9-B07B-40D2-A9FC-F4F1A74D3530</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>7428F446-30F4-47E3-B12E-CD98D2522BA1</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>yoshihiko</string>
+	<key>description</key>
+	<string>Notion の欲しいものリスト（W I S H - L I S T）で優先度=高 の在庫を補充する。Notion の「在庫追加」ボタンと同じ処理を行う。</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Stock Add</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<true/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>stock</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Notion から在庫一覧を取得中…</string>
+				<key>script</key>
+				<string># ネットワークの問題でエラーが出る場合は下記のコメントアウトを外してください
+# require 'resolv-replace'
+
+require "net/http"
+require "uri"
+require "json"
+require "fileutils"
+
+# TOKEN は Alfred の Workflow Configuration（右上の [x] ボタン）で設定する。
+# public リポジトリへ載せないため info.plist には保存しない。
+MY_NOTION_TOKEN = ENV["TOKEN"].to_s
+WISHLIST_DB_ID = ENV["WISHLIST_DB_ID"].to_s
+
+# 一覧のキャッシュ有効期間（秒）。Script Filter は1打鍵ごとに走るため、
+# キャッシュが無いと打鍵のたびに Notion API を叩くことになる。
+# 在庫追加を実行した側でキャッシュを消すので、補充直後は必ず再取得される。
+CACHE_TTL = 600
+
+def emit(items)
+  print JSON.generate({ "items" =&gt; items })
+  exit 0
+end
+
+def emit_message(title, subtitle)
+  emit([{ "title" =&gt; title, "subtitle" =&gt; subtitle, "valid" =&gt; false }])
+end
+
+def cache_file
+  dir = ENV["alfred_workflow_cache"].to_s
+  return nil if dir.empty?
+  FileUtils.mkdir_p(dir)
+  File.join(dir, "items.json")
+end
+
+def read_cache(path)
+  return nil if path.nil? || !File.exist?(path)
+  JSON.parse(File.read(path))
+rescue StandardError
+  nil
+end
+
+def fresh_cache(path)
+  return nil if path.nil? || !File.exist?(path)
+  return nil if Time.now - File.mtime(path) &gt; CACHE_TTL
+  read_cache(path)
+end
+
+def write_cache(path, items)
+  return if path.nil?
+  File.write(path, JSON.generate(items))
+rescue StandardError
+  nil
+end
+
+def plain_text(parts)
+  (parts || []).map { |t| t["plain_text"] }.join
+end
+
+# Notion ビュー「在庫管理（取扱中）」と同じ条件に 優先度=高 を足したもの。
+# （購入状況=再購入 かつ 発注点≠0 かつ 優先度=高）
+# 発注点が未設定の行も does_not_equal 0 に該当する（ビューと同じ挙動、実測済み）。
+def fetch_items
+  items = []
+  cursor = nil
+
+  loop do
+    uri = URI.parse("https://api.notion.com/v1/databases/#{WISHLIST_DB_ID}/query")
+    request = Net::HTTP::Post.new(uri)
+    request.content_type = "application/json"
+    request["Authorization"] = "Bearer #{MY_NOTION_TOKEN}"
+    request["Notion-Version"] = "2022-06-28"
+
+    body = {
+      "page_size" =&gt; 100,
+      "filter" =&gt; {
+        "and" =&gt; [
+          { "property" =&gt; "購入状況", "select" =&gt; { "equals" =&gt; "再購入" } },
+          { "property" =&gt; "発注点", "number" =&gt; { "does_not_equal" =&gt; 0 } },
+          { "property" =&gt; "優先度", "select" =&gt; { "equals" =&gt; "高" } }
+        ]
+      },
+      "sorts" =&gt; [{ "property" =&gt; "商品名", "direction" =&gt; "ascending" }]
+    }
+    body["start_cursor"] = cursor if cursor
+    request.body = JSON.dump(body)
+
+    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
+      http.request(request)
+    end
+    raise "#{response.code} #{response.body}" unless response.code == "200"
+
+    data = JSON.parse(response.body)
+    data["results"].each do |page|
+      props = page["properties"] || {}
+      name = plain_text((props["商品名"] || {})["title"])
+      next if name.empty?
+
+      items &lt;&lt; {
+        "id" =&gt; page["id"],
+        "name" =&gt; name,
+        "category" =&gt; ((props["商品カテゴリ"] || {})["select"] || {})["name"].to_s,
+        "stock" =&gt; (props["実在庫"] || {})["number"],
+        "qty" =&gt; (props["入数"] || {})["number"],
+        "reorder" =&gt; (props["発注点"] || {})["number"]
+      }
+    end
+
+    cursor = data["next_cursor"]
+    break unless data["has_more"]
+  end
+
+  items
+end
+
+# 0.5 のような小数在庫もあるので、整数なら整数で表示する
+def num(value)
+  return "-" if value.nil?
+  value == value.to_i ? value.to_i.to_s : value.to_s
+end
+
+if MY_NOTION_TOKEN.empty?
+  emit_message("Notion のトークンが未設定です",
+               "Alfred の Configure Workflow で TOKEN を設定してください")
+end
+
+path = cache_file
+items = fresh_cache(path)
+
+if items.nil?
+  begin
+    items = fetch_items
+    write_cache(path, items)
+  rescue StandardError =&gt; e
+    # 取得に失敗したら期限切れキャッシュで代替する。それも無ければ諦める。
+    items = read_cache(path)
+    if items.nil?
+      emit_message("欲しいものリストを取得できませんでした", e.message.to_s[0, 120])
+    end
+  end
+end
+
+if items.empty?
+  emit_message("優先度=高 の対象がありません",
+               "購入状況=再購入 かつ 発注点≠0 かつ 優先度=高 が対象です")
+end
+
+results = items.map do |item|
+  qty = item["qty"]
+  stock = item["stock"]
+  after = (stock.to_f + qty.to_f)
+  detail = ["在庫 #{num(stock)} → #{num(after)}（+#{num(qty)}）",
+            "発注点 #{num(item['reorder'])}",
+            item["category"]].reject { |v| v.to_s.empty? }.join("  ·  ")
+
+  {
+    "uid" =&gt; item["id"],
+    "title" =&gt; item["name"],
+    "subtitle" =&gt; detail,
+    "match" =&gt; "#{item['name']} #{item['category']}",
+    "arg" =&gt; item["id"],
+    "variables" =&gt; { "ITEM_NAME" =&gt; item["name"] }
+  }
+end
+
+emit(results)
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>優先度=高 の商品を選んで在庫を追加</string>
+				<key>title</key>
+				<string>Stock Add</string>
+				<key>type</key>
+				<integer>2</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>29EC8143-6B19-4C3C-B9DA-3DC201221D3F</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string># ネットワークの問題でエラーが出る場合は下記のコメントアウトを外してください
+# require 'resolv-replace'
+
+require "net/http"
+require "uri"
+require "json"
+require "time"
+require "fileutils"
+
+# Notion の「在庫追加」ボタン（WISH-LIST の button プロパティ）と同じ処理を行う。
+# button プロパティは API から押すことも読むこともできないため、内容を再現している。
+#
+# 本家ボタンの処理:
+#   1. このページを編集: 実在庫 = 実在庫 + 入数 / 優先度 = 低
+#   2. Webhook → GAS stockRelation:
+#      S T O C K - R E P L E N I S H に {商品名, 購入日=今日} を作成し、
+#      WISH-LIST の _在庫履歴 リレーションへ追記する
+#      （実装: yoshihiko555/google-apps-scripts apps/notion/Db/inventory.js）
+#
+# ここでは Webhook を経由せず、同じ結果を Notion API へ直接書き込む。
+
+MY_NOTION_TOKEN = ENV["TOKEN"].to_s
+STOCK_DB_ID = ENV["STOCK_DB_ID"].to_s
+PAGE_ID = ARGV[0].to_s
+ITEM_NAME = ENV["ITEM_NAME"].to_s
+
+if MY_NOTION_TOKEN.empty?
+  STDERR.print "Notion のトークンが未設定です。\nAlfred の Configure Workflow で TOKEN を設定してください。\n"
+  exit 1
+end
+
+def request(method, path, body = nil)
+  uri = URI.parse("https://api.notion.com/v1/#{path}")
+  klass = { get: Net::HTTP::Get, post: Net::HTTP::Post, patch: Net::HTTP::Patch }[method]
+  req = klass.new(uri)
+  req.content_type = "application/json"
+  req["Authorization"] = "Bearer #{MY_NOTION_TOKEN}"
+  req["Notion-Version"] = "2022-06-28"
+  req.body = JSON.dump(body) if body
+
+  res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| http.request(req) }
+  [res.code, (JSON.parse(res.body) rescue {})]
+end
+
+def abort_with(message)
+  STDERR.print "#{message}\n"
+  exit 1
+end
+
+# 補充後は 実在庫 が変わり 優先度=低 で一覧から外れるので、キャッシュを捨てる
+def clear_cache
+  dir = ENV["alfred_workflow_cache"].to_s
+  return if dir.empty?
+  FileUtils.rm_f(File.join(dir, "items.json"))
+rescue StandardError
+  nil
+end
+
+abort_with("商品が選択されていません") if PAGE_ID.empty?
+
+# 在庫履歴 DB が integration に共有されていないと、履歴ページを作れないうえ
+# _在庫履歴 リレーションが空で返る（＝上書きで既存履歴を消す）。
+# 破壊的な更新に入る前にここで止める。
+code, body = request(:get, "databases/#{STOCK_DB_ID}")
+unless code == "200"
+  abort_with("在庫履歴DB（S T O C K - R E P L E N I S H）へアクセスできません。\n" \
+             "Notion で当該DBを integration に共有してください。\n#{body['message']}")
+end
+
+# 更新前の値を取得する
+code, page = request(:get, "pages/#{PAGE_ID}")
+abort_with("商品ページを取得できませんでした。\n#{page['message']}") unless code == "200"
+
+props = page["properties"] || {}
+stock = (props["実在庫"] || {})["number"].to_f
+qty = (props["入数"] || {})["number"].to_f
+name = ITEM_NAME.empty? ? ((props["商品名"] || {})["title"] || []).map { |t| t["plain_text"] }.join : ITEM_NAME
+name = "不明な商品" if name.empty?
+
+# リレーションはページ取得だと 25 件で打ち切られる（has_more）。
+# 打ち切られたまま書き戻すと履歴が消えるので、その場合は専用エンドポイントで全件取る。
+history_prop = props["_在庫履歴"] || {}
+relations = (history_prop["relation"] || []).map { |r| { "id" =&gt; r["id"] } }
+
+if history_prop["has_more"]
+  relations = []
+  cursor = nil
+  loop do
+    path = "pages/#{PAGE_ID}/properties/#{URI.encode_www_form_component(history_prop['id'])}?page_size=100"
+    path += "&amp;start_cursor=#{cursor}" if cursor
+    code, chunk = request(:get, path)
+    abort_with("在庫履歴を取得できませんでした。\n#{chunk['message']}") unless code == "200"
+    (chunk["results"] || []).each { |r| relations &lt;&lt; { "id" =&gt; r.dig("relation", "id") } }
+    cursor = chunk["next_cursor"]
+    break unless chunk["has_more"]
+  end
+end
+
+# 1. 在庫履歴を作成する（ここで失敗しても商品ページは無傷）
+code, history = request(:post, "pages", {
+  "parent" =&gt; { "database_id" =&gt; STOCK_DB_ID },
+  "properties" =&gt; {
+    "商品名" =&gt; { "title" =&gt; [{ "text" =&gt; { "content" =&gt; name } }] },
+    "購入日" =&gt; { "date" =&gt; { "start" =&gt; Time.now.iso8601 } }
+  }
+})
+abort_with("在庫履歴を作成できませんでした。\n#{history['message']}") unless code == "200"
+
+# 2. 商品ページを更新する（実在庫 加算 / 優先度=低 / 履歴リレーション追記）
+code, updated = request(:patch, "pages/#{PAGE_ID}", {
+  "properties" =&gt; {
+    "実在庫" =&gt; { "number" =&gt; stock + qty },
+    "優先度" =&gt; { "select" =&gt; { "name" =&gt; "低" } },
+    "_在庫履歴" =&gt; { "relation" =&gt; relations + [{ "id" =&gt; history["id"] }] }
+  }
+})
+unless code == "200"
+  abort_with("商品ページを更新できませんでした（在庫履歴は作成済みです）。\n#{updated['message']}")
+end
+
+clear_cache
+
+after = stock + qty
+format_num = -&gt;(v) { v == v.to_i ? v.to_i.to_s : v.to_s }
+print "#{name} の在庫を #{format_num.call(stock)} → #{format_num.call(after)} に更新しました"
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>2</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>5D7C20F9-B07B-40D2-A9FC-F4F1A74D3530</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>lastpathcomponent</key>
+				<false/>
+				<key>onlyshowifquerypopulated</key>
+				<true/>
+				<key>removeextension</key>
+				<false/>
+				<key>text</key>
+				<string>{query}</string>
+				<key>title</key>
+				<string>在庫を追加しました</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.notification</string>
+			<key>uid</key>
+			<string>7428F446-30F4-47E3-B12E-CD98D2522BA1</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string>`stock` で Notion の欲しいものリストから 優先度=高 の商品を一覧表示し、
+選ぶと在庫を補充する（Notion の「在庫追加」ボタンと同じ処理）。
+
+対象は 購入状況=再購入 かつ 発注点≠0 かつ 優先度=高。
+ビュー「在庫管理（取扱中）」に 優先度=高 を足した条件と一致する。
+
+実行内容:
+  1. S T O C K - R E P L E N I S H に {商品名, 購入日=今日} を作成
+  2. W I S H - L I S T を更新（実在庫 += 入数 / 優先度=低 / _在庫履歴 に追記）
+
+Notion Integration のトークンは Configure Workflow（右上の [x] ボタン）で設定する。
+リポジトリ（public）に載せないため info.plist には保存されない。
+
+W I S H - L I S T と S T O C K - R E P L E N I S H の両方を integration に
+共有していないと動作しない。Notion で各DBを開き「…」→「接続」から追加すること。</string>
+	<key>uidata</key>
+	<dict>
+		<key>29EC8143-6B19-4C3C-B9DA-3DC201221D3F</key>
+		<dict>
+			<key>xpos</key>
+			<real>95</real>
+			<key>ypos</key>
+			<real>215</real>
+		</dict>
+		<key>5D7C20F9-B07B-40D2-A9FC-F4F1A74D3530</key>
+		<dict>
+			<key>xpos</key>
+			<real>295</real>
+			<key>ypos</key>
+			<real>215</real>
+		</dict>
+		<key>7428F446-30F4-47E3-B12E-CD98D2522BA1</key>
+		<dict>
+			<key>xpos</key>
+			<real>495</real>
+			<key>ypos</key>
+			<real>215</real>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>ntn_...</string>
+				<key>required</key>
+				<true/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Notion Integration Token。リポジトリには保存されない。</string>
+			<key>label</key>
+			<string>Notion Token</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>TOKEN</string>
+		</dict>
+	</array>
+	<key>variables</key>
+	<dict>
+		<key>STOCK_DB_ID</key>
+		<string>2a96d81aac528058a127e354b6ed5033</string>
+		<key>WISHLIST_DB_ID</key>
+		<string>bbfb504cf2714ee293c18835379684e4</string>
+	</dict>
+	<key>variablesdontexport</key>
+	<array>
+		<string>TOKEN</string>
+	</array>
+	<key>version</key>
+	<string>1.0.0</string>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>
