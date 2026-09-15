@@ -4,6 +4,8 @@
 <dict>
 	<key>bundleid</key>
 	<string></string>
+	<key>category</key>
+	<string>Internet</string>
 	<key>connections</key>
 	<dict>
 		<key>BF10B845-468E-4A88-A9D9-8E4C589E387C</key>
@@ -63,7 +65,7 @@
 		</array>
 	</dict>
 	<key>createdby</key>
-	<string></string>
+	<string>yoshihiko</string>
 	<key>description</key>
 	<string></string>
 	<key>disabled</key>

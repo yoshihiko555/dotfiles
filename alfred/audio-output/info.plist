@@ -23,7 +23,7 @@
 		</array>
 	</dict>
 	<key>createdby</key>
-	<string></string>
+	<string>yoshihiko</string>
 	<key>description</key>
 	<string>全オーディオ出力デバイスを一覧から選んで切り替えるワークフロー</string>
 	<key>disabled</key>
@@ -32,6 +32,45 @@
 	<string>Audio Output Switcher</string>
 	<key>objects</key>
 	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>#!/bin/zsh
+set -euo pipefail
+
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+# Alfred は選択アイテムの variables を環境変数として渡す。argv はフォールバック。
+# 名前は Unicode 正規化(NFC/NFD)差で一致しないことがあるため UID で切り替える。
+uid="${uid:-${1:-}}"
+name="${device_name:-$uid}"
+
+if [[ -z "$uid" ]]; then
+  osascript -e 'display notification "デバイスが指定されていません" with title "Audio Output"'
+  exit 1
+fi
+
+/etc/profiles/per-user/yoshihiko/bin/SwitchAudioSource -t output -u "$uid"
+osascript -e "display notification \"$name に切り替えました\" with title \"Audio Output\""</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>11</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>1159A364-FA87-4F58-A4C6-155B813D0948</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
 		<dict>
 			<key>config</key>
 			<dict>
@@ -120,45 +159,6 @@ print(json.dumps({"items": items}, ensure_ascii=False))</string>
 			<string>D4946BC1-B080-4BCB-AE2F-B37275946ECE</string>
 			<key>version</key>
 			<integer>3</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>concurrently</key>
-				<false/>
-				<key>escaping</key>
-				<integer>102</integer>
-				<key>script</key>
-				<string>#!/bin/zsh
-set -euo pipefail
-
-export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
-
-# Alfred は選択アイテムの variables を環境変数として渡す。argv はフォールバック。
-# 名前は Unicode 正規化(NFC/NFD)差で一致しないことがあるため UID で切り替える。
-uid="${uid:-${1:-}}"
-name="${device_name:-$uid}"
-
-if [[ -z "$uid" ]]; then
-  osascript -e 'display notification "デバイスが指定されていません" with title "Audio Output"'
-  exit 1
-fi
-
-/etc/profiles/per-user/yoshihiko/bin/SwitchAudioSource -t output -u "$uid"
-osascript -e "display notification \"$name に切り替えました\" with title \"Audio Output\""</string>
-				<key>scriptargtype</key>
-				<integer>1</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>type</key>
-				<integer>11</integer>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.script</string>
-			<key>uid</key>
-			<string>1159A364-FA87-4F58-A4C6-155B813D0948</string>
-			<key>version</key>
-			<integer>2</integer>
 		</dict>
 	</array>
 	<key>readme</key>
