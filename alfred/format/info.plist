@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.yoshihiko.alfred.format</string>
+	<key>category</key>
+	<string>Tools</string>
+	<key>connections</key>
+	<dict>
+		<key>9C1D2A5E-7F43-4A1B-8E60-2B7C4D9F1A30</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>3E8B6C14-52D7-4F9A-B0C3-7A1E5D82F4B6</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>yoshihiko</string>
+	<key>description</key>
+	<string>クリップボードのテキストを JSON / XML / Base64 / URL / JWT で整形・変換するワークフロー</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Format Clipboard</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<true/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>68</integer>
+				<key>keyword</key>
+				<string>fmt</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string></string>
+				<key>script</key>
+				<string>#!/bin/zsh
+# symlink 経由でも fmt.py を見つけられるよう、ワークフローディレクトリへ移動する。
+cd "${alfred_preferences}/workflows/${alfred_workflow_uid}" 2&gt;/dev/null || true
+
+# Alfred はワークフローディレクトリを cwd としてスクリプトを実行する。
+# fmt.py が pbpaste を読み、変換可能な候補だけを Script Filter JSON で返す。
+/usr/bin/python3 ./fmt.py list
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>JSON / XML / Base64 / URL / JWT — 適用できる変換だけを表示</string>
+				<key>title</key>
+				<string>クリップボードを整形</string>
+				<key>type</key>
+				<integer>11</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>9C1D2A5E-7F43-4A1B-8E60-2B7C4D9F1A30</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>#!/bin/zsh
+# symlink 経由でも fmt.py を見つけられるよう、ワークフローディレクトリへ移動する。
+cd "${alfred_preferences}/workflows/${alfred_workflow_uid}" 2&gt;/dev/null || true
+
+set -uo pipefail
+
+name="${1:-}"
+if [[ -z "$name" ]]; then
+  osascript -e 'display notification "変換が指定されていません" with title "Format"'
+  exit 1
+fi
+
+# 候補列挙時ではなく実行時のクリップボードを対象にするため、ここで再変換する。
+if ! result="$(/usr/bin/python3 ./fmt.py apply "$name" 2&gt;&amp;1)"; then
+  osascript -e "display notification \"変換に失敗しました: $name\" with title \"Format\""
+  exit 1
+fi
+
+printf '%s' "$result" | /usr/bin/pbcopy
+osascript -e "display notification \"$name の結果をコピーしました\" with title \"Format\""
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>11</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>3E8B6C14-52D7-4F9A-B0C3-7A1E5D82F4B6</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string></string>
+	<key>uidata</key>
+	<dict>
+		<key>3E8B6C14-52D7-4F9A-B0C3-7A1E5D82F4B6</key>
+		<dict>
+			<key>xpos</key>
+			<integer>475</integer>
+			<key>ypos</key>
+			<integer>300</integer>
+		</dict>
+		<key>9C1D2A5E-7F43-4A1B-8E60-2B7C4D9F1A30</key>
+		<dict>
+			<key>xpos</key>
+			<integer>175</integer>
+			<key>ypos</key>
+			<integer>300</integer>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array/>
+	<key>version</key>
+	<string></string>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>
