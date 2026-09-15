@@ -105,6 +105,15 @@ import json, subprocess, sys
 SAS = "/etc/profiles/per-user/yoshihiko/bin/SwitchAudioSource"
 query = (sys.argv[1] if len(sys.argv) &gt; 1 else "").strip().lower()
 
+# 一覧に出したくないデバイス名（完全一致）
+EXCLUDE = {
+    "DELL U2720QM",
+    "DELL G2422HS",
+    "Microsoft Teams Audio",
+    "USB HIFI AUDIO",
+    "HyperX QuadCast",
+}
+
 try:
     cur = subprocess.check_output([SAS, "-c", "-t", "output", "-f", "json"], text=True).strip()
     current_uid = json.loads(cur).get("uid", "")
@@ -125,6 +134,8 @@ items = []
 for d in devices:
     name = d.get("name", "")
     uid = d.get("uid", "")
+    if name in EXCLUDE:
+        continue
     if query and query not in name.lower():
         continue
     is_cur = (uid == current_uid)
