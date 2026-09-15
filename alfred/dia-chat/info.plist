@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string></string>
+	<key>category</key>
+	<string>Internet</string>
+	<key>connections</key>
+	<dict>
+		<key>2A8FE70F-8D9C-430D-89E9-A0037514FBF7</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>98A813BD-D210-4BAA-BD05-7A2639CE11C5</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>yoshihiko</string>
+	<key>description</key>
+	<string>Dia の AI チャットを新規に開いて、その場で質問を送るワークフロー</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Dia Chat</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>keyword</key>
+				<string>dia</string>
+				<key>subtext</key>
+				<string>Dia の新規チャットで質問する</string>
+				<key>text</key>
+				<string>Dia に聞く</string>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.keyword</string>
+			<key>uid</key>
+			<string>2A8FE70F-8D9C-430D-89E9-A0037514FBF7</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>#!/bin/zsh
+set -euo pipefail
+
+query="${1:-}"
+
+if [[ -z "$query" ]]; then
+  osascript -e 'display notification "質問文が空です" with title "Dia Chat"'
+  exit 1
+fi
+
+# Dia には prompt を渡す URL スキームが無い（dia://assistant/&lt;UUID&gt; は既存会話の参照のみ）。
+# そのため新規タブを開き、検索バーに質問を貼り付けて「Chat」ショートカットで送信する。
+osascript - "$query" &lt;&lt;'APPLESCRIPT'
+on waitForDiaFront()
+	-- 未起動時は activate 直後にメニューバーがまだ無い。
+	-- キー入力が別アプリへ飛ぶのを防ぐため、前面になるまで最大 12 秒待つ。
+	repeat 60 times
+		try
+			tell application "System Events"
+				if (exists menu bar 1 of process "Dia") and (frontmost of process "Dia") then return true
+			end tell
+		end try
+		delay 0.2
+	end repeat
+	return false
+end waitForDiaFront
+
+on run argv
+	set q to item 1 of argv
+
+	set savedClipboard to missing value
+	try
+		set savedClipboard to the clipboard
+	end try
+
+	tell application "Dia" to activate
+	if not waitForDiaFront() then
+		display notification "Dia を前面にできませんでした" with title "Dia Chat"
+		return
+	end if
+	delay 0.3
+
+	-- 直前に見ていたページを文脈に含めない「まっさらなチャット」にするため、
+	-- 先に新規タブを開く。
+	tell application "System Events" to tell process "Dia"
+		click menu item "New Tab" of menu 1 of menu bar item "File" of menu bar 1
+	end tell
+	delay 1.0
+
+	if not waitForDiaFront() then
+		display notification "Dia が前面から外れました" with title "Dia Chat"
+		return
+	end if
+
+	-- 日本語は keystroke だと IME を経由して壊れるため、必ず貼り付けで入力する。
+	set the clipboard to q
+	delay 0.2
+	tell application "System Events"
+		keystroke "v" using command down
+		delay 0.6
+		-- 検索バーの候補のうち「… — Chat」に割り当てられた ^⌘↵。
+		-- 素の Enter は Google 検索になるので使わない。
+		key code 36 using {command down, control down}
+	end tell
+	delay 0.6
+
+	if savedClipboard is not missing value then
+		try
+			set the clipboard to savedClipboard
+		end try
+	end if
+end run
+APPLESCRIPT
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>11</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>98A813BD-D210-4BAA-BD05-7A2639CE11C5</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string></string>
+	<key>uidata</key>
+	<dict>
+		<key>2A8FE70F-8D9C-430D-89E9-A0037514FBF7</key>
+		<dict>
+			<key>xpos</key>
+			<integer>40</integer>
+			<key>ypos</key>
+			<integer>40</integer>
+		</dict>
+		<key>98A813BD-D210-4BAA-BD05-7A2639CE11C5</key>
+		<dict>
+			<key>xpos</key>
+			<integer>300</integer>
+			<key>ypos</key>
+			<integer>40</integer>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array/>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>

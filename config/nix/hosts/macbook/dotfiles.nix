@@ -88,6 +88,8 @@ in
           mkLink "alfred/fast-notion";
         "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.5B4C6E9B-E7D8-4A26-BDE6-653EFD05231D".source =
           mkLink "alfred/github-repo";
+        "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.EBF00FBD-E862-4C9E-9D7E-4F258D7B5CEA".source =
+          mkLink "alfred/dia-chat";
       };
 
       # Claude Code / Antigravity CLI は JSON を rename で置換するため、symlink では
