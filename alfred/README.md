@@ -282,6 +282,48 @@ Notion Calendar に繋いでいても Calendar.app 側で無効だと EventKit �
 **YAML / SQL 非対応:** どちらも標準ライブラリに無く、対応するには Nix 側へ
 `pyyaml` / `sqlparse` の追加が必要なため今回は見送り。
 
+### cleaning
+
+Notion の清掃DB（`C L E A N I N G`）から、次にやるべき清掃を一覧するワークフロー。
+
+**キーワード:** `clean`
+
+**使い方:**
+1. Alfred で `clean` と入力すると、未着手・進行中のエリアが
+   次回清掃予定日の早い順に並ぶ
+2. 続けて文字を打つとエリア名・清掃箇所で絞り込める
+3. **表示専用。** 選択しても何も起きない（全項目 `valid: false`）
+
+**表示内容:**
+
+| 位置 | 内容 |
+|---|---|
+| タイトル | エリア名 ＋ `あと3日` / `今日` / `2日超過`（超過は先頭に `●`） |
+| サブタイトル | 清掃箇所 ／ 最終清掃完了日 ／ ステータス |
+
+**動作:**
+
+- 次回清掃予定日は Notion 側の formula。API では **`2026年09月11日` という
+  文字列**で返ってくる（date 型ではない）ため、和暦表記と ISO 形式の両方を
+  パースする。どちらでも読めなければ「清掃完了日 + 清掃間隔(週)」で代替計算する
+- 並び替えは formula 相手だと API 側が弾く場合があるためローカルで行う
+  （予定日なしは末尾）
+- `alfredfiltersresults` を有効にしているため、スクリプトは1回だけ走り
+  以降の絞り込みは Alfred 側で行う。キャッシュは持たない（Notion で
+  完了にした直後に開き直したとき古い行が出ないようにするため）
+
+**Notion 側の前提:**
+
+- 清掃DB を Integration（`Alfred API`）に共有しておく。
+  未共有だと `object_not_found` で 404 になる
+
+**秘匿情報の扱い:**
+
+fast-notion と同様、Token は `info.plist` に置かず Alfred の
+Workflow Configuration で設定する（`prefs.plist` は `.gitignore` 済み）。
+**prefs.plist はワークフローごとに独立**しているため、fast-notion で
+設定済みでも本ワークフローには改めて入力が必要。
+
 ## ディレクトリ構造
 
 ```
@@ -315,6 +357,11 @@ alfred/
 ├── format/
 │   ├── info.plist
 │   ├── fmt.py
+│   └── .uuid
+├── cleaning/
+│   ├── info.plist
+│   ├── icon.png
+│   ├── prefs.plist   # Alfred が生成（TOKEN 保管、.gitignore）
 │   └── .uuid
 └── README.md
 ```

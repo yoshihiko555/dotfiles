@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.yoshihiko555.cleaning</string>
+	<key>connections</key>
+	<dict/>
+	<key>createdby</key>
+	<string>yoshihiko</string>
+	<key>description</key>
+	<string>Notion の清掃DBから次の清掃予定を一覧する</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Cleaning</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<true/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>clean</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Notion から清掃予定を取得中…</string>
+				<key>script</key>
+				<string># ネットワークの問題でエラーが出る場合は下記のコメントアウトを外してください
+# require 'resolv-replace'
+
+require "net/http"
+require "uri"
+require "json"
+require "date"
+
+# TOKEN は Alfred の Workflow Configuration（右上の [x] ボタン）で設定する。
+# public リポジトリへ載せないため info.plist には保存しない。
+MY_NOTION_TOKEN = ENV["TOKEN"].to_s
+DATABASE_ID = ENV["DATABASE_ID"].to_s
+
+def emit(items)
+  print JSON.generate({ "items" =&gt; items })
+  exit 0
+end
+
+def emit_message(title, subtitle)
+  emit([{ "title" =&gt; title, "subtitle" =&gt; subtitle, "valid" =&gt; false }])
+end
+
+# 次回清掃予定日は formula。現状は `2026年09月11日` という文字列を返すが、
+# formula の書き方次第で date 型にもなりうるので両方を見る。
+def formula_value(prop)
+  formula = (prop || {})["formula"]
+  return nil if formula.nil?
+
+  case formula["type"]
+  when "date" then (formula["date"] || {})["start"]
+  when "string" then formula["string"]
+  end
+end
+
+# ISO 形式（2026-09-11 / 2026-09-11T...）と和暦表記（2026年09月11日）の両対応。
+def parse_date(str)
+  value = str.to_s.strip
+  return nil if value.empty?
+
+  if (m = value.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/))
+    return Date.new(m[1].to_i, m[2].to_i, m[3].to_i)
+  end
+
+  Date.parse(value[0, 10])
+rescue StandardError
+  nil
+end
+
+# 残り日数を「あと3日 / 今日 / 2日超過」の形にする。
+def due_label(next_date)
+  return "予定日なし" if next_date.nil?
+
+  diff = (next_date - Date.today).to_i
+  return "今日" if diff.zero?
+  diff.positive? ? "あと#{diff}日" : "#{-diff}日超過"
+end
+
+def fetch_rows
+  rows = []
+  cursor = nil
+
+  loop do
+    uri = URI.parse("https://api.notion.com/v1/databases/#{DATABASE_ID}/query")
+    request = Net::HTTP::Post.new(uri)
+    request.content_type = "application/json"
+    request["Authorization"] = "Bearer #{MY_NOTION_TOKEN}"
+    request["Notion-Version"] = "2022-06-28"
+
+    # 完了済みは予定一覧に出しても意味がないので除外する。
+    # 並び替えは formula 相手だと API 側が弾く場合があるためローカルで行う。
+    body = {
+      "page_size" =&gt; 100,
+      "filter" =&gt; {
+        "property" =&gt; "ステータス",
+        "status" =&gt; { "does_not_equal" =&gt; "完了" }
+      }
+    }
+    body["start_cursor"] = cursor if cursor
+    request.body = JSON.dump(body)
+
+    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
+      http.request(request)
+    end
+    raise "#{response.code} #{response.body}" unless response.code == "200"
+
+    data = JSON.parse(response.body)
+    data["results"].each do |page|
+      props = page["properties"] || {}
+      area = ((props["エリア"] || {})["title"] || []).map { |t| t["plain_text"] }.join
+      next if area.empty?
+
+      done_on = parse_date(((props["清掃完了日"] || {})["date"] || {})["start"])
+      interval = (props["清掃間隔(週)"] || {})["number"]
+      next_on = parse_date(formula_value(props["次回清掃予定日"]))
+      # formula が読めなかった場合は「清掃完了日 + 清掃間隔(週)」で代替する。
+      next_on ||= done_on + (interval.to_i * 7) if done_on &amp;&amp; interval
+
+      rows &lt;&lt; {
+        "area" =&gt; area,
+        "status" =&gt; ((props["ステータス"] || {})["status"] || {})["name"].to_s,
+        "places" =&gt; ((props["清掃箇所"] || {})["multi_select"] || []).map { |o| o["name"] },
+        "done_on" =&gt; done_on,
+        "next_on" =&gt; next_on
+      }
+    end
+
+    cursor = data["next_cursor"]
+    break unless data["has_more"]
+  end
+
+  rows
+end
+
+emit_message("Notion のトークンが未設定です",
+             "Alfred の Configure Workflow で TOKEN を設定してください") if MY_NOTION_TOKEN.empty?
+
+begin
+  rows = fetch_rows
+rescue StandardError =&gt; e
+  emit_message("清掃予定を取得できませんでした", e.message.to_s[0, 120])
+end
+
+emit_message("清掃予定はありません", "未着手・進行中のエリアがありません") if rows.empty?
+
+# 予定日の早い順。予定日が無いものは末尾へ。
+rows.sort_by! { |r| [r["next_on"].nil? ? 1 : 0, r["next_on"] || Date.today, r["area"]] }
+
+items = rows.map do |row|
+  overdue = !row["next_on"].nil? &amp;&amp; row["next_on"] &lt; Date.today
+  places = row["places"].join("・")
+  done = row["done_on"] ? row["done_on"].strftime("%Y-%m-%d") : "なし"
+
+  subtitle = [places.empty? ? nil : places, "最終 #{done}", row["status"]].compact.join("  ｜  ")
+
+  {
+    "title" =&gt; "#{overdue ? '● ' : ''}#{row['area']}  ｜  #{due_label(row['next_on'])}",
+    "subtitle" =&gt; subtitle,
+    "match" =&gt; "#{row['area']} #{places}",
+    "valid" =&gt; false
+  }
+end
+
+emit(items)
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>未着手・進行中のエリアを次回清掃予定日順に表示</string>
+				<key>title</key>
+				<string>Cleaning</string>
+				<key>type</key>
+				<integer>2</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>311C91DE-A075-4C0D-94D9-50DA5D91C2EC</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string>Notion の清掃DB（C L E A N I N G）から、未着手・進行中のエリアを
+次回清掃予定日の早い順に一覧する。表示専用で、選択しても何も起きない。
+
+TOKEN は Configure Workflow で設定する（prefs.plist に保存され、
+リポジトリには含まれない）。対象DBを Notion の Integration に
+共有しておくこと。
+</string>
+	<key>uidata</key>
+	<dict>
+		<key>311C91DE-A075-4C0D-94D9-50DA5D91C2EC</key>
+		<dict>
+			<key>xpos</key>
+			<real>60.0</real>
+			<key>ypos</key>
+			<real>60.0</real>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>ntn_...</string>
+				<key>required</key>
+				<true/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Notion Integration Token。リポジトリには保存されない。</string>
+			<key>label</key>
+			<string>Notion Token</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>TOKEN</string>
+		</dict>
+	</array>
+	<key>variables</key>
+	<dict>
+		<key>DATABASE_ID</key>
+		<string>13f6d81aac52809ca761e7daa8fa019f</string>
+	</dict>
+	<key>variablesdontexport</key>
+	<array>
+		<string>TOKEN</string>
+	</array>
+	<key>version</key>
+	<string>1.0</string>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>

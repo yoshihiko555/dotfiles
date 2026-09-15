@@ -94,6 +94,8 @@ in
           mkLink "alfred/free-slots";
         "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.F6E09DF1-E931-4654-96D1-84A9F4E800D7".source =
           mkLink "alfred/format";
+        "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.B211A0F7-6ADC-434E-A36C-74840C438984".source =
+          mkLink "alfred/cleaning";
       };
 
       # Claude Code / Antigravity CLI は JSON を rename で置換するため、symlink では
