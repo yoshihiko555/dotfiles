@@ -420,6 +420,35 @@ attach 済みの tmux クライアントを `switch-client` で `containers` に
 - `shell` 以外はバックグラウンドで実行し、開始時と完了時に通知する（`compose up` のビルド待ちで Alfred が固まらない）
 - Docker / OrbStack が停止している場合は一覧に「Docker / OrbStack が起動していません」と表示する
 
+## 外部ワークフローの設定メモ
+
+リポジトリ管理外（Alfred Gallery からインストール）のワークフローのうち、
+再セットアップ時に手で入れ直す必要がある設定を記録する。
+
+### 1Password（by Vítor Galvão）
+
+`Configure Workflow…` から修飾キーの動作を変更できる。デフォルトの `↩` は
+「Open and Fill」で該当ページをブラウザで開いてしまうため、以下に組み替える。
+
+| キー | 割り当て |
+| --- | --- |
+| `↩` | Copy Password |
+| `⇧↩` | Copy One-Time Password |
+| `⌥↩` | Copy Username |
+| `⌘↩` | View in 1Password |
+| `⌃↩` | Open and Fill |
+
+**メモ:**
+
+- 設定は Alfred がワークフローフォルダ内の `prefs.plist` に書き込む。Alfred 側が
+  書き換えるファイルなので nix symlink 管理はせず、Dropbox 同期に任せる。
+- 前提として 1Password アプリの 設定 → 開発者 → 「1Password CLI と連携」が必要。
+  OFF だとワークフローが起動時のサニティチェックで停止する。
+- パスワードのコピーは `org.nspasteboard.ConcealedType` を立てているため、
+  対応するクリップボードマネージャの履歴には残らない。
+- 任意のカスタムフィールドを選んでコピーする操作は用意されていない
+  （割り当てられるのは上記 5 アクションのみ）。
+
 ## ディレクトリ構造
 
 ```
