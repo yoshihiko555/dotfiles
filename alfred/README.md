@@ -379,6 +379,47 @@ Notion の `在庫追加` ボタン（button プロパティ）と同じ処理�
 | `TOKEN` | Alfred の Configure Workflow（`prefs.plist` に保存。`.gitignore` 済み） |
 | `WISHLIST_DB_ID` / `STOCK_DB_ID` | `info.plist` の `variables`（ID のみで秘匿情報ではない） |
 
+### container
+
+Docker / OrbStack のコンテナと Compose プロジェクトを操作するワークフロー。
+
+**キーワード:** `ctr`
+
+**使い方:**
+1. Alfred で `ctr` と入力（続けて絞り込みワードを入力可）
+2. 一覧から対象を選択
+   - 📦 … Compose プロジェクト（`docker compose ls -a`）
+   - 🟢 / ⚪️ … コンテナ（`docker ps -a`、稼働中 / 停止中）
+3. 対象の状態に応じたアクションを選択
+
+**アクション:**
+
+| 対象 | 状態 | アクション |
+| --- | --- | --- |
+| Compose | 稼働中 | `restart` / `stop` / `down` |
+| Compose | 停止・未作成 | `up` (`-d`) / `down` |
+| コンテナ | 稼働中 | `shell` / `restart` / `stop` |
+| コンテナ | 停止中 | `start` |
+
+**shell の動線:**
+
+tmux セッション `containers` にコンテナ名のウィンドウを作り、`docker exec -it` で入る。
+attach 済みの tmux クライアントを `switch-client` で `containers` に切り替え、WezTerm を前面に出す。
+
+- `containers` セッションが無ければ自動で作成する
+- attach 済みクライアントが無い場合は実行せず通知で知らせる（WezTerm で tmux に入ってから実行する）
+
+**down 対策:**
+
+`docker compose down` するとプロジェクトが `compose ls -a` から消え、Alfred から `up` し直せなくなる。
+そのため一覧表示のたびに `プロジェクト名 → ConfigFiles` を
+`$alfred_workflow_data/projects.json` に保存し、消えたプロジェクトも「未作成」として一覧に残す。
+
+**動作:**
+
+- `shell` 以外はバックグラウンドで実行し、開始時と完了時に通知する（`compose up` のビルド待ちで Alfred が固まらない）
+- Docker / OrbStack が停止している場合は一覧に「Docker / OrbStack が起動していません」と表示する
+
 ## ディレクトリ構造
 
 ```
@@ -421,6 +462,9 @@ alfred/
 ├── stock-add/
 │   ├── info.plist
 │   ├── prefs.plist   # Alfred が生成（TOKEN 保管、.gitignore）
+│   └── .uuid
+├── container/
+│   ├── info.plist
 │   └── .uuid
 └── README.md
 ```

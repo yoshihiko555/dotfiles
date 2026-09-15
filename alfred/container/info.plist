@@ -1,0 +1,536 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string></string>
+	<key>category</key>
+	<string>Tools</string>
+	<key>connections</key>
+	<dict>
+		<key>0E4A6E3C-7C6B-4C3E-9C1E-2A5F1D8B4A11</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>1F5B7F4D-8D7C-4D4F-8D2F-3B6A2E9C5B22</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>2A6C8A5E-9E8D-4E5A-9E3A-4C7B3F0D6C33</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>3B7D9B6F-0F9E-4F6B-8F4B-5D8C401E7D44</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>3B7D9B6F-0F9E-4F6B-8F4B-5D8C401E7D44</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>4C8E0C70-101F-4A7C-9A5C-6E9D512F8E55</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>yoshihiko</string>
+	<key>description</key>
+	<string>Docker / OrbStack のコンテナと Compose プロジェクトを操作するワークフロー</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Container</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>68</integer>
+				<key>keyword</key>
+				<string>ctr</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string></string>
+				<key>script</key>
+				<string>#!/usr/bin/env python3
+"""コンテナ / Compose プロジェクトを一覧する Script Filter。"""
+import json, os, subprocess, sys
+
+DOCKER = "/usr/local/bin/docker"
+query = (sys.argv[1] if len(sys.argv) &gt; 1 else "").strip().lower()
+
+wf_data = os.getenv("alfred_workflow_data") or os.getcwd()
+os.makedirs(wf_data, exist_ok=True)
+cache_path = os.path.join(wf_data, "projects.json")
+
+
+def run(args, timeout=5):
+    return subprocess.check_output([DOCKER] + args, text=True, timeout=timeout, stderr=subprocess.DEVNULL)
+
+
+def load_cache():
+    try:
+        with open(cache_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def save_cache(cache):
+    try:
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(cache, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+
+# --- Docker が使えるか確認 ---
+try:
+    run(["version", "--format", "{{.Server.Version}}"], timeout=3)
+except Exception:
+    print(json.dumps({"items": [{
+        "title": "Docker / OrbStack が起動していません",
+        "subtitle": "OrbStack を起動してから再度お試しください",
+        "valid": False,
+    }]}, ensure_ascii=False))
+    raise SystemExit
+
+items = []
+
+# --- Compose プロジェクト ---
+projects = []
+try:
+    projects = json.loads(run(["compose", "ls", "-a", "--format", "json"]) or "[]")
+except Exception:
+    projects = []
+
+cache = load_cache()
+seen = set()
+for p in projects:
+    name = p.get("Name", "")
+    if not name:
+        continue
+    seen.add(name)
+    config_files = p.get("ConfigFiles", "")
+    if config_files:
+        cache[name] = config_files
+    items.append({
+        "kind": "compose",
+        "target": name,
+        "status": p.get("Status", ""),
+        "config_files": config_files,
+        "title": f"📦 {name}",
+        "subtitle": f"Compose · {p.get('Status', '')}",
+        "match": name,
+    })
+
+# down 済みで compose ls から消えたプロジェクトもキャッシュから復元する
+# （compose ファイルが消えているものは除外し、キャッシュからも落とす）
+for name in list(cache):
+    if name in seen:
+        continue
+    config_files = cache[name]
+    if not all(os.path.exists(f) for f in config_files.split(",") if f):
+        del cache[name]
+        continue
+    items.append({
+        "kind": "compose",
+        "target": name,
+        "status": "",
+        "config_files": config_files,
+        "title": f"📦 {name}",
+        "subtitle": "Compose · 未作成（down 済み）",
+        "match": name,
+    })
+
+save_cache(cache)
+
+# --- コンテナ ---
+try:
+    lines = run(["ps", "-a", "--format", "{{json .}}"]).strip().splitlines()
+except Exception:
+    lines = []
+
+for line in lines:
+    try:
+        c = json.loads(line)
+    except Exception:
+        continue
+    name = c.get("Names", "")
+    status = c.get("Status", "")
+    running = status.startswith("Up")
+    items.append({
+        "kind": "container",
+        "target": name,
+        "status": status,
+        "config_files": "",
+        "title": f"{'🟢' if running else '⚪️'} {name}",
+        "subtitle": f"{c.get('Image', '')} · {status}",
+        "match": f"{name} {c.get('Image', '')}",
+    })
+
+out = []
+for it in items:
+    if query and query not in it["match"].lower():
+        continue
+    out.append({
+        "title": it["title"],
+        "subtitle": it["subtitle"],
+        "arg": it["target"],
+        "variables": {
+            "kind": it["kind"],
+            "target": it["target"],
+            "status": it["status"],
+            "config_files": it["config_files"],
+        },
+    })
+
+if not out:
+    out = [{"title": "該当なし", "subtitle": query, "valid": False}]
+
+print(json.dumps({"items": out}, ensure_ascii=False))
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>コンテナ / Compose プロジェクトを検索</string>
+				<key>title</key>
+				<string>Container 操作</string>
+				<key>type</key>
+				<integer>9</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>0E4A6E3C-7C6B-4C3E-9C1E-2A5F1D8B4A11</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>externaltriggerid</key>
+				<string>choose_action</string>
+				<key>passinputasargument</key>
+				<true/>
+				<key>passvariables</key>
+				<true/>
+				<key>workflowbundleid</key>
+				<string>self</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.callexternaltrigger</string>
+			<key>uid</key>
+			<string>1F5B7F4D-8D7C-4D4F-8D2F-3B6A2E9C5B22</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>availableviaurlhandler</key>
+				<false/>
+				<key>triggerid</key>
+				<string>choose_action</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>2A6C8A5E-9E8D-4E5A-9E3A-4C7B3F0D6C33</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string></string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string></string>
+				<key>script</key>
+				<string>#!/usr/bin/env python3
+"""選択した対象に対して実行できるアクションを出す Script Filter。"""
+import json, os
+
+kind = os.getenv("kind", "")
+target = os.getenv("target", "")
+status = os.getenv("status", "")
+config_files = os.getenv("config_files", "")
+
+if not target:
+    print(json.dumps({"items": [{"title": "対象が取得できません", "valid": False}]}, ensure_ascii=False))
+    raise SystemExit
+
+
+def item(title, action, subtitle=""):
+    return {
+        "title": title,
+        "subtitle": subtitle or target,
+        "arg": action,
+        "variables": {
+            "kind": kind,
+            "target": target,
+            "action": action,
+            "config_files": config_files,
+        },
+    }
+
+
+items = []
+
+if kind == "compose":
+    # compose ls は "exited(1), running(2)" のように混在状態を返す
+    running = "running" in status
+    if running:
+        items.append(item("restart — 再起動", "restart"))
+        items.append(item("stop — 停止", "stop"))
+        items.append(item("down — 停止してコンテナ削除", "down"))
+    else:
+        items.append(item("up — 起動（-d）", "up"))
+        if status:
+            items.append(item("down — コンテナ削除", "down"))
+else:
+    running = status.startswith("Up")
+    if running:
+        items.append(item("shell — コンテナ内に入る", "shell", "tmux セッション containers に新しいタブを作成"))
+        items.append(item("restart — 再起動", "restart"))
+        items.append(item("stop — 停止", "stop"))
+    else:
+        items.append(item("start — 起動", "start"))
+
+print(json.dumps({"items": items}, ensure_ascii=False))
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string></string>
+				<key>title</key>
+				<string></string>
+				<key>type</key>
+				<integer>9</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>3B7D9B6F-0F9E-4F6B-8F4B-5D8C401E7D44</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>#!/bin/zsh
+set -uo pipefail
+
+# tmux は nix profile 配下にしか無いため、そのパスを先頭に置く
+export PATH="/etc/profiles/per-user/yoshihiko/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+kind="${kind:-}"
+target="${target:-}"
+action="${action:-}"
+config_files="${config_files:-}"
+
+# osascript に渡す文字列から引用符・バックスラッシュ・改行を除く
+sanitize() {
+  printf '%s' "$1" | tr -d '"\\' | tr '\n' ' '
+}
+
+notify() {
+  local sub msg
+  sub="$(sanitize "$1")"
+  msg="$(sanitize "$2")"
+  osascript -e "display notification \"$msg\" with title \"Container\" subtitle \"$sub\"" &gt;/dev/null 2&gt;&amp;1
+}
+
+if [[ -z "$target" || -z "$action" ]]; then
+  notify "エラー" "対象またはアクションが渡ってきていません"
+  exit 1
+fi
+
+# --- shell: tmux セッション containers にタブを作って docker exec する ---
+if [[ "$action" == "shell" ]]; then
+  # attach 済みクライアントが無いとタブを作っても切り替えられないので先に確認する
+  client="$(tmux list-clients -F '#{client_tty}' 2&gt;/dev/null | head -1)"
+  if [[ -z "$client" ]]; then
+    notify "$target" "tmux クライアントが見つかりません。WezTerm で tmux に attach してから実行してください"
+    exit 1
+  fi
+
+  if ! tmux has-session -t containers 2&gt;/dev/null; then
+    tmux new-session -d -s containers -n scratch
+  fi
+
+  win="$(printf '%s' "$target" | tr -c 'a-zA-Z0-9_-' '-')"
+  tmux new-window -t containers: -n "$win" \
+    "docker exec -it '$target' sh -c 'command -v bash &gt;/dev/null 2&gt;&amp;1 &amp;&amp; exec bash || exec sh'"
+
+  tmux switch-client -c "$client" -t containers
+
+  wez_app="WezTerm"
+  [[ -d "/Applications/WezTerm Nightly.app" ]] &amp;&amp; wez_app="WezTerm Nightly"
+  open -a "$wez_app"
+  exit 0
+fi
+
+# --- それ以外はバックグラウンドで実行して完了を通知する ---
+(
+  rc=0
+  if [[ "$kind" == "compose" ]]; then
+    args=(compose -p "$target")
+    if [[ "$action" == "up" &amp;&amp; -n "$config_files" ]]; then
+      for f in ${(s:,:)config_files}; do
+        args+=(-f "$f")
+      done
+    fi
+
+    case "$action" in
+      up)      out="$(docker "${args[@]}" up -d 2&gt;&amp;1)"; rc=$? ;;
+      down)    out="$(docker "${args[@]}" down 2&gt;&amp;1)"; rc=$? ;;
+      stop)    out="$(docker "${args[@]}" stop 2&gt;&amp;1)"; rc=$? ;;
+      restart) out="$(docker "${args[@]}" restart 2&gt;&amp;1)"; rc=$? ;;
+      *)       out="unknown action: $action"; rc=1 ;;
+    esac
+  else
+    out="$(docker "$action" "$target" 2&gt;&amp;1)"; rc=$?
+  fi
+
+  if [[ $rc -eq 0 ]]; then
+    notify "$target" "$action 完了"
+  else
+    notify "$target" "$action 失敗: ${out##*$'\n'}"
+  fi
+) &gt;/dev/null 2&gt;&amp;1 &amp;!
+
+notify "$target" "$action を実行中…"
+exit 0
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>11</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>4C8E0C70-101F-4A7C-9A5C-6E9D512F8E55</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string></string>
+	<key>uidata</key>
+	<dict>
+		<key>0E4A6E3C-7C6B-4C3E-9C1E-2A5F1D8B4A11</key>
+		<dict>
+			<key>xpos</key>
+			<integer>40</integer>
+			<key>ypos</key>
+			<integer>40</integer>
+		</dict>
+		<key>1F5B7F4D-8D7C-4D4F-8D2F-3B6A2E9C5B22</key>
+		<dict>
+			<key>xpos</key>
+			<integer>300</integer>
+			<key>ypos</key>
+			<integer>40</integer>
+		</dict>
+		<key>2A6C8A5E-9E8D-4E5A-9E3A-4C7B3F0D6C33</key>
+		<dict>
+			<key>xpos</key>
+			<integer>40</integer>
+			<key>ypos</key>
+			<integer>200</integer>
+		</dict>
+		<key>3B7D9B6F-0F9E-4F6B-8F4B-5D8C401E7D44</key>
+		<dict>
+			<key>xpos</key>
+			<integer>300</integer>
+			<key>ypos</key>
+			<integer>200</integer>
+		</dict>
+		<key>4C8E0C70-101F-4A7C-9A5C-6E9D512F8E55</key>
+		<dict>
+			<key>xpos</key>
+			<integer>560</integer>
+			<key>ypos</key>
+			<integer>200</integer>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array/>
+	<key>version</key>
+	<string></string>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>
