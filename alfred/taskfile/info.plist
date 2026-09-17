@@ -1,0 +1,671 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.yoshihiko.taskfile</string>
+	<key>category</key>
+	<string>Tools</string>
+	<key>connections</key>
+	<dict>
+		<key>0CE07878-6FB7-44FA-A6D2-3756EC84C2E6</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>D40186E1-5A22-43FC-BC0E-FFBCC4D97BB5</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>2CDEECE4-D6B3-4E94-A2CF-653F91E0FABD</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>D26F1AC3-85CA-4F5B-B25C-A0E1C63E9A4E</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>416786B9-2F8A-4025-8102-3CC299583008</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>2CDEECE4-D6B3-4E94-A2CF-653F91E0FABD</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>DD4650AE-F800-4EA6-9CEC-9DE87CF1C756</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>F2ACCA9F-C784-4E90-99FF-EE1D2BC4122D</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>DE0DA7B9-70E9-42C6-B3DC-92F9871516B9</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>DD4650AE-F800-4EA6-9CEC-9DE87CF1C756</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>yoshihiko</string>
+	<key>description</key>
+	<string>go-task (Taskfile) のタスクをプロジェクトを明示して実行するワークフロー</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Taskfile</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>68</integer>
+				<key>keyword</key>
+				<string>tk</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string></string>
+				<key>script</key>
+				<string>#!/usr/bin/env python3
+"""go-task の Taskfile を持つ ghq リポジトリを一覧する Script Filter。"""
+import json, os, subprocess, sys
+
+GHQ = "/etc/profiles/per-user/yoshihiko/bin/ghq"
+TASKFILE_NAMES = ("Taskfile.yml", "Taskfile.yaml", "taskfile.yml", "taskfile.yaml")
+
+query = (sys.argv[1] if len(sys.argv) &gt; 1 else "").strip().lower()
+
+# alfred_workflow_data が未設定なら config なし扱い（os.getcwd() へはフォールバックしない）
+wf_data = os.getenv("alfred_workflow_data")
+cfg = {"extras": [], "overrides": {}, "excludes": [], "terminal": []}
+if wf_data:
+    try:
+        with open(os.path.join(wf_data, "config.json"), "r", encoding="utf-8") as f:
+            cfg.update(json.load(f))
+    except FileNotFoundError:
+        pass
+    except Exception:
+        pass
+
+excludes = cfg.get("excludes", [])
+overrides = cfg.get("overrides", {})
+
+try:
+    out = subprocess.check_output([GHQ, "list", "--full-path"], text=True)
+    repos = [l for l in out.strip().splitlines() if l]
+except Exception:
+    repos = []
+
+try:
+    ghq_root = subprocess.check_output([GHQ, "root"], text=True).strip()
+except Exception:
+    ghq_root = ""
+
+items = []
+
+for full_path in repos:
+    if not any(os.path.isfile(os.path.join(full_path, n)) for n in TASKFILE_NAMES):
+        continue
+
+    rel = full_path.replace(ghq_root + "/", "", 1) if ghq_root else full_path
+    parts = rel.split("/")
+    repo_key = "/".join(parts[2:]) if len(parts) &gt; 2 else rel
+    basename = os.path.basename(full_path.rstrip("/"))
+
+    if repo_key in excludes or basename in excludes:
+        continue
+
+    name = overrides.get(repo_key, {}).get("name", basename)
+
+    if query and query not in f"{name} {repo_key} {full_path}".lower():
+        continue
+
+    items.append({
+        "title": name,
+        "subtitle": full_path,
+        "arg": full_path,
+        "variables": {"project_name": name, "project_dir": full_path},
+    })
+
+# extras（ghq 管理外のプロジェクト。Taskfile の有無は検査せず config を信頼する）
+for ex in cfg.get("extras", []):
+    path = ex.get("path", "")
+    name = ex.get("name", os.path.basename(path.rstrip("/")))
+    if query and query not in f"{name} {path}".lower():
+        continue
+    items.append({
+        "title": name,
+        "subtitle": path,
+        "arg": path,
+        "variables": {"project_name": name, "project_dir": path},
+    })
+
+if not items:
+    items = [{"title": "Taskfile を持つプロジェクトが見つかりません", "subtitle": query, "valid": False}]
+
+print(json.dumps({"items": items}, ensure_ascii=False))
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string></string>
+				<key>title</key>
+				<string></string>
+				<key>type</key>
+				<integer>9</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>0CE07878-6FB7-44FA-A6D2-3756EC84C2E6</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>externaltriggerid</key>
+				<string>choose_task</string>
+				<key>passinputasargument</key>
+				<true/>
+				<key>passvariables</key>
+				<true/>
+				<key>workflowbundleid</key>
+				<string>self</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.callexternaltrigger</string>
+			<key>uid</key>
+			<string>D40186E1-5A22-43FC-BC0E-FFBCC4D97BB5</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>availableviaurlhandler</key>
+				<false/>
+				<key>triggerid</key>
+				<string>choose_task</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>DE0DA7B9-70E9-42C6-B3DC-92F9871516B9</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string></string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>{var:project_name} のタスクを取得中…</string>
+				<key>script</key>
+				<string>#!/usr/bin/env python3
+"""選択したプロジェクトの go-task タスク（desc ありのみ）を一覧する Script Filter。"""
+import json, os, subprocess, sys
+
+TASK = "/etc/profiles/per-user/yoshihiko/bin/task"
+TASKFILE_NAMES = ("Taskfile.yml", "Taskfile.yaml", "taskfile.yml", "taskfile.yaml")
+
+query = (sys.argv[1] if len(sys.argv) &gt; 1 else "").strip().lower()
+project_name = os.getenv("project_name", "")
+project_dir = os.getenv("project_dir", "")
+
+if not project_dir:
+    print(json.dumps({"items": [{"title": "プロジェクトが取得できません", "valid": False}]}, ensure_ascii=False))
+    raise SystemExit
+
+
+def is_project_root_taskfile(taskfile_path):
+    if not taskfile_path:
+        return True
+    return any(
+        os.path.abspath(taskfile_path) == os.path.abspath(os.path.join(project_dir, n))
+        for n in TASKFILE_NAMES
+    )
+
+
+try:
+    out = subprocess.check_output(
+        [TASK, "--list", "--json"], text=True, cwd=project_dir, timeout=10, stderr=subprocess.DEVNULL
+    )
+    tasks = json.loads(out).get("tasks", [])
+except Exception:
+    tasks = None
+
+if tasks is None:
+    print(json.dumps({
+        "items": [{"title": "タスク一覧の取得に失敗しました", "subtitle": project_dir, "valid": False}]
+    }, ensure_ascii=False))
+    raise SystemExit
+
+items = []
+for t in tasks:
+    name = t.get("name", "")
+    desc = t.get("desc", "")
+    if not name or not desc:
+        continue
+    if query and query not in f"{name} {desc}".lower():
+        continue
+
+    taskfile = t.get("location", {}).get("taskfile", "")
+    subtitle = desc
+    if not is_project_root_taskfile(taskfile):
+        subtitle += f" [{os.path.relpath(taskfile, project_dir)}]"
+
+    items.append({
+        "title": f"{project_name} \u203a {name}",
+        "subtitle": subtitle,
+        "arg": name,
+        "variables": {"project_name": project_name, "project_dir": project_dir, "task_name": name},
+    })
+
+if not items:
+    items = [{"title": "desc 付きのタスクが見つかりません", "subtitle": project_dir, "valid": False}]
+
+print(json.dumps({"items": items}, ensure_ascii=False))
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string></string>
+				<key>title</key>
+				<string></string>
+				<key>type</key>
+				<integer>9</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>DD4650AE-F800-4EA6-9CEC-9DE87CF1C756</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>externaltriggerid</key>
+				<string>confirm_task</string>
+				<key>passinputasargument</key>
+				<true/>
+				<key>passvariables</key>
+				<true/>
+				<key>workflowbundleid</key>
+				<string>self</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.callexternaltrigger</string>
+			<key>uid</key>
+			<string>F2ACCA9F-C784-4E90-99FF-EE1D2BC4122D</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>availableviaurlhandler</key>
+				<false/>
+				<key>triggerid</key>
+				<string>confirm_task</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>416786B9-2F8A-4025-8102-3CC299583008</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string></string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string></string>
+				<key>script</key>
+				<string>#!/usr/bin/env python3
+"""バックグラウンド実行 / ターミナル実行を選ばせる確認 Script Filter。"""
+import json, os
+
+project_name = os.getenv("project_name", "")
+project_dir = os.getenv("project_dir", "")
+task_name = os.getenv("task_name", "")
+
+if not project_dir or not task_name:
+    print(json.dumps({
+        "items": [{"title": "プロジェクトまたはタスクが取得できません", "valid": False}]
+    }, ensure_ascii=False))
+    raise SystemExit
+
+wf_data = os.getenv("alfred_workflow_data")
+terminal_list = []
+if wf_data:
+    try:
+        with open(os.path.join(wf_data, "config.json"), "r", encoding="utf-8") as f:
+            terminal_list = json.load(f).get("terminal", [])
+    except Exception:
+        terminal_list = []
+
+prefer_terminal = (
+    f"{project_name}/{task_name}" in terminal_list or f"{project_name}/*" in terminal_list
+)
+
+
+def make_item(title, mode, subtitle):
+    return {
+        "title": title,
+        "subtitle": subtitle,
+        "arg": mode,
+        "variables": {
+            "project_name": project_name,
+            "project_dir": project_dir,
+            "task_name": task_name,
+            "mode": mode,
+        },
+    }
+
+
+bg_subtitle = f"\u30d0\u30c3\u30af\u30b0\u30e9\u30a6\u30f3\u30c9\u3067\u5b9f\u884c\u3057\u901a\u77e5 / {project_dir}"
+if prefer_terminal:
+    bg_subtitle += " \u26a0 \u8a2d\u5b9a\u3067\u30bf\u30fc\u30df\u30ca\u30eb\u63a8\u5968"
+
+bg = make_item(f"\u5b9f\u884c: {project_name} \u203a {task_name}", "background", bg_subtitle)
+term = make_item(
+    f"\u30bf\u30fc\u30df\u30ca\u30eb\u3067\u5b9f\u884c: {project_name} \u203a {task_name}",
+    "terminal",
+    "tmux \"tasks\" \u30bb\u30c3\u30b7\u30e7\u30f3\u3067\u5b9f\u884c / \u5bfe\u8a71\u30fbsudo\u30fb\u9577\u6642\u9593\u5411\u3051",
+)
+
+items = [term, bg] if prefer_terminal else [bg, term]
+
+print(json.dumps({"items": items}, ensure_ascii=False))
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string></string>
+				<key>title</key>
+				<string></string>
+				<key>type</key>
+				<integer>9</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>2CDEECE4-D6B3-4E94-A2CF-653F91E0FABD</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>#!/bin/zsh
+set -uo pipefail
+
+# task / tmux は nix profile 配下にしか無いため、そのパスを先頭に置く
+export PATH="/etc/profiles/per-user/yoshihiko/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+TASK_BIN="/etc/profiles/per-user/yoshihiko/bin/task"
+TMUX_BIN="/etc/profiles/per-user/yoshihiko/bin/tmux"
+
+project_name="${project_name:-}"
+project_dir="${project_dir:-}"
+task_name="${task_name:-}"
+mode="${mode:-}"
+
+# osascript / ファイル名に渡す文字列から引用符・バックスラッシュ・改行・スラッシュを除く
+sanitize() {
+  printf '%s' "$1" | tr -d '"\\' | tr '\n' ' '
+}
+
+# ログファイル名専用。プロジェクト名やタスク名に含まれ得る記号を潰す
+safe_name() {
+  printf '%s' "$1" | tr -c 'a-zA-Z0-9_.-' '-'
+}
+
+notify() {
+  local sub msg
+  sub="$(sanitize "$1")"
+  msg="$(sanitize "$2")"
+  osascript -e "display notification \"$msg\" with title \"Taskfile\" subtitle \"$sub\"" &gt;/dev/null 2&gt;&amp;1
+}
+
+if [[ -z "$project_dir" || -z "$task_name" ]]; then
+  notify "エラー" "project_dir または task_name が渡ってきていません"
+  exit 1
+fi
+
+# --- terminal: tmux セッション tasks にウィンドウを作って実行する ---
+if [[ "$mode" == "terminal" ]]; then
+  # attach 済みクライアントが無いとウィンドウを作っても切り替えられないので先に確認する
+  client="$("$TMUX_BIN" list-clients -F '#{client_tty}' 2&gt;/dev/null | head -1)"
+  if [[ -z "$client" ]]; then
+    notify "$project_name" "tmux クライアントが見つかりません。WezTerm で tmux に attach してから実行してください"
+    exit 1
+  fi
+
+  if ! "$TMUX_BIN" has-session -t tasks 2&gt;/dev/null; then
+    "$TMUX_BIN" new-session -d -s tasks -n scratch
+  fi
+
+  win="$(sanitize "${project_name}:${task_name}")"
+  "$TMUX_BIN" new-window -t tasks: -n "$win" \
+    "cd '$project_dir' &amp;&amp; '$TASK_BIN' '$task_name'"
+
+  "$TMUX_BIN" switch-client -c "$client" -t tasks
+
+  wez_app="WezTerm"
+  [[ -d "/Applications/WezTerm Nightly.app" ]] &amp;&amp; wez_app="WezTerm Nightly"
+  open -a "$wez_app"
+  exit 0
+fi
+
+# --- background: nohup 相当でバックグラウンド実行し、開始・終了を通知する ---
+log_dir="${alfred_workflow_cache:-/tmp}/logs"
+mkdir -p "$log_dir"
+timestamp="$(date +%Y%m%d-%H%M%S)"
+log_file="$log_dir/$(safe_name "$project_name")-$(safe_name "$task_name")-$timestamp.log"
+
+(
+  cd "$project_dir" &amp;&amp; "$TASK_BIN" "$task_name" &gt;"$log_file" 2&gt;&amp;1
+  rc=$?
+  if [[ $rc -eq 0 ]]; then
+    notify "$project_name › $task_name" "完了"
+  else
+    notify "$project_name › $task_name" "失敗（終了コード $rc）: $log_file"
+  fi
+) &gt;/dev/null 2&gt;&amp;1 &amp;!
+
+notify "$project_name › $task_name" "バックグラウンドで実行中…"
+exit 0
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>11</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>D26F1AC3-85CA-4F5B-B25C-A0E1C63E9A4E</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string></string>
+	<key>uidata</key>
+	<dict>
+		<key>0CE07878-6FB7-44FA-A6D2-3756EC84C2E6</key>
+		<dict>
+			<key>xpos</key>
+			<integer>40</integer>
+			<key>ypos</key>
+			<integer>40</integer>
+		</dict>
+		<key>2CDEECE4-D6B3-4E94-A2CF-653F91E0FABD</key>
+		<dict>
+			<key>xpos</key>
+			<integer>300</integer>
+			<key>ypos</key>
+			<integer>360</integer>
+		</dict>
+		<key>416786B9-2F8A-4025-8102-3CC299583008</key>
+		<dict>
+			<key>xpos</key>
+			<integer>40</integer>
+			<key>ypos</key>
+			<integer>360</integer>
+		</dict>
+		<key>D26F1AC3-85CA-4F5B-B25C-A0E1C63E9A4E</key>
+		<dict>
+			<key>xpos</key>
+			<integer>560</integer>
+			<key>ypos</key>
+			<integer>360</integer>
+		</dict>
+		<key>D40186E1-5A22-43FC-BC0E-FFBCC4D97BB5</key>
+		<dict>
+			<key>xpos</key>
+			<integer>300</integer>
+			<key>ypos</key>
+			<integer>40</integer>
+		</dict>
+		<key>DD4650AE-F800-4EA6-9CEC-9DE87CF1C756</key>
+		<dict>
+			<key>xpos</key>
+			<integer>300</integer>
+			<key>ypos</key>
+			<integer>200</integer>
+		</dict>
+		<key>DE0DA7B9-70E9-42C6-B3DC-92F9871516B9</key>
+		<dict>
+			<key>xpos</key>
+			<integer>40</integer>
+			<key>ypos</key>
+			<integer>200</integer>
+		</dict>
+		<key>F2ACCA9F-C784-4E90-99FF-EE1D2BC4122D</key>
+		<dict>
+			<key>xpos</key>
+			<integer>560</integer>
+			<key>ypos</key>
+			<integer>200</integer>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array/>
+	<key>version</key>
+	<string></string>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>

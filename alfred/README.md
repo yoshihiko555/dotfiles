@@ -420,6 +420,76 @@ attach 済みの tmux クライアントを `switch-client` で `containers` に
 - `shell` 以外はバックグラウンドで実行し、開始時と完了時に通知する（`compose up` のビルド待ちで Alfred が固まらない）
 - Docker / OrbStack が停止している場合は一覧に「Docker / OrbStack が起動していません」と表示する
 
+### taskfile
+
+go-task (Taskfile) のタスクを、プロジェクトを明示したうえで実行するワークフロー。
+
+**キーワード:** `tk`
+
+**使い方:**
+1. Alfred で `tk` と入力すると、Taskfile を持つ ghq リポジトリが並ぶ
+2. プロジェクトを選択すると、そのプロジェクトの desc 付きタスクが並ぶ
+3. タスクを選択すると、実行方法（バックグラウンド / ターミナル）を選ぶ
+4. 選択した方法でタスクが実行される
+
+**3 段階に分けている理由（誤発火防止）:**
+
+`tk` の後にタスク名だけを打つ方式だと、同名タスクを持つ別プロジェクトで
+誤って実行してしまう事故が起きやすい。そのため
+「プロジェクト選択 → タスク選択 → 実行方法選択」の 3 段階にし、
+常に `プロジェクト名 › タスク名` の形式で対象を明示してから実行する。
+
+**対象プロジェクト:**
+
+`ghq list --full-path` の結果のうち、直下に
+`Taskfile.yml` / `Taskfile.yaml` / `taskfile.yml` / `taskfile.yaml`
+のいずれかを持つものだけを一覧する。
+
+**タスク一覧:**
+
+- `task --list --json`（desc ありのみ。`--list-all` は使わない）
+- includes 経由で別ファイルに定義されたタスクは、サブタイトル末尾に
+  `[taskfiles/xxx.yml]` のように相対パスを表示する
+
+**`config.json`（`$alfred_workflow_data/config.json`）:**
+
+`Open-VS-or-IT` の `favorites.json` と同様の方式。ただし本ワークフローは
+bundleid を持つため `alfred_workflow_data` は Alfred のサポートフォルダ
+（`~/Library/Application Support/Alfred/Workflow Data/com.yoshihiko.taskfile/`）を
+指し、repo 管理外・端末ローカルの設定になる（`favorites.json` のように
+ワークフローディレクトリ直下には置かれない）。
+
+```json
+{
+  "excludes": ["ai-orchestra"],
+  "extras": [{ "name": "手動プロジェクト", "path": "/path/to/project" }],
+  "overrides": { "baton": { "name": "Baton改名" } },
+  "terminal": ["dotfiles/nix-fmt", "learno/backend:dev"]
+}
+```
+
+| キー | 内容 |
+|---|---|
+| `excludes` | 一覧から除外する（basename、または owner を除いた相対パス） |
+| `extras` | ghq 管理外のプロジェクトを追加（Taskfile の有無は検査しない） |
+| `overrides` | 表示名を変更する（キーは owner を除いた相対パス。単純な `owner/repo` 構成では basename と一致する） |
+| `terminal` | `"プロジェクト名/タスク名"` または `"プロジェクト名/*"` で、実行方法の選択肢でターミナル実行を先頭に出し、バックグラウンド側に `⚠ 設定でターミナル推奨` を付ける（対話・sudo・長時間タスク向け）。プロジェクト名は `overrides` 適用後の表示名で照合するため、改名すると `terminal` 側のキーも合わせる必要がある |
+
+**実行方法:**
+
+| 方法 | 動作 |
+|---|---|
+| バックグラウンド | `nohup` 相当で実行し、開始・終了（終了コード付き）を通知する |
+| ターミナル | tmux セッション `tasks` にウィンドウ `プロジェクト名:タスク名` を作り、`cd プロジェクト && task タスク名` を実行して WezTerm を前面に出す（`container` の `shell` と同じ動線。タスク終了と同時にウィンドウ内のプロセスも終わるため、失敗が一瞬で流れて見えることがある） |
+
+**ログ:**
+
+バックグラウンド実行の標準出力・標準エラーは
+`$alfred_workflow_cache/logs/プロジェクト名-タスク名-YYYYmmdd-HHMMSS.log`
+に保存する。失敗時は通知にログパスを含める。
+
+**依存:** `go-task`（`task` コマンド。Nix 管理）。
+
 ## 外部ワークフローの設定メモ
 
 リポジトリ管理外（Alfred Gallery からインストール）のワークフローのうち、
@@ -494,6 +564,10 @@ alfred/
 │   └── .uuid
 ├── container/
 │   ├── info.plist
+│   └── .uuid
+├── taskfile/
+│   ├── info.plist
+│   ├── icon.png
 │   └── .uuid
 └── README.md
 ```
