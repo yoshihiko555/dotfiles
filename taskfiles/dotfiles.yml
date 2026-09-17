@@ -3,6 +3,9 @@ version: "3"
 tasks:
   adopt-settings:
     desc: アプリが変更した mutable 設定を確認し、repo 側へ回収
+    summary: |
+      使い方: TARGET=all|claude|claude-work|antigravity-settings|antigravity-keybindings
+      例: task adopt-settings TARGET=claude
     vars:
       TARGET: '{{default "all" .TARGET}}'
     cmds:

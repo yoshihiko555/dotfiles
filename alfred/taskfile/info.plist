@@ -275,7 +275,13 @@ print(json.dumps({"items": items}, ensure_ascii=False))
 				<key>script</key>
 				<string>#!/usr/bin/env python3
 """選択したプロジェクトの go-task タスク（desc ありのみ）を一覧する Script Filter。"""
-import json, os, subprocess, sys
+import hashlib
+import json
+import os
+import re
+import subprocess
+import sys
+from concurrent.futures import ThreadPoolExecutor
 
 TASK = "/etc/profiles/per-user/yoshihiko/bin/task"
 TASKFILE_NAMES = ("Taskfile.yml", "Taskfile.yaml", "taskfile.yml", "taskfile.yaml")
@@ -312,12 +318,181 @@ if tasks is None:
     }, ensure_ascii=False))
     raise SystemExit
 
+desc_tasks = [t for t in tasks if t.get("name") and t.get("desc")]
+
+# --- vars / requires / CLI_ARGS 抽出（重い処理なので Taskfile の mtime でキャッシュする） ---
+
+_FILE_LINES_CACHE = {}
+
+
+def read_lines(path):
+    if path not in _FILE_LINES_CACHE:
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                _FILE_LINES_CACHE[path] = f.read().splitlines()
+        except OSError:
+            _FILE_LINES_CACHE[path] = []
+    return _FILE_LINES_CACHE[path]
+
+
+def task_body_lines(lines, start_idx):
+    """taskfile 上でタスク定義が始まる行から、次のトップレベル要素の手前までを返す"""
+    if start_idx &gt;= len(lines):
+        return []
+    indent = len(lines[start_idx]) - len(lines[start_idx].lstrip(" "))
+    end_idx = len(lines)
+    for j in range(start_idx + 1, len(lines)):
+        line = lines[j]
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        cur_indent = len(line) - len(line.lstrip(" "))
+        if cur_indent &lt;= indent:
+            end_idx = j
+            break
+    return lines[start_idx:end_idx]
+
+
+def parse_summary_vars(text):
+    """`task --summary` の出力から vars の既定値と requires の必須変数名を抜き出す"""
+    lines = text.splitlines()
+
+    def find_top(label):
+        for i, l in enumerate(lines):
+            if l == f"{label}:":
+                return i
+        return None
+
+    vars_idx = find_top("vars")
+    requires_idx = find_top("requires")
+    commands_idx = find_top("commands")
+
+    var_defaults = {}
+    if vars_idx is not None:
+        candidates = [i for i in (requires_idx, commands_idx) if i is not None and i &gt; vars_idx]
+        end = min(candidates) if candidates else len(lines)
+        for l in lines[vars_idx + 1:end]:
+            if not l.strip():
+                continue
+            m = re.match(r'^  ([A-Za-z_][A-Za-z0-9_]*): (.*)$', l)
+            if m:
+                val = m.group(2).strip()
+                if val.startswith('"') and val.endswith('"') and len(val) &gt;= 2:
+                    val = val[1:-1]
+                var_defaults[m.group(1)] = val
+
+    required_vars = []
+    if requires_idx is not None:
+        end = commands_idx if commands_idx is not None else len(lines)
+        for l in lines[requires_idx + 1:end]:
+            m = re.match(r'^\s*-\s*(\S+)\s*$', l)
+            if m:
+                required_vars.append(m.group(1))
+
+    return var_defaults, required_vars
+
+
+def compute_task_meta(t):
+    name = t["name"]
+    try:
+        summary_out = subprocess.check_output(
+            [TASK, "--summary", name], text=True, cwd=project_dir, timeout=5, stderr=subprocess.DEVNULL
+        )
+    except Exception:
+        summary_out = ""
+
+    var_defaults, required_vars = parse_summary_vars(summary_out)
+
+    loc = t.get("location", {}) or {}
+    taskfile = loc.get("taskfile", "")
+    line = loc.get("line")
+    cli_args = False
+    if taskfile and line:
+        lines = read_lines(taskfile)
+        idx = line - 1
+        if 0 &lt;= idx &lt; len(lines):
+            body = task_body_lines(lines, idx)
+            cli_args = any(".CLI_ARGS" in l for l in body)
+
+    return {"defaults": var_defaults, "required": required_vars, "cli_args": cli_args}
+
+
+# --- キャッシュ（$alfred_workflow_cache 配下、Taskfile 群の mtime をキーにする） ---
+
+cache_dir = os.getenv("alfred_workflow_cache")
+cache_path = None
+cached_data = {}
+cache_key = None
+
+if cache_dir:
+    digest = hashlib.sha1(project_dir.encode("utf-8")).hexdigest()[:16]
+    cache_path = os.path.join(cache_dir, "task_vars", f"{digest}.json")
+
+    taskfile_paths = sorted({
+        t.get("location", {}).get("taskfile", "") for t in desc_tasks if t.get("location")
+    })
+    mtimes = {}
+    for p in taskfile_paths:
+        if not p:
+            continue
+        try:
+            mtimes[p] = os.path.getmtime(p)
+        except OSError:
+            mtimes[p] = 0
+    cache_key = json.dumps(mtimes, sort_keys=True)
+
+    try:
+        with open(cache_path, "r", encoding="utf-8") as f:
+            saved = json.load(f)
+        if saved.get("cache_key") == cache_key:
+            cached_data = saved.get("data", {})
+    except Exception:
+        cached_data = {}
+
+to_compute = [t for t in desc_tasks if t["name"] not in cached_data]
+computed = {}
+if to_compute:
+    workers = min(12, max(4, len(to_compute)))
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        futures = {ex.submit(compute_task_meta, t): t["name"] for t in to_compute}
+        for fut in futures:
+            name = futures[fut]
+            try:
+                computed[name] = fut.result()
+            except Exception:
+                computed[name] = {"defaults": {}, "required": [], "cli_args": False}
+
+all_meta = dict(cached_data)
+all_meta.update(computed)
+
+if cache_path and computed:
+    try:
+        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump({"cache_key": cache_key, "data": all_meta}, f, ensure_ascii=False)
+    except OSError:
+        pass
+
+
+def build_hint(meta):
+    parts = []
+    seen = set()
+    for k, v in meta.get("defaults", {}).items():
+        seen.add(k)
+        parts.append(f"{k}={v}")
+    for k in meta.get("required", []):
+        if k not in seen:
+            parts.append(f"{k}=&lt;必須&gt;")
+    hint = " ".join(parts)
+    if meta.get("cli_args"):
+        hint = (hint + " -- &lt;args&gt;").strip()
+    return f"⌨ {hint}" if hint else ""
+
+
 items = []
-for t in tasks:
+for t in desc_tasks:
     name = t.get("name", "")
     desc = t.get("desc", "")
-    if not name or not desc:
-        continue
     if query and query not in f"{name} {desc}".lower():
         continue
 
@@ -326,11 +501,25 @@ for t in tasks:
     if not is_project_root_taskfile(taskfile):
         subtitle += f" [{os.path.relpath(taskfile, project_dir)}]"
 
+    meta = all_meta.get(name, {"defaults": {}, "required": [], "cli_args": False})
+    hint = build_hint(meta)
+    if hint:
+        subtitle += f"  {hint}"
+
+    summary_text = (t.get("summary") or "").strip()
+    task_summary = summary_text.splitlines()[0] if summary_text else ""
+
     items.append({
-        "title": f"{project_name} \u203a {name}",
+        "title": f"{project_name} › {name}",
         "subtitle": subtitle,
         "arg": name,
-        "variables": {"project_name": project_name, "project_dir": project_dir, "task_name": name},
+        "variables": {
+            "project_name": project_name,
+            "project_dir": project_dir,
+            "task_name": name,
+            "task_vars": json.dumps(meta, ensure_ascii=False),
+            "task_summary": task_summary,
+        },
     })
 
 if not items:
@@ -421,16 +610,94 @@ print(json.dumps({"items": items}, ensure_ascii=False))
 				<string></string>
 				<key>script</key>
 				<string>#!/usr/bin/env python3
-"""バックグラウンド実行 / ターミナル実行を選ばせる確認 Script Filter。"""
-import json, os
+"""バックグラウンド実行 / ターミナル実行を選ばせる確認 Script Filter。
+入力欄の文字列は go-task に渡す引数（KEY=VALUE / -- 以降の CLI_ARGS）として扱う。
+"""
+import json
+import os
+import shlex
+import sys
 
 project_name = os.getenv("project_name", "")
 project_dir = os.getenv("project_dir", "")
 task_name = os.getenv("task_name", "")
+task_summary = os.getenv("task_summary", "")
+task_vars_raw = os.getenv("task_vars", "")
+
+raw_args = sys.argv[1] if len(sys.argv) &gt; 1 else ""
 
 if not project_dir or not task_name:
     print(json.dumps({
         "items": [{"title": "プロジェクトまたはタスクが取得できません", "valid": False}]
+    }, ensure_ascii=False))
+    raise SystemExit
+
+try:
+    task_vars = json.loads(task_vars_raw) if task_vars_raw else {}
+except Exception:
+    task_vars = {}
+
+required_vars = task_vars.get("required", []) if isinstance(task_vars, dict) else []
+var_defaults = task_vars.get("defaults", {}) if isinstance(task_vars, dict) else {}
+cli_args_used = bool(task_vars.get("cli_args")) if isinstance(task_vars, dict) else False
+
+
+def build_hint():
+    parts = []
+    seen = set()
+    for k, v in var_defaults.items():
+        seen.add(k)
+        parts.append(f"{k}={v}")
+    for k in required_vars:
+        if k not in seen:
+            parts.append(f"{k}=&lt;必須&gt;")
+    hint = " ".join(parts)
+    if cli_args_used:
+        hint = (hint + " -- &lt;args&gt;").strip()
+    return f"⌨ {hint}" if hint else ""
+
+
+# --- 引数のトークン化 ---
+parse_error = None
+tokens = []
+if raw_args.strip():
+    try:
+        tokens = shlex.split(raw_args)
+    except ValueError as e:
+        parse_error = str(e)
+
+if parse_error is not None:
+    print(json.dumps({
+        "items": [{
+            "title": f"引数を解析できません: {raw_args}",
+            "subtitle": f"入力を見直してください（{parse_error}）",
+            "valid": False,
+        }]
+    }, ensure_ascii=False))
+    raise SystemExit
+
+# "--" より前のトークンから KEY=VALUE で渡された変数名を集める
+supplied_vars = set()
+for tok in tokens:
+    if tok == "--":
+        break
+    if "=" in tok:
+        key = tok.split("=", 1)[0]
+        if key:
+            supplied_vars.add(key)
+
+missing = [v for v in required_vars if v not in supplied_vars and v not in var_defaults]
+
+args_display = raw_args.strip()
+title_suffix = f" {args_display}" if args_display else ""
+
+if missing:
+    print(json.dumps({
+        "items": [{
+            "title": f"実行: {project_name} › {task_name}{title_suffix}",
+            "subtitle": f"{', '.join(missing)} が未指定です",
+            "valid": False,
+        }]
     }, ensure_ascii=False))
     raise SystemExit
 
@@ -447,30 +714,40 @@ prefer_terminal = (
     f"{project_name}/{task_name}" in terminal_list or f"{project_name}/*" in terminal_list
 )
 
+if task_summary:
+    base_subtitle = task_summary
+else:
+    hint = build_hint()
+    guidance = "入力欄で KEY=VALUE や -- 引数 を指定"
+    base_subtitle = f"{hint} / {guidance}" if hint else guidance
 
-def make_item(title, mode, subtitle):
+task_args_json = json.dumps(tokens, ensure_ascii=False)
+
+
+def make_item(title, mode, mode_detail):
     return {
         "title": title,
-        "subtitle": subtitle,
+        "subtitle": f"{base_subtitle} / {mode_detail}",
         "arg": mode,
         "variables": {
             "project_name": project_name,
             "project_dir": project_dir,
             "task_name": task_name,
             "mode": mode,
+            "task_args": task_args_json,
         },
     }
 
 
-bg_subtitle = f"\u30d0\u30c3\u30af\u30b0\u30e9\u30a6\u30f3\u30c9\u3067\u5b9f\u884c\u3057\u901a\u77e5 / {project_dir}"
+bg_detail = f"バックグラウンドで実行し通知 / {project_dir}"
 if prefer_terminal:
-    bg_subtitle += " \u26a0 \u8a2d\u5b9a\u3067\u30bf\u30fc\u30df\u30ca\u30eb\u63a8\u5968"
+    bg_detail += " ⚠ 設定でターミナル推奨"
 
-bg = make_item(f"\u5b9f\u884c: {project_name} \u203a {task_name}", "background", bg_subtitle)
+bg = make_item(f"実行: {project_name} › {task_name}{title_suffix}", "background", bg_detail)
 term = make_item(
-    f"\u30bf\u30fc\u30df\u30ca\u30eb\u3067\u5b9f\u884c: {project_name} \u203a {task_name}",
+    f"ターミナルで実行: {project_name} › {task_name}{title_suffix}",
     "terminal",
-    "tmux \"tasks\" \u30bb\u30c3\u30b7\u30e7\u30f3\u3067\u5b9f\u884c / \u5bfe\u8a71\u30fbsudo\u30fb\u9577\u6642\u9593\u5411\u3051",
+    "tmux \"tasks\" セッションで実行 / 対話・sudo・長時間向け",
 )
 
 items = [term, bg] if prefer_terminal else [bg, term]
@@ -510,6 +787,8 @@ set -uo pipefail
 
 # task / tmux は nix profile 配下にしか無いため、そのパスを先頭に置く
 export PATH="/etc/profiles/per-user/yoshihiko/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+# ロケール未設定だと printf %q が非ASCII引数をバイトエスケープしてしまうため明示する
+export LC_ALL="${LC_ALL:-en_US.UTF-8}"
 
 TASK_BIN="/etc/profiles/per-user/yoshihiko/bin/task"
 TMUX_BIN="/etc/profiles/per-user/yoshihiko/bin/tmux"
@@ -518,6 +797,7 @@ project_name="${project_name:-}"
 project_dir="${project_dir:-}"
 task_name="${task_name:-}"
 mode="${mode:-}"
+task_args="${task_args:-[]}"
 
 # osascript / ファイル名に渡す文字列から引用符・バックスラッシュ・改行・スラッシュを除く
 sanitize() {
@@ -541,6 +821,27 @@ if [[ -z "$project_dir" || -z "$task_name" ]]; then
   exit 1
 fi
 
+# task_args（JSON 配列文字列）を zsh 配列へデコードする
+args=()
+if [[ -n "$task_args" &amp;&amp; "$task_args" != "[]" ]]; then
+  while IFS= read -r -d '' tok; do
+    args+=("$tok")
+  done &lt; &lt;(python3 -c '
+import json, sys
+try:
+    for a in json.loads(sys.argv[1]):
+        sys.stdout.write(str(a) + "\0")
+except Exception:
+    pass
+' "$task_args")
+fi
+
+# 通知・ログファイル名に使う引数表示（空なら付けない）
+args_display=""
+if (( ${#args[@]} &gt; 0 )); then
+  args_display="${(j: :)args}"
+fi
+
 # --- terminal: tmux セッション tasks にウィンドウを作って実行する ---
 if [[ "$mode" == "terminal" ]]; then
   # attach 済みクライアントが無いとウィンドウを作っても切り替えられないので先に確認する
@@ -555,8 +856,15 @@ if [[ "$mode" == "terminal" ]]; then
   fi
 
   win="$(sanitize "${project_name}:${task_name}")"
+
+  # 各トークンをシェル注入を避けるため printf %q でクォートしてから連結する
+  quoted_args=""
+  for a in "${args[@]}"; do
+    quoted_args+=" $(printf '%q' "$a")"
+  done
+
   "$TMUX_BIN" new-window -t tasks: -n "$win" \
-    "cd '$project_dir' &amp;&amp; '$TASK_BIN' '$task_name'"
+    "cd '$project_dir' &amp;&amp; '$TASK_BIN' '$task_name'$quoted_args"
 
   "$TMUX_BIN" switch-client -c "$client" -t tasks
 
@@ -570,10 +878,17 @@ fi
 log_dir="${alfred_workflow_cache:-/tmp}/logs"
 mkdir -p "$log_dir"
 timestamp="$(date +%Y%m%d-%H%M%S)"
-log_file="$log_dir/$(safe_name "$project_name")-$(safe_name "$task_name")-$timestamp.log"
+
+args_label=""
+if (( ${#args[@]} &gt; 0 )); then
+  label_source="${(j:_:)${(@)args:#--}}"
+  [[ -n "$label_source" ]] &amp;&amp; args_label="-$(safe_name "$label_source" | cut -c1-40)"
+fi
+
+log_file="$log_dir/$(safe_name "$project_name")-$(safe_name "$task_name")${args_label}-$timestamp.log"
 
 (
-  cd "$project_dir" &amp;&amp; "$TASK_BIN" "$task_name" &gt;"$log_file" 2&gt;&amp;1
+  cd "$project_dir" &amp;&amp; "$TASK_BIN" "$task_name" "${args[@]}" &gt;"$log_file" 2&gt;&amp;1
   rc=$?
   if [[ $rc -eq 0 ]]; then
     notify "$project_name › $task_name" "完了"
@@ -582,7 +897,9 @@ log_file="$log_dir/$(safe_name "$project_name")-$(safe_name "$task_name")-$times
   fi
 ) &gt;/dev/null 2&gt;&amp;1 &amp;!
 
-notify "$project_name › $task_name" "バックグラウンドで実行中…"
+notify_title="$project_name › $task_name"
+[[ -n "$args_display" ]] &amp;&amp; notify_title+=" $args_display"
+notify "$notify_title" "バックグラウンドで実行中…"
 exit 0
 </string>
 				<key>scriptargtype</key>
