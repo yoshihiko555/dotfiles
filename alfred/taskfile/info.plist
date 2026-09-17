@@ -217,7 +217,7 @@ print(json.dumps({"items": items}, ensure_ascii=False))
 				<key>externaltriggerid</key>
 				<string>choose_task</string>
 				<key>passinputasargument</key>
-				<true/>
+				<false/>
 				<key>passvariables</key>
 				<true/>
 				<key>workflowbundleid</key>
@@ -364,7 +364,7 @@ print(json.dumps({"items": items}, ensure_ascii=False))
 				<key>externaltriggerid</key>
 				<string>confirm_task</string>
 				<key>passinputasargument</key>
-				<true/>
+				<false/>
 				<key>passvariables</key>
 				<true/>
 				<key>workflowbundleid</key>
