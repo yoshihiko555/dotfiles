@@ -17,6 +17,11 @@ __pycache__/
 codex/skills/.system
 shared/skills/codex-only/.system/
 
+# Claude Code がアカウント同期スキルを展開する先（2.1.273 以降）。
+# ~/.claude/skills が当リポジトリへの symlink のため差分に出るが、
+# クラウド側が正で再生成可能なのでコミットしない
+claude/skills/synced/
+
 # Local backups
 backup/
 
