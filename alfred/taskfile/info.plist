@@ -392,6 +392,85 @@ def parse_summary_vars(text):
     return var_defaults, required_vars
 
 
+def parse_own_vars(body):
+    """タスク定義ブロックから、タスク自身が持つ vars: 直下のキーと
+    requires: vars: のキーだけを抜き出す（include 元やトップレベルの vars は含めない）"""
+    if len(body) &lt; 2:
+        return set()
+
+    child_indent = None
+    for line in body[1:]:
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        child_indent = len(line) - len(line.lstrip(" "))
+        break
+    if child_indent is None:
+        return set()
+
+    def own_section(label):
+        """child_indent 上にある `label:` 行を探し、(同じ行の残り, より深い内側の行) を返す"""
+        for i, line in enumerate(body):
+            if len(line) - len(line.lstrip(" ")) != child_indent:
+                continue
+            stripped = line.strip()
+            if stripped != f"{label}:" and not stripped.startswith(f"{label}:"):
+                continue
+            inline = stripped[len(label) + 1:].strip()
+            inner = []
+            for j in range(i + 1, len(body)):
+                l2 = body[j]
+                s2 = l2.strip()
+                if not s2 or s2.startswith("#"):
+                    continue
+                if len(l2) - len(l2.lstrip(" ")) &lt;= child_indent:
+                    break
+                inner.append(l2)
+            return inline, inner
+        return "", []
+
+    names = set()
+
+    _, vars_inner = own_section("vars")
+    if vars_inner:
+        vars_indent = len(vars_inner[0]) - len(vars_inner[0].lstrip(" "))
+        for l in vars_inner:
+            if len(l) - len(l.lstrip(" ")) != vars_indent:
+                continue
+            m = re.match(r'^([A-Za-z_][A-Za-z0-9_]*):', l.strip())
+            if m:
+                names.add(m.group(1))
+
+    _, requires_inner = own_section("requires")
+    if requires_inner:
+        req_indent = len(requires_inner[0]) - len(requires_inner[0].lstrip(" "))
+        for i, l in enumerate(requires_inner):
+            if len(l) - len(l.lstrip(" ")) != req_indent:
+                continue
+            stripped = l.strip()
+            if stripped != "vars:" and not stripped.startswith("vars:"):
+                continue
+            inline = stripped[len("vars:"):].strip()
+            if inline.startswith("[") and inline.endswith("]"):
+                for item in inline[1:-1].split(","):
+                    item = item.strip()
+                    if item:
+                        names.add(item)
+            else:
+                for l2 in requires_inner[i + 1:]:
+                    s2 = l2.strip()
+                    if not s2:
+                        continue
+                    if len(l2) - len(l2.lstrip(" ")) &lt;= req_indent:
+                        break
+                    m2 = re.match(r'^-\s*(\S+)', s2)
+                    if m2:
+                        names.add(m2.group(1))
+            break
+
+    return names
+
+
 def compute_task_meta(t):
     name = t["name"]
     try:
@@ -401,18 +480,25 @@ def compute_task_meta(t):
     except Exception:
         summary_out = ""
 
+    # `task --summary` の vars/requires にはトップレベル vars や include 元の変数も
+    # 混ざるため、既定値の取得にのみ使い、ヒント対象はタスク自身の vars に絞り込む
     var_defaults, required_vars = parse_summary_vars(summary_out)
 
     loc = t.get("location", {}) or {}
     taskfile = loc.get("taskfile", "")
     line = loc.get("line")
     cli_args = False
+    own_vars = set()
     if taskfile and line:
         lines = read_lines(taskfile)
         idx = line - 1
         if 0 &lt;= idx &lt; len(lines):
             body = task_body_lines(lines, idx)
             cli_args = any(".CLI_ARGS" in l for l in body)
+            own_vars = parse_own_vars(body)
+
+    var_defaults = {k: v for k, v in var_defaults.items() if k in own_vars}
+    required_vars = [k for k in required_vars if k in own_vars]
 
     return {"defaults": var_defaults, "required": required_vars, "cli_args": cli_args}
 
@@ -439,7 +525,10 @@ if cache_dir:
             mtimes[p] = os.path.getmtime(p)
         except OSError:
             mtimes[p] = 0
-    cache_key = json.dumps(mtimes, sort_keys=True)
+    # own-vars 絞り込みロジックを追加したため、キャッシュ形式のバージョンを混ぜて
+    # 旧ロジックで保存された古いキャッシュを無効化する
+    VARS_ALGO_VERSION = 2
+    cache_key = json.dumps({"algo": VARS_ALGO_VERSION, "mtimes": mtimes}, sort_keys=True)
 
     try:
         with open(cache_path, "r", encoding="utf-8") as f:

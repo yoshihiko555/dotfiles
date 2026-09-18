@@ -454,11 +454,14 @@ go-task (Taskfile) のタスクを、プロジェクトを明示したうえで�
 
 **タスク引数:**
 
-- タスク選択画面で、各タスクに対し `task --summary <name>` を実行して
-  `vars:` の既定値・`requires: vars:` の必須変数・Taskfile 本文中の
-  `.CLI_ARGS` 参照の有無を調べ、subtitle 末尾にヒントを付ける
+- タスク選択画面で、各タスクに対し `task --summary <name>` を実行して既定値を取得しつつ、
+  Taskfile 本文のタスク定義ブロックからそのタスク自身が持つ `vars:` 直下のキーと
+  `requires: vars:` の必須変数・`.CLI_ARGS` 参照の有無を調べ、subtitle 末尾にヒントを付ける
+  - `task --summary` の `vars:` にはトップレベル vars や include 元の変数も混ざるため、
+    既定値の取得にのみ使い、ヒント表示はタスク自身が定義した変数だけに絞り込む
   - 例: `⌨ TARGET=all`（変数と既定値）／`⌨ NAME=<必須>`（既定値なしの必須変数）／
     `⌨ -- <args>`（`.CLI_ARGS` を使うタスク。複数ヒントはスペース区切りで並ぶ）
+  - タスク自身に `vars:` も `requires:` も無ければヒントは付かない
 - 続く「実行方法を選ぶ」画面の入力欄に、そのヒントに従って引数を打つ
   - `KEY=VALUE` は go-task の変数として渡る（例: `TARGET=claude`）
   - `--` 以降はそのまま `task` の CLI 引数（`.CLI_ARGS`）として渡る
