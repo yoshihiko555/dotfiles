@@ -471,6 +471,29 @@ def parse_own_vars(body):
     return names
 
 
+# desc / summary 全文から `KEY=v1|v2|...`（値 2 つ以上）を拾い、列挙型引数の候補にする
+CHOICE_RE = re.compile(r'([A-Za-z_][A-Za-z0-9_]*)=([A-Za-z0-9_.\-]+(?:\|[A-Za-z0-9_.\-]+)+)')
+
+
+def extract_choices(text, allowed_keys):
+    """text から allowed_keys（タスク自身の vars/requires）に含まれる列挙候補だけを拾う。
+    同じ KEY が複数回出てきても最初の一致を採用する"""
+    choices = {}
+    for m in CHOICE_RE.finditer(text):
+        key, raw_values = m.group(1), m.group(2)
+        if key not in allowed_keys or key in choices:
+            continue
+        values = []
+        seen_v = set()
+        for v in raw_values.split("|"):
+            if v and v not in seen_v:
+                seen_v.add(v)
+                values.append(v)
+        if len(values) &gt;= 2:
+            choices[key] = values
+    return choices
+
+
 def compute_task_meta(t):
     name = t["name"]
     try:
@@ -500,7 +523,11 @@ def compute_task_meta(t):
     var_defaults = {k: v for k, v in var_defaults.items() if k in own_vars}
     required_vars = [k for k in required_vars if k in own_vars]
 
-    return {"defaults": var_defaults, "required": required_vars, "cli_args": cli_args}
+    # 列挙候補は `--list --json` の desc + summary 全文（1 行目に限らない）から拾う
+    choice_text = f"{t.get('desc', '')}\n{t.get('summary') or ''}"
+    choices = extract_choices(choice_text, own_vars)
+
+    return {"defaults": var_defaults, "required": required_vars, "cli_args": cli_args, "choices": choices}
 
 
 # --- キャッシュ（$alfred_workflow_cache 配下、Taskfile 群の mtime をキーにする） ---
@@ -525,9 +552,9 @@ if cache_dir:
             mtimes[p] = os.path.getmtime(p)
         except OSError:
             mtimes[p] = 0
-    # own-vars 絞り込みロジックを追加したため、キャッシュ形式のバージョンを混ぜて
-    # 旧ロジックで保存された古いキャッシュを無効化する
-    VARS_ALGO_VERSION = 2
+    # own-vars 絞り込み・choices 抽出ロジックを追加したため、キャッシュ形式のバージョンを
+    # 混ぜて旧ロジックで保存された古いキャッシュを無効化する
+    VARS_ALGO_VERSION = 3
     cache_key = json.dumps({"algo": VARS_ALGO_VERSION, "mtimes": mtimes}, sort_keys=True)
 
     try:
@@ -549,7 +576,7 @@ if to_compute:
             try:
                 computed[name] = fut.result()
             except Exception:
-                computed[name] = {"defaults": {}, "required": [], "cli_args": False}
+                computed[name] = {"defaults": {}, "required": [], "cli_args": False, "choices": {}}
 
 all_meta = dict(cached_data)
 all_meta.update(computed)
@@ -590,7 +617,7 @@ for t in desc_tasks:
     if not is_project_root_taskfile(taskfile):
         subtitle += f" [{os.path.relpath(taskfile, project_dir)}]"
 
-    meta = all_meta.get(name, {"defaults": {}, "required": [], "cli_args": False})
+    meta = all_meta.get(name, {"defaults": {}, "required": [], "cli_args": False, "choices": {}})
     hint = build_hint(meta)
     if hint:
         subtitle += f"  {hint}"
@@ -608,6 +635,7 @@ for t in desc_tasks:
             "task_name": name,
             "task_vars": json.dumps(meta, ensure_ascii=False),
             "task_summary": task_summary,
+            "task_choices": json.dumps(meta.get("choices", {}), ensure_ascii=False),
         },
     })
 
@@ -701,6 +729,10 @@ print(json.dumps({"items": items}, ensure_ascii=False))
 				<string>#!/usr/bin/env python3
 """バックグラウンド実行 / ターミナル実行を選ばせる確認 Script Filter。
 入力欄の文字列は go-task に渡す引数（KEY=VALUE / -- 以降の CLI_ARGS）として扱う。
+
+入力欄が空で、かつタスクに列挙型変数（`KEY=a|b|c` 形式）があるときは、
+値ごとの選択肢 item を並べる（列挙変数が複数あっても最初の 1 つだけ）。
+入力途中で `KEY=` に続けて値の一部を打っているときも、前方一致で選択肢を絞り込む。
 """
 import json
 import os
@@ -712,6 +744,7 @@ project_dir = os.getenv("project_dir", "")
 task_name = os.getenv("task_name", "")
 task_summary = os.getenv("task_summary", "")
 task_vars_raw = os.getenv("task_vars", "")
+task_choices_raw = os.getenv("task_choices", "")
 
 raw_args = sys.argv[1] if len(sys.argv) &gt; 1 else ""
 
@@ -730,6 +763,16 @@ required_vars = task_vars.get("required", []) if isinstance(task_vars, dict) els
 var_defaults = task_vars.get("defaults", {}) if isinstance(task_vars, dict) else {}
 cli_args_used = bool(task_vars.get("cli_args")) if isinstance(task_vars, dict) else False
 
+try:
+    task_choices = json.loads(task_choices_raw) if task_choices_raw else {}
+    if not isinstance(task_choices, dict):
+        task_choices = {}
+except Exception:
+    task_choices = {}
+
+# 列挙変数が複数あっても選択肢化するのは最初の 1 つだけ（残りは自由入力のまま）
+choice_key, choice_values = next(iter(task_choices.items()), (None, None))
+
 
 def build_hint():
     parts = []
@@ -746,49 +789,12 @@ def build_hint():
     return f"⌨ {hint}" if hint else ""
 
 
-# --- 引数のトークン化 ---
-parse_error = None
-tokens = []
-if raw_args.strip():
-    try:
-        tokens = shlex.split(raw_args)
-    except ValueError as e:
-        parse_error = str(e)
-
-if parse_error is not None:
-    print(json.dumps({
-        "items": [{
-            "title": f"引数を解析できません: {raw_args}",
-            "subtitle": f"入力を見直してください（{parse_error}）",
-            "valid": False,
-        }]
-    }, ensure_ascii=False))
-    raise SystemExit
-
-# "--" より前のトークンから KEY=VALUE で渡された変数名を集める
-supplied_vars = set()
-for tok in tokens:
-    if tok == "--":
-        break
-    if "=" in tok:
-        key = tok.split("=", 1)[0]
-        if key:
-            supplied_vars.add(key)
-
-missing = [v for v in required_vars if v not in supplied_vars and v not in var_defaults]
-
-args_display = raw_args.strip()
-title_suffix = f" {args_display}" if args_display else ""
-
-if missing:
-    print(json.dumps({
-        "items": [{
-            "title": f"実行: {project_name} › {task_name}{title_suffix}",
-            "subtitle": f"{', '.join(missing)} が未指定です",
-            "valid": False,
-        }]
-    }, ensure_ascii=False))
-    raise SystemExit
+if task_summary:
+    base_subtitle = task_summary
+else:
+    hint = build_hint()
+    guidance = "入力欄で KEY=VALUE や -- 引数 を指定"
+    base_subtitle = f"{hint} / {guidance}" if hint else guidance
 
 wf_data = os.getenv("alfred_workflow_data")
 terminal_list = []
@@ -803,43 +809,169 @@ prefer_terminal = (
     f"{project_name}/{task_name}" in terminal_list or f"{project_name}/*" in terminal_list
 )
 
-if task_summary:
-    base_subtitle = task_summary
-else:
-    hint = build_hint()
-    guidance = "入力欄で KEY=VALUE や -- 引数 を指定"
-    base_subtitle = f"{hint} / {guidance}" if hint else guidance
 
-task_args_json = json.dumps(tokens, ensure_ascii=False)
+def mode_detail(mode):
+    if mode == "terminal":
+        return "tmux \"tasks\" セッションで実行 / 対話・sudo・長時間向け"
+    detail = f"バックグラウンドで実行し通知 / {project_dir}"
+    if prefer_terminal:
+        detail += " ⚠ 設定でターミナル推奨"
+    return detail
 
 
-def make_item(title, mode, mode_detail):
+def run_title(mode, args_display):
+    prefix = "ターミナルで実行" if mode == "terminal" else "実行"
+    suffix = f" {args_display}" if args_display else ""
+    return f"{prefix}: {project_name} › {task_name}{suffix}"
+
+
+def other_mode(mode):
+    return "background" if mode == "terminal" else "terminal"
+
+
+def supplied_vars_of(tokens):
+    supplied = set()
+    for tok in tokens:
+        if tok == "--":
+            break
+        if "=" in tok:
+            key = tok.split("=", 1)[0]
+            if key:
+                supplied.add(key)
+    return supplied
+
+
+def missing_of(tokens):
+    supplied = supplied_vars_of(tokens)
+    return [v for v in required_vars if v not in supplied and v not in var_defaults]
+
+
+def tokenize(text):
+    if not text.strip():
+        return [], None
+    try:
+        return shlex.split(text), None
+    except ValueError as e:
+        return [], str(e)
+
+
+# --- 引数のトークン化 ---
+tokens, parse_error = tokenize(raw_args)
+
+if parse_error is not None:
+    print(json.dumps({
+        "items": [{
+            "title": f"引数を解析できません: {raw_args}",
+            "subtitle": f"入力を見直してください（{parse_error}）",
+            "valid": False,
+        }]
+    }, ensure_ascii=False))
+    raise SystemExit
+
+
+def default_pair_items(tokens, args_display):
+    """従来どおりの「実行 / ターミナルで実行」の 2 item（必須変数未指定なら invalid 1 件）を返す"""
+    missing = missing_of(tokens)
+    title_suffix = f" {args_display}" if args_display else ""
+
+    if missing:
+        return [{
+            "title": f"実行: {project_name} › {task_name}{title_suffix}",
+            "subtitle": f"{', '.join(missing)} が未指定です",
+            "valid": False,
+        }]
+
+    task_args_json = json.dumps(tokens, ensure_ascii=False)
+
+    def make_item(title, mode):
+        return {
+            "title": title,
+            "subtitle": f"{base_subtitle} / {mode_detail(mode)}",
+            "arg": mode,
+            "variables": {
+                "project_name": project_name,
+                "project_dir": project_dir,
+                "task_name": task_name,
+                "mode": mode,
+                "task_args": task_args_json,
+            },
+        }
+
+    bg = make_item(f"実行: {project_name} › {task_name}{title_suffix}", "background")
+    term = make_item(f"ターミナルで実行: {project_name} › {task_name}{title_suffix}", "terminal")
+    return [term, bg] if prefer_terminal else [bg, term]
+
+
+def choice_run_item(mode, item_tokens, subtitle_prefix=""):
+    args_display = " ".join(item_tokens)
+    subtitle_body = f"{subtitle_prefix}{base_subtitle}" if subtitle_prefix else base_subtitle
+    if choice_key is not None and len(task_choices) &gt; 1:
+        subtitle_body += "（他の変数は自由入力）"
     return {
-        "title": title,
-        "subtitle": f"{base_subtitle} / {mode_detail}",
+        "title": run_title(mode, args_display),
+        "subtitle": f"{subtitle_body} / {mode_detail(mode)}",
         "arg": mode,
         "variables": {
             "project_name": project_name,
             "project_dir": project_dir,
             "task_name": task_name,
             "mode": mode,
-            "task_args": task_args_json,
+            "task_args": json.dumps(item_tokens, ensure_ascii=False),
         },
     }
 
 
-bg_detail = f"バックグラウンドで実行し通知 / {project_dir}"
-if prefer_terminal:
-    bg_detail += " ⚠ 設定でターミナル推奨"
+items = None
 
-bg = make_item(f"実行: {project_name} › {task_name}{title_suffix}", "background", bg_detail)
-term = make_item(
-    f"ターミナルで実行: {project_name} › {task_name}{title_suffix}",
-    "terminal",
-    "tmux \"tasks\" セッションで実行 / 対話・sudo・長時間向け",
-)
+# ============ (A) 入力欄が空 + 列挙型変数あり: 値ごとの選択肢 item を並べる ============
+if not raw_args.strip() and choice_key is not None:
+    other_missing = [v for v in missing_of(tokens) if v != choice_key]
+    if not other_missing:
+        default_val = var_defaults.get(choice_key)
+        ordered_values = list(choice_values)
+        if default_val in ordered_values:
+            ordered_values = [default_val] + [v for v in ordered_values if v != default_val]
 
-items = [term, bg] if prefer_terminal else [bg, term]
+        mode = "terminal" if prefer_terminal else "background"
+        choice_items = []
+        for val in ordered_values:
+            prefix = "(既定) " if val == default_val else ""
+            choice_items.append(choice_run_item(mode, [f"{choice_key}={val}"], subtitle_prefix=prefix))
+
+        tail_items = []
+        if choice_key not in missing_of(tokens):
+            # choice_key に既定値があり「引数なし」でも実行できる場合のみ、
+            # もう一方の実行方法を末尾に残す
+            alt_mode = other_mode(mode)
+            tail_items.append(choice_run_item(alt_mode, tokens))
+
+        items = choice_items + tail_items
+
+# ============ (B) 入力途中の `KEY=` に続けて列挙値の一部を打っている: 前方一致で絞り込む ============
+if items is None and choice_key is not None and tokens and "--" not in tokens:
+    last = tokens[-1]
+    if "=" in last:
+        key, _, val_prefix = last.partition("=")
+        if key == choice_key:
+            # 完全一致の値は候補から除く（自由入力側と重複するため）
+            matches = [v for v in choice_values if v.startswith(val_prefix) and v != val_prefix]
+            # choice_key 以外の必須変数が未指定なら、値を選んでも実行できないため
+            # 選択肢は出さず (C) の通常フローに任せる（未指定エラーの 1 item になる）
+            if matches and missing_of(tokens[:-1] + [f"{choice_key}={matches[0]}"]):
+                matches = []
+            if matches:
+                mode = "terminal" if prefer_terminal else "background"
+                prefix_items = []
+                for val in matches:
+                    item_tokens = tokens[:-1] + [f"{choice_key}={val}"]
+                    prefix_items.append(choice_run_item(mode, item_tokens))
+                # 自由入力（今の入力そのまま）の item も末尾に残す
+                prefix_items.extend(default_pair_items(tokens, raw_args.strip()))
+                items = prefix_items
+
+# ============ (C) 通常の自由入力モード（既定の挙動） ============
+if items is None:
+    items = default_pair_items(tokens, raw_args.strip())
 
 print(json.dumps({"items": items}, ensure_ascii=False))
 </string>

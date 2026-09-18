@@ -472,6 +472,12 @@ go-task (Taskfile) のタスクを、プロジェクトを明示したうえで�
 - タスク側で使い方を案内したい場合は Taskfile に `summary:` を書く。
   `task --summary` で確認できる文面がそのまま「実行方法を選ぶ」画面の
   subtitle に出る（例: `adopt-settings` の `TARGET=all|claude|...` 案内）
+- `desc` または `summary` に `KEY=a|b|c`（値は 2 つ以上）と書くと、そのタスク自身の
+  `vars:`／`requires: vars:` にある変数に限り、値の選択肢として「実行方法を選ぶ」
+  画面に列挙される（入力欄が空のときは値ごとの item、`KEY=` の途中まで打つと
+  前方一致で絞り込む。既定値と一致する値には `(既定)` が付き先頭に並ぶ）
+  - 列挙変数が 2 つ以上あるタスクでも選択肢化するのは最初の 1 つだけで、
+    残りは従来どおり自由入力になる
 
 **`config.json`（`$alfred_workflow_data/config.json`）:**
 
