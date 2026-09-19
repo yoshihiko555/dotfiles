@@ -21,6 +21,7 @@ web_search = "live"
 # - "on-request": 必要なときだけ確認
 # - "on-failure": 失敗時に確認
 approval_policy = "on-request"
+approvals_reviewer = "auto_review"
 
 # サンドボックスレベル
 # - "workspace-write": 作業ディレクトリ内は書き込みOK、外は制限
