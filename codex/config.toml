@@ -170,6 +170,7 @@ hide_rate_limit_model_nudge = true
 
 # ---- TUI ----
 [tui]
+animations = false
 notifications = ["approval-requested"]
 notification_method = "bel"
 notification_condition = "always"
