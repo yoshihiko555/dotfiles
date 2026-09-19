@@ -77,6 +77,9 @@ trust_level = "trusted"
 [projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/learno/.worktrees/20260907T1613-add-roadmap-item-generation-99e524289925f71e"]
 trust_level = "trusted"
 
+[projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/hermes-managements"]
+trust_level = "trusted"
+
 # END managed-trust-projects
 
 # ---- 機能フラグ（手動管理） ----
