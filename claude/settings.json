@@ -206,9 +206,12 @@
         "generativelanguage.googleapis.com",
         "accounts.google.com",
         "127.0.0.1",
+        "localhost",
+        "::1",
         "mcp.notion.com",
         "api.github.com"
-      ]
+      ],
+      "allowLocalBinding": true
     },
     "filesystem": {
       "allowWrite": [
