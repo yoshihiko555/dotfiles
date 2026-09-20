@@ -1,0 +1,89 @@
+#!/bin/bash
+# tmux-launch-claude-work — 現在ウィンドウの全ペインで会社用 Claude Code を auto モード起動
+#
+# Usage: tmux-launch-claude-work [pane_id]
+#
+#   Loupedeck の「アプリを実行」から呼ばれる想定 (tmux 側のキーバインドは持たない)。
+#   省略時は最後に操作した tmux クライアントのアクティブウィンドウを対象にする。
+#   TTY も TMUX 環境変数も無い状態で動くため、launchd 経由の最小 PATH に無い
+#   tmux を先頭で補う。pane_id を渡した場合はそのウィンドウが対象 (検証・手動用)。
+#
+#   シェルが待機しているペインにだけコマンドを送る。すでに claude / nvim 等が
+#   動いているペインはスキップし、二重起動を防ぐ。
+#
+# 環境変数:
+#   TMUX_CLAUDE_WORK_CMD  送るコマンド (既定: ccw --permission-mode auto)
+#   TMUX_LAUNCH_SOCKET    tmux -L のソケット名 (検証用。実運用では未設定)
+
+set -euo pipefail
+
+export PATH="/opt/homebrew/bin:/etc/profiles/per-user/${USER:-$(id -un)}/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
+launch_cmd="${TMUX_CLAUDE_WORK_CMD:-ccw --permission-mode auto}"
+
+tmux_cmd=(tmux)
+if [ -n "${TMUX_LAUNCH_SOCKET:-}" ]; then
+  tmux_cmd+=(-L "$TMUX_LAUNCH_SOCKET")
+fi
+
+target=""
+# 引数なし = tmux 外 (Loupedeck) からの呼び出し。TMUX 環境変数はサーバー起動元の
+# 環境を継承するだけで判定に使えないため、引数の有無で経路を見分ける。
+from_outside=0
+[ -z "${1:-}" ] && from_outside=1
+
+# ステータス行に出し、tmux 外からの呼び出しなら macOS 通知にも出す
+notify() {
+  local msg="launch-claude-work: $1"
+  if [ -n "$target" ]; then
+    "${tmux_cmd[@]}" display-message -t "$target" "$msg" 2>/dev/null || true
+  fi
+  if [ "$from_outside" -eq 1 ]; then
+    /usr/bin/osascript -e "display notification \"$1\" with title \"tmux\"" >/dev/null 2>&1 || true
+  fi
+  echo "$msg" >&2
+}
+
+# 対象ペインの解決
+if [ -n "${1:-}" ]; then
+  target="$1"
+else
+  target=$("${tmux_cmd[@]}" list-clients -F '#{client_activity} #{pane_id}' 2>/dev/null \
+    | sort -rn | head -1 | awk '{print $2}')
+  if [ -z "$target" ]; then
+    notify "接続中の tmux クライアントがありません"
+    exit 1
+  fi
+fi
+
+# ウィンドウ内のペインを走査し、シェル待機中のものだけ拾う
+free_panes=()
+busy_panes=()
+while read -r pane_id current_cmd; do
+  case "$current_cmd" in
+    zsh | bash | fish | sh | -zsh | -bash)
+      free_panes+=("$pane_id")
+      ;;
+    *)
+      busy_panes+=("${pane_id}:${current_cmd}")
+      ;;
+  esac
+done < <("${tmux_cmd[@]}" list-panes -t "$target" -F '#{pane_id} #{pane_current_command}')
+
+if [ "${#free_panes[@]}" -eq 0 ]; then
+  notify "起動できるペインがありません (${busy_panes[*]})"
+  exit 1
+fi
+
+for pane_id in "${free_panes[@]}"; do
+  "${tmux_cmd[@]}" send-keys -t "$pane_id" -l "$launch_cmd"
+  "${tmux_cmd[@]}" send-keys -t "$pane_id" Enter
+done
+
+"${tmux_cmd[@]}" select-pane -t "${free_panes[0]}"
+
+summary="${#free_panes[@]} ペインで起動"
+if [ "${#busy_panes[@]}" -gt 0 ]; then
+  summary="${summary} (${#busy_panes[@]} ペインは実行中のためスキップ)"
+fi
+notify "$summary"

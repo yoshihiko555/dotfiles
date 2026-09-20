@@ -9,6 +9,8 @@
 | tmux-apply-statusbar | 現役 | `statusbar.conf` | Powerline 付き `window-status-format` を適用 |
 | tmux-status-right | 現役 | `statusbar.conf` | セッション名 + 日時を右側に描画 |
 | tmux-save-pane-snapshot | 現役 | `keybinds.conf`, `pane-mode.conf` | ペイン内容のスナップショット保存 |
+| tmux-split-layout | 現役 | `keybinds.conf` (`Prefix+2-8`) | 現在ウィンドウを N ペインに分割 |
+| tmux-launch-claude-work | 現役 | Loupedeck (tmux キーバインドなし) | 全ペインで会社用 Claude Code を auto モード起動 |
 | tmux-open-pane-snapshot | 現役 | `copy-mode.conf` | 保存済みスナップショットを popup で表示 |
 | ~~tmux-list-claude-panes~~ | 撤去 | - | baton に移行済み |
 | ~~tmux-popup-claude-dashboard~~ | 撤去 | - | baton に移行済み |
@@ -164,6 +166,26 @@ fzf でセッション選択 → 削除。プレビューにウィンドウ一�
 
 - 現在のセッションと `claude-*` は除外
 - キーバインド: `Prefix + W`
+
+---
+
+## ペイン一括起動
+
+### tmux-launch-claude-work `[pane_id]`
+
+対象ウィンドウの全ペインへ `ccw --permission-mode auto` を送り、会社用 Claude Code を
+auto モードで一斉起動する。`Prefix+8` で 8 分割したあと Loupedeck のボタンで押す想定で、
+tmux 側のキーバインドは意図的に持たない。
+
+- 省略時は最後に操作した tmux クライアントのアクティブウィンドウが対象。
+  Loupedeck の「アプリを実行」にこのスクリプトの絶対パスを登録して呼ぶ
+  (TTY なし・`TMUX` なしで動くよう PATH を自前で補っている)
+- `pane_id` を渡すとそのウィンドウが対象 (検証・手動実行用)
+- `pane_current_command` がシェル (zsh/bash/fish/sh) のペインにだけ送る。
+  claude / nvim 等が動いているペインはスキップし、結果をステータス行
+  (tmux 外からは macOS 通知) に出す
+- 検証時は `TMUX_LAUNCH_SOCKET=<name>` で `tmux -L` の別サーバーに向け、
+  `TMUX_CLAUDE_WORK_CMD='echo ok'` で実コマンドを差し替える
 
 ---
 
