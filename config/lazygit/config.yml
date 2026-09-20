@@ -17,7 +17,12 @@ customCommands:
         exit 1
       fi
 
-      AGY_MODEL="${AGY_MODEL:-Gemini 3.6 Flash (Low)}"
+      if ! command -v jq >/dev/null 2>&1; then
+        echo "JSON の入出力に必要な jq が見つかりません。"
+        exit 1
+      fi
+
+      AGY_MODEL="${AGY_MODEL:-Gemini 3.8 Flash (Low)}"
 
       echo ""
       echo "  ╭─────────────────────────────────────────────╮"
@@ -32,8 +37,11 @@ customCommands:
       echo "  メッセージ編集: エディタで自由に書き換えてOK"
       echo ""
 
-      PROMPT_CONTENT="$(
-        cat <<'EOF'
+      AGY_ERR="$(mktemp -t lazygit-agy)" || exit 1
+      # 大きな差分が OS の引数サイズ上限を超えないよう、JSON を標準入力で渡す。
+      AGY_RESPONSE="$(
+        {
+          cat <<'EOF'
       以下の staged diff だけを根拠に、Conventional Commits 形式の1行コミットメッセージを日本語で生成してください。
       形式: type(scope): 日本語の要約
       type は feat, fix, docs, style, refactor, test, chore のいずれかを使ってください。
@@ -41,13 +49,21 @@ customCommands:
 
       Staged diff:
       EOF
-        git diff --cached
+          git diff --cached
+        } | jq -Rsc '{event: "user", message: {content: .}}' \
+          | "$AGY_BIN" --model "$AGY_MODEL" \
+              --input-format stream-json --output-format stream-json 2>"$AGY_ERR"
       )"
+      AGY_STATUS=$?
 
-      AGY_ERR="$(mktemp -t lazygit-agy)"
-      MSG="$("$AGY_BIN" --model "$AGY_MODEL" -p "$PROMPT_CONTENT" </dev/null 2>"$AGY_ERR")"
+      MSG="$(printf '%s\n' "$AGY_RESPONSE" | jq -ers '
+        map(select(.event == "result")) | last | .result |
+        if .status == "SUCCESS" then .response // empty
+        else error(.error // "Antigravity の生成が完了しませんでした。") end
+      ' 2>>"$AGY_ERR")"
+      MSG_STATUS=$?
 
-      if [ -z "$MSG" ]; then
+      if [ "$AGY_STATUS" -ne 0 ] || [ "$MSG_STATUS" -ne 0 ] || [ -z "$MSG" ]; then
         echo "Antigravity did not return a commit message."
         if [ -s "$AGY_ERR" ]; then
           echo ""
