@@ -1,0 +1,5 @@
+# Loupedeck Live のプロファイル snapshot（scripts/loupedeck-sync.sh）。
+# 現状は .gitignore で git 管理外だが、将来 track する場合に備えて改行変換を止めておく。
+# LogiPluginService の出力と実機をバイト単位で一致させる方式のため、
+# CRLF を含むアプリ生成ファイルを LF へ正規化させてはいけない
+config/loupedeck/** -text

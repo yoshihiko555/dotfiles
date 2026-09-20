@@ -57,3 +57,8 @@ alfred/*/prefs.plist
 # nix build の出力 symlink（--no-link を付け忘れたときに生まれる）
 /result
 /result-*
+
+# Loupedeck Live のプロファイル snapshot（task loupedeck-export の回収先）。
+# 開く URL やマクロ内容など私的な設定が入るため public リポジトリには載せず、
+# ローカルコピーとしてのみ保持する。仕組み（scripts/loupedeck-sync.sh）は管理対象
+config/loupedeck/

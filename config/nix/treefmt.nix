@@ -98,6 +98,11 @@
     "shared/skills/codex-only/.system/**"
     "takt/runtime.yaml"
 
+    # Loupedeck Live のプロファイル snapshot（scripts/loupedeck-sync.sh）。
+    # LogiPluginService が生成するツリーをバイト単位で実機と一致させる方式
+    # なので、中の LoupedeckPackage.yaml を整形すると drift 扱いになる
+    "config/loupedeck/**"
+
     # ROADMAP.md（Phase 3-2, l.328-329, l.419）記載の「アプリが書き戻す
     # 要注意 5 件」。home-manager の mkOutOfStoreSymlink でリポジトリ内の
     # ファイルへ直接シンボリックリンクしているため、アプリの通常動作

@@ -78,6 +78,7 @@ sudo ./result/sw/bin/darwin-rebuild switch --flake ./config/nix#macbook
 task --list        # タスク一覧
 task status        # home-manager の配線と mutable 設定の drift を確認
 task adopt-settings # アプリが変更した mutable 設定を repo へ回収
+task loupedeck-export # Loupedeck Live のプロファイルを config/loupedeck/（git 管理外）へ回収。適用は switch / task loupedeck-apply
 task sync-skills   # shared/skills のリンクを更新
 task sync-agents   # shared/agents から Codex/Gemini の AGENTS.md を生成
 task claude-work-init # 会社用 Claude Code 設定ディレクトリを初期化

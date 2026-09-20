@@ -81,6 +81,7 @@ config/nix/
 |---|---|---|---|
 | **symlink**（原則） | 大半の dotfiles | `mkOutOfStoreSymlink` で store 経由リポジトリの実体を指す | **repo を編集した時点で即反映**。switch が要るのは配線を増減したときだけ |
 | **mutable 実ファイル**（例外） | `~/.claude/settings.json`、`~/.claude-work/settings.json`、Antigravity の `settings.json` / `keybindings.json` の 4 件（`hosts/macbook/dotfiles.nix` で定義） | activation が repo からコピーし、`.nix-managed` の参照コピーも保存 | **switch のときだけ**。drift 検出中は上書きを拒否 |
+| **snapshot**（例外） | BetterTouchTool（`config/btt/triggers.json`）、Loupedeck Live（`config/loupedeck/Loupedeck50/`。私的な設定を含むため `.gitignore` 済みのローカルコピー） | activation が `scripts/btt-sync.sh` / `scripts/loupedeck-sync.sh` を呼び、参照コピー（ハッシュ）と実機が一致するときだけ流し込む | **switch のときだけ**。drift 検出中は上書きを拒否。回収は `task btt-export` / `task loupedeck-export` |
 | **パッケージ** | CLI / cask | `flake.lock` でバージョンを固定 | **switch のときだけ** |
 
 mutable 実ファイル方式は、アプリ本体が atomic write（temp → rename）で
@@ -119,6 +120,8 @@ symlink を実ファイルに置換してしまう問題への対処。正は re
   **理由コメント必須**
   - `mutableDotfiles`: アプリが rename で JSON を置換する（Claude Code / Antigravity CLI）
   - `bttSync`: 設定実体が SQLite で symlink 不可（BetterTouchTool）
+  - `loupedeckSync`: サービスが起動時にツリーを書き戻し、稼働中の編集も禁止（Loupedeck Live）。
+    サービス停止→差し替え→再起動で流し込む
 - 設定内容を Nix 言語へ書き直す全面移行（`programs.*`）はしない
 
 ### パッケージの置き場

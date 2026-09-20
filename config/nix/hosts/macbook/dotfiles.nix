@@ -239,5 +239,16 @@ in
         JQ=${pkgs.jq}/bin/jq \
           ${pkgs.bash}/bin/bash "${dotfilesDir}/scripts/btt-sync.sh" apply || true
       '';
+
+      # Loupedeck Live のプロファイルは LogiPluginService が起動時にツリーごと
+      # 書き戻し、稼働中の編集も禁止されているため symlink にできない。repo の
+      # snapshot をサービス停止→差し替え→再起動で流し込む。判定は BTT と同じく
+      # 参照ハッシュとの比較で、drift 中は警告のみ。詳細は scripts/loupedeck-sync.sh。
+      #
+      # Options+ 未導入・Loupedeck 未接続ならスクリプト側が警告して抜ける。
+      home.activation.loupedeckSync = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        RSYNC=${pkgs.rsync}/bin/rsync \
+          ${pkgs.bash}/bin/bash "${dotfilesDir}/scripts/loupedeck-sync.sh" apply || true
+      '';
     };
 }
