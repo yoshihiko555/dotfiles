@@ -41,6 +41,7 @@
       "/private/tmp/claude-501"
     ]
   },
+  "model": "opus[1m]",
   "hooks": {
     "PreToolUse": [
       {
@@ -227,6 +228,11 @@
     ]
   },
   "effortLevel": "high",
+  "modelSettings": {
+    "claude-opus-5": {
+      "effortLevel": "medium"
+    }
+  },
   "advisorModel": "fable",
   "tui": "fullscreen",
   "autoDreamEnabled": true,
@@ -234,7 +240,6 @@
   "theme": "dark-ansi",
   "autoContinueAtUsageLimit": true,
   "agentPushNotifEnabled": true,
-  "skipAutoPermissionPrompt": true,
   "autoMode": {
     "environment": [
       "### Org-wide",
