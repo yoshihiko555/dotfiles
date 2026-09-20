@@ -67,10 +67,13 @@ config/nix/
 ├── modules/
 │   └── hostSpec.nix        # 全ホスト共通のオプション定義（username / dotfilesDir）
 │
+├── packages/
+│   └── claude-swap.nix     # nixpkgs 未収録 CLI のパッケージ定義
+│
 └── docs/                   # ガイド・チートシート・ROADMAP・ADR
 ```
 
-将来追加予定の `packages/`（自作パッケージ）・`hosts/wsl/` を含む目標形は
+`hosts/wsl/` などを含む目標形は
 [ROADMAP の「目標構成」](docs/ROADMAP.md)を参照。
 
 ## 設定の反映方式
@@ -131,9 +134,10 @@ symlink を実ファイルに置換してしまう問題への対処。正は re
 | nixpkgs 収録の CLI（全台共通） | `home/packages.nix` |
 | nixpkgs 収録の CLI（ホスト固有） | `hosts/<host>/packages.nix` |
 | nixpkgs 未収録だが公式 flake あり | `flake.nix` の inputs + 対象ホストの packages.nix（例: takt） |
+| 独自にパッケージ化する CLI | `packages/<name>.nix` + 対象ホストの packages.nix（例: claude-swap） |
 | nixpkgs 未収録の formula | `darwin/homebrew.nix`（共通）/ `hosts/<host>/homebrew.nix`（固有） |
 | cask（GUI） | `hosts/<host>/homebrew.nix` |
-| 言語ランタイム | mise（Nix では管理しない） |
+| 開発用の言語ランタイム | mise（CLI の実行に必要なランタイムは、その Nix パッケージの依存として管理） |
 
 ### 運用
 
@@ -196,6 +200,7 @@ sudo darwin-rebuild switch --flake "$DOTFILES/config/nix#hermes"
 - [docs/BOOTSTRAP.md](docs/BOOTSTRAP.md) — **まっさらな Mac からの初回構築手順（正典）**
 - [docs/GUIDE.md](docs/GUIDE.md) — **設定ファイルの読み方ガイド（学習用）**。どのファイルが何をしていて、nix-darwin / home-manager とどう繋がるか
 - [docs/CHEATSHEET.md](docs/CHEATSHEET.md) — **日常運用チートシート**。反映・rollback・パッケージ追加・更新・掃除の実用コマンド集
+- [docs/CLAUDE-SWAP.md](docs/CLAUDE-SWAP.md) — claude-swap の Nix 管理と CodexBar 連携
 - [docs/USECASES.md](docs/USECASES.md) — **ユースケースカタログ**。次に何をやるかの判断材料（価値・コスト・向き不向き）
 - [docs/ROADMAP.md](docs/ROADMAP.md) — 段階的な移行計画と**現在地**（進捗はこちらが正）
 - [docs/PHASE-3-3-WSL2.md](docs/PHASE-3-3-WSL2.md) — WSL2 の作業計画・設計（実稼働待ち）

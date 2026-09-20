@@ -64,6 +64,9 @@ in
       sandbox-runtime # npm -g（@anthropic-ai/sandbox-runtime）から移行
     ])
     ++ [
+      # CodexBar で複数の Claude アカウントの利用状況を読む（docs/CLAUDE-SWAP.md）。
+      (pkgs.callPackage ../../packages/claude-swap.nix { })
+
       # nixpkgs 未収録だが公式 flake あり（npm -g から移行）
       # Phase 2 のツール呼び出しでプロセスが落ちる問題にパッチを当てている（上記 let）
       taktPackage

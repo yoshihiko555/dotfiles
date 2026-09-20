@@ -113,6 +113,9 @@
       ];
     in
     {
+      # ホスト全体を反映せず、独自 CLI のビルド・起動を確認するための出力。
+      packages.${system}.claude-swap = pkgs.callPackage ./packages/claude-swap.nix { };
+
       # 既存の devShell はそのまま維持（Phase 0 由来。`nix develop` の挙動を壊さない）
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [
