@@ -7,7 +7,7 @@
 model = "gpt-6-astra"
 
 # 推論の深さ（medium: バランス型 / high: より時間をかける）
-model_reasoning_effort = "medium"
+model_reasoning_effort = "xhigh"
 
 # 出力トーン
 personality = "pragmatic"
