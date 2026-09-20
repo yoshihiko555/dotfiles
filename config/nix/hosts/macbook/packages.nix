@@ -41,6 +41,7 @@ in
       typescript-language-server
 
       # --- 新規導入 ---
+      delve # Neovim の Go デバッグ。Go ランタイムは引き続き mise で管理
       imagemagick # Neovim の snacks.image で画像の変換・サイズ取得に使用
       resvg # SVG→PNG ラスタライザ。logo-design スキルの export.sh が最優先で検出する
 

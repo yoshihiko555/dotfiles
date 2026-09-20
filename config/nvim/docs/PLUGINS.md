@@ -52,6 +52,19 @@
 | [lazydev.nvim](https://github.com/folke/lazydev.nvim) | `plugins/lazydev.lua` | Neovim Lua API の型定義補完 | lua_ls に vim.* API の型情報を提供し、誤検知（undefined field 等）を解消 |
 | [todo-comments.nvim](https://github.com/folke/todo-comments.nvim) | `plugins/todo-comments.lua` | TODO/FIXME/HACK等の強調・検索 | コード内のTODOコメントをハイライト表示し、fzf-luaで横断検索が可能 |
 
+## Phase 5: デバッグ & テスト（Go から導入）
+
+| プラグイン | 設定ファイル | 用途 | 導入理由 |
+|-----------|-------------|------|---------|
+| [nvim-dap](https://github.com/mfussenegger/nvim-dap) | `plugins/dap.lua`（依存） | ブレークポイント・ステップ実行・REPL | 言語共通の DAP 操作を `<leader>d` に集約 |
+| [nvim-dap-ui](https://github.com/rcarriga/nvim-dap-ui) | `plugins/dap.lua` | 変数・スタック・監視式・ブレークポイントの表示 | セッション開始・終了に合わせた UI と手動切り替え |
+| [nvim-nio](https://github.com/nvim-neotest/nvim-nio) | `plugins/dap.lua`（依存） | 非同期処理 | dap-ui の必須依存。neotest 本体は導入しない |
+| [nvim-dap-go](https://github.com/leoluz/nvim-dap-go) | `plugins/dap-go.lua` | Delve 起動・Go 実行・テストの構成 | 既存アダプターと Treesitter による付近のテスト検出を利用 |
+
+Delve 実行ファイルは MacBook の Nix `hosts/macbook/packages.nix`、Go は mise で管理する。
+共通キーで dap-ui と依存を読み込み、Go バッファでは dap-go が UI 初期化後に構成を登録する。
+導入・操作・実機検証の状況は [デバッグガイド](cheatsheet/debugging.md) を参照。
+
 ## tmux 連携
 
 | プラグイン | 設定ファイル | 用途 | 導入理由 |

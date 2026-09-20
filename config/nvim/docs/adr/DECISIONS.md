@@ -15,3 +15,4 @@
 | ADR-20260313-009 | Gitガターサインにgitsigns.nvimを採用 | accepted | 2026-03-13 | 全部入り / 依存ゼロ / デファクト標準 | Git |
 | ADR-20260313-010 | Diff Viewerにcodediff.nvimを採用、lazygitとの役割分担 | accepted | 2026-03-13 | 文字レベルdiff / 活発メンテ / lazygit併用 | Git |
 | ADR-20260915-011 | 画像確認にパスコピーとAlfredを使い、Snacksの画像表示を休止 | accepted | 2026-09-15 | 残像・位置ずれ / 操作の快適さ / 端末構成維持 | UX |
+| ADR-20260920-012 | 共通 DAP 基盤と Go のデバッグ構成を分離して導入する | accepted | 2026-09-20 | 共通とプロジェクトの分離 / Nix 管理 / Go から段階導入 | Debug |

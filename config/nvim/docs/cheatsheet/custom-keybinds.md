@@ -103,6 +103,27 @@ which-key により `<leader>w` が `Ctrl+w` のプロキシとして動作:
 | `<leader>gc` | Git commits |
 | `<leader>gs` | Git status |
 
+## デバッグ (`<leader>d`)
+
+| キー | モード | 説明 |
+|------|--------|------|
+| `<leader>db` | Normal | ブレークポイントを切り替え |
+| `<leader>dB` | Normal | 条件付きブレークポイント（条件式を入力） |
+| `<leader>dc` | Normal | デバッグ開始 / 続行 |
+| `<leader>do` | Normal | ステップオーバー |
+| `<leader>di` | Normal | ステップイン |
+| `<leader>dO` | Normal | ステップアウト |
+| `<leader>dq` | Normal | デバッグ終了・UI を閉じる |
+| `<leader>du` | Normal | デバッグ UI を切り替え |
+| `<leader>de` | Normal / Visual | カーソル位置 / 選択範囲の式を評価 |
+| `<leader>dr` | Normal | DAP REPL を切り替え |
+| `<leader>dt` | Normal（Go のみ） | カーソル付近の Go テストをデバッグ |
+| `<leader>dT` | Normal（Go のみ） | 前回の Go テストを再実行 |
+
+パッケージのテストは `<leader>dc` → `Debug test (go.mod)`。
+プロジェクトルートを作業ディレクトリにして使う。
+導入と操作例は [デバッグガイド](debugging.md) を参照。
+
 ## フォーマット
 
 | キー | 説明 |

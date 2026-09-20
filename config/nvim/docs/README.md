@@ -16,6 +16,7 @@ docs/
 │   ├── custom-keybinds.md # カスタムキーバインド全般
 │   ├── ex-commands.md      # キーマップ未割り当ての便利なExコマンド
 │   ├── lsp.md             # 定義/参照/実装/Diagnostics
+│   ├── debugging.md       # Goデバッグの導入・操作・検証
 │   ├── plugin-operations.md # Neo-tree/FzfLua/Alpha 内部操作
 │   └── git-workflow.md    # gitsigns/CodeDiff/Git操作
 ├── exercises/             # ハンズオン練習ファイル
@@ -39,6 +40,9 @@ docs/
 
 トピック別に分割したキーバインド・操作リファレンス。
 → [目次](cheatsheet/README.md)
+
+Go のデバッグを始める場合は [デバッグガイド](cheatsheet/debugging.md) を参照。
+Delve の Nix 適用、最小サンプル、確認済み・未確認の操作をまとめている。
 
 ## exercises/
 

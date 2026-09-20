@@ -10,6 +10,7 @@ return {
     spec = {
       { "<leader>a", group = "AI" },
       { "<leader>c", group = "コード" },
+      { "<leader>d", group = "デバッグ" },
       { "<leader>m", group = "Markdown" },
       { "<leader>f", group = "検索" },
       { "<leader>g", group = "Git" },

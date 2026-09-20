@@ -13,6 +13,7 @@
 - [custom-keybinds.md](custom-keybinds.md) — カスタムキーバインド全般
 - [ex-commands.md](ex-commands.md) — キーマップ未割り当ての便利な `:` コマンド
 - [lsp.md](lsp.md) — 定義・参照・実装・Diagnosticsの目的別操作
+- [debugging.md](debugging.md) — Go のデバッグ導入 / ブレークポイント / 変数 / テスト / トラブルシュート
 - [plugin-operations.md](plugin-operations.md) — Neo-tree / FzfLua / Alpha 内部操作
 - [git-workflow.md](git-workflow.md) — gitsigns / CodeDiff / Git 操作
 

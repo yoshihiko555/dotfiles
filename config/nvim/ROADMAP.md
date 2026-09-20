@@ -132,18 +132,29 @@ VSCodeの補完・スニペット体験に近づける。
 
 IDE級の最終ピース。ブレークポイント・ステップ実行をNeovim内で行う。
 
-| プラグイン | 用途 | 優先度 |
-|-----------|------|--------|
-| nvim-dap | デバッグアダプタープロトコル | 必須 |
-| nvim-dap-ui | デバッグUI | 必須 |
-| nvim-dap-go | Go用DAP設定 | 必須 |
-| neotest | テストランナー統合 | 推奨 |
-| toggleterm.nvim | ターミナル統合（テスト実行用） | 推奨 |
+| プラグイン | 用途 | 優先度 | 状態 |
+|-----------|------|--------|------|
+| nvim-dap | デバッグアダプタープロトコル | 必須 | 導入済み・Go の実停止とステップ操作を確認 |
+| nvim-dap-ui | デバッグUI | 必須 | 導入済み・実セッションの自動開閉と式評価を確認 |
+| nvim-nio | dap-ui の非同期処理 | 必須（依存） | 導入済み |
+| nvim-dap-go | Go用DAP設定 | 必須 | 導入済み・パッケージ / 付近 / 前回テストを確認 |
+| neotest | テストランナー統合 | 推奨 | 後続 |
+| toggleterm.nvim | ターミナル統合（テスト実行用） | 推奨 | 後続 |
+
+共通操作は `<leader>d`。Delve は MacBook の Nix、Go は mise で管理する。
+導入と再現手順、確認状況は [デバッグガイド](docs/cheatsheet/debugging.md) を参照。
 
 ### 検証ポイント
-- [ ] Goのデバッグ（delve連携）が動作するか
-- [ ] ブレークポイント設定・ステップ実行が使えるか
-- [ ] テスト結果がNeovim内で確認できるか
+- [x] 共通キー・Go バッファ限定キー・DAP/UI の初回ロードと Delve 未導入時の案内
+- [x] 実端末の which-key 日本語案内・UI 手動開閉・起動失敗後の終了と通常編集への復帰
+- [x] Delve 1.27.1 と Go 1.26.1 の対応範囲、Nix の整形・チェック・MacBook build
+- [ ] 手元への Nix switch（sudo 認証が必要）
+- [x] Go のブレークポイントで実停止し、変数・スタック・ステップ実行を確認
+- [x] パッケージ / 付近 / 前回の Go テストをデバッグし、結果・ログを REPL で確認
+- [x] 実セッションでの UI 自動開閉・手動終了・再デバッグ
+- [x] 実端末の Normal / Visual 式評価・REPL、新規 Neovim の実行 / テストの初回停止
+- [ ] Learno の Docker 接続（プロジェクト側設定・API リクエストでの停止）
+- [ ] TypeScript / Python のデバッグ
 
 ---
 
@@ -162,7 +173,7 @@ IDE級の最終ピース。ブレークポイント・ステップ実行をNeovi
 
 ## 進め方
 
-1. 各フェーズごとにブランチで作業 → 検証 → mainにマージ
+1. 当リポジトリの `AGENTS.md` に従い、main で直接作業する（PR 運用対象外）
 2. 検証ポイントをクリアしてから次のフェーズへ
 3. 各プラグインは`lua/plugins/`配下に個別ファイルとして追加
    ```
@@ -182,12 +193,15 @@ IDE級の最終ピース。ブレークポイント・ステップ実行をNeovi
 - [x] Phase 2: 編集効率
 - [x] Phase 3: Git連携
 - [x] Phase 4: LSP強化 & コード品質
-- [ ] Phase 5: デバッグ & テスト
+- [ ] Phase 5: デバッグ & テスト（共通基盤・Go 実デバッグ検証済み、Nix switch と後続対象は未完了）
 - [ ] Phase 6: 仕上げ
 
 ## 運用メモ
 
 - （2026-03-04）当面は基本操作の定着と日常編集フローの安定化を優先
 - （2026-03-22）Phase 4 完了。core/lsp.lua → plugins/lsp.lua へ移行。mason + lspconfig 体制に
-- `nvim-dap` 系の導入検討は Phase 5 開始時に再開する
+- （2026-09-20）nvim-dap / dap-ui / nio / dap-go を導入。Delve は MacBook 固有の Nix 宣言に追加。
+  Developer Tools Access 認証後、Go の実停止・変数・ステップ・3 種類のテスト・UI を検証済み。
+  検証時は Nix store の Delve を PATH に追加。恒久適用の Nix switch は sudo 認証待ち。
+  Learno の Docker 接続、他言語、neotest 等は後続に分ける。
 - （2026-07-30）AI質問フロート（`lua/ai/claude.lua`、自作）を導入。`<leader>aa` で claude -p (sonnet) に一問一答
