@@ -62,3 +62,7 @@ alfred/*/prefs.plist
 # 開く URL やマクロ内容など私的な設定が入るため public リポジトリには載せず、
 # ローカルコピーとしてのみ保持する。仕組み（scripts/loupedeck-sync.sh）は管理対象
 config/loupedeck/
+
+# Alfred ワークフローが実行時に書き出すキャッシュ（プロジェクト名 → ConfigFiles）。
+# 絶対パスやワークツリーパスなどマシン固有の値が入るため管理対象外
+alfred/*/projects.json
