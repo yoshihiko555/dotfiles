@@ -2,31 +2,11 @@ local wezterm = require("wezterm")
 local config = {}
 local mux = wezterm.mux
 
--- ウィンドウ設定
-config.window_decorations = "RESIZE"
-config.adjust_window_size_when_changing_font_size = false
-config.window_background_opacity = 0.7
-config.macos_window_background_blur = 20
-
--- 背景画像設定
-config.background = {
-  {
-    source = {
-      File = wezterm.home_dir .. "/.config/wezterm/background.jpg"
-    },
-    hsb = {
-      brightness = 0.2,
-    }
-  }
-}
-
--- タイトルバーを透明化
-config.window_frame = {
-  inactive_titlebar_bg = "none",
-  active_titlebar_bg = "none",
-  font = wezterm.font("UDEV Gothic 35NFLG", { weight = "Bold" }),
-  font_size = 14,
-}
+-- ウィンドウの見た目設定（herdr 版 config/window-herdr.lua と共通のため切り出し）
+local appearance = require("config/window-appearance")
+for k, v in pairs(appearance) do
+  config[k] = v
+end
 
 -- イベントハンドラ
 -- 起動時にメインモニターで3ペイン分割＋最大化
