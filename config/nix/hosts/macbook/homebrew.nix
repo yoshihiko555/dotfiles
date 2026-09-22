@@ -16,6 +16,10 @@
     "agent-browser" # nixpkgs 版はバージョン追従が遅い（AI 系は brew 残留方針）
     "cliproxyapi" # nixpkgs 未収録（自前 API プロキシ、launchd 常駐）
     "coderabbitai/tap/git-gtr" # hermes 未使用のため darwin 共通層から降格（2026-08-02）
+    # hunk: エージェントが書いた変更セットをまとめて読むための review-first diff TUI。
+    # 試用中（2026-09-23〜）。nixpkgs は 0.20.1 で brew（0.22.0）より追従が遅いため
+    # AI 系 brew 残留方針に従う。見送る場合はこの行を消せば次の switch で消える。
+    "hunk"
     "morantron/tmux-fingers/tmux-fingers"
   ];
 
