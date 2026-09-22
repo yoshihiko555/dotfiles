@@ -51,7 +51,7 @@
 	<key>createdby</key>
 	<string>yoshihiko</string>
 	<key>description</key>
-	<string>お気に入りのフォルダをVSCode・Zed・WezTermで開くワークフロー</string>
+	<string>お気に入りのフォルダをVSCode・Zed・Ghostty(herdr)で開くワークフロー</string>
 	<key>disabled</key>
 	<false/>
 	<key>name</key>
@@ -228,23 +228,33 @@ if [[ "$mode" == "wez" ]]; then
   dir="$(cd "$dir" &amp;&amp; pwd -P)"
   ws_name="$(basename "$dir")"
 
-  wez_app="WezTerm"
-  if [[ -d "/Applications/WezTerm Nightly.app" ]]; then
-    wez_app="WezTerm Nightly"
-  fi
-
-  # WezTerm 未起動なら起動して待機
-  if ! wezterm cli list &amp;&gt;/dev/null; then
-    open -a "$wez_app"
-    for i in {1..50}; do
-      wezterm cli list &amp;&gt;/dev/null &amp;&amp; break
+  # 2026-09-23: 常用端末を WezTerm から Ghostty + herdr に移したので、こちらへ向ける
+  # （docs/adr/ADR-20260922-0001）。旧実装は WezTerm の Lua が
+  # /tmp/wezterm-alfred-workspace.json を監視して SwitchToWorkspace する前提だったが、
+  # その受け口は tmux 移行時に消えていて動いていなかった。また `wezterm cli list` は
+  # GUI に繋がらないと wezterm-mux-server を勝手に起動する（--no-auto-start が要る）ため、
+  # 孤児プロセスを残す副作用があった。
+  #
+  # herdr のワークスペースはソケット API でサーバー側に作るので、端末アプリの前面化とは
+  # 独立に扱える。サーバーが居なければ Ghostty を起動する（initial-command が herdr に
+  # アタッチし、サーバーも立ち上がる）。
+  if ! herdr workspace list &amp;&gt;/dev/null; then
+    open -a Ghostty
+    for i in {1..100}; do
+      herdr workspace list &amp;&gt;/dev/null &amp;&amp; break
       sleep 0.1
     done
   fi
 
-  # トリガーファイルを書いて WezTerm 側で SwitchToWorkspace を実行させる
-  printf '{"name":"%s","cwd":"%s","timestamp":%d}' "$ws_name" "$dir" "$(date +%s)" &gt; /tmp/wezterm-alfred-workspace.json
-  open -a "$wez_app"
+  # リポジトリのルートなら herdr-sessionizer と同じ worktree open（既に開いていれば
+  # フォーカスだけ移る）。それ以外は素の workspace create。
+  if [[ "$(git -C "$dir" rev-parse --show-toplevel 2&gt;/dev/null)" == "$dir" ]]; then
+    herdr worktree open --cwd "$dir" --path "$dir" --label "$ws_name" --focus &gt;/dev/null
+  else
+    herdr workspace create --cwd "$dir" --label "$ws_name" --focus &gt;/dev/null
+  fi
+
+  open -a Ghostty
   exit 0
 fi</string>
 				<key>scriptargtype</key>
@@ -301,7 +311,7 @@ items = [
      "variables":{"mode":"vs", "dir":target}},
     {"title":"zed で開く（Zed）", "subtitle":target, "arg":"zed",
      "variables":{"mode":"zed", "dir":target}},
-    {"title":"wez で開く（WezTerm ワークスペース）",  "subtitle":target, "arg":"wez",
+    {"title":"wez で開く（herdr ワークスペース / Ghostty）",  "subtitle":target, "arg":"wez",
      "variables":{"mode":"wez", "dir":target}},
 ]
 
