@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+# herdr-sessionizer — GHQ プロジェクト picker (herdr 版)
+#
+# 元: dotfiles config/tmux/bin/tmux-sessionizer (65行、読み取り専用で参照)
+#
+# tmux 版との違い:
+#  - 重複ワークスペース検出: tmux は `tmux has-session -t "=$session_name"` で
+#    セッション名の厳密一致を見ていた。herdr では label と pane の cwd の
+#    どちらも重複検出の根拠として不十分と判断した:
+#      * label は重複しうる (実機で確認: "learno" という label のワークスペースが
+#        w2 と w4 の2つ存在していた)
+#      * pane の cwd はユーザーが cd すると drift する上、上記 w2/w4 は
+#        cwd も完全に同じだったため cwd 一致でも一意に絞れなかった
+#    そこで `herdr worktree list --cwd <repo_root>` が返す `open_workspace_id`
+#    を使う。これは herdr 自身が git worktree ごとに追跡している対応表であり、
+#    通常のリポジトリ (worktree でない) でも repo_root を渡せば主チェックアウトの
+#    エントリとして同じ仕組みで open_workspace_id を返すことを実機で確認済み。
+#  - worktree の扱い: tmux 版は `.worktrees/<branch>` ディレクトリへ単に cd する
+#    だけだった (tmux は git worktree を認識しない)。herdr 版は
+#    `herdr worktree open --cwd <repo_root> --path <worktree_path>` を使い、
+#    herdr のワークツリー管理に正しく登録する。
+#  - display-popup 内で switch-client が効かない問題を tmux 版は一時ファイル
+#    経由で回避していたが、herdr は `workspace focus` / `--focus` でサーバー側
+#    から直接フォーカスを切り替えられるため、その回避策は不要。
+#  - セッション名の '.' → '-' 置換 (tmux のセッション名制約回避) は herdr の
+#    label には制約がないため行わない。
+#
+# 候補集合: repo-list.sh (dotfiles リポジトリ内、読み取りのみ) をそのまま使い、
+# tmux 版と全く同じ候補 (ghq list + 各リポジトリの .worktrees/* ) を列挙する。
+
+set -euo pipefail
+
+# type = "shell" のデタッチ実行は PATH が最小で /opt/homebrew/bin が入らず、
+# herdr / jq / fzf が見つからずに exit 127 になる。ここで補う。
+# herdr 自身の場所は HERDR_BIN_PATH がペインに渡されていればそれを使う。
+if [ -n "${HERDR_BIN_PATH:-}" ]; then
+  PATH="$(dirname "$HERDR_BIN_PATH"):$PATH"
+fi
+PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+export PATH
+
+
+REPO_LIST="$HOME/ghq/github.com/yoshihiko555/dotfiles/scripts/repo-list.sh"
+
+for cmd in herdr fzf jq; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "herdr-sessionizer: 必要なコマンドが見つかりません: $cmd" >&2
+    exit 1
+  fi
+done
+
+if [ ! -f "$REPO_LIST" ]; then
+  echo "herdr-sessionizer: repo-list.sh が見つかりません: $REPO_LIST" >&2
+  exit 1
+fi
+
+# "(current)" マーカーはあくまで表示上のヒント。重複判定には使わない
+# (判定は選択後に herdr worktree list の open_workspace_id で行う)。
+current_cwd=""
+if cur_json=$(herdr pane current --current 2>/dev/null); then
+  current_cwd=$(printf '%s' "$cur_json" | jq -r '.result.pane.cwd // empty')
+fi
+
+selected=$(bash "$REPO_LIST" | while IFS=$'\t' read -r type label path; do
+  if [ "$type" = "worktree" ]; then
+    # "owner/repo:branch" → "repo/branch"
+    session_name=$(echo "$label" | sed 's|.*/\([^/]*\):\([^/]*\)$|\1/\2|')
+    icon=$'\xe2\x97\x8f \xee\x9c\xa8'   # ● + git-merge
+  else
+    session_name=$(basename "$path")
+    icon=$'\xe2\x97\x8b \xee\xa9\xa2'   # ○ + repo
+  fi
+
+  if [ "$path" = "$current_cwd" ]; then
+    marker="  (current)"
+  else
+    marker=""
+  fi
+
+  # 表示\tセッション名\tパス\tタイプ
+  printf '%s  %s%s\t%s\t%s\t%s\n' "$icon" "$label" "$marker" "$session_name" "$path" "$type"
+done | fzf --ansi \
+           --delimiter=$'\t' \
+           --with-nth=1 \
+           --header="Select project (herdr)" \
+           --preview='ls -la {3}' \
+           --preview-window=down:3:wrap)
+
+[ -z "$selected" ] && exit 0
+
+session_name=$(echo "$selected" | cut -f2)
+path=$(echo "$selected" | cut -f3)
+type=$(echo "$selected" | cut -f4)
+
+if [ "$type" = "worktree" ]; then
+  # path は ".../<repo>/.worktrees/<name>" 形式
+  repo_root="${path%/.worktrees/*}"
+else
+  repo_root="$path"
+fi
+
+# 重複判定は herdr 自身に任せる。`herdr worktree open` は応答に already_open を
+# 返し、既に開いていればそのワークスペースへフォーカスする。
+# 当初 `herdr worktree list` の open_workspace_id を使う設計にしていたが、
+# そのフィールドは実在しなかった（返るのは branch/is_bare/is_detached/
+# is_linked_worktree/is_prunable/label/path の 7 つだけ）。
+#
+# worktree list は主チェックアウト（.worktrees 配下でない本体）も含むため、
+# 通常のリポジトリでも worktree open で扱える。両方を同じ経路にする。
+#
+# 注意: --path と --branch は排他（usage の (--path PATH | --branch NAME)）。
+# 両方渡すと usage エラーになり、popup だと即閉じて「何も起きない」ように見える。
+if ! open_out=$(herdr worktree open --cwd "$repo_root" --path "$path" --label "$session_name" --focus 2>&1); then
+  echo "herdr-sessionizer: herdr worktree open に失敗しました" >&2
+  echo "$open_out" >&2
+  echo >&2
+  echo "Enter で閉じます" >&2
+  read -r _ || true
+  exit 1
+fi

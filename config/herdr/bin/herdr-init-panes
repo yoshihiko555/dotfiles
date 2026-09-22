@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+# herdr-init-panes — ペイン数に応じてプロセスを自動起動 (herdr 版)
+#
+# 元: dotfiles config/tmux/bin/tmux-init-panes (61行、読み取り専用で参照)
+#
+# 2ペイン: pane0=nvim, pane1=free
+# 3ペイン: pane0=nvim, pane1=claude, pane2=free
+# 4ペイン: pane0=claude, pane1=codex, pane2=free, pane3=free
+#
+# tmux 版との違い:
+#  - 対象タブは $HERDR_PANE_ID (herdr がキーバインド実行時に注入する呼び出し元
+#    ペインID) を起点に特定する。無ければ `herdr pane current --current` に
+#    フォールバックする。
+#  - herdr にはペインの番号 (tmux の #{pane_index} 相当) がない。
+#    `herdr pane layout` が返す各ペインの rect (x, y) を (y, x) の順で
+#    ソートし、tmux の ASCII レイアウト図と同じ「左上→右上→左下→右下」の
+#    読み順を pane0..N-1 とみなす。
+#  - 二重起動防止 (tmux の alternate_on チェック) 相当の機能は herdr CLI に
+#    直接は無い。代わりに `herdr pane process-info` の foreground_processes を見て、
+#    「フォアグラウンドのプロセスがシェル1つだけ」でなければ「何か動いている」と
+#    みなす。tmux 版の alternate_on はエディタ/TUI 特有のフラグで、より狭い
+#    条件 (alt screen 使用時のみ検知) だったため、この判定はやや広め
+#    (alt screen を使わない常駐プロセスも検知しうる) になっている。
+#  - `tmux send-keys ... Enter` の代わりに `herdr pane run <pane_id> <command>`
+#    (コマンド文字列送出 + Enter を1コマンドで行う) を使う。
+#  - 最後の `tmux select-pane -t 0` に相当する明示的なフォーカス切り替えは
+#    行っていない。herdr の `pane focus` は隣接ペイン方向指定のみで
+#    pane_id 直接指定のフォーカスが無いため。このコマンド実行前から
+#    フォーカスされていたペインがそのままフォーカスされ続ける想定 (pane run
+#    自体はフォーカスを移動しないため、通常は呼び出し元ペイン=pane0 のまま)。
+
+set -euo pipefail
+
+# type = "shell" のデタッチ実行は PATH が最小で /opt/homebrew/bin が入らず、
+# herdr / jq / fzf が見つからずに exit 127 になる。ここで補う。
+# herdr 自身の場所は HERDR_BIN_PATH がペインに渡されていればそれを使う。
+if [ -n "${HERDR_BIN_PATH:-}" ]; then
+  PATH="$(dirname "$HERDR_BIN_PATH"):$PATH"
+fi
+PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+export PATH
+
+
+# type = "shell" はデタッチ実行のため stderr がどこにも出ない。
+# 失敗した理由が分からないと「押したのに何も起きない」になるので、
+# 異常終了時は必ず herdr のトースト通知に出す。
+_notify_fail() {
+  herdr notification show "$(basename "$0")" --body "$1" >/dev/null 2>&1 || true
+}
+trap 'rc=$?; [ $rc -ne 0 ] && _notify_fail "失敗しました (exit=$rc)。詳細はペインで直接実行して確認してください。"' EXIT
+
+
+for cmd in herdr jq; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "herdr-init-panes: 必要なコマンドが見つかりません: $cmd" >&2
+    exit 1
+  fi
+done
+
+PANE_ID="${HERDR_PANE_ID:-}"
+if [ -z "$PANE_ID" ]; then
+  cur=$(herdr pane current --current 2>&1) || {
+    echo "herdr-init-panes: 対象ペインを特定できませんでした: $cur" >&2
+    exit 1
+  }
+  PANE_ID=$(printf '%s' "$cur" | jq -r '.result.pane.pane_id // empty')
+fi
+if [ -z "$PANE_ID" ]; then
+  echo "herdr-init-panes: 対象ペインを特定できませんでした" >&2
+  exit 1
+fi
+
+layout=$(herdr pane layout --pane "$PANE_ID" 2>&1) || {
+  echo "herdr-init-panes: pane layout に失敗しました: $layout" >&2
+  exit 1
+}
+
+pane_count=$(printf '%s' "$layout" | jq -r '.result.layout.panes | length')
+case "$pane_count" in
+  2|3|4) ;;
+  *)
+    echo "herdr-init-panes: ${pane_count}ペインには未対応です (対応: 2, 3, 4)" >&2
+    exit 1
+    ;;
+esac
+
+# rect.y, rect.x の順でソートし、左上→右上→左下→右下 の読み順を pane0..N-1 とする
+# mapfile は bash 4 以降の機能で、macOS 標準の bash 3.2 には無い。
+# デタッチ実行では古い bash を掴むため while read で組む。
+pane_ids=()
+while IFS= read -r _pid; do
+  [ -n "$_pid" ] && pane_ids+=("$_pid")
+done < <(printf '%s' "$layout" | jq -r '.result.layout.panes | sort_by(.rect.y, .rect.x) | .[].pane_id')
+
+if [ "${#pane_ids[@]}" -ne "$pane_count" ]; then
+  echo "herdr-init-panes: pane_id の取得数がペイン数と一致しません" >&2
+  exit 1
+fi
+
+cur_pane=$(herdr pane current --pane "$PANE_ID" 2>&1) || {
+  echo "herdr-init-panes: pane current に失敗しました: $cur_pane" >&2
+  exit 1
+}
+CWD=$(printf '%s' "$cur_pane" | jq -r '.result.pane.cwd // empty')
+if [ -z "$CWD" ]; then
+  echo "herdr-init-panes: 対象ペインの cwd を取得できませんでした" >&2
+  exit 1
+fi
+
+# GHQ リポジトリ配下チェック
+ghq_root="$HOME/ghq/"
+case "$CWD" in
+  "$ghq_root"*) ;;
+  *)
+    echo "herdr-init-panes: GHQ リポジトリ配下でのみ実行できます (cwd=${CWD})" >&2
+    exit 1
+    ;;
+esac
+
+# 二重起動防止: フォアグラウンドプロセスがシェル1つだけでないペインがあれば中止
+for pid in "${pane_ids[@]}"; do
+  info=$(herdr pane process-info --pane "$pid" 2>&1) || {
+    echo "herdr-init-panes: pane process-info に失敗しました (${pid}): ${info}" >&2
+    exit 1
+  }
+  shell_only=$(printf '%s' "$info" | jq -r '
+    (.result.process_info.foreground_processes // []) as $fg
+    | ($fg | length) == 1
+      and (($fg[0].argv0 // "") | test("^(bash|zsh|fish|sh|dash)$"))
+  ')
+  if [ "$shell_only" != "true" ]; then
+    echo "herdr-init-panes: ペイン ${pid} でプロセスが実行中の可能性があります" >&2
+    exit 1
+  fi
+done
+
+# 全ペインを同じディレクトリに移動 (pane0 以外)
+for idx in "${!pane_ids[@]}"; do
+  [ "$idx" -eq 0 ] && continue
+  herdr pane run "${pane_ids[$idx]}" "cd '${CWD}'" >/dev/null
+done
+
+case "$pane_count" in
+  2)
+    # pane0=nvim, pane1=free
+    herdr pane run "${pane_ids[0]}" "nvim" >/dev/null
+    ;;
+  3)
+    # pane0=nvim, pane1=claude, pane2=free
+    herdr pane run "${pane_ids[0]}" "nvim" >/dev/null
+    herdr pane run "${pane_ids[1]}" "claude" >/dev/null
+    ;;
+  4)
+    # pane0=claude, pane1=codex, pane2=free, pane3=free
+    herdr pane run "${pane_ids[0]}" "claude" >/dev/null
+    herdr pane run "${pane_ids[1]}" "codex" >/dev/null
+    ;;
+esac

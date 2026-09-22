@@ -1,0 +1,754 @@
+#!/usr/bin/env bash
+# herdr-agent-console — herdr 用「承認待ちエージェント・コンソール」(baton TUI の代替)
+#
+# baton の代替として、herdr 上のエージェント一覧を fzf で表示し、
+#   j/k, ↑↓  : 移動（検索モード中は ↑↓ / Ctrl-j / Ctrl-k のみが効く）
+#   Enter    : 選択エージェントのペインへフォーカス
+#   a        : 承認キーを送信（確認プロンプトなし。対象が承認待ち(blocked)でなければ
+#              送信せずスキップする。結果は必ず画面表示 + ログに残す）
+#   d        : 拒否キー（Escape）を送信（a と同じ安全策・同じ結果表示/ログ）
+#   /        : 検索モードに入り、文字入力でツール名・ワークスペース名等を絞り込む
+#              （検索モード中は a/d/w/r/q は文字として入力され、キー操作としては働かない）
+#   Esc      : 検索モード中は検索モードを終了する（絞り込み文字列は保持したまま）。
+#              通常モードでは閉じる（quit）
+#   w        : 承認待ち(blocked)のみに絞り込む
+#   r        : 全件再取得（絞り込み・検索文字列を解除）
+#   q        : 閉じる
+# を提供する。一覧は fzf の `every(N)` イベントで数秒ごとに自動更新し、
+# ヘッダーに キー説明 + 承認待ち/作業中/待機中 の件数サマリを表示する。
+#
+# 呼び出し元（キーバインドの配線）はこのスクリプトの範囲外。
+# ~/.config/herdr/config.toml と ~/.config/wezterm-herdr/wezterm.lua は
+# 一切編集しない。
+#
+# ---- <TARGET> に何を渡すか -------------------------------------------------
+# `herdr --skill` の説明より:
+#   "Agent commands accept either a unique live agent name or the pane ID
+#    currently hosting that agent. They do not accept terminal IDs or bare
+#    agent-kind labels."
+# 実機の `herdr agent list` では `agent` フィールドはツール種別名（例: "claude"）
+# であり、同一種別のエージェントが複数居れば重複しうる（実機確認済み、
+# 例えば "claude" が同時に6件出るケースを確認した）。一意な名前は
+# `herdr agent start <NAME> ...` で明示的に付けた場合のみ得られる。
+# そのため本スクリプトは常に一意な `pane_id`（例: "w1:p4"）を <TARGET> として使う。
+#
+# ---- 承認(a) / 拒否(d) の安全策 ---------------------------------------------
+# 以前は送信前に y/N の確認プロンプトを出していたが、ユーザーからの明示的な
+# 仕様変更指示により確認プロンプトは廃止した。代わりに以下の二段構えで
+# 誤送信を防ぐ。
+#   1. 送信前に対象の status（一覧の {3} フィールド）が "blocked" であることを
+#      必ず確認する。blocked 以外（working/idle/done/unknown 等）なら
+#      何も送信せずスキップする。
+#      ※ 一覧は最大 5 秒（自動更新間隔）古い可能性があるため、この判定も
+#        同程度古い可能性がある。怪しい場合は r で再取得してから操作すること。
+#   2. ツール種別ごとの送信キーが調査済みのものだけキーを送る。未調査・未対応の
+#      ツールは何も送信せずメッセージを出して終わる（旧版にあった「キーを
+#      手入力させる」機能は廃止した。誤ったキーを送るより「何もしない」方が
+#      安全というユーザー判断による）。
+# 送信した／スキップした結果は必ず画面に一時表示し（Enter で一覧へ戻る）、
+# 同時に "$SEND_LOG"（下記）にも 1 行追記する。
+#
+# ---- ツールごとの承認・拒否キー（重要・要確認事項） -------------------------
+#   claude (Claude Code):
+#     承認: [文書ベース・未検証] 承認ダイアログは
+#       "1. Yes / 2. Yes, and don't ask again ... / 3. No, ..." の形式で、
+#     数字キーで直接選択・即決定できると案内されている。既定のハイライトは
+#     "1. Yes" とされる。本スクリプトは '1' を送る。
+#     拒否: [ユーザー指示にもとづく・このスクリプト内では未検証] Escape で
+#     キャンセル（拒否）できるとされる。本スクリプトは 'esc'（herdr の正式な
+#     キー名。'escape' も受理される）を送る。
+#     いずれも実際に blocked 状態のエージェントに対して検証してはいない
+#     （このタスクの制約で実エージェントへの送信は禁止されているため）。
+#
+#   codex (Codex CLI):
+#     承認・拒否とも [ドキュメントで確認済み]。承認プロンプトは
+#       "1. Yes, proceed (y)" / "2. Yes, and don't ask again for commands that
+#        start with `...` (p)" / "3. No, and tell Codex what to do
+#        differently (esc)"
+#     の形式で、'y' が「1. Yes, proceed」、'esc' が「3. No, ...」のショートカット
+#     として明記されている。本スクリプトは承認に 'y'、拒否に 'esc' を送る。
+#
+#   opencode (OpenCode):
+#     承認: [文書ベース・未検証] 権限確認は y/n で応答すると案内されているが、
+#     バージョンや ~/.config/opencode/tui.json のキーバインド設定次第で
+#     挙動が変わりうる。本スクリプトは 'y' を送るが、確信度は claude より低い。
+#     拒否: [未検証] Escape で拒否できると見られるが確認できていない。
+#     本スクリプトは 'esc' を送るが、確信度はさらに低い。
+#
+#   takt:
+#     [未確認・そもそも対象外] `herdr agent start --kind` の対応一覧に "takt" は
+#     存在しない。takt は claude/codex/opencode 等を配下のペインで起動する
+#     オーケストレーターであり、herdr 側からは配下のツールとして検出される想定。
+#     そのため `agent` フィールドの値が "takt" になるケースは通常ない。念のため
+#     case 文には残すが、送信キーは設定しない（未調査ツールとして扱う）。
+#
+#   上記以外の kind（gemini/cursor/devin/... 等）:
+#     [未調査] 送信キーは設定しない。a/d を押すと「未調査のため送信しません」と
+#     表示して終わる。
+#
+# ---- 件数サマリ / 自由文字列での絞り込み -------------------------------------
+# ヘッダーは fzf の `transform-header` で 5 秒ごと・w/r/Esc のたびに再計算する。
+# 通常モードでは 承認待ち/作業中/待機中（+その他があれば）の件数を表示し、
+# 検索モード中は簡易な操作説明に切り替える。件数は現在の絞り込み(w/r)に
+# 関わらず、常に全件（baton の Attention 相当）から計算する。
+#
+# 自由文字列での絞り込みは、fzf 本来の --no-input を維持したまま
+# `/` で show-input、Esc で hide-input する方式（依頼書でいう設計案(b)）を
+# fzf 0.74.3 で採用した。検索モード中は j/k/a/d/w/r/q を unbind し、
+# 抜けるときに rebind することで、通常モードのキー操作（baton と同じ指の
+# 動き）を一切変えずに文字入力を実現している。トレードオフは:
+#   - 検索モード中は q で閉じられない（Esc で通常モードに戻ってから q）
+#   - 検索モード中は j/k で移動できない（↑↓ / Ctrl-j / Ctrl-k は常に有効）
+#   - '/' 自体は検索文字列に含められない
+#   - 検索モードに入った直後、一文字も入力せずに Esc を押した場合も
+#     「検索モード終了」として通常モードに戻るだけで、アプリは終了しない
+# という点。
+
+set -euo pipefail
+
+# type = "shell" のデタッチ実行は PATH が最小で /opt/homebrew/bin が入らず、
+# herdr / jq / fzf が見つからずに exit 127 になる。ここで補う。
+# herdr 自身の場所は HERDR_BIN_PATH がペインに渡されていればそれを使う。
+if [ -n "${HERDR_BIN_PATH:-}" ]; then
+  PATH="$(dirname "$HERDR_BIN_PATH"):$PATH"
+fi
+PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+export PATH
+
+
+# popup で実行されると終了と同時に窓が閉じ、エラーが読めない。
+# 異常終了の直前に必ず呼んで、ユーザーがメッセージを読めるようにする。
+_pause_on_error() {
+  echo >&2
+  echo "Enter で閉じます" >&2
+  read -r _ </dev/tty 2>/dev/null || true
+}
+trap '[ $? -ne 0 ] && _pause_on_error' EXIT
+
+
+SELF="herdr-agent-console"
+SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+
+# a/d で送信した（またはスキップした）結果の記録先。
+SEND_LOG="${XDG_STATE_HOME:-$HOME/.local/state}/herdr-agent-console/actions.log"
+
+err() {
+  echo "$SELF: $*" >&2
+}
+
+usage() {
+  cat <<'USAGE'
+使い方: herdr-agent-console
+  引数なしで実行すると fzf ベースの承認待ちエージェント・コンソールを開く。
+
+  キー割当:
+    j/k, ↑↓   移動（検索モード中は ↑↓ / Ctrl-j / Ctrl-k のみ）
+    Enter     選択エージェントのペインへフォーカスして終了
+    a         承認キーを送信（確認プロンプトなし。blocked 以外はスキップ）
+    d         拒否キー（Escape）を送信（同上の安全策）
+    /         検索モードに入り、文字入力で絞り込む
+    Esc       検索モード中: 検索モードを終了（絞り込みは保持）
+              通常モード  : 閉じる
+    w         承認待ち(blocked)のみに絞り込む
+    r         全件再取得（絞り込み・検索文字列を解除）
+    q         閉じる（検索モード中は効かない。先に Esc で通常モードへ）
+
+  送信結果は "~/.local/state/herdr-agent-console/actions.log"（$XDG_STATE_HOME 設定時はそちら）に記録される。
+USAGE
+}
+
+# ---- 依存チェック ----
+for cmd in herdr fzf; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    err "必要なコマンドが見つかりません: $cmd"
+    exit 1
+  fi
+done
+
+JSON_TOOL=""
+if command -v jq >/dev/null 2>&1; then
+  JSON_TOOL="jq"
+elif command -v python3 >/dev/null 2>&1; then
+  JSON_TOOL="python3"
+else
+  err "jq も python3 も見つかりません。どちらか一方が必要です。"
+  exit 1
+fi
+
+# jq 版: herdr agent list の JSON を TSV に変換する
+# 出力列: pane_id / kind_raw / status_raw / badge / workspace_id / tab_id / kind_display / title / cwd
+json_to_tsv_jq() {
+  local filter="$1" home="$2"
+  jq -r --arg filter "$filter" --arg home "$home" '
+    def badge:
+      if .agent_status=="blocked" then "\u001b[1;31m● 承認待ち\u001b[0m"
+      elif .agent_status=="working" then "\u001b[1;33m◐ 作業中\u001b[0m"
+      elif .agent_status=="idle" then "\u001b[1;32m✓ 待機中\u001b[0m"
+      elif .agent_status=="done" then "\u001b[1;36m✓ 完了\u001b[0m"
+      else "\u001b[1;90m? 不明(" + (.agent_status // "null") + ")\u001b[0m"
+      end;
+    def prio:
+      if .agent_status=="blocked" then 0
+      elif .agent_status=="working" then 1
+      elif .agent_status=="unknown" then 2
+      elif .agent_status=="idle" then 3
+      elif .agent_status=="done" then 4
+      else 5 end;
+    (.result.agents // [])
+    | map(select($filter != "blocked" or .agent_status == "blocked"))
+    | sort_by(prio)
+    | .[]
+    | [
+        (.pane_id // ""),
+        (.agent // "?"),
+        (.agent_status // "unknown"),
+        badge,
+        (.workspace_id // ""),
+        (.tab_id // ""),
+        (.agent // "?"),
+        ((.terminal_title_stripped // .terminal_title // "") + (if .focused == true then " ★" else "" end)),
+        ((.cwd // "") | gsub("^" + $home; "~"))
+      ]
+    | @tsv
+  '
+}
+
+# python3 版（jq が無い環境向けフォールバック）
+json_to_tsv_py() {
+  local filter="$1" home="$2"
+  python3 - "$filter" "$home" <<'PYEOF'
+import json
+import sys
+
+filt, home = sys.argv[1], sys.argv[2]
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    sys.exit(0)
+
+agents = ((data.get("result") or {}).get("agents")) or []
+
+def badge(a):
+    s = a.get("agent_status")
+    if s == "blocked":
+        return "\x1b[1;31m● 承認待ち\x1b[0m"
+    if s == "working":
+        return "\x1b[1;33m◐ 作業中\x1b[0m"
+    if s == "idle":
+        return "\x1b[1;32m✓ 待機中\x1b[0m"
+    if s == "done":
+        return "\x1b[1;36m✓ 完了\x1b[0m"
+    return f"\x1b[1;90m? 不明({s})\x1b[0m"
+
+def prio(a):
+    return {"blocked": 0, "working": 1, "unknown": 2, "idle": 3, "done": 4}.get(a.get("agent_status"), 5)
+
+if filt == "blocked":
+    agents = [a for a in agents if a.get("agent_status") == "blocked"]
+
+agents.sort(key=prio)
+
+for a in agents:
+    pane_id = a.get("pane_id") or ""
+    kind = a.get("agent") or "?"
+    status = a.get("agent_status") or "unknown"
+    ws = a.get("workspace_id") or ""
+    tab = a.get("tab_id") or ""
+    title = a.get("terminal_title_stripped") or a.get("terminal_title") or ""
+    if a.get("focused"):
+        title += " ★"
+    cwd = a.get("cwd") or ""
+    if home and cwd.startswith(home):
+        cwd = "~" + cwd[len(home):]
+    row = [pane_id, kind, status, badge(a), ws, tab, kind, title, cwd]
+    print("\t".join(row))
+PYEOF
+}
+
+# jq 版: herdr agent list の生 JSON から件数を計算する。
+# 出力: blocked \t working \t idle \t other \t total の 1 行 TSV（常に全件が対象）
+count_agents_jq() {
+  jq -r '
+    (.result.agents // []) as $a
+    | ($a | length) as $total
+    | ($a | map(select(.agent_status=="blocked")) | length) as $b
+    | ($a | map(select(.agent_status=="working")) | length) as $w
+    | ($a | map(select(.agent_status=="idle")) | length) as $i
+    | ($total - $b - $w - $i) as $o
+    | [$b, $w, $i, $o, $total] | @tsv
+  '
+}
+
+# python3 版件数カウント（フォールバック）
+count_agents_py() {
+  python3 - <<'PYEOF'
+import json
+import sys
+
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    print("?\t?\t?\t?\t?")
+    sys.exit(0)
+
+agents = ((data.get("result") or {}).get("agents")) or []
+
+def c(s):
+    return sum(1 for a in agents if a.get("agent_status") == s)
+
+b, w, i = c("blocked"), c("working"), c("idle")
+total = len(agents)
+o = total - b - w - i
+print(f"{b}\t{w}\t{i}\t{o}\t{total}")
+PYEOF
+}
+
+# herdr agent list を叩いて生 JSON を返す。失敗時は stderr にエラーを出して
+# 空文字列を返す（fzf の reload/transform から呼ばれても落ちないようにするため）。
+fetch_agents_raw() {
+  local tmp_err raw ec
+  tmp_err="$(mktemp "${TMPDIR:-/tmp}/herdr-agent-console-err.XXXXXX")"
+  if ! raw="$(herdr agent list 2>"$tmp_err")"; then
+    ec=$?
+    err "herdr agent list に失敗しました (exit=$ec): $(cat "$tmp_err")"
+    rm -f "$tmp_err"
+    return 0
+  fi
+  rm -f "$tmp_err"
+  printf '%s' "$raw"
+}
+
+# raw JSON から件数 TSV を計算し out_file に書き込む（_header が読む）。
+write_counts() {
+  local raw="$1" out_file="$2" line
+  [ -z "$out_file" ] && return 0
+  if [ -z "$raw" ]; then
+    line=$'?\t?\t?\t?\t?'
+  elif [ "$JSON_TOOL" = "jq" ]; then
+    line="$(printf '%s' "$raw" | count_agents_jq)"
+  else
+    line="$(printf '%s' "$raw" | count_agents_py)"
+  fi
+  [ -z "$line" ] && line=$'?\t?\t?\t?\t?'
+  printf '%s\n' "$line" >"$out_file" 2>/dev/null || true
+}
+
+list_agents_tsv() {
+  local filter="${1:-all}" raw
+  raw="$(fetch_agents_raw)"
+  [ -z "$raw" ] && return 0
+  if [ "$JSON_TOOL" = "jq" ]; then
+    printf '%s' "$raw" | json_to_tsv_jq "$filter" "$HOME" | _align_rows || true
+  else
+    printf '%s' "$raw" | json_to_tsv_py "$filter" "$HOME" | _align_rows || true
+  fi
+}
+
+pause_tty() {
+  printf '\nEnter キーで一覧に戻ります...' >/dev/tty
+  read -r _ </dev/tty || true
+}
+
+# ---- 隠しサブコマンド: fzf の reload / preview / bind から自分自身を呼び出す ----
+
+
+# 表示列を全角幅で揃える。タブ区切りのままだと日本語が全角のためタブ位置がずれ、
+# 「状態」(4桁) と「● 承認待ち」(10桁) が別のタブストップに落ちて列が崩れる。
+# フィールド 1-3（pane_id / kind / status）はそのまま残し、表示用の 4-9 を
+# 1 つの整形済みフィールドにまとめる。fzf 側は --with-nth=4 で表示する。
+COL_W_STATUS=12
+COL_W_WS=4
+COL_W_TAB=8
+COL_W_TOOL=8
+COL_W_TITLE=34
+
+_align_rows() {
+  python3 -c '
+import sys, re, unicodedata
+W = [int(x) for x in sys.argv[1:6]]
+ansi = re.compile(r"\x1b\[[0-9;]*m")
+def dw(s):
+    s = ansi.sub("", s)
+    return sum(2 if unicodedata.east_asian_width(c) in "WF" else 1 for c in s)
+def pad(s, w):
+    d = dw(s)
+    if d > w:
+        out, acc = "", 0
+        for c in ansi.sub("", s):
+            cw = 2 if unicodedata.east_asian_width(c) in "WF" else 1
+            if acc + cw > w - 2:
+                break
+            out += c; acc += cw
+        return out + "‥" + " " * max(0, w - acc - 2)
+    return s + " " * (w - d)
+for line in sys.stdin:
+    f = line.rstrip("\n").split("\t")
+    if len(f) < 9:
+        continue
+    disp = "".join([pad(f[3], W[0]), pad(f[4], W[1]), pad(f[5], W[2]),
+                    pad(f[6], W[3]), pad(f[7], W[4]), f[8]])
+    print("\t".join([f[0], f[1], f[2], disp]))
+' "$COL_W_STATUS" "$COL_W_WS" "$COL_W_TAB" "$COL_W_TOOL" "$COL_W_TITLE"
+}
+
+# 列見出しを一覧と同じ幅で整形する（_align_rows と同じ列幅を使う）。
+_align_header() {
+  python3 -c '
+import sys, unicodedata
+W = [int(x) for x in sys.argv[1:6]]
+def dw(s):
+    return sum(2 if unicodedata.east_asian_width(c) in "WF" else 1 for c in s)
+f = sys.stdin.read().rstrip("\n").split("\t")
+out = ""
+for i, w in enumerate(W):
+    out += f[i] + " " * max(0, w - dw(f[i]))
+out += f[5]
+print(out)
+' "$COL_W_STATUS" "$COL_W_WS" "$COL_W_TAB" "$COL_W_TOOL" "$COL_W_TITLE"
+}
+
+cmd_list() {
+  # $1: フィルタ状態を書いたファイルのパス（無ければ全件）
+  local state_file="${1:-}" filter="all" raw
+  if [ -n "$state_file" ] && [ -f "$state_file" ]; then
+    filter="$(cat "$state_file" 2>/dev/null || echo all)"
+  fi
+  raw="$(fetch_agents_raw)"
+  if [ -n "$state_file" ]; then
+    write_counts "$raw" "${state_file}.counts"
+  fi
+  [ -z "$raw" ] && return 0
+  if [ "$JSON_TOOL" = "jq" ]; then
+    printf '%s' "$raw" | json_to_tsv_jq "$filter" "$HOME" | _align_rows || true
+  else
+    printf '%s' "$raw" | json_to_tsv_py "$filter" "$HOME" | _align_rows || true
+  fi
+}
+
+# ヘッダー文字列を出力する。fzf の transform-header から呼ばれる想定で、
+# 実行中の fzf が渡す環境変数 FZF_INPUT_STATE / FZF_QUERY を見て
+# 通常モード / 検索モードでヘッダーの内容を切り替える。
+cmd_header() {
+  local state_file="${1:-}"
+  local input_state="${FZF_INPUT_STATE:-hidden}"
+  local query="${FZF_QUERY:-}"
+
+  if [ "$input_state" != "hidden" ]; then
+    printf '検索モード: 文字入力でツール名・ワークスペース名等を絞り込み\n'
+    printf '↑↓ / Ctrl-j / Ctrl-k で移動   Enter でフォーカス   Esc で検索終了・絞り込みは保持されます\n'
+    return 0
+  fi
+
+  local counts_file="" b="?" w="?" i="?" o="?" t="?"
+  if [ -n "$state_file" ]; then
+    counts_file="${state_file}.counts"
+    if [ -f "$counts_file" ]; then
+      IFS=$'\t' read -r b w i o t <"$counts_file" 2>/dev/null || true
+    fi
+  fi
+
+  printf 'j/k 移動   Enter フォーカス   a 承認   d 拒否   / 検索\n'
+  printf 'w 待ちのみ   r 再取得(絞り込み解除)   q 閉じる   (5秒ごとに自動更新)\n'
+
+  local counts_line
+  counts_line="$(printf '\033[1;31m● 承認待ち %s\033[0m   \033[1;33m◐ 作業中 %s\033[0m   \033[1;32m✓ 待機中 %s\033[0m' "$b" "$w" "$i")"
+  if [ "$o" != "0" ] && [ "$o" != "?" ]; then
+    counts_line="${counts_line}   $(printf '\033[1;90mその他 %s\033[0m' "$o")"
+  fi
+  # 件数サマリと一覧の間に 1 行空ける（区切りが無いと数字と行が地続きに見えるため）
+  printf '%s\n' "$counts_line"
+  # 列見出し。一覧と同じタブ区切りにして fzf のタブストップで揃える。
+  # 空行は fzf に落とされるため、区切りも兼ねてここに置く。
+  # 背景が透過しているため 1;90(暗いグレー)は読めない。下線付きの通常色にする。
+  printf '\033[4;37m%s\033[0m\n' "$(printf '状態\tws\ttab\ttool\tタイトル\tパス' | _align_header)"
+
+  if [ -n "$query" ]; then
+    printf '絞り込み中: %s   (r で解除)\n' "$query"
+  fi
+}
+
+# Esc が押されたときに呼ばれる。fzf の transform アクション用で、
+# 実行すべきアクション列を標準出力に「1行」印字する。
+#   検索モード中 (FZF_INPUT_STATE != hidden): 入力欄を隠し、キーを rebind し、
+#     ヘッダーを通常モードのものへ戻す
+#   通常モード   (FZF_INPUT_STATE == hidden): 何もせず abort（= 閉じる）
+cmd_esc() {
+  local state_file="${1:-}"
+  if [ "${FZF_INPUT_STATE:-hidden}" = "hidden" ]; then
+    echo abort
+    return 0
+  fi
+  printf 'hide-input+rebind(j,k,a,d,w,r,q)+transform-header("%s" _header "%s")\n' "$SCRIPT" "$state_file"
+}
+
+cmd_preview() {
+  local pane_id="${1:-}" kind="${2:-}"
+  if [ -z "$pane_id" ]; then
+    echo "(pane_id が取得できませんでした)"
+    return 0
+  fi
+  echo "pane   : $pane_id"
+  echo "tool   : ${kind:-?}"
+  echo "------------------------------------------------------------"
+  if ! herdr agent read "$pane_id" --source visible --lines 60 --format text 2>&1; then
+    echo "(herdr agent read に失敗しました。ペインが既に閉じている可能性があります)"
+  fi
+}
+
+cmd_focus() {
+  local pane_id="${1:-}"
+  if [ -z "$pane_id" ]; then
+    err "pane_id が指定されていません"
+    exit 1
+  fi
+  if out="$(herdr agent focus "$pane_id" 2>&1)"; then
+    echo "フォーカスしました: $pane_id"
+  else
+    err "フォーカスに失敗しました: $pane_id"
+    echo "$out" >&2
+    exit 1
+  fi
+}
+
+# a / d 共通: 画面への結果表示 + ログ追記 + Enter 待ち
+# $1=操作名(承認/拒否) $2=結果 $3=pane_id $4=kind $5=status $6=title $7=key(空可) $8=note
+_report_and_log() {
+  local action="$1" result="$2" pane_id="$3" kind="$4" status="$5" title="$6" key="$7" note="$8"
+
+  # 画面には何も出さない（a/d を押すたびに完了画面が挟まると操作が止まるため）。
+  # 何が起きたかは全てログに残す。結果は一覧の状態表示が更新されることで分かる。
+  mkdir -p "$(dirname "$SEND_LOG")" 2>/dev/null || true
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+    "$(date '+%Y-%m-%d %H:%M:%S')" "$action" "$result" "$pane_id" "$kind" "$status" "${key:--}" "$note" \
+    >>"$SEND_LOG" 2>/dev/null || true
+}
+
+
+# 押した瞬間の状態を herdr へ問い合わせて返す（pane_id, kind, status, title をタブ区切り）。
+# fzf のフィールド番号に頼ると --with-nth との組み合わせでずれる上、一覧は最大 5 秒古い。
+# 送信の可否は必ずこの関数の結果で判断する。
+_live_agent() {
+  local pane_id="$1" json
+  json=$(herdr agent list 2>/dev/null) || return 1
+  printf '%s' "$json" | jq -r --arg p "$pane_id" '
+    .result.agents[]? | select(.pane_id == $p)
+    | [.pane_id, (.agent // "unknown"), (.agent_status // "unknown"), (.terminal_title_stripped // "")]
+    | @tsv' | head -1
+}
+
+cmd_approve() {
+  local pane_id="${1:-}" kind="unknown" status="unknown" title=""
+  local key="" note="" live=""
+
+  if [ -z "$pane_id" ]; then
+    err "pane_id が指定されていません"
+    exit 1
+  fi
+
+  # 一覧の値ではなく、押した瞬間の状態を herdr から取り直す
+  if live=$(_live_agent "$pane_id") && [ -n "$live" ]; then
+    IFS=$'\t' read -r _ kind status title <<<"$live"
+  else
+    status="not_found"
+  fi
+
+  if [ "$status" != "blocked" ]; then
+    _report_and_log "承認" "スキップ(承認待ちではありません)" "$pane_id" "$kind" "$status" "$title" "" \
+      "対象は承認待ち(blocked)ではないため送信しませんでした。状態は押した時点で herdr に問い合わせた実際の値です。"
+    return 0
+  fi
+
+  case "$kind" in
+    claude)
+      key="1"
+      note="[文書ベース/未検証] Claude Code の承認ダイアログは数字キーで直接選択でき、既定選択は「1. Yes」とされています。"
+      ;;
+    codex)
+      key="y"
+      note="[ドキュメントで確認済み] Codex CLI の承認プロンプトは「1. Yes, proceed (y)」と明記されています。"
+      ;;
+    opencode)
+      key="y"
+      note="[文書ベース/未検証] OpenCode は y/n で応答すると案内されていますが、バージョンや tui.json の設定次第で変わりえます。"
+      ;;
+    *)
+      key=""
+      note="ツール '$kind' の承認キーは未調査・未確認です。誤送信を避けるため何も送信しません。"
+      ;;
+  esac
+
+  if [ -z "$key" ]; then
+    _report_and_log "承認" "スキップ(未調査ツール)" "$pane_id" "$kind" "$status" "$title" "" "$note"
+    return 0
+  fi
+
+  local result="送信失敗" send_out=""
+  if send_out="$(herdr agent send-keys "$pane_id" "$key" 2>&1)"; then
+    result="送信成功"
+  else
+    result="送信失敗: ${send_out:-不明なエラー}"
+  fi
+  _report_and_log "承認" "$result" "$pane_id" "$kind" "$status" "$title" "$key" "$note"
+}
+
+cmd_deny() {
+  local pane_id="${1:-}" kind="unknown" status="unknown" title=""
+  local key="" note="" live=""
+
+  if [ -z "$pane_id" ]; then
+    err "pane_id が指定されていません"
+    exit 1
+  fi
+
+  # 一覧の値ではなく、押した瞬間の状態を herdr から取り直す
+  if live=$(_live_agent "$pane_id") && [ -n "$live" ]; then
+    IFS=$'\t' read -r _ kind status title <<<"$live"
+  else
+    status="not_found"
+  fi
+
+  if [ "$status" != "blocked" ]; then
+    _report_and_log "拒否" "スキップ(承認待ちではありません)" "$pane_id" "$kind" "$status" "$title" "" \
+      "対象は承認待ち(blocked)ではないため送信しませんでした。状態は押した時点で herdr に問い合わせた実際の値です。"
+    return 0
+  fi
+
+  case "$kind" in
+    claude)
+      key="esc"
+      note="[ユーザー指示にもとづく/このスクリプト内では未検証] Claude Code の承認ダイアログは Escape でキャンセル（拒否）できるとされています。"
+      ;;
+    codex)
+      key="esc"
+      note="[ドキュメントで確認済み] Codex CLI の承認プロンプトには「3. No, and tell Codex what to do differently (esc)」と明記されています。"
+      ;;
+    opencode)
+      key="esc"
+      note="[文書ベース/未検証] OpenCode も Escape で拒否できると見られますが、未検証です。"
+      ;;
+    *)
+      key=""
+      note="ツール '$kind' の拒否キーは未調査・未確認です。誤送信を避けるため何も送信しません。"
+      ;;
+  esac
+
+  if [ -z "$key" ]; then
+    _report_and_log "拒否" "スキップ(未調査ツール)" "$pane_id" "$kind" "$status" "$title" "" "$note"
+    return 0
+  fi
+
+  local result="送信失敗" send_out=""
+  if send_out="$(herdr agent send-keys "$pane_id" "$key" 2>&1)"; then
+    result="送信成功"
+  else
+    result="送信失敗: ${send_out:-不明なエラー}"
+  fi
+  _report_and_log "拒否" "$result" "$pane_id" "$kind" "$status" "$title" "$key" "$note"
+}
+
+# ---- メイン TUI ----
+
+main_tui() {
+  # herdr サーバーに疎通できるか事前確認（読み取りのみ）
+  if ! herdr agent list >/dev/null 2>&1; then
+    err "herdr agent list に疎通できませんでした。herdr サーバーが起動しているか確認してください。"
+    exit 1
+  fi
+
+  local state_file
+  state_file="$(mktemp "${TMPDIR:-/tmp}/herdr-agent-console-filter.XXXXXX")"
+  echo all >"$state_file"
+  trap 'rm -f "$state_file" "${state_file}.counts"' EXIT INT TERM
+
+  local initial_list initial_header
+  initial_list="$(cmd_list "$state_file")"
+  # 起動元の環境に FZF_INPUT_STATE / FZF_QUERY が漏れ込んでいても（例えば
+  # herdr-cheatsheet など別の fzf 上でこのスクリプトを叩いた場合）、初期表示は
+  # 必ず通常モードのヘッダーになるよう明示的に固定する。
+  initial_header="$(FZF_INPUT_STATE=hidden FZF_QUERY='' cmd_header "$state_file")"
+
+  local preview_cmd focus_bind approve_bind deny_bind search_bind esc_bind w_bind r_bind every_bind
+  preview_cmd="\"$SCRIPT\" _preview {1} {2}"
+  focus_bind="enter:become(\"$SCRIPT\" _focus {1})"
+  approve_bind="a:execute-silent(\"$SCRIPT\" _approve {1})+reload-sync(\"$SCRIPT\" _list \"$state_file\")+transform-header(\"$SCRIPT\" _header \"$state_file\")"
+  deny_bind="d:execute-silent(\"$SCRIPT\" _deny {1})+reload-sync(\"$SCRIPT\" _list \"$state_file\")+transform-header(\"$SCRIPT\" _header \"$state_file\")"
+  # show-input で入力欄を出した後に transform-header を呼ぶことで、
+  # cmd_header が FZF_INPUT_STATE の更新後の値を見て検索モード用の文言を返す
+  # （esc_bind と同じ「show-input/hide-input を先に実行してから transform-header
+  # で読む」という順序に統一している）。
+  search_bind="/:show-input+unbind(j,k,a,d,w,r,q)+transform-header(\"$SCRIPT\" _header \"$state_file\")"
+  esc_bind="esc:transform(\"$SCRIPT\" _esc \"$state_file\")"
+  w_bind="w:execute-silent(echo blocked > \"$state_file\")+reload(\"$SCRIPT\" _list \"$state_file\")+transform-header(\"$SCRIPT\" _header \"$state_file\")"
+  r_bind="r:execute-silent(echo all > \"$state_file\")+clear-query+reload(\"$SCRIPT\" _list \"$state_file\")+transform-header(\"$SCRIPT\" _header \"$state_file\")"
+  every_bind="every(5):reload-sync(\"$SCRIPT\" _list \"$state_file\")+transform-header(\"$SCRIPT\" _header \"$state_file\")"
+
+  printf '%s' "$initial_list" | fzf \
+    --ansi \
+    --no-input \
+    --track \
+    --id-nth=1 \
+    --delimiter=$'\t' \
+    --with-nth=4 \
+    --layout=reverse \
+    --header="$initial_header" \
+    --preview="$preview_cmd" \
+    --preview-window='right:55%:wrap' \
+    --bind 'j:down' \
+    --bind 'k:up' \
+    --bind 'q:abort' \
+    --bind "$every_bind" \
+    --bind "$w_bind" \
+    --bind "$r_bind" \
+    --bind "$focus_bind" \
+    --bind "$approve_bind" \
+    --bind "$deny_bind" \
+    --bind "$search_bind" \
+    --bind "$esc_bind" \
+    >/dev/null
+}
+
+main() {
+  case "${1:-}" in
+    _list)
+      shift
+      cmd_list "$@"
+      ;;
+    _header)
+      shift
+      cmd_header "$@"
+      ;;
+    _esc)
+      shift
+      cmd_esc "$@"
+      ;;
+    _preview)
+      shift
+      cmd_preview "$@"
+      ;;
+    _focus)
+      shift
+      cmd_focus "$@"
+      ;;
+    _approve)
+      shift
+      cmd_approve "$@"
+      ;;
+    _deny)
+      shift
+      cmd_deny "$@"
+      ;;
+    -h | --help)
+      usage
+      ;;
+    "")
+      main_tui
+      ;;
+    *)
+      err "不明な引数です: $1"
+      usage
+      exit 1
+      ;;
+  esac
+}
+
+main "$@"

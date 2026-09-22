@@ -34,7 +34,12 @@
   # MBP では使用中のため Phase 3-2 で hosts/macbook/homebrew.nix に宣言する
   # （ADR-0004 ルール 3: 共通層に置くのは 2 台以上で使うものだけ）。
   homebrew.taps = [ ];
-  homebrew.brews = [ ];
+  homebrew.brews = [
+    # herdr: tmux + baton の代替として試用中のターミナルワークスペースマネージャ。
+    # cleanup = "zap" のため、ここに書かないと switch のたびに削除される。
+    # 移行を見送った場合はこの行を消せば次の switch で消える。
+    "herdr"
+  ];
 
   # 対話利用の brew（switch 経路ではない）は Homebrew 6.0 の tap trust に従うため、
   # ~/.homebrew/trust.json に信頼済み tap が無いと `brew info --cask aerospace` 等が

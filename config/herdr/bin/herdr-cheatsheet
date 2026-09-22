@@ -1,0 +1,348 @@
+#!/usr/bin/env bash
+# herdr-cheatsheet — チートシート一覧とプレビューを同時表示する (herdr 版)
+#
+# 元: dotfiles config/tmux/bin/tmux-cheatsheet-preview (165行) と
+#     dotfiles config/tmux/bin/tmux-cheatsheet (46行) (どちらも読み取り専用で参照)
+#
+# tmux 版との違い:
+#  - この2本は tmux の API を一切呼んでおらず、fzf + glow だけで完結する
+#    純粋なファイルビューアだったため、UI 部分 (fzf のレイアウト/キー/配色) は
+#    tmux-cheatsheet-preview からほぼそのまま流用している。
+#  - tmux-cheatsheet-preview は `~/.config/tmux/docs/CHEATSHEET.md` を
+#    「最初に並べる固定ファイル」として特別扱いしていた。このリポジトリでは
+#    dotfiles 配下にしかファイルを置けない制約があり、`~/.config/herdr/docs/`
+#    のような静的ファイルを新設できない (作成先は ~/.config/herdr/bin/ のみ)。
+#    そこで、tmux 用の特別扱いを herdr 用に差し替え、実行のたびに
+#    `~/.config/herdr/config.toml` の [keys] と [[keys.command]] を解析して
+#    Markdown を動的生成し、一時ファイルに書き出してから同じ仕組みで表示する。
+#    静的ファイルを持たないため、config.toml を直接編集した内容が
+#    次回起動時にそのまま反映される。
+#  - tmux-cheatsheet-preview は tool=="tmux" のときだけ "Prefix: Ctrl+Q" を
+#    プレビュー冒頭に固定表示していた。herdr 版では tool=="herdr" のときに
+#    config.toml から prefix の値を都度読み直して表示する (ハードコードしない)。
+#  - 依存コマンドの存在確認 (fzf, glow) はそのまま踏襲。加えて config.toml の
+#    解析に jq は使わず (TOML であり JSON ではないため)、コメント込みで
+#    行ベースに解析できる python3 を使う。
+
+set -euo pipefail
+
+# type = "shell" のデタッチ実行は PATH が最小で /opt/homebrew/bin が入らず、
+# herdr / jq / fzf が見つからずに exit 127 になる。ここで補う。
+# herdr 自身の場所は HERDR_BIN_PATH がペインに渡されていればそれを使う。
+if [ -n "${HERDR_BIN_PATH:-}" ]; then
+  PATH="$(dirname "$HERDR_BIN_PATH"):$PATH"
+fi
+PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+export PATH
+
+
+# popup で実行されると終了と同時に窓が閉じ、エラーが読めない。
+# 異常終了の直前に必ず呼んで、ユーザーがメッセージを読めるようにする。
+_pause_on_error() {
+  echo >&2
+  echo "Enter で閉じます" >&2
+  read -r _ </dev/tty 2>/dev/null || true
+}
+trap '[ $? -ne 0 ] && _pause_on_error' EXIT
+
+
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+HERDR_CONFIG="$CONFIG_HOME/herdr/config.toml"
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+SCRIPT_PATH="$SCRIPT_DIR/$(basename "${BASH_SOURCE[0]}")"
+HERDR_MD="${TMPDIR:-/tmp}/herdr-cheatsheet-generated.md"
+
+render_preview() {
+  local path="$1"
+  local start_line="$2"
+  local end_line="$3"
+  local tool="$4"
+  local title="$5"
+  local width="${FZF_PREVIEW_COLUMNS:-100}"
+
+  if [ "$width" -gt 8 ]; then
+    width=$((width - 4))
+  fi
+
+  {
+    printf '# %s · %s\n\n' "$tool" "$title"
+    if [ "$tool" = "herdr" ]; then
+      local herdr_prefix
+      herdr_prefix=$(grep -m1 '^prefix' "$HERDR_CONFIG" 2>/dev/null | sed -E 's/^prefix[[:space:]]*=[[:space:]]*"([^"]*)".*/\1/')
+      printf '> Prefix: **%s**\n\n' "${herdr_prefix:-ctrl+q}"
+    fi
+    sed -n "${start_line},${end_line}p" "$path" | sed '1{/^#/d;}'
+  } | glow -s dark -w "$width" -
+}
+
+if [ "${1:-}" = "--preview" ]; then
+  shift
+  render_preview "$@"
+  exit 0
+fi
+
+for command in fzf glow python3; do
+  if ! command -v "$command" >/dev/null 2>&1; then
+    printf 'Required command not found: %s\n' "$command" >&2
+    exit 1
+  fi
+done
+
+if [ ! -f "$HERDR_CONFIG" ]; then
+  printf 'herdr config.toml not found: %s\n' "$HERDR_CONFIG" >&2
+  exit 1
+fi
+
+# config.toml の [keys] / [[keys.command]] を Markdown に変換する。
+# コメント (直前の連続する # 行) をその下のキー行の説明として拾う。
+python3 - "$HERDR_CONFIG" "$HERDR_MD" <<'PYEOF'
+import re
+import sys
+
+config_path, out_path = sys.argv[1], sys.argv[2]
+
+with open(config_path, encoding="utf-8") as f:
+    lines = f.readlines()
+
+pending = []
+section = None  # None | "keys" | "command"
+key_rows = []    # (key, value, desc)
+commands = []    # dict
+cur_cmd = None
+
+key_re = re.compile(r'^([A-Za-z0-9_]+)\s*=\s*(.*)$')
+
+
+def extract_value(rest):
+    # TOML 基本文字列 ("...") のエスケープ (\" \\) を素朴に処理する。
+    # 例: command = "open \"$(pbpaste)\"" のような埋め込みクォートを
+    # 素の正規表現 [^"]* で切り出すと最初の \" で途切れてしまうため、
+    # バックスラッシュを見たら次の1文字をそのまま採用して読み進める。
+    rest = rest.strip()
+    if rest.startswith('"'):
+        buf = []
+        i = 1
+        while i < len(rest):
+            c = rest[i]
+            if c == "\\" and i + 1 < len(rest):
+                nc = rest[i + 1]
+                if nc in ('"', "\\"):
+                    buf.append(nc)
+                    i += 2
+                    continue
+                buf.append(c)
+                i += 1
+                continue
+            if c == '"':
+                break
+            buf.append(c)
+            i += 1
+        return "".join(buf)
+    return rest
+
+
+def flush_cmd():
+    global cur_cmd
+    if cur_cmd is not None and cur_cmd.get("key"):
+        commands.append(cur_cmd)
+    cur_cmd = None
+
+
+for raw in lines:
+    line = raw.rstrip("\n")
+    stripped = line.strip()
+
+    if stripped.startswith("#"):
+        pending.append(stripped.lstrip("#").strip())
+        continue
+
+    if stripped == "":
+        pending = []
+        continue
+
+    if stripped == "[keys]":
+        section = "keys"
+        pending = []
+        continue
+
+    if stripped == "[[keys.command]]":
+        flush_cmd()
+        cur_cmd = {"desc": " ".join(p for p in pending if p)}
+        section = "command"
+        pending = []
+        continue
+
+    if stripped.startswith("[") and stripped != "[[keys.command]]":
+        # 他のセクションに入ったら keys 系の解析を終える
+        flush_cmd()
+        section = None
+        pending = []
+        continue
+
+    m = key_re.match(stripped)
+    if not m:
+        pending = []
+        continue
+    key, rest = m.group(1), m.group(2)
+    val = extract_value(rest)
+
+    if section == "command" and cur_cmd is not None:
+        cur_cmd[key] = val
+    elif section == "keys":
+        key_rows.append((key, val, " ".join(p for p in pending if p)))
+        pending = []
+
+flush_cmd()
+
+out = []
+out.append("# herdr\n")
+out.append("\n")
+out.append("## 基本キーバインド\n")
+out.append("\n")
+out.append("| キー | 動作 | 補足 |\n")
+out.append("|------|------|------|\n")
+for key, val, desc in key_rows:
+    if not val:
+        continue
+    desc_cell = desc.replace("|", "\\|") if desc else ""
+    out.append(f"| `{val}` | {key} | {desc_cell} |\n")
+out.append("\n")
+
+out.append("## カスタムコマンド\n")
+out.append("\n")
+out.append("| キー | 種別 | コマンド | 補足 |\n")
+out.append("|------|------|----------|------|\n")
+for cmd in commands:
+    key = cmd.get("key", "")
+    typ = cmd.get("type", "")
+    command = cmd.get("command", "")
+    desc = cmd.get("desc", "").replace("|", "\\|")
+    command_cell = command.replace("|", "\\|")
+    out.append(f"| `{key}` | {typ} | `{command_cell}` | {desc} |\n")
+out.append("\n")
+
+with open(out_path, "w", encoding="utf-8") as f:
+    f.writelines(out)
+PYEOF
+
+entries=()
+
+add_entry() {
+  local tool="$1"
+  local title="$2"
+  local path="$3"
+  local start_line="$4"
+  local end_line="$5"
+  local tool_label
+  local plain_title
+  local display
+
+  tool_label=$(printf '%s' "$tool" | tr '[:lower:]' '[:upper:]')
+  plain_title=$(printf '%s' "$title" | sed 's/`//g')
+  printf -v display '  \033[38;2;130;170;255m%-10s\033[0m  %s' "$tool_label" "$plain_title"
+  entries+=("$display"$'\t'"$path"$'\t'"$start_line"$'\t'"$end_line"$'\t'"$tool"$'\t'"$plain_title")
+}
+
+add_sectioned_file() {
+  local path="$1"
+  local tool="$2"
+  local line_count
+  local sections=()
+  local index
+  local section
+  local start_line
+  local end_line
+  local next_line
+  local title
+
+  line_count=$(wc -l < "$path" | tr -d ' ')
+  while IFS=$'\t' read -r start_line title; do
+    sections+=("$start_line"$'\t'"$title")
+  done < <(awk '/^## / { title=$0; sub(/^## /, "", title); printf "%d\t%s\n", NR, title }' "$path")
+
+  if [ ${#sections[@]} -eq 0 ]; then
+    title=$(awk '/^# / { sub(/^# /, ""); print; exit }' "$path")
+    add_entry "$tool" "${title:-$(basename "$path" .md)}" "$path" 1 "$line_count"
+    return
+  fi
+
+  for ((index = 0; index < ${#sections[@]}; index++)); do
+    section="${sections[$index]}"
+    start_line="${section%%$'\t'*}"
+    title="${section#*$'\t'}"
+    end_line="$line_count"
+    if [ $((index + 1)) -lt ${#sections[@]} ]; then
+      next_line="${sections[$((index + 1))]%%$'\t'*}"
+      end_line=$((next_line - 1))
+    fi
+    add_entry "$tool" "$title" "$path" "$start_line" "$end_line"
+  done
+}
+
+add_topic_file() {
+  local path="$1"
+  local tool="$2"
+  local line_count
+  local title
+
+  line_count=$(wc -l < "$path" | tr -d ' ')
+  title=$(awk '/^# / { sub(/^# /, ""); print; exit }' "$path")
+  add_entry "$tool" "${title:-$(basename "$path" .md)}" "$path" 1 "$line_count"
+}
+
+# 最初に herdr を並べ、起動直後から現在の主要キーを確認できるようにする
+# (tmux-cheatsheet-preview が tmux を最初に並べていたのと同じ発想)。
+add_sectioned_file "$HERDR_MD" "herdr"
+
+for path in "$CONFIG_HOME"/*/docs/CHEATSHEET.md; do
+  [ -f "$path" ] || continue
+  tool=$(printf '%s' "$path" | sed 's|.*/\.config/\([^/]*\)/.*|\1|')
+  [ "$tool" = "tmux" ] && continue
+  add_sectioned_file "$path" "$tool"
+done
+
+for path in "$CONFIG_HOME"/*/docs/cheatsheet/*.md; do
+  [ -f "$path" ] || continue
+  [ "$(basename "$path")" = "README.md" ] && continue
+  tool=$(printf '%s' "$path" | sed 's|.*/\.config/\([^/]*\)/.*|\1|')
+  add_topic_file "$path" "$tool"
+done
+
+if [ ${#entries[@]} -eq 0 ]; then
+  printf 'No cheatsheets found.\n' >&2
+  exit 1
+fi
+
+printf '%s\n' "${entries[@]}" | fzf \
+  --ansi \
+  --delimiter=$'\t' \
+  --with-nth=1 \
+  --layout=reverse \
+  --cycle \
+  --scroll-off=3 \
+  --no-multi \
+  --info=inline-right \
+  --border=rounded \
+  --border-label=' Cheat Sheet · Preview (herdr) ' \
+  --input-border=rounded \
+  --input-label=' Search ' \
+  --list-border=rounded \
+  --list-label=' Topics ' \
+  --preview-border=rounded \
+  --preview-label=' Details ' \
+  --header-border=line \
+  --header=' ↑↓/Ctrl-jk: topic   Enter: maximize   Ctrl-d/u: scroll   Ctrl-/: hide   Esc: close ' \
+  --prompt=' 󰍉  ' \
+  --pointer='▶' \
+  --marker='●' \
+  --preview="$SCRIPT_PATH --preview {2} {3} {4} {5} {6}" \
+  --preview-window='right,72%,border-left,wrap' \
+  --bind='ctrl-d:preview-half-page-down,ctrl-u:preview-half-page-up' \
+  --bind='enter:change-preview-window(down,99%,border-top,wrap|right,72%,border-left,wrap)' \
+  --bind='ctrl-/:change-preview-window(hidden|)' \
+  --color='fg:#c8d3f5,bg:#1e2030,hl:#ffc777' \
+  --color='fg+:#c8d3f5,bg+:#3654a7,hl+:#ffc777' \
+  --color='pointer:#c3e88d,marker:#c3e88d,prompt:#82aaff,spinner:#82aaff' \
+  --color='border:#394270,label:#82aaff,header:#828bb8,info:#828bb8' \
+  --color='preview-border:#394270,preview-label:#c3e88d,list-border:#394270,list-label:#82aaff,input-border:#394270,input-label:#82aaff' \
+  >/dev/null || true

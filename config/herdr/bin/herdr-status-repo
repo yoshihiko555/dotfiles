@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# herdr-status-repo — タブバー右端に、アクティブなワークスペースのリポジトリ名
+# (リンクされたワークツリーならブランチも) を表示する。
+#
+# 元: dotfiles config/tmux/bin/tmux-session-icon / tmux-status-right のプロジェクト
+#     アイコン部分（読み取り専用で参照。アイコンのコードポイントのみ流用した）。
+#
+# ~/.config/herdr/config.toml の [ui] tab_bar_right から
+# { type = "command", interval_seconds = 5 } で 5 秒おきに呼ばれる想定。
+#
+# herdr-init-panes と同じ3つの制約に従う:
+#  1. PATH が最小になることがあるので先頭で補う。
+#  2. 失敗が見えないが、この用途 (5秒毎の定期実行) で通知を出すと鳴りっぱなしに
+#     なるため出さない。失敗時は空文字を返して静かに終わる (exit は常に 0)。
+#  3. mapfile は使えない (bash 3.2) — 本スクリプトは配列を使わないので該当なし。
+#
+# コンテキスト変数について（実際に config.toml へ登録し reload-config させた上で
+# 実測した。ドキュメント化されていないため今後のバージョンで変わる可能性がある）:
+#   HERDR_ACTIVE_WORKSPACE_ID / HERDR_ACTIVE_TAB_ID / HERDR_ACTIVE_PANE_ID /
+#   HERDR_ACTIVE_PANE_CWD / HERDR_SOCKET_PATH / HERDR_BIN_PATH が渡ってくる。
+#   HERDR_ACTIVE_PANE_CWD を直接使えるため、通常経路では herdr CLI (ソケット経由)を
+#   一切呼ばない。サーバー自身がこのコマンドを実行している最中にソケットへ問い合わせて
+#   デッドロック/タイムアウトする懸念を避けるため。
+#   `timeout` コマンドは PATH 補強後も見つからなかった (exit 127) ため使わない。
+
+set -u
+
+PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+export PATH
+
+# アクティブペインの cwd。env に無ければ herdr CLI へフォールバック
+# (手動実行や将来の変更に備える)。フォールバックも失敗したら黙って空文字で終わる。
+cwd="${HERDR_ACTIVE_PANE_CWD:-}"
+if [ -z "$cwd" ] && command -v herdr >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+  cur=$(herdr pane current --current 2>/dev/null) || cur=""
+  cwd=$(printf '%s' "$cur" | jq -r '.result.pane.cwd // empty' 2>/dev/null)
+fi
+[ -n "$cwd" ] || exit 0
+[ -d "$cwd" ] || exit 0
+
+command -v git >/dev/null 2>&1 || exit 0
+
+git_common_dir=$(git -C "$cwd" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || exit 0
+git_dir=$(git -C "$cwd" rev-parse --path-format=absolute --git-dir 2>/dev/null) || exit 0
+[ -n "$git_common_dir" ] || exit 0
+
+repo_root=$(dirname "$git_common_dir")
+repo_name=$(basename "$repo_root")
+[ -n "$repo_name" ] || exit 0
+
+# Nerd Font アイコン。config/tmux/bin/tmux-session-icon / tmux-status-right と同じグリフ。
+ICON_REPO=$(printf '\xee\xa9\xa2')     # nf-cod-repo (U+EA62)
+ICON_WORKTREE=$(printf '\xee\x9c\xa8') # nf-cod-git_merge (U+E728)
+
+if [ "$git_dir" != "$git_common_dir" ]; then
+  # git-dir と git-common-dir が異なる = リンクされたワークツリー。ブランチも添える。
+  branch=$(git -C "$cwd" branch --show-current 2>/dev/null)
+  if [ -z "$branch" ]; then
+    # detached HEAD 用のフォールバック
+    branch=$(git -C "$cwd" rev-parse --short HEAD 2>/dev/null)
+  fi
+  if [ -n "$branch" ]; then
+    printf '%s %s:%s\n' "$ICON_WORKTREE" "$repo_name" "$branch"
+  else
+    printf '%s %s\n' "$ICON_WORKTREE" "$repo_name"
+  fi
+else
+  printf '%s %s\n' "$ICON_REPO" "$repo_name"
+fi

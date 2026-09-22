@@ -21,6 +21,12 @@ in
         "aerospace".source = mkLink "config/aerospace";
         "gh/config.yml".source = mkLink "config/gh/config.yml";
         "ghostty".source = mkLink "config/ghostty";
+        # herdr はディレクトリごと張れない。~/.config/herdr/ には herdr 自身が書く
+        # ソケット・ログ・session.json が同居するため、設定とスクリプトだけを張る。
+        # config.toml は herdr 自身も書き換えるが（オンボーディング / config reset-keys）、
+        # symlink を辿って実体に書くことを実測で確認済み（inode 保持、symlink も壊れない）。
+        "herdr/config.toml".source = mkLink "config/herdr/config.toml";
+        "herdr/bin".source = mkLink "config/herdr/bin";
         "karabiner".source = mkLink "config/karabiner";
         "lazygit".source = mkLink "config/lazygit";
         "nix".source = mkLink "config/nix";

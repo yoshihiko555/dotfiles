@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+# herdr-kill-workspace-checked — 現在のワークスペースを終了する (確認付き, herdr 版)
+#
+# 元: dotfiles config/tmux/bin/tmux-kill-current-session (18行、読み取り専用で参照)
+#
+# tmux 版との違い:
+#  - tmux はセッション名を対象にした `kill-session` だが、herdr では workspace
+#    を対象にした `workspace close` を使う。対象は $HERDR_WORKSPACE_ID
+#    (herdr がキーバインド実行時に注入する呼び出し元ワークスペースID) を使い、
+#    無ければ `herdr pane current --current` から解決する。
+#  - 実行中プロセス判定: tmux 版は `pane_current_command` (フォアグラウンドの
+#    コマンド名ひとつ) をシェル名の一覧と比較するだけだった。herdr CLI には
+#    同等の「代表コマンド名ひとつ」を返す仕組みが無いため、
+#    `herdr pane process-info --pane <id>` の foreground_processes を使う。
+#    これはフォアグラウンドのプロセスグループ全体 (子プロセスも含む) を返すため、
+#    tmux 版より広め(誤検知しやすい)の判定になる。実機確認では、シェルの
+#    プロンプト待ちペインは foreground_processes が zsh 1件のみ、Claude Code
+#    実行中のペインは claude 本体に加えて配下の MCP サーバー等の node
+#    プロセスも列挙された。「フォアグラウンドプロセスがシェル1つだけでない」
+#    ことを「実行中」の判定条件にしている。
+#  - tmux の `confirm-before` ポップアップの代わりに、herdr の popup 型コマンドは
+#    通常の TTY を持つため `read -r -p` で確認する。
+#  - herdr の `workspace close` は、対象が worktree グループの親ワークスペース
+#    である場合 `workspace_group_close_required` エラーを返すことがある。
+#    herdr のスキルガイドが「バイパス目的で --group を付けない」ことを
+#    明示しているため、このスクリプトは --group を付けずエラーメッセージを
+#    そのまま表示して終了する (強制終了はしない)。
+#
+# 破壊的操作 (実際にワークスペースを閉じる) を含むため、このスクリプト自体は
+# 動作確認のための実行はしていない (bash -n の構文チェックと、herdr CLI が
+# --help どおりの引数になっているかの確認に留めた)。
+
+set -euo pipefail
+
+# type = "shell" のデタッチ実行は PATH が最小で /opt/homebrew/bin が入らず、
+# herdr / jq / fzf が見つからずに exit 127 になる。ここで補う。
+# herdr 自身の場所は HERDR_BIN_PATH がペインに渡されていればそれを使う。
+if [ -n "${HERDR_BIN_PATH:-}" ]; then
+  PATH="$(dirname "$HERDR_BIN_PATH"):$PATH"
+fi
+PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+export PATH
+
+
+# popup で実行されると終了と同時に窓が閉じ、エラーが読めない。
+# 異常終了の直前に必ず呼んで、ユーザーがメッセージを読めるようにする。
+_pause_on_error() {
+  echo >&2
+  echo "Enter で閉じます" >&2
+  read -r _ </dev/tty 2>/dev/null || true
+}
+trap '[ $? -ne 0 ] && _pause_on_error' EXIT
+
+
+for cmd in herdr jq; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "herdr-kill-workspace-checked: 必要なコマンドが見つかりません: $cmd" >&2
+    exit 1
+  fi
+done
+
+workspace_id="${HERDR_WORKSPACE_ID:-}"
+if [ -z "$workspace_id" ]; then
+  cur=$(herdr pane current --current 2>&1) || {
+    echo "herdr-kill-workspace-checked: 対象ワークスペースを特定できませんでした: $cur" >&2
+    exit 1
+  }
+  workspace_id=$(printf '%s' "$cur" | jq -r '.result.pane.workspace_id // empty')
+fi
+if [ -z "$workspace_id" ]; then
+  echo "herdr-kill-workspace-checked: 対象ワークスペースを特定できませんでした" >&2
+  exit 1
+fi
+
+ws_info=$(herdr workspace get "$workspace_id" 2>&1) || {
+  echo "herdr-kill-workspace-checked: workspace get に失敗しました: $ws_info" >&2
+  exit 1
+}
+label=$(printf '%s' "$ws_info" | jq -r '.result.workspace.label // .result.workspace.workspace_id')
+
+panes_json=$(herdr pane list --workspace "$workspace_id" 2>&1) || {
+  echo "herdr-kill-workspace-checked: pane list に失敗しました: $panes_json" >&2
+  exit 1
+}
+# mapfile は bash 4 以降。macOS 標準の bash 3.2 でも動くよう while read で組む。
+pane_ids=()
+while IFS= read -r _pid; do
+  [ -n "$_pid" ] && pane_ids+=("$_pid")
+done < <(printf '%s' "$panes_json" | jq -r '.result.panes[].pane_id')
+
+running=0
+for pid in "${pane_ids[@]}"; do
+  info=$(herdr pane process-info --pane "$pid" 2>/dev/null) || continue
+  shell_only=$(printf '%s' "$info" | jq -r '
+    (.result.process_info.foreground_processes // []) as $fg
+    | ($fg | length) == 1
+      and (($fg[0].argv0 // "") | test("^(bash|zsh|fish|sh|dash)$"))
+  ')
+  if [ "$shell_only" != "true" ]; then
+    running=$((running + 1))
+  fi
+done
+
+if [ "$running" -gt 0 ]; then
+  echo "ワークスペース '${label}' (${workspace_id}) に実行中プロセスのあるペインが ${running} 個あります。"
+  read -r -p "終了しますか? (y/N): " reply
+  case "$reply" in
+    y|Y) ;;
+    *)
+      echo "中止しました。"
+      exit 0
+      ;;
+  esac
+fi
+
+close_out=$(herdr workspace close "$workspace_id" 2>&1) || {
+  echo "herdr-kill-workspace-checked: workspace close に失敗しました: ${close_out}" >&2
+  echo "(worktree グループの親の場合 workspace_group_close_required が返ることがあります。--group による強制はこのスクリプトでは行いません)" >&2
+  exit 1
+}
+echo "ワークスペース '${label}' を終了しました。"

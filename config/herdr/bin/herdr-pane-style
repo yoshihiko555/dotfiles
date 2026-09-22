@@ -1,0 +1,56 @@
+#!/bin/bash
+# ペインの見た目 3 設定を即座に切り替えて herdr に反映する。
+# 見比べ用のヘルパー。設定ファイルを書き換えてリロードするだけ。
+#
+#   herdr-pane-style              現在の値を表示
+#   herdr-pane-style borders off  外枠を消す
+#   herdr-pane-style gaps on      ペイン間の隙間を出す
+#   herdr-pane-style scroll off   スクロールバーを消す
+#   herdr-pane-style all off      3 つまとめて
+set -euo pipefail
+
+CONFIG="$HOME/.config/herdr/config.toml"
+
+key_of() {
+  case "$1" in
+    borders) echo "pane_outer_borders" ;;
+    gaps)    echo "pane_gaps" ;;
+    scroll)  echo "pane_scrollbars" ;;
+    *) echo "不明な項目: $1 (borders / gaps / scroll / all)" >&2; exit 1 ;;
+  esac
+}
+
+show() {
+  echo "現在の値:"
+  for n in borders gaps scroll; do
+    k=$(key_of "$n")
+    v=$(grep -E "^${k} = " "$CONFIG" | head -1 | awk '{print $3}')
+    printf "  %-8s %-20s %s\n" "$n" "$k" "${v:-(未設定=既定 true)}"
+  done
+}
+
+set_one() {
+  local k="$1" v="$2"
+  if grep -qE "^${k} = " "$CONFIG"; then
+    sed -i '' -E "s/^${k} = (true|false)/${k} = ${v}/" "$CONFIG"
+  else
+    echo "$k が設定ファイルに見つかりません" >&2; exit 1
+  fi
+}
+
+[ $# -eq 0 ] && { show; exit 0; }
+
+case "${2:-}" in
+  on|true)   val=true ;;
+  off|false) val=false ;;
+  *) echo "使い方: herdr-pane-style <borders|gaps|scroll|all> <on|off>" >&2; exit 1 ;;
+esac
+
+if [ "$1" = "all" ]; then
+  for n in borders gaps scroll; do set_one "$(key_of "$n")" "$val"; done
+else
+  set_one "$(key_of "$1")" "$val"
+fi
+
+herdr server reload-config >/dev/null
+show

@@ -1,0 +1,137 @@
+#!/bin/bash
+# herdr-launch-claude-work — 現在アクティブなタブの全ペインで会社用 Claude Code を auto モード起動 (herdr 版)
+#
+# 元: dotfiles config/tmux/bin/tmux-launch-claude-work (89行、読み取り専用で参照)
+#
+# Usage: herdr-launch-claude-work [pane_id]
+#
+#   Loupedeck の「アプリを実行」から呼ばれる想定 (herdr のキーバインドは持たない)。
+#   省略時はフォーカス中のペイン (herdr pane current --current) が属するタブを対象にする。
+#   TTY も HERDR_PANE_ID も無い状態 (Loupedeck 経由) で動くため、launchd 経由の
+#   最小 PATH に無い herdr を先頭で補う。pane_id を渡した場合はそのタブが対象 (検証・手動用)。
+#
+#   シェルが待機しているペインにだけコマンドを送る。すでに claude / nvim 等が
+#   動いているペインはスキップし、二重起動を防ぐ。
+#
+# 環境変数:
+#   HERDR_CLAUDE_WORK_CMD  送るコマンド (既定: ccw --permission-mode auto)
+#
+# tmux 版との違い:
+#  - 対象タブの解決は tmux の `list-clients` (最終操作クライアントのアクティブ
+#    ウィンドウ) の代わりに `herdr pane current --current` (アプリ全体で
+#    フォーカス中のペイン) を使う。引数で pane_id を渡した場合はそれをそのまま
+#    対象タブの代表ペインとする。
+#  - ウィンドウ内ペイン列挙は `tmux list-panes -F '#{pane_id} #{pane_current_command}'`
+#    の代わりに `herdr pane layout --pane <id>` の `.result.layout.panes` を使う。
+#    herdr にはペイン番号の概念が無いため、rect を (y, x) の順でソートし
+#    「左上→右上→左下→右下」の読み順を走査順とみなす (herdr-init-panes と同じ方式)。
+#  - 起動可否判定は `pane_current_command` の代わりに
+#    `herdr pane process-info --pane <id>` の foreground_processes を見る。
+#    「フォアグラウンドのプロセスがシェル1つだけ」であれば空きペインとみなす
+#    (herdr-init-panes と同じ判定方式)。tmux 版の pane_current_command 判定より
+#    やや広め (alt screen を使わない常駐プロセスも検知しうる) だが、狙いは同じ。
+#  - `tmux send-keys -l ... && tmux send-keys Enter` の代わりに
+#    `herdr pane run <pane_id> <command>` (コマンド送出 + Enter を1コマンドで行う) を使う。
+#  - 最後の `tmux select-pane -t ...` に相当する明示的なフォーカス切り替えは行わない。
+#    herdr の `pane focus` は隣接ペイン方向指定のみで pane_id 直接指定のフォーカスが
+#    無いため (herdr-init-panes と同じ理由)。
+#  - 結果通知は tmux 版の「status line 表示 + (tmux 外呼び出し時のみ) macOS 通知」の
+#    代わりに `herdr notification show` に統一する。成功時は明示的に呼び、
+#    失敗時は下記の trap 経由 (herdr-init-panes / herdr-split-layout と同じ方式) で
+#    汎用メッセージを出す。
+
+set -euo pipefail
+
+# type = "shell" のデタッチ実行は PATH が最小で /opt/homebrew/bin が入らず、
+# herdr / jq が見つからずに exit 127 になる。ここで補う。
+# herdr 自身の場所は HERDR_BIN_PATH がペインに渡されていればそれを使う。
+if [ -n "${HERDR_BIN_PATH:-}" ]; then
+  PATH="$(dirname "$HERDR_BIN_PATH"):$PATH"
+fi
+PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+export PATH
+
+# type = "shell" はデタッチ実行のため stderr がどこにも出ない。
+# 失敗した理由が分からないと「押したのに何も起きない」になるので、
+# 異常終了時は必ず herdr のトースト通知に出す。
+_notify_fail() {
+  herdr notification show "$(basename "$0")" --body "$1" >/dev/null 2>&1 || true
+}
+trap 'rc=$?; [ $rc -ne 0 ] && _notify_fail "失敗しました (exit=$rc)。詳細はペインで直接実行して確認してください。"' EXIT
+
+for cmd in herdr jq; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "herdr-launch-claude-work: 必要なコマンドが見つかりません: $cmd" >&2
+    exit 1
+  fi
+done
+
+launch_cmd="${HERDR_CLAUDE_WORK_CMD:-ccw --permission-mode auto}"
+
+# 対象ペインの解決 (このペインが属するタブを起動対象にする)
+PANE_ID="${1:-}"
+if [ -z "$PANE_ID" ]; then
+  cur=$(herdr pane current --current 2>&1) || {
+    echo "herdr-launch-claude-work: 対象ペインを特定できませんでした: $cur" >&2
+    exit 1
+  }
+  PANE_ID=$(printf '%s' "$cur" | jq -r '.result.pane.pane_id // empty')
+fi
+if [ -z "$PANE_ID" ]; then
+  echo "herdr-launch-claude-work: 対象ペインを特定できませんでした" >&2
+  exit 1
+fi
+
+layout=$(herdr pane layout --pane "$PANE_ID" 2>&1) || {
+  echo "herdr-launch-claude-work: pane layout に失敗しました: $layout" >&2
+  exit 1
+}
+
+# rect.y, rect.x の順でソートし、左上→右上→左下→右下 の読み順で走査する。
+# mapfile は bash 4 以降の機能で macOS 標準の bash 3.2 には無いため while read で組む。
+pane_ids=()
+while IFS= read -r _pid; do
+  [ -n "$_pid" ] && pane_ids+=("$_pid")
+done < <(printf '%s' "$layout" | jq -r '.result.layout.panes | sort_by(.rect.y, .rect.x) | .[].pane_id')
+
+if [ "${#pane_ids[@]}" -eq 0 ]; then
+  echo "herdr-launch-claude-work: 対象タブのペインを取得できませんでした" >&2
+  exit 1
+fi
+
+# シェル待機中のペインにだけ拾う (herdr-init-panes と同じ判定方式)
+free_panes=()
+busy_panes=()
+for pid in "${pane_ids[@]}"; do
+  info=$(herdr pane process-info --pane "$pid" 2>&1) || {
+    echo "herdr-launch-claude-work: pane process-info に失敗しました (${pid}): ${info}" >&2
+    exit 1
+  }
+  shell_only=$(printf '%s' "$info" | jq -r '
+    (.result.process_info.foreground_processes // []) as $fg
+    | ($fg | length) == 1
+      and (($fg[0].argv0 // "") | test("^(bash|zsh|fish|sh|dash)$"))
+  ')
+  if [ "$shell_only" = "true" ]; then
+    free_panes+=("$pid")
+  else
+    cmd_name=$(printf '%s' "$info" | jq -r '.result.process_info.foreground_processes[0].name // "unknown"')
+    busy_panes+=("${pid}:${cmd_name}")
+  fi
+done
+
+if [ "${#free_panes[@]}" -eq 0 ]; then
+  echo "herdr-launch-claude-work: 起動できるペインがありません (${busy_panes[*]})" >&2
+  exit 1
+fi
+
+for pid in "${free_panes[@]}"; do
+  herdr pane run "$pid" "$launch_cmd" >/dev/null
+done
+
+summary="${#free_panes[@]} ペインで起動"
+if [ "${#busy_panes[@]}" -gt 0 ]; then
+  summary="${summary} (${#busy_panes[@]} ペインは実行中のためスキップ)"
+fi
+herdr notification show "herdr-launch-claude-work" --body "$summary" >/dev/null 2>&1 || true
+echo "$summary" >&2

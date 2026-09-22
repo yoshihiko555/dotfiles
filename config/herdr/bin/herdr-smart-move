@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+# herdr-smart-move — Alt+H/J/K/L によるペイン越境移動 (herdr 版 smart-splits 連携)
+#
+# 元: dotfiles config/tmux/conf/smart-splits.conf の is_vim 判定
+#   is_vim="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\S+\/)?g?(view|n?vim?x?)(diff)?$'"
+#   bind -n M-h if-shell "$is_vim" "send-keys M-h" "select-pane -L"
+# tmux は「フォアグラウンドプロセスが vim/nvim 系かどうか」で分岐し、
+#   vim 系なら同じ Alt+方向キーをペインへ転送 (smart-splits.nvim が受け取る)、
+#   それ以外なら tmux 自身がペインを直接切り替える。
+# herdr にはこの分岐機構が無いため、`herdr pane process-info` で
+# フォアグラウンドプロセスを調べて同じ判定をここで再現する。
+#
+# Usage: herdr-smart-move <left|right|up|down>
+#
+# 性能上の注意:
+#   キー入力のたびに起動される。herdr CLI 呼び出しは通常 2 回
+#   (process-info 1回 + send-keys/focus 1回。$HERDR_PANE_ID が
+#   注入されない場合のみ pane current が追加で1回) に抑えている。
+#   スリープ・余計なプロセス起動は入れていない。
+#
+# エラー時の扱い:
+#   このスクリプトは type=shell (デタッチ実行) でキーバインドから
+#   起動されるため、標準エラーは誰にも見えない。実際の失敗
+#   (herdr/jq が無い、pane id が特定できない、CLI 呼び出し自体が
+#   失敗する) はログファイルに記録した上で herdr notification でも
+#   一度だけ知らせる。一方、移動先ペインが無い「端」のケースは
+#   `herdr pane focus` 自体が exit 0 / reason=no_neighbor を返す
+#   正常系なので、ここで特別扱いする必要はない
+#   (一時ワークスペースでの実機検証で確認済み)。
+
+set -euo pipefail
+
+# type = "shell" のデタッチ実行は PATH が最小で /opt/homebrew/bin が入らず、
+# herdr / jq / fzf が見つからずに exit 127 になる。ここで補う。
+# herdr 自身の場所は HERDR_BIN_PATH がペインに渡されていればそれを使う。
+if [ -n "${HERDR_BIN_PATH:-}" ]; then
+  PATH="$(dirname "$HERDR_BIN_PATH"):$PATH"
+fi
+PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+export PATH
+
+
+LOG_FILE="$HOME/.config/herdr/herdr-smart-move.log"
+
+log_err() {
+  printf '%s [herdr-smart-move] %s\n' "$(date '+%Y-%m-%dT%H:%M:%S%z')" "$1" >>"$LOG_FILE" 2>/dev/null || true
+}
+
+notify_err() {
+  herdr notification show "herdr-smart-move" --body "$1" >/dev/null 2>&1 || true
+}
+
+fail() {
+  log_err "$1"
+  notify_err "$1"
+  exit 1
+}
+
+# 第1引数は移動なら left/right/up/down、リサイズなら resize-left などの
+# resize- 接頭辞つき。tmux 側は Alt+HJKL が移動、Alt+Shift+HJKL がリサイズで、
+# どちらも is_vim 判定を通していたので、ここでも同じ 1 本で両方を扱う。
+ARG="${1:-}"
+MODE="move"
+DIRECTION="$ARG"
+case "$ARG" in
+  resize-*)
+    MODE="resize"
+    DIRECTION="${ARG#resize-}"
+    ;;
+esac
+case "$DIRECTION" in
+  left) KEY_LETTER="h" ;;
+  down) KEY_LETTER="j" ;;
+  up) KEY_LETTER="k" ;;
+  right) KEY_LETTER="l" ;;
+  *)
+    fail "使い方: herdr-smart-move <left|right|up|down|resize-left|resize-right|resize-up|resize-down> (受け取った引数: '${ARG}')"
+    ;;
+esac
+# リサイズ時は Neovim へ Alt+Shift+大文字 を送る（smart-splits.nvim の
+# <A-S-h> などに対応）。移動時は Alt+小文字。
+if [ "$MODE" = "resize" ]; then
+  SEND_KEY="alt+shift+${KEY_LETTER}"
+else
+  SEND_KEY="alt+${KEY_LETTER}"
+fi
+
+for cmd in herdr jq; do
+  command -v "$cmd" >/dev/null 2>&1 || fail "必要なコマンドが見つかりません: $cmd"
+done
+
+PANE_ID="${HERDR_PANE_ID:-}"
+if [ -z "$PANE_ID" ]; then
+  cur=$(herdr pane current --current 2>&1) || fail "対象ペインを特定できませんでした: $cur"
+  PANE_ID=$(printf '%s' "$cur" | jq -r '.result.pane.pane_id // empty')
+fi
+[ -n "$PANE_ID" ] || fail "対象ペインを特定できませんでした (PANE_ID が空)"
+
+info=$(herdr pane process-info --pane "$PANE_ID" 2>&1) || fail "process-info に失敗しました (pane=${PANE_ID}): ${info}"
+
+# tmux 版の正規表現 `(\S+\/)?g?(view|n?vim?x?)(diff)?$` を移植。
+#  - foreground_processes には caffeinate のような無関係プロセスも
+#    混在しうる (実例: [{"name":"caffeinate",...},{"name":"claude",...}])
+#    ため、配列を走査し「いずれか1つでも vim/nvim 系か」で判定する
+#    (any)。tmux 側もフォアグラウンドプロセスグループ全体を見る
+#    想定のため、この広さは元の意図と一致する。
+#  - cmdline は引数付きの文字列 (`/path/to/nvim --cmd ...`) で
+#    末尾アンカー `$` が意味を成さなくなるため使わない
+#    (実機検証で cmdline に引数が入ることを確認済み)。
+#  - name (ps の comm 相当) と argv0 (シンボリックリンク経由の
+#    起動名。例: vi→nvim) の両方を見る。どちらか一方が一致すれば vim 系とみなす。
+#  - パス接頭辞は tmux の `\S+\/` (スラッシュを含む貪欲マッチ) に
+#    合わせて `.*\/` とし、複数階層のパス (例: /opt/homebrew/bin/) も
+#    1つのグループでマッチできるようにしている。
+is_vim=$(printf '%s' "$info" | jq -r '
+  def is_vim_name(s): (s // "") | test("^(.*/)?g?(view|n?vim?x?)(diff)?$"; "i");
+  any(.result.process_info.foreground_processes[]?; is_vim_name(.name) or is_vim_name(.argv0))
+' 2>>"$LOG_FILE") || fail "process-info の判定に失敗しました (pane=${PANE_ID})"
+
+if [ "$is_vim" = "true" ]; then
+  herdr pane send-keys "$PANE_ID" "$SEND_KEY" >/dev/null 2>&1 \
+    || fail "send-keys に失敗しました (pane=${PANE_ID}, key=${SEND_KEY})"
+elif [ "$MODE" = "resize" ]; then
+  # tmux の resize_mode は h/j/k/l が 5 桁、H/J/K/L が 1 桁の 2 段階だった。
+  # herdr の resize_mode (prefix+r) は 1 段階しかなく、大文字は効かない（実測）。
+  # そこで prefix+r を粗い方（既定の刻み＝タブ幅の約 5%）として使い、
+  # この Alt+Shift+HJKL を細かい方に割り当てる。
+  # --amount はタブ全体の幅に対する割合（実測: 幅246のタブで 0.01 → +3 桁）。
+  # 0.004 で約 1 桁となり tmux の H/J/K/L 相当になる。
+  herdr pane resize --pane "$PANE_ID" --direction "$DIRECTION" --amount "${HERDR_RESIZE_FINE:-0.004}" >/dev/null 2>&1 \
+    || fail "resize に失敗しました (pane=${PANE_ID}, direction=${DIRECTION})"
+else
+  herdr pane focus --pane "$PANE_ID" --direction "$DIRECTION" >/dev/null 2>&1 \
+    || fail "focus に失敗しました (pane=${PANE_ID}, direction=${DIRECTION})"
+fi
