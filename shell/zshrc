@@ -75,6 +75,7 @@ source ~/.zsh/screenpipe.zsh
 source ~/.zsh/awake.zsh
 source ~/.zsh/herdr.zsh
 source ~/.zsh/terminal-browser.zsh
+source ~/.zsh/prompt-marks.zsh
 
 # --------------------------------------------
 # 5. Local Config (machine-specific)
