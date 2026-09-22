@@ -50,15 +50,27 @@
 #
 # ---- ツールごとの承認・拒否キー（重要・要確認事項） -------------------------
 #   claude (Claude Code):
-#     承認: [文書ベース・未検証] 承認ダイアログは
-#       "1. Yes / 2. Yes, and don't ask again ... / 3. No, ..." の形式で、
-#     数字キーで直接選択・即決定できると案内されている。既定のハイライトは
-#     "1. Yes" とされる。本スクリプトは '1' を送る。
-#     拒否: [ユーザー指示にもとづく・このスクリプト内では未検証] Escape で
-#     キャンセル（拒否）できるとされる。本スクリプトは 'esc'（herdr の正式な
-#     キー名。'escape' も受理される）を送る。
-#     いずれも実際に blocked 状態のエージェントに対して検証してはいない
-#     （このタスクの制約で実エージェントへの送信は禁止されているため）。
+#     承認・拒否とも [実機検証済み 2026-09-22 / herdr 0.9.1 /
+#     検出マニフェスト 2026.09.11.1]。検証用タブで claude を起動し、
+#     allowlist 外の Bash コマンドで実際に承認ダイアログを出して確認した。
+#     承認: Bash 権限ダイアログ（検出ルール bash_permission_prompt,
+#       region=whole_recent, priority=850）は "Do you want to proceed?" の下に
+#       "❯ 1. Yes / 2. Yes, and always allow ... / 3. Yes, and switch to auto
+#        mode / 4. No" を出す。2 以降の文面と個数は状況で変わるが '1' = "Yes"
+#       は変わらなかった。'1' を送るとその場で承認され、対象コマンドが実行される
+#       （副作用ファイルの生成まで確認済み）。
+#     拒否: 'esc'（herdr の正式なキー名。'escape' も受理される）を送ると
+#       ダイアログが閉じてコマンドは実行されず、状態が idle に戻ることを確認済み。
+#
+#     ★ 実機で確認した設計上のギャップ（未対応・要注意）:
+#       herdr の blocked は「承認ダイアログ」だけでなく AskUserQuestion などの
+#       質問フォーム（検出ルール live_blocked_form,
+#       region=after_last_horizontal_rule, priority=980）でも立つ。
+#       質問フォームに '1' を送ると「1 番目の選択肢を選んで即送信」になり、
+#       承認ではなく勝手な回答をしてしまう（実機で再現済み）。
+#       両者は `herdr agent explain <TARGET>` の rule 行で判別できるが、
+#       本スクリプトは現状その判別を行っていない。a を押す前に必ず preview で
+#       ダイアログ本文を読むこと。
 #
 #   codex (Codex CLI):
 #     承認・拒否とも [ドキュメントで確認済み]。承認プロンプトは
@@ -561,7 +573,7 @@ cmd_approve() {
   case "$kind" in
     claude)
       key="1"
-      note="[文書ベース/未検証] Claude Code の承認ダイアログは数字キーで直接選択でき、既定選択は「1. Yes」とされています。"
+      note="[実機検証済み 2026-09-22] Claude Code の Bash 権限ダイアログは '1' が「Yes」で、送信すると即承認されコマンドが実行されます。★ただし blocked は AskUserQuestion 等の質問フォームでも立ち、その場合 '1' は「1 番目の選択肢を選んで送信」になります。右の preview でダイアログ本文を必ず確認してください。"
       ;;
     codex)
       key="y"
@@ -616,7 +628,7 @@ cmd_deny() {
   case "$kind" in
     claude)
       key="esc"
-      note="[ユーザー指示にもとづく/このスクリプト内では未検証] Claude Code の承認ダイアログは Escape でキャンセル（拒否）できるとされています。"
+      note="[実機検証済み 2026-09-22] Claude Code の Bash 権限ダイアログは Escape でキャンセルでき、コマンドは実行されず idle に戻ることを確認済みです。"
       ;;
     codex)
       key="esc"
