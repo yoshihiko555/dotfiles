@@ -282,7 +282,28 @@ delivery = "herdr"
 [ui.sound]
 # baton の waiting 強調表示(オレンジ色)に相当する聴覚的な合図。
 # herdr の既定と同じ値だが明示しておく。
+# 鳴るのは「バックグラウンドのワークスペース」でエージェントの状態が変わったときだけで、
+# フォアグラウンドのペインでは鳴らない (herdr の仕様)。
 enabled = true
+
+# 組み込み音からの差し替え。herdr が読めるのは mp3 のみ (wav / aiff は不可)。
+# 相対パスは symlink を辿らず ~/.config/herdr/ 基準で解決される (herdr config check の
+# 診断メッセージで実測)。config.toml 自体は mkOutOfStoreSymlink でリポジトリを指すが
+# そちらは基準にならないため、dotfiles.nix の mkLink で ~/.config/herdr/sounds を
+# config/herdr/sounds へ張ることが必須。張り忘れると "missing sound file" の診断が出て
+# 組み込み音に無言でフォールバックする。
+#
+# done    = タスク完了。ffmpeg で合成したマリンバ2音 (C6 -> G6)、約 0.9 秒。
+#           request と釣り合うよう合成後に -6dB している (実測 -20.3 LUFS)。
+# request = 承認待ち。ユーザーが用意した音源 (約 1.7 秒、実測 -19.3 LUFS) を
+#           再エンコードせずそのまま配置。リポジトリ内に生成手順は無い。
+# done より request の方が約 1LU 大きく、先に気付いてほしい側を目立たせてある。
+#
+# Claude Code の hook (claude_message.sh) も Glass / Ping / Basso を afplay しているため、
+# バックグラウンドのペインでは hook の音と二重に鳴る。herdr を常用すると決めた段階で
+# hook 側を止める想定 (現時点では両方鳴らしたまま)。
+done_path = "sounds/done.mp3"
+request_path = "sounds/request.mp3"
 
 # 承認待ちエージェント・コンソール: baton を出していた Prefix+B と同じ指の位置。
 # herdr 既定でここにあった toggle_sidebar は prefix+d へ退避した。

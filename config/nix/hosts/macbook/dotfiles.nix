@@ -27,6 +27,10 @@ in
         # symlink を辿って実体に書くことを実測で確認済み（inode 保持、symlink も壊れない）。
         "herdr/config.toml".source = mkLink "config/herdr/config.toml";
         "herdr/bin".source = mkLink "config/herdr/bin";
+        # 通知音 (ui.sound.done_path / request_path)。herdr は相対パスを symlink を
+        # 辿らず ~/.config/herdr/ 基準で解決するため、この link が無いと config.toml の
+        # 相対パスが解決できず組み込み音へフォールバックする。
+        "herdr/sounds".source = mkLink "config/herdr/sounds";
         "karabiner".source = mkLink "config/karabiner";
         "lazygit".source = mkLink "config/lazygit";
         "nix".source = mkLink "config/nix";
