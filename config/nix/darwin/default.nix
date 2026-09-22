@@ -36,6 +36,11 @@
   # /etc 側で先に export しておけば dotfiles 側の記述を変更せずに済む。
   environment.variables.DOTFILES = config.hostSpec.dotfilesDir;
 
+  # nix-darwin は environment.variables.EDITOR に `nano` を mkDefault で入れるため、
+  # 明示しないと git 以外（crontab -e / gh / 各種 CLI）が nano で開く。
+  # git は config/git/config の core.editor で既に nvim。
+  environment.variables.EDITOR = "nvim";
+
   system.primaryUser = config.hostSpec.username;
   users.users.${config.hostSpec.username} = {
     name = config.hostSpec.username;
