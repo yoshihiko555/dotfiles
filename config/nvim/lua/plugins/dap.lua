@@ -31,6 +31,14 @@ return {
     { "<leader>du", function() require("dapui").toggle() end, desc = "デバッグUIを切替" },
     { "<leader>de", function() require("dapui").eval() end, mode = { "n", "x" }, desc = "式を評価" },
     { "<leader>dr", function() require("dap").repl.toggle() end, desc = "デバッグREPLを切替" },
+
+    -- VSCode 互換。既存の <leader>d 系はそのまま残す。
+    { "<F5>", function() require("dap").continue() end, desc = "デバッグ開始・続行" },
+    { "<F9>", function() require("dap").toggle_breakpoint() end, desc = "ブレークポイントを切替" },
+    { "<F10>", function() require("dap").step_over() end, desc = "ステップオーバー" },
+    { "<F11>", function() require("dap").step_into() end, desc = "ステップイン" },
+    -- Shift+F11 は tmux 経由で <F23> に変換され届かないため、F12 を使う。
+    { "<F12>", function() require("dap").step_out() end, desc = "ステップアウト" },
   },
   config = function()
     local dap, dapui = require("dap"), require("dapui")
