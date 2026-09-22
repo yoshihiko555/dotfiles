@@ -31,6 +31,12 @@ in
         # 辿らず ~/.config/herdr/ 基準で解決するため、この link が無いと config.toml の
         # 相対パスが解決できず組み込み音へフォールバックする。
         "herdr/sounds".source = mkLink "config/herdr/sounds";
+        # herdr-automatic-rename (タブ名の自動追従プラグイン) の設定。
+        # プラグインは $HERDR_PLUGIN_CONFIG_DIR ではなくこの固定パスを読む
+        # （シェルフックが herdr の外で動くため両者が共有できる場所が要る、という設計）。
+        # プラグイン本体は herdr plugin install が ~/.config/herdr/plugins/ へ
+        # 命令的に入れるため Nix 管理外。設定だけをリポジトリ側に置く。
+        "herdr-automatic-rename".source = mkLink "config/herdr/automatic-rename";
         "karabiner".source = mkLink "config/karabiner";
         "lazygit".source = mkLink "config/lazygit";
         "nix".source = mkLink "config/nix";

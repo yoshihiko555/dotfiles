@@ -362,9 +362,32 @@ key = "alt+shift+l"
 type = "shell"
 command = "~/.config/herdr/bin/herdr-smart-move resize-right"
 
-# タブ名をタブの中身から付け直す: herdr にタブ名の自動追従が無いため、キー 1 つで
-# 更新できるようにする。検出されたエージェント名、無ければ作業ディレクトリ名を使う。
+# タブ名を自動命名へ戻す: herdr-automatic-rename プラグインは、手動でリネームした
+# タブを「ユーザーが決めた名前」とみなして以後触らなくなる。reset はその opt-out を
+# 解除して自動命名に戻すアクション。
+#
+# もともとここは herdr-rename-tab-auto を叩くキーだった。タブ名の自動追従が herdr 本体に
+# 無いため手動で全タブを付け直していたが、押す手間を無くすためプラグインへ置き換えた。
+# スクリプトは退路として config/herdr/bin/ に残してある（キー割り当てのみ外した）。
+# 注意: プラグイン導入後にあのスクリプトを実行すると、書いたラベルが「手動リネーム」と
+# 判定されて全タブが自動命名から外れる。戻すにはこの reset を押す。
 [[keys.command]]
 key = "prefix+y"
-type = "shell"
-command = "~/.config/herdr/bin/herdr-rename-tab-auto"
+type = "plugin_action"
+command = "herdr-automatic-rename.reset"
+
+# terminal-browser（Chromium を Kitty graphics でペインに描くブラウザ）の試用に必要。
+# terminal-browser は herdr 内では kitty のエスケープを自分で書かず、herdr のソケット
+# (pane.graphics.info / pane.graphics.stream) 経由で direct-kitty 転送を要求する。
+# このフラグが無いと herdr が direct-kitty を advertise せず、terminal-browser 側は
+# 握り潰して無言の空白ペインになる（zenbu-labs/terminal-browser#89）。
+#
+# 前提条件（どれか欠けると direct-kitty は出ない）:
+#   - 外側の端末が ghostty / wezterm / kitty のいずれか
+#   - アタッチ中のクライアントがちょうど 1 つ（Moshi の 2 台目を繋ぐと落ちる）
+#   - ssh / tmux / herdr --remote 経由でないこと
+# 反映には reload-config だけでなくデタッチ→再アタッチが要る（cell_size_unavailable 対策）。
+#
+# 試用を止める場合はこのセクションごと削除する。
+[experimental]
+kitty_graphics = true
