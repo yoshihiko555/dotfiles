@@ -89,6 +89,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "^(startup|resume|clear|compact|fork)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/yoshihiko/.claude/hooks/herdr-agent-state.sh' session",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "SessionEnd": [
@@ -233,10 +243,20 @@
   "effortLevel": "high",
   "modelSettings": {
     "claude-opus-5": {
-      "effortLevel": "medium"
+      "effortLevel": "xhigh"
+    },
+    "claude-fable-5-1": {
+      "effortLevel": "high"
     }
   },
   "advisorModel": "fable",
+  "pluginConfigs": {
+    "agents-md@builtin": {
+      "options": {
+        "instructionFiles": "claude-md-or-agents-md"
+      }
+    }
+  },
   "tui": "fullscreen",
   "autoDreamEnabled": true,
   "skipWorkflowUsageWarning": true,
@@ -270,12 +290,5 @@
       "**Org-specific CLIs**: None configured — routine repo-local tooling observed: task, takt, mise, nix, stow, agy (used repeatedly in this project's transcripts)",
       "routine under yoshihiko555/dotfiles/ prefix: task, nix, mise, takt, stow operations are part of normal repo workflow"
     ]
-  },
-  "pluginConfigs": {
-    "agents-md@builtin": {
-      "options": {
-        "instructionFiles": "claude-md-or-agents-md"
-      }
-    }
   }
 }
