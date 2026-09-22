@@ -1,0 +1,186 @@
+#!/bin/bash
+# herdr-clear-claude-panes — 現在アクティブなタブの Claude Code ペインで /clear を実行する
+#
+# Usage: herdr-clear-claude-panes [pane_id]
+#
+#   Loupedeck の「アプリを実行」から呼ばれる想定 (herdr のキーバインドは持たない)。
+#   省略時はフォーカス中のペイン (herdr pane current --current) が属するタブを対象にする。
+#   TTY も HERDR_PANE_ID も無い状態 (Loupedeck 経由) で動くため、launchd 経由の
+#   最小 PATH に無い herdr を先頭で補う。pane_id を渡した場合はそのタブが対象 (検証・手動用)。
+#
+#   herdr-launch-claude-work と対になるスクリプト。あちらは「シェル待機中のペイン」に
+#   claude を起動し、こちらは「claude が動いているペイン」の文脈を捨てる。
+#
+# 環境変数:
+#   HERDR_CLEAR_CLAUDE_CMD  送るスラッシュコマンド (既定: /clear)
+#
+# 対象ペインの選び方:
+#  - `herdr pane layout --pane <id>` でタブ内のペインを列挙し、rect を (y, x) 順に
+#    ソートして「左上→右上→左下→右下」の読み順とする (herdr-launch-claude-work と同じ方式)。
+#  - agent 判定は `herdr pane process-info` ではなく `herdr pane list --workspace <id>` の
+#    `agent` / `agent_status` を使う。herdr が claude のライフサイクルを直接持っているため、
+#    プロセス名から推測するより正確で、ワークスペース単位の 1 回の呼び出しで済む。
+#  - `agent` が claude でないペイン (シェル・nvim 等) はスキップする。
+#  - `agent_status` が working のペインもスキップする。実行中に /clear を打つと
+#    入力がキューされて次のターンに混ざるため。判定は一覧取得時と送信直前の 2 回行う。
+#    8 ペインを順に送る数秒の間に idle → working へ変わるとスナップショットだけでは
+#    取りこぼすため。
+#  - 呼び出し元のペイン自身も、対象タブの idle な claude ペインなら /clear される。
+#    Loupedeck 経由では HERDR_PANE_ID が渡らず自ペインを確実に除外できないうえ、
+#    「タブ内の全ペインを消す」という用途では除外しない方が期待どおりのため。
+#
+# キー送出の手順 (実測で確定。2026-09-23):
+#  1. `send-keys ctrl+u` — 入力欄に打ちかけのテキストが残っていると `foo/clear` になり
+#     スラッシュコマンドとして成立しないため、先に行削除する。
+#     **esc は使わない。** 1 回目の esc は「Esc again to clear」を出すだけで消えず、
+#     2 回目まで送ると入力欄が空のときに巻き戻しメニューが開いてしまう。
+#     ctrl+u は入力欄が空でも無害。
+#  2. `send-text /clear` — ここでスラッシュコマンドの補完メニューが出て /clear が先頭に来る。
+#  3. `send-keys Enter` — Enter 1 回で補完確定と実行が同時に起きる (2 回は不要)。
+#  `herdr pane run` は使わない。テキストと Enter を 1 回の書き込みで送るため、
+#  TUI 側でペースト扱いになって実行されない可能性がある。
+#
+# /clear は直前のセッションを消すわけではない (Claude Code 側の説明どおり
+# previous session は残る) ため、確認プロンプトは持たない。Loupedeck は
+# デタッチ実行で TTY が無く、そもそも read での確認ができない。
+
+set -euo pipefail
+
+# type = "shell" のデタッチ実行は PATH が最小で /opt/homebrew/bin が入らず、
+# herdr / jq が見つからずに exit 127 になる。ここで補う。
+# herdr 自身の場所は HERDR_BIN_PATH がペインに渡されていればそれを使う。
+if [ -n "${HERDR_BIN_PATH:-}" ]; then
+  PATH="$(dirname "$HERDR_BIN_PATH"):$PATH"
+fi
+PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+export PATH
+
+# type = "shell" はデタッチ実行のため stderr がどこにも出ない。
+# 失敗した理由が分からないと「押したのに何も起きない」になるので、
+# 異常終了時は必ず herdr のトースト通知に出す。
+_notify_fail() {
+  herdr notification show "$(basename "$0")" --body "$1" >/dev/null 2>&1 || true
+}
+trap 'rc=$?; [ $rc -ne 0 ] && _notify_fail "失敗しました (exit=$rc)。詳細はペインで直接実行して確認してください。"' EXIT
+
+for cmd in herdr jq; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "herdr-clear-claude-panes: 必要なコマンドが見つかりません: $cmd" >&2
+    exit 1
+  fi
+done
+
+clear_cmd="${HERDR_CLEAR_CLAUDE_CMD:-/clear}"
+
+# 対象ペインの解決 (このペインが属するタブを対象にする)
+PANE_ID="${1:-}"
+if [ -z "$PANE_ID" ]; then
+  cur=$(herdr pane current --current 2>&1) || {
+    echo "herdr-clear-claude-panes: 対象ペインを特定できませんでした: $cur" >&2
+    exit 1
+  }
+  PANE_ID=$(printf '%s' "$cur" | jq -r '.result.pane.pane_id // empty')
+fi
+if [ -z "$PANE_ID" ]; then
+  echo "herdr-clear-claude-panes: 対象ペインを特定できませんでした" >&2
+  exit 1
+fi
+
+layout=$(herdr pane layout --pane "$PANE_ID" 2>&1) || {
+  echo "herdr-clear-claude-panes: pane layout に失敗しました: $layout" >&2
+  exit 1
+}
+
+workspace_id=$(printf '%s' "$layout" | jq -r '.result.layout.workspace_id // empty')
+if [ -z "$workspace_id" ]; then
+  echo "herdr-clear-claude-panes: ワークスペースを特定できませんでした" >&2
+  exit 1
+fi
+
+# rect.y, rect.x の順でソートし、左上→右上→左下→右下 の読み順で走査する。
+# mapfile は bash 4 以降の機能で macOS 標準の bash 3.2 には無いため while read で組む。
+pane_ids=()
+while IFS= read -r _pid; do
+  [ -n "$_pid" ] && pane_ids+=("$_pid")
+done < <(printf '%s' "$layout" | jq -r '.result.layout.panes | sort_by(.rect.y, .rect.x) | .[].pane_id')
+
+if [ "${#pane_ids[@]}" -eq 0 ]; then
+  echo "herdr-clear-claude-panes: 対象タブのペインを取得できませんでした" >&2
+  exit 1
+fi
+
+# agent 情報はワークスペース単位で 1 回だけ取り、以降は jq で引く
+panes_json=$(herdr pane list --workspace "$workspace_id" 2>&1) || {
+  echo "herdr-clear-claude-panes: pane list に失敗しました: $panes_json" >&2
+  exit 1
+}
+
+target_panes=()
+busy_panes=()
+skipped=0
+for pid in "${pane_ids[@]}"; do
+  info=$(printf '%s' "$panes_json" | jq -r --arg id "$pid" '
+    .result.panes[] | select(.pane_id == $id)
+    | "\(.agent // "none")\t\(.agent_status // "unknown")"
+  ')
+  agent="${info%%$'\t'*}"
+  status="${info##*$'\t'}"
+  case "$agent" in
+    claude)
+      if [ "$status" = "working" ]; then
+        busy_panes+=("$pid")
+      else
+        target_panes+=("$pid")
+      fi
+      ;;
+    *)
+      skipped=$((skipped + 1))
+      ;;
+  esac
+done
+
+if [ "${#target_panes[@]}" -eq 0 ]; then
+  summary="${clear_cmd} できるペインがありません"
+  if [ "${#busy_panes[@]}" -gt 0 ]; then
+    summary="${summary} (${#busy_panes[@]} ペインは実行中)"
+  fi
+  echo "herdr-clear-claude-panes: ${summary}" >&2
+  exit 1
+fi
+
+sent_panes=()
+for pid in "${target_panes[@]}"; do
+  # 送信直前にもう一度 working を確認する。上の pane list は一度きりのスナップショットで、
+  # 8 ペインを順に送る数秒の間に idle → working へ変わったペインへ打ち込むと、
+  # 入力がキューされて次のターンに混ざる (スキップ指定の趣旨から外れる)。
+  now=$(herdr pane get "$pid" 2>/dev/null | jq -r '.result.pane.agent_status // "unknown"') || now="unknown"
+  if [ "$now" = "working" ]; then
+    busy_panes+=("$pid")
+    continue
+  fi
+
+  # 打ちかけの入力を消す → スラッシュコマンドを打つ → 実行
+  # sleep は TUI 側の再描画待ち。無いと補完メニューが出る前に Enter が届く。
+  herdr pane send-keys "$pid" ctrl+u >/dev/null
+  sleep 0.2
+  herdr pane send-text "$pid" "$clear_cmd" >/dev/null
+  sleep 0.3
+  herdr pane send-keys "$pid" Enter >/dev/null
+  sent_panes+=("$pid")
+done
+
+if [ "${#sent_panes[@]}" -eq 0 ]; then
+  summary="${clear_cmd} できるペインがありません (${#busy_panes[@]} ペインは実行中)"
+  echo "herdr-clear-claude-panes: ${summary}" >&2
+  exit 1
+fi
+
+summary="${#sent_panes[@]} ペインで ${clear_cmd}"
+if [ "${#busy_panes[@]}" -gt 0 ]; then
+  summary="${summary} (${#busy_panes[@]} ペインは実行中のためスキップ)"
+fi
+if [ "$skipped" -gt 0 ]; then
+  summary="${summary} (${skipped} ペインは claude 以外)"
+fi
+herdr notification show "herdr-clear-claude-panes" --body "$summary" >/dev/null 2>&1 || true
+echo "$summary" >&2
