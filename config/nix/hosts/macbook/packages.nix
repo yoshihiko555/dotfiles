@@ -41,11 +41,6 @@ in
       typescript-language-server
 
       # --- 新規導入 ---
-      # ターミナル内 Web ブラウザ（cha）。独自エンジンで Chromium を積まないため軽い。
-      # tmux 時代は Kitty image protocol 非対応（上流が対応予定なしと明言）で画像が
-      # 出せず見送っていたが、herdr では画像表示が通ることを 2026-09-23 に実測した。
-      # 画像なしでもテキストブラウザとして成立するため herdr の採否とは独立。
-      chawan
       delve # Neovim の Go デバッグ。Go ランタイムは引き続き mise で管理
       imagemagick # Neovim の snacks.image で画像の変換・サイズ取得に使用
       resvg # SVG→PNG ラスタライザ。logo-design スキルの export.sh が最優先で検出する

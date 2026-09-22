@@ -139,13 +139,26 @@ Kitty graphics はフラグ無効のまま処理される。WezTerm 側は virtu
 - **Neovim の画像表示**: `snacks.nvim` の image モジュール（実装済み・`cond = false` で休止中
   だった）を `~/.config/use-herdr` の有無で有効化。markdown の画像はカーソルが乗ると自動で
   フロート表示される。本文への inline 埋め込みのみ WezTerm の placeholder 未対応で不可
-- **ターミナル内 Web ブラウザ**: Chawan（`cha`）を `hosts/macbook/packages.nix` に追加。
-  以前 Chromium 系（carbonyl / browsh 相当）で「重い」と感じて断念した経緯があったが、
-  Chawan は独自エンジンで Chromium を積まないため、実測で重さは出なかった。
-  上流ドキュメントも「tmux は Kitty image protocol 非対応、ハックへの対応予定なし」と明言
-  しており、tmux のままでは画像表示は不可能だった
+- **ターミナル内 Web ブラウザ**: 制約は解けたが**導入は見送り**（下記）
 
-いずれも herdr の採否とは独立に成立する（tmux に戻せば画像表示だけが自動で無効に戻る）。
+**ターミナルブラウザを見送った理由（2026-09-23）**
+
+Chawan（`cha`）で検証した。以前 Chromium 系（carbonyl / browsh 相当）で「重い」と感じて
+断念した経緯があったが、Chawan は独自エンジンで Chromium を積まないため重さは出ず、
+画像も herdr 上で表示できた（上流ドキュメントも「tmux は Kitty image protocol 非対応、
+ハックへの対応予定なし」と明言しており、tmux のままでは不可能だった）。
+
+しかし自分のプロダクト（Next.js）を開くと、アイコンがすべて `[img]` プレースホルダーに
+なり文字に食い込んだ。原因は `<img>` が 0 個で、アイコン 29 個がすべて inline `<svg>`
+だったため。Chawan の `nanosvg` デコーダは `<img src="x.svg">` 用で、HTML に直接
+埋め込まれた `<svg>` 要素は描画されない。Wikipedia のような文書寄りのページは問題なく
+読めるが、モダンな Web アプリの UI 確認には使えない。
+
+そもそも求めていた「画面の要素を選んで AI に渡す」は CDP（Chrome DevTools Protocol）が
+本質であり、ターミナルかどうかは関係ない。この用途は agent-browser と Dia 自作拡張
+（ui-context）で別途進めているため、ターミナルブラウザは不要と判断した。
+
+画像表示の解禁自体は herdr の採否とは独立に成立する（tmux に戻せば自動で無効に戻る）。
 
 ## 影響
 
@@ -153,7 +166,6 @@ Kitty graphics はフラグ無効のまま処理される。WezTerm 側は virtu
 - herdr 本体は `homebrew.nix` に登録した
 - `config/nvim/lua/plugins/snacks.lua` の image を `~/.config/use-herdr` の有無で有効化した
   （tmux 時代の残像対策だった全画像削除と手動プレビューは撤去）
-- Chawan を `config/nix/hosts/macbook/packages.nix` に追加した
 - 試用期間中は tmux + baton の設定・スクリプトを削除せずそのまま残す（切替式のため）
 - hook は herdr 側（`session` のときのセッション ID 紐付けのみ）と baton 側（既存の 7 イベント）が
   並存する
