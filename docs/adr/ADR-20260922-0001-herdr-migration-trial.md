@@ -139,7 +139,7 @@ Kitty graphics はフラグ無効のまま処理される。WezTerm 側は virtu
 - **Neovim の画像表示**: `snacks.nvim` の image モジュール（実装済み・`cond = false` で休止中
   だった）を `~/.config/use-herdr` の有無で有効化。markdown の画像はカーソルが乗ると自動で
   フロート表示される。本文への inline 埋め込みのみ WezTerm の placeholder 未対応で不可
-- **ターミナル内 Web ブラウザ**: 制約は解けたが**導入は見送り**（下記）
+- **ターミナル内 Web ブラウザ**: Chawan は**見送り**、terminal-browser は**Ghostty 限定で実用**（下記 2 節）
 
 **ターミナルブラウザを見送った理由（2026-09-23）**
 
@@ -159,6 +159,139 @@ Chawan（`cha`）で検証した。以前 Chromium 系（carbonyl / browsh 相�
 （ui-context）で別途進めているため、ターミナルブラウザは不要と判断した。
 
 画像表示の解禁自体は herdr の採否とは独立に成立する（tmux に戻せば自動で無効に戻る）。
+
+### terminal-browser は Ghostty 限定で実用（2026-09-23）
+
+Chawan を見送った直後に [zenbu-labs/terminal-browser](https://github.com/zenbu-labs/terminal-browser)
+0.11.1 を評価した。Chawan が独自エンジンで inline `<svg>` を描けなかったのに対し、こちらは
+**Electron のオフスクリーンレンダリングで本物の Chromium を動かし、そのピクセルを Kitty graphics で
+ペインに描く**方式のため、描画は実ブラウザと同一で Chawan の敗因は起きない。
+
+**実測（60 秒連続スクロール、2 秒 × 30 サンプル。localhost:3000 = Next.js dev、ペイン約 4.4K×2.7K）**
+
+| | WezTerm | **Ghostty** |
+| --- | --- | --- |
+| 端末プロセス CPU 中央値 | 115.4% | **11.2%** |
+| 端末プロセス CPU ピーク | 128.8% | **39.7%** |
+| herdr client CPU 中央値 | 31.5% | **3.1%** |
+| herdr server CPU 中央値 | 2.9% | 2.7% |
+| 端末 RSS 推移 | 3306M → 4452M | **366M → 409M** |
+| herdr client RSS 推移 | 1851M → 1799M | **11M 横ばい** |
+
+WezTerm はスクロール中に CPU 約 1.5 コア（端末 115% + client 31.5%）を専有する。Ghostty は合計 15% 未満で、
+upstream issue #65 に載っている参考値（Ghostty 15% / herdr 3% / browser 6%）とほぼ一致する。つまり
+Ghostty 側が開発元の想定する健全な経路であり、WezTerm 側が異常という関係になる。
+
+**差の正体は direct-kitty ストリームの寿命**
+
+terminal-browser は herdr の中では Kitty のエスケープを自分で書かず、herdr のソケット
+（`pane.graphics.info` / `pane.graphics.stream`）経由で direct-kitty 転送を要求する。
+
+| 端末 | `pane.graphics.stream` の挙動 |
+| --- | --- |
+| WezTerm | 開いたストリームは**例外なく約 3 秒で `stream_closed`**（18:50:50→53 / 19:02:11→14 UTC）。4 回の起動のうち 2 回は要求自体が飛ばなかった（条件は未特定） |
+| Ghostty | 19:20:56 に開始し 83 秒以上**開いたまま継続** |
+
+ストリームが死ぬとフレームは PTY 経由のフォールバックを流れる。0.11.1 のフォールバックは
+**無制限版**（流量を制限する PR #65 は未マージ）で、これが重さの正体。
+
+確定したのは「どこで起きるか」であって「なぜ閉じるか」ではない。WezTerm が Kitty の確認応答
+（`Gi=<id>,p=1;OK`）を 3 秒以内に返していないのか、herdr の WezTerm プロファイルの問題か、
+terminal-browser 側の扱いかは切り分けていない。なお WezTerm の `enable_kitty_graphics` は
+config に明示指定がないが既定で有効であり、描画自体はできていた。
+
+**実用条件は 2 つ**
+
+1. 外側の端末を Ghostty にすること
+2. herdr のクライアントを 1 つに保つこと — Ghostty でも、クライアント構成が変わった瞬間
+   （別クライアントの接続 / 離脱）にストリームが閉じる挙動を観測した。#65 も「Mosh クライアントが
+   後から attach すると direct-kitty が下りなくなる」と書いており、**Moshi で iPhone / Mac mini から
+   2 台目を繋いだ時点で Ghostty でもフォールバックに落ちる**。しかもブラウザは再ネゴシエーションせず、
+   開き直すまで重いまま
+
+**端末そのものの素の性能差は小さい**
+
+26MB / 20 万行の色付きテキストを 3 回流す描画ベンチ（同一 herdr ペイン）では、経過秒が
+WezTerm 0.59 / Ghostty 0.56（差 5%）、端末 CPU 秒が 0.74 / 0.40、起動直後の RSS が 316MB / 213MB。
+**普段遣いのテキスト描画で体感差はない。** 差が出るのは Kitty graphics の経路だけであり、
+Ghostty へ移る見返りは「terminal-browser が使えること」であって「端末が速くなること」ではない。
+
+**否定した仮説**
+
+1. herdr のクライアントが 2 つ繋がっていた（脱出路として開いた Ghostty で誤ってアタッチしていた）
+   → 解消しても変化なし
+2. herdr サーバが `[experimental]` 追加より前から稼働していた → フラグは効いている
+   （無効ならストリーム自体が始まらない）
+3. screenpipe の CPU 占有（launchd agent が 1 コアを 2 日間 98% 占有していた）→ 停止しても解消せず。
+   むしろ WezTerm が空いた分を使い切り 33.8% → 115.4% へ上昇した
+4. メモリ不足（32GB）→ swap 0 バイト、swapouts 0、`memory_pressure` の free 60%。不足ではない
+
+### 常用端末を WezTerm から Ghostty へ移行する（2026-09-23 決定）
+
+terminal-browser の実用条件が「外側の端末が Ghostty であること」と確定したため、herdr 用の常用端末を
+Ghostty に切り替える。tmux + baton への復帰経路は WezTerm のまま残す（WezTerm の cask・設定は削除しない）。
+
+**移行動機は terminal-browser のみ。** テキスト描画の実測差は 5% で、端末を替えても普段の操作は速くならない。
+
+**決定に至る確認（すべて実機）**
+
+| 論点 | 結果 |
+| --- | --- |
+| WezTerm の herdr 用キーバインド 23 個 | Ghostty で全部再現。takt の Shift+Enter も既定挙動で通る |
+| 見た目（フォント・太さ・背景画像） | 画素比較で一致（下記） |
+| 長時間メモリ（Claude Code 起因のリーク報告） | 1.3.1 に修正が入っている。1 時間で 191→202MB。**1 週間観測を継続** |
+| 他ホストとの統一 | macOS のみでよいと判断（Ghostty に Windows 版はないが WSL2 は対象外） |
+
+**Ghostty 側の実装（`config/ghostty/`）**
+
+- `herdr.conf`（新規、`config` から `config-file = ?herdr.conf` で読む）: WezTerm の `keybinds-herdr.lua` と同じ対応表。
+  Ghostty に Lua は無いので `text:` アクションで prefix（Ctrl+Q = `\x11`）+ キーのバイト列を直接送る
+  - Alt 修飾は kitty 形式の CSI u（`\x1b[49;3u` = Alt+1）で送る（動作確認済み）。ESC 前置（`\x1b1`）は
+    下記の物理キー既定の陰に隠れて単体では未検証。herdr が外側の端末に kitty keyboard protocol を要求する
+    ため ESC + 文字は Alt と解釈されない可能性が高い、という理由で CSI u を採った
+  - **Ghostty の既定 `super+digit_N=goto_tab:N`（物理キー指定）が `cmd+N` の上書きより先にマッチする。**
+    `cmd+digit_N=unbind` で先に外す必要がある
+  - `macos-option-as-alt = true`（WezTerm の `send_composed_key_when_left_alt_is_pressed = false` 相当）
+  - Ghostty 既定と挙動が違うもの: `shift+page_up/down` は既定が選択拡張なのでスクロールに戻す。
+    `cmd+r` を `reload_config` に（Ghostty には設定の自動リロードが無い）
+- フォント: UDEV Gothic 35NFLG Bold 15pt、`adjust-cell-height = 20%`（line_height 1.2）、フォールバック 5 書体。
+  `font-thicken = false`（Ghostty だけ太く見えていた原因）
+- 背景画像: WezTerm の `hsb.brightness = 0.2` を Ghostty で再現する設定は無い。画像を事前に暗くして不透明で敷く。
+  変換式は両端末を並べたスクリーンショットの同一領域を画素比較して求めた: **`out = 0.50 × src − 6`**（sRGB）。
+  WezTerm の brightness はリニア光で掛かるため sRGB 上では ×0.5 相当になる。実際の `background.png` は
+  この式より明るい（平均 28,37,47 vs 式どおり 17,28,40）。`background-image-position = top-left`
+  （WezTerm の既定 `horizontal_align = Left` と同じ範囲を見せる）。`window-colorspace = display-p3`
+  （`srgb` だと R だけ 3 割暗く出た: 月の領域で 43,77,98 vs 30,78,100。再起動後に一致を目視確認）
+- **窓の透過は使わない**（`background-opacity = 1`）。0.7 にすると Ghostty は背景画像にも透過をかけ、
+  下のデスクトップのブラーが全面に乗って白茶ける
+- 起動: `initial-command = /bin/zsh -lic herdr`（WezTerm の gui-startup 相当）
+- **`herdr.conf` は Ghostty の全ウィンドウに効く。** WezTerm は herdr 用の設定を別ディレクトリ
+  （`~/.config/wezterm-herdr`）に分けていたが、Ghostty には条件分岐が無い。Cmd+N で開いた素のシェルでも
+  Cmd+W / D / T / S / 1〜9 は herdr 向けのバイト列を送る（閉じるのはウィンドウのボタンか Cmd+Q）。
+  素のシェルは herdr の `prefix+t` ポップアップで足りると判断して許容
+- 通知: `desktop-notifications = false`（Codex の osascript 通知との二重化防止、WezTerm の NeverShow 相当）、
+  ベルは `bell-features = audio` + `Purr.aiff`（WezTerm の afplay 相当）
+- AeroSpace: `com.mitchellh.ghostty` を WezTerm と同じ M3 枠へ（`aerospace.toml` と `layouts/{default,dev}.sh`）
+- terminal-browser が初回起動の `setup` で `~/.claude` `~/.codex` `~/.agents` `~/.gemini` の `skills/` に自動で張った
+  スキルの symlink（`Caskroom/0.11.1/` への絶対パス）は外した。操作 CLI は agent-browser 互換で、スキルの中身は
+  「ペインを割って人間の隣に出す」以外 agent-browser の写しのため、導線を 2 本にしない。必要になれば
+  agent-browser スキル側に一節を足す。再導入は `terminal-browser setup`
+
+**Ghostty に相当が無いもの**
+
+- WezTerm のコピーモード（`Ctrl+Shift+X`、key_table 30 個）— herdr のコピーモードを使っており不要と確認
+- 文字・絵文字ピッカー（`Ctrl+Shift+U`）— macOS の Ctrl+Cmd+Space で代替
+- 設定の自動リロード — `Cmd+R` 手動
+
+**観測（1 週間、2026-09-30 まで）**
+
+launchd agent `local.ghostty-mem-watch`（`~/Library/LaunchAgents/`、dotfiles 管理外・一時的）が 10 分ごとに
+Ghostty の RSS を `~/.local/state/ghostty-mem.log` へ追記する。通常負荷（Claude ペイン 4〜8 本）で
+1 日以内に 2GB を超えたら移行を取り消す。観測が終わったら
+`launchctl bootout gui/$(id -u)/local.ghostty-mem-watch && rm ~/Library/LaunchAgents/local.ghostty-mem-watch.plist`。
+
+**ロールバック**: `~/.config/wezterm-herdr` の WezTerm を起動して `herdr` でアタッチするだけ。
+Ghostty 側の設定は残しても害はない。
 
 ### タブ名の自動命名をプラグインへ置き換えた（2026-09-23）
 
@@ -219,6 +352,11 @@ activation に持ち込むうえ herdr 自体が採否判断前であるため�
 - タブ名の自動命名を herdr-automatic-rename プラグインへ移した。`config/herdr/automatic-rename/`
   （設定）と `shell/zsh/herdr.zsh`（zsh フック）を追加し、`prefix+y` を `plugin_action` へ
   付け替えた。プラグイン本体だけは Nix 管理外
+- terminal-browser を評価するため、`config/herdr/config.toml` に `[experimental] kitty_graphics = true` を
+  追加し、`hosts/macbook/homebrew.nix` の `homebrew.casks` に `terminal-browser` を宣言した
+  （`cleanup = "zap"` のため宣言しないと switch のたびに消える）。見送る場合は両方を削除する
+- 常用端末を Ghostty に切り替えた。`config/ghostty/`（`config` / `herdr.conf` / `background.png`）と
+  `config/aerospace/`（Ghostty のワークスペース割当）を変更。WezTerm の設定・cask は tmux 復帰経路として残す
 - 試用期間中は tmux + baton の設定・スクリプトを削除せずそのまま残す（切替式のため）
 - hook は herdr 側（`session` のときのセッション ID 紐付けのみ）と baton 側（既存の 7 イベント）が
   並存する
@@ -242,3 +380,7 @@ activation に持ち込むうえ herdr 自体が採否判断前であるため�
 
 - 2026-09-27 の最終判断そのもの（試用継続の結果、herdr を採用するか tmux + baton に留まるか）
 - リモート（iPhone からの接続）の使い勝手の評価（接続自体は確認済み。描画バグは上記）
+- Ghostty のメモリ長期観測の結果（2026-09-30 まで。上記「常用端末を WezTerm から Ghostty へ移行する」）
+- Cmd+クリックのリンクオープンは Ghostty でも効かない（2026-09-23 実測）。ただし WezTerm でも同じで、
+  herdr がマウスを捕捉しているため端末に届かない（`mouse_capture = false` は上記「できないこと」のとおり
+  副作用が大きく無効化済み）。端末の差ではなく herdr の制約

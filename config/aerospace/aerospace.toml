@@ -130,6 +130,11 @@ run = ['move-node-to-workspace M2']
 if.app-id = 'com.github.wez.wezterm'
 run = ['move-node-to-workspace M3']
 
+# Ghostty: 2026-09-23 に常用端末を WezTerm から移行（docs/adr/ADR-20260922-0001）。WezTerm と同じ枠
+[[on-window-detected]]
+if.app-id = 'com.mitchellh.ghostty'
+run = ['move-node-to-workspace M3']
+
 # M4 は Hermes の画面共有などに使う空き枠。自動配置ルールは置かない。
 
 # --- S 系: サブ DELL ---

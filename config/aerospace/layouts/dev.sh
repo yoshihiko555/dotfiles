@@ -21,6 +21,7 @@ move_app_to_workspace 'dev.zed.Zed'             'M1'
 move_app_to_workspace 'com.microsoft.VSCode'    'M1'
 move_app_to_workspace 'company.thebrowser.dia'  'M2'
 move_app_to_workspace 'com.github.wez.wezterm'  'M3'
+move_app_to_workspace 'com.mitchellh.ghostty'   'M3'
 move_app_to_workspace 'com.google.Chrome'       'M4'
 
 # Sub Monitor

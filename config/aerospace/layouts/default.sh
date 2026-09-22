@@ -24,6 +24,7 @@ move_app_to_workspace() {
 move_app_to_workspace 'com.google.Chrome'       'M1'
 move_app_to_workspace 'company.thebrowser.dia'  'M2'
 move_app_to_workspace 'com.github.wez.wezterm'  'M3'
+move_app_to_workspace 'com.mitchellh.ghostty'   'M3'
 # M4 は空き枠（Hermes 画面共有等）。ルールを持たない。
 
 # Sub Monitor

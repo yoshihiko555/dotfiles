@@ -4,18 +4,51 @@ theme = TokyoNight Moon
 
 # 2) WezTerm相当の “背景だけ透過” と “すりガラス”
 background-blur = 20
+# 窓自体は不透明にする。0.7 にすると Ghostty は背景画像にも同じ透過をかけるため、
+# 下のデスクトップのブラー（明るい灰色）が全面に乗って白茶けた見た目になる（実測）。
+# WezTerm の見た目は「暗くした画像がほぼ不透明に敷かれている」状態なので、こちらで揃える。
+background-opacity = 1
 
 # 3) TUIが背景色を塗ると透過が効かない問題を避ける（WezTerm寄りの見え方になる）
 background-opacity-cells = true
-background-image="background.jpg"
+# WezTerm は同じ画像を hsb.brightness = 0.2 で「暗くして」重ねている（config/wezterm/config/window-appearance.lua）。
+# Ghostty には明度を下げる設定が無く、不透明度を下げると背景色やデスクトップが透けて白っぽくなる。
+# そのため事前に暗くした画像（background.png）を不透明度 1 で使う。JPEG だと暗部が階調割れするので PNG。
+# 元画像は config/wezterm/background.jpg（同一ファイル。こちらの jpg は削除済み）。
+# WezTerm と同じ明るさにする変換式は、両端末を並べたスクリーンショットの同一領域を画素比較して求めた:
+#   out = 0.50 × src − 6（sRGB、3 チャネルほぼ共通。WezTerm の brightness 0.2 はリニア光で
+#   掛かるため、sRGB 上では ×0.5 相当になる。この式の平均値は 17,28,40）
+#   magick ../wezterm/background.jpg -colorspace sRGB -channel R -fx "u*0.498-5.69/255" \
+#     -channel G -fx "u*0.505-5.90/255" -channel B -fx "u*0.509-6.49/255" +channel background.png
+# 現在の background.png は式どおりの値より明るい（平均 28,37,47。式どおりなら 17,28,40）。
+background-image="background.png"
 background-image-fit= cover
-background-image-opacity=0.2
-alpha-blending = linear-corrected
+# WezTerm の background layer は既定で左寄せ（horizontal_align = Left）。Ghostty の既定 center だと
+# 同じ画像でも見える範囲がずれる（WezTerm は後頭部、Ghostty は顔が出る）ので左上基準に揃える
+background-image-position = top-left
+background-image-opacity=1
+# linear-corrected は同じ値でも sRGB 合成より明るく見えるため、WezTerm と揃えて native
+alpha-blending = native
 
-font-family = "JetBrainsMono Nerd Font Mono"
-font-size = 16
-font-thicken=true
-window-colorspace = srgb
+# フォント: WezTerm（config/wezterm/config/font.lua）と揃える。
+# UDEV Gothic 35NFLG Bold 15pt、行間 1.2（adjust-cell-height = 20%）。
+# font-family を複数並べると後ろがフォールバックになる（WezTerm の font_with_fallback 相当）。
+font-family = UDEV Gothic 35NFLG
+font-family = Hiragino Sans
+font-family = PingFang SC
+font-family = Apple SD Gothic Neo
+font-family = Apple Symbols
+font-family = Apple Color Emoji
+font-style = Bold
+font-size = 15
+adjust-cell-height = 20%
+# font-thicken は macOS 専用でグリフを太らせる設定。WezTerm には無く、
+# 同じ UDEV Gothic Bold 15pt でも Ghostty だけ太く見えていた（実測）ため切る
+font-thicken=false
+# WezTerm と並べて画素比較すると G/B は一致するのに R だけ Ghostty が 3 割暗かった
+# （月の領域: WezTerm 43,77,98 / Ghostty 30,78,100）。srgb だと Ghostty が P3 ディスプレイ向けに
+# 色変換して赤の彩度が落ちる。WezTerm は変換せず生の値を出しているので display-p3 で揃える。
+window-colorspace = display-p3
 
 # ウィンドウ状態の保存
 window-save-state = never
@@ -52,3 +85,18 @@ keybind = ctrl+cmd+h=goto_split:left
 keybind = ctrl+cmd+n=goto_split:bottom
 keybind = ctrl+cmd+p=goto_split:top
 keybind = ctrl+cmd+f=goto_split:right
+# herdr 用のキーバインド層（WezTerm の keybinds-herdr.lua 相当）。無ければ黙って無視する
+config-file = ?herdr.conf
+
+# ---- herdr 常用化に伴う移植（WezTerm の window-herdr.lua / notification.lua 相当）----
+# 起動時に最初のウィンドウで herdr へアタッチする。WezTerm と同じく絶対パスにせず
+# ログインシェル経由で PATH 解決させる（GUI 起動の環境変数には Homebrew の PATH が無い）。
+# Cmd+N で開く 2 枚目以降は素のシェル。
+initial-command = /bin/zsh -lic herdr
+# OSC 9 / 777 のデスクトップ通知は出さない。Codex が osascript で直接通知するため二重になる
+# （WezTerm の notification_handling = "NeverShow" と同じ）
+desktop-notifications = false
+# ベルは WezTerm と同じく Purr.aiff を鳴らす（内蔵ベル音は使わない）。attention/title は既定のまま
+bell-features = audio,attention,title
+bell-audio-path = /System/Library/Sounds/Purr.aiff
+bell-audio-volume = 0.5
