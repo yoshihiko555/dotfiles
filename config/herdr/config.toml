@@ -181,6 +181,13 @@ pane_gaps = true
 # スクロールバーだけは消す。tmux に無かったもので、横 1 桁分を内容に回せる。
 pane_scrollbars = false
 
+# 新規タブ作成 (Cmd+T → prefix+c) のたびに出るタブ名入力を止める。tmux の Prefix+c は
+# 名前を聞かずに即作成だったため、同じ感覚で使えるよう既定 (true) から変える。
+# 名前は既定ラベルのままになるが、付けたくなったら prefix+y の
+# herdr-rename-tab-auto で全タブまとめて中身から付け直せる。
+# 聞いてほしくなったらこの行を削除すれば既定に戻る。
+prompt_new_tab_name = false
+
 # tmux の automatic-rename (ウィンドウ名をフォアグラウンドのプロセス名で自動表示) に
 # 最も近い代替。herdr にはタブ名自体の自動追従は無い（キー 1 つで全タブを付け直す
 # ~/.config/herdr/bin/herdr-rename-tab-auto を prefix+y に割り当てて代替している。
