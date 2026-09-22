@@ -1,16 +1,20 @@
-local preview_active = false
-
 return {
   "folke/snacks.nvim",
-  -- WezTerm + tmux で残像・位置ずれがあるため休止。再試用時は true に戻す。
-  cond = false,
+  -- WezTerm + tmux では残像・位置ずれがあるため無効。herdr のときだけ有効にする。
+  -- herdr は Kitty graphics を素通しせず自前で処理しており、2026-09-23 の実測で
+  -- 分割・タブ切替・zoom・ID 指定削除のいずれでも崩れ/残像が出ないことを確認した。
+  -- 判定は WezTerm 層 (config/wezterm/wezterm.lua) と同じ ~/.config/use-herdr の有無。
+  cond = vim.fn.filereadable(vim.fn.expand("~/.config/use-herdr")) == 1,
   lazy = false,
   priority = 1000,
   opts = {
     image = {
       enabled = true,
-      -- WezTerm + tmux では手動フロートで試す。既存の Mermaid 表示とも分離する。
-      doc = { enabled = false, inline = false, float = true },
+      -- markdown の画像はカーソルが乗ったら自動でフロート表示する。
+      -- inline（本文に画像を埋め込む）は unicode placeholder 対応端末でのみ有効で、
+      -- snacks の端末表では wezterm は placeholders = false。よって WezTerm では
+      -- 自動的に float へフォールバックする（Ghostty / kitty に移れば inline が効く）。
+      doc = { enabled = true, inline = true, float = true },
       math = { enabled = false },
     },
   },
@@ -18,26 +22,11 @@ return {
     local snacks = require("snacks")
     snacks.setup(opts)
 
-    local function clear_preview()
-      -- フロートを閉じる際の WinLeave による再入を防ぐ。
-      preview_active = false
-      snacks.image.doc.hover_close()
-      -- WezTerm + tmux では ID 指定の削除で残像が残るため、表示中の画像を消す。
-      -- ImageClear と同じ消去要求。ほかのペインの画像も消える場合がある。
-      snacks.image.terminal.request({ a = "d", d = "a" })
-      vim.cmd("redraw!")
-    end
-
-    -- 手動プレビューは移動時に閉じる。上流の hover 再評価だけに任せない。
+    -- markdown のプレビューは doc.enabled = true による自動 hover に任せる。
+    -- 手動プレビュー (<leader>mi) と、その後始末の全画像削除は 2026-09-23 に撤去した。
+    -- tmux の残像対策だったが、herdr では ID 指定削除が効くため不要で、
+    -- 全消しは他ペインの画像まで巻き込むため自動 hover とは併用できない。
     local group = vim.api.nvim_create_augroup("image-preview-close", { clear = true })
-    vim.api.nvim_create_autocmd({ "CursorMoved", "InsertEnter", "BufLeave", "WinLeave", "FocusLost" }, {
-      group = group,
-      callback = function()
-        if preview_active then
-          clear_preview()
-        end
-      end,
-    })
 
     -- 画像ファイルはカーソル移動では閉じず、表示先を離れたときに消す。
     local hidden_images = {}
@@ -74,20 +63,12 @@ return {
       callback = function(ev) hidden_images[ev.buf] = nil end,
     })
 
+    -- 緊急用。全消しなので、ほかのペインの画像も消える。
     vim.api.nvim_create_user_command("ImageClear", function()
-      clear_preview()
+      snacks.image.doc.hover_close()
+      snacks.image.terminal.request({ a = "d", d = "a" })
       snacks.image.placement.clean()
+      vim.cmd("redraw!")
     end, { desc = "端末に残った画像を消去" })
   end,
-  keys = {
-    {
-      "<leader>mi",
-      function()
-        preview_active = true
-        require("snacks").image.hover()
-      end,
-      desc = "カーソル位置の画像をプレビュー",
-      ft = "markdown",
-    },
-  },
 }

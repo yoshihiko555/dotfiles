@@ -1,9 +1,12 @@
 -- mermaid ブロックをバッファ内に Unicode art で展開する
 --
--- 画像インライン表示（image.nvim 系）を採らない理由:
---   tmux が Kitty graphics protocol を未サポートで、allow-passthrough による
---   回避は大きい図の二重描画やペイン分割時の画像漏れが既知。常時 tmux 運用では
---   実用にならないため、端末非依存な Unicode art を主軸にする。
+-- mermaid を画像で描かず Unicode art を主軸にする理由:
+--   もとは tmux が Kitty graphics protocol を未サポートで、allow-passthrough による
+--   回避に二重描画やペイン分割時の画像漏れがあったため。2026-09-23 の実測で、herdr では
+--   Kitty graphics が崩れずに通ることを確認し、画像表示そのものの制約は解消した
+--   （snacks.lua の image を herdr 時のみ有効化済み）。
+--   ただし mermaid の画像化には mmdc が要る一方、Unicode art は端末非依存で
+--   追加依存もないため、mermaid についてはこちらを主軸のまま据え置く。
 -- 複雑な図の精査は markdown-preview.nvim（<leader>mp）のブラウザ表示に逃がす。
 return {
   "searleser97/mermaid-nvim",
