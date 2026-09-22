@@ -115,10 +115,45 @@ tmux で依存していた以下の挙動設定に相当するものが、herdr 
 - `focus-events on`
 - `allow-passthrough on`
 
+### tmux 時代に諦めていたものの解禁（2026-09-23 実測）
+
+tmux が Kitty graphics protocol に未対応だったために見送っていた 2 件が、herdr では動く
+ことを確認した。採用判断の材料として記録する。
+
+**herdr の Kitty graphics の扱い**（`kitty_graphics` を有効化していない既定状態で実測）
+
+| 経路 | 素の WezTerm | herdr の中 |
+| --- | --- | --- |
+| Kitty direct placement (`a=T`) | 描画 | 描画 |
+| unicode placeholder (`U=1`) | 豆腐が並ぶ | herdr が消費して描画されない |
+| iTerm2 inline image | 描画 | herdr が破棄して描画されない |
+
+placeholder 文字と iTerm2 の APC が外側へ届かないことから、herdr は tmux の
+`allow-passthrough`（素通し）とは違い、Ghostty コアでパースして処理していると判断できる。
+分割・タブ切替・zoom・ID 指定削除のいずれでも二重描画や隣ペインへの漏れは再現しなかった。
+なお `terminal.kitty_graphics` フラグは `pane.graphics.*` ソケット API 用で、pty 由来の
+Kitty graphics はフラグ無効のまま処理される。WezTerm 側は virtual placement のみ未対応。
+
+**解禁されたもの**
+
+- **Neovim の画像表示**: `snacks.nvim` の image モジュール（実装済み・`cond = false` で休止中
+  だった）を `~/.config/use-herdr` の有無で有効化。markdown の画像はカーソルが乗ると自動で
+  フロート表示される。本文への inline 埋め込みのみ WezTerm の placeholder 未対応で不可
+- **ターミナル内 Web ブラウザ**: Chawan（`cha`）を `hosts/macbook/packages.nix` に追加。
+  以前 Chromium 系（carbonyl / browsh 相当）で「重い」と感じて断念した経緯があったが、
+  Chawan は独自エンジンで Chromium を積まないため、実測で重さは出なかった。
+  上流ドキュメントも「tmux は Kitty image protocol 非対応、ハックへの対応予定なし」と明言
+  しており、tmux のままでは画像表示は不可能だった
+
+いずれも herdr の採否とは独立に成立する（tmux に戻せば画像表示だけが自動で無効に戻る）。
+
 ## 影響
 
 - `config/herdr/config.toml` と `config/herdr/bin/`（スクリプト 11 本）を dotfiles 管理下に置いた
 - herdr 本体は `homebrew.nix` に登録した
+- `config/nvim/lua/plugins/snacks.lua` の image を `~/.config/use-herdr` の有無で有効化した
+  （tmux 時代の残像対策だった全画像削除と手動プレビューは撤去）
+- Chawan を `config/nix/hosts/macbook/packages.nix` に追加した
 - 試用期間中は tmux + baton の設定・スクリプトを削除せずそのまま残す（切替式のため）
 - hook は herdr 側（`session` のときのセッション ID 紐付けのみ）と baton 側（既存の 7 イベント）が
   並存する
