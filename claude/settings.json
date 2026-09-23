@@ -43,53 +43,7 @@
   },
   "model": "opus[1m]",
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/baton-hook.sh",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "PermissionRequest": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/baton-hook.sh",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/baton-hook.sh",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
     "SessionStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/baton-hook.sh",
-            "timeout": 5
-          }
-        ]
-      },
       {
         "matcher": "^(startup|resume|clear|compact|fork)$",
         "hooks": [
@@ -97,18 +51,6 @@
             "type": "command",
             "command": "bash '/Users/yoshihiko/.claude/hooks/herdr-agent-state.sh' session",
             "timeout": 10
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/baton-hook.sh",
-            "timeout": 5
           }
         ]
       }
@@ -124,11 +66,6 @@
           {
             "type": "command",
             "command": "$HOME/.claude/claude_message.sh stop"
-          },
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/baton-hook.sh",
-            "timeout": 5
           }
         ]
       }
@@ -151,11 +88,6 @@
           {
             "type": "command",
             "command": "$HOME/.claude/claude_message.sh success"
-          },
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/baton-hook.sh",
-            "timeout": 5
           }
         ]
       }
