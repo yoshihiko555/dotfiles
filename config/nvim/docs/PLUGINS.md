@@ -6,7 +6,7 @@
 
 | プラグイン | 設定ファイル | 用途 | 導入理由 |
 |-----------|-------------|------|---------|
-| [tokyonight.nvim](https://github.com/folke/tokyonight.nvim) | `plugins/colorscheme.lua` | カラースキーム（moon テーマ） | WezTerm と統一した配色でモチベーション維持 |
+| [tokyonight.nvim](https://github.com/folke/tokyonight.nvim) | `plugins/colorscheme.lua` | カラースキーム（moon テーマ） | 端末（Ghostty / WezTerm）と統一した配色でモチベーション維持 |
 | [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) | `plugins/treesitter.lua` | 構文解析ベースのハイライト・インデント | 正規表現ベースより正確なシンタックスハイライトを実現 |
 | [fzf-lua](https://github.com/ibhagwan/fzf-lua) | `plugins/fzf-lua.lua` | ファジーファインダー（ファイル検索・grep・LSP連携） | 素早いファイル移動・コード検索で編集効率を確保 |
 | [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim) | `plugins/lualine.lua` | ステータスライン | モード・ブランチ・ファイル情報を常時表示 |

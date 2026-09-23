@@ -15,11 +15,11 @@ WezTerm のワークスペース管理を tmux セッションに移行し、tmu
 | Phase | 内容 | 状態 | 備考 |
 |-------|------|------|------|
 | - | 基盤機能 (Prefix, smart-splits, pane_mode, popup, テーマ等) | **完了** | 移行前の tmux ブランチ資産 |
-| 1 | 設定ファイル分割 + Stow 対応 | **完了** | `config/.config/tmux/` に分割・移動済み |
+| 1 | 設定ファイル分割 + Stow 対応 | **完了** | `config/.config/tmux/` に分割・移動済み（その後 stow 層を除去し、現在は `config/tmux/`） |
 | 2 | プロジェクト管理の移行 | **完了** | sessionizer (Prefix+f), kill-session (Prefix+W), セッション切替 (Prefix+w) |
 | 3 | プラグイン導入 (TPM) | **部分完了** | fingers (Prefix+F), open 導入済み。resurrect/continuum は後回し |
-| 4 | AI セッション管理 | **完了** | `baton` TUI を `Prefix+b` で popup 起動。暫定ダッシュボードスクリプトは撤去済み。ADR-007 参照 |
-| 5 | コマンドパレット + URL ハンドラ | **保留** | チートシート (Prefix+?) で代替。URL は tmux-open で対応済み。必要になれば追加 |
+| 4 | AI セッション管理 | **完了** | `baton` TUI を `Prefix+B` で popup 起動（`Prefix+b` は常駐の default セッションへ切替）。暫定ダッシュボードスクリプトは撤去済み。ADR-007 参照 |
+| 5 | コマンドパレット + URL ハンドラ | **保留** | チートシート (Prefix+.) で代替。URL は tmux-open で対応済み。必要になれば追加 |
 | 6 | WezTerm 設定の縮小 | **完了** | GUI レンダラーに限定。7 ファイル削除、keybinds.lua 大幅削減 |
 | 7 | 試用 + 微調整 | **進行中** | 1 週間の試用 (目標: 2026-03-23 レビュー) |
 
@@ -48,6 +48,7 @@ WezTerm のワークスペース管理を tmux セッションに移行し、tmu
 ### Stow パス変更
 
 `config/.config/tmux/` に統一。home-manager で `~/.config/tmux/` に配線する。
+（その後 stow 由来の `config/.config` 中間層を除去し、現在は `config/tmux/`）
 
 ### 分割マッピング
 
@@ -85,7 +86,7 @@ WezTerm の `select_project` と同等の UI を再現する:
   - `worktree` → `● 🔀` (worktree、親リポジトリ:ブランチ形式)
 - 現在のセッションと一致する項目に `(current)` を表示
 - セッション名: worktree は `repo:branch`、repo は末尾ディレクトリ名 (`.` → `-` に変換)
-- データソース: `scripts/repo-list.sh` (WezTerm と共有)
+- データソース: `scripts/repo-list.sh` (`repo` / herdr-sessionizer と共有)
 
 ### tmux-kill-session (Prefix+W)
 
@@ -104,9 +105,9 @@ TPM を自動ブートストラップ方式で導入。初回 tmux 起動時に�
 
 ## Phase 4: AI セッション管理
 
-- `baton` TUI を `Prefix+b` で popup 起動 (90x90%)
+- `baton` TUI を `Prefix+B` で popup 起動 (90x90%)。`Prefix+b` は常駐の default セッションへ切替
 - 暫定ダッシュボード (`tmux-popup-claude-dashboard`, `tmux-list-claude-panes`, `tmux-open-claude-target`) は撤去済み
-- 補足: ai-orchestra 監視用の `tmux-watch-claude-panes` 系スクリプトは先行実装済み
+- 補足: ai-orchestra 監視用の `tmux-watch-claude-panes` 系スクリプトは先行実装していたが、2026-09-23 に撤去した
 
 ## Phase 5: コマンドパレット + URL ハンドラ
 
@@ -151,6 +152,7 @@ git show fbf993a:config/.config/wezterm.bak/config/statusbar.lua
 | Cmd+T | Prefix+c | 新規ウィンドウ |
 | Cmd+D / Shift+D | Prefix+r/d | ペイン分割 |
 | Cmd+W | Prefix+x | ペイン閉じ |
+| Cmd+Shift+W | Prefix+X | セッション閉じ (確認付き) |
 
 ### 注意: TabBarState ちらつき問題
 

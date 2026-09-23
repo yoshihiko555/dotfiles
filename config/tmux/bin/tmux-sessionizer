@@ -1,6 +1,5 @@
 #!/bin/bash
 # tmux-sessionizer — GHQ プロジェクト picker
-# WezTerm の select_project (Leader+f) 相当
 # repo-list.sh の出力を fzf で選択 → tmux セッション作成/切替
 
 set -euo pipefail

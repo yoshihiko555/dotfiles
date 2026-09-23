@@ -1,6 +1,5 @@
 #!/bin/bash
 # tmux-split-layout — 現在のウィンドウを N ペインに分割
-# WezTerm の layouts.split_to() 相当
 # Usage: tmux-split-layout <N> <pane_id>
 
 set -euo pipefail

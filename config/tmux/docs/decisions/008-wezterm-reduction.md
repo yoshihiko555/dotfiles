@@ -18,13 +18,16 @@ tmux-first 環境への移行に伴い、WezTerm の役割を GUI レンダラ�
 | `layouts.lua` | ペイン分割レイアウト | `bin/tmux-split-layout` (Prefix+2-8) |
 | `statusbar.lua` | WezTerm ステータスバー | `statusbar.conf` |
 | `tab.lua` | タブバーカスタマイズ | tmux ウィンドウ一覧 |
-| `command_palette.lua` | コマンドパレット拡張 | `bin/tmux-cheatsheet` (Prefix+?) |
+| `command_palette.lua` | コマンドパレット拡張 | `bin/tmux-cheatsheet` (Prefix+?)。2026-09-23 に `bin/tmux-cheatsheet-preview` (Prefix+.) へ一本化 |
 | `resurrect.lua` | セッション永続化 | tmux-resurrect (将来導入) |
 | `context.lua` | 上記モジュールの依存ヘルパー | 不要 |
 
 ### 残したモジュール
 
 `wezterm.lua`, `window.lua`, `font.lua`, `general.lua`, `keybinds.lua`, `notification.lua`
+
+（2026-09-23 追記: 見た目の設定は `window-appearance.lua` に切り出し済み。Ghostty + herdr を常用にしたことに伴い、
+WezTerm は tmux 専用のサブ端末として、tmux 接続中に効かない設定（ペイン・スクロールバック・コピーモード・マウス・`Cmd+N`）を削除した）
 
 ### キーバインド方針
 

@@ -4,7 +4,7 @@
             "complex_modifications": {
                 "rules": [
                     {
-                        "description": "Ctrl+Q (tmux Prefix) 押下時に英数キーを送ってから Prefix を送る",
+                        "description": "Ctrl+Q (tmux / herdr Prefix) 押下時に英数キーを送ってから Prefix を送る",
                         "manipulators": [
                             {
                                 "from": {

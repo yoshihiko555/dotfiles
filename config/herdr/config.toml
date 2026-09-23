@@ -2,7 +2,7 @@ onboarding = false
 
 [keys]
 # Karabiner が Ctrl+B を left_arrow に変換するため、herdr 既定の ctrl+b は届かない。
-# 普段の tmux と同じ ctrl+q に揃える（試用中のキー覚え直しコストを比較から除外する目的）。
+# tmux（WezTerm のサブ経路）と同じ ctrl+q に揃え、両方でキーを覚え直さずに済むようにする。
 prefix = "ctrl+q"
 
 # tmux では Alt+; (prefix なし直接キー) でアクティブペインをズームしていた。
@@ -16,7 +16,7 @@ previous_agent = "prefix+shift+a"
 focus_agent = "prefix+alt+1..9"
 
 # タブ切替: 既定の prefix+1..9 から退避。prefix+2..8 を将来 N 分割に使うため。
-# WezTerm 側で Cmd+1..9 → Alt+1..9 を送る
+# Ghostty 側（config/ghostty/herdr.conf）で Cmd+1..9 → Alt+1..9 を送る
 switch_tab = "alt+1..9"
 
 # ワークスペースの番号による直接切替は用意していない。Cmd+Shift+1..9 は macOS の
@@ -29,7 +29,7 @@ switch_tab = "alt+1..9"
 goto = "prefix+m"
 
 # サイドバーの開閉。既定の prefix+b は承認コンソール（baton の Prefix+B 相当）に
-# 譲った。WezTerm 側で Cmd+S → Ctrl+Q, d を送る。prefix+d は tmux では縦分割だが
+# 譲った。Ghostty 側で Cmd+S → Ctrl+Q, d を送る。prefix+d は tmux では縦分割だが
 # herdr では未割当なので空いている。
 toggle_sidebar = "prefix+d"
 
@@ -63,7 +63,7 @@ key = "prefix+u"
 type = "shell"
 command = "open \"$(pbpaste)\""
 
-# --- herdr 試用 第2段階: tmux/bin から移植したスクリプト群 ---
+# --- tmux/bin から移植したスクリプト群 ---
 # 詳細は各スクリプト (~/.config/herdr/bin/herdr-*) 冒頭のコメントを参照。
 
 # GHQ プロジェクト picker: tmux の Prefix+f と同じ
@@ -116,7 +116,7 @@ key = "prefix+0"
 type = "shell"
 command = "~/.config/herdr/bin/herdr-init-panes"
 
-# チートシート表示: tmux の Prefix+? 相当。herdr 版は config.toml から動的生成する
+# チートシート表示: tmux の Prefix+. 相当。herdr 版は config.toml から動的生成する
 [[keys.command]]
 key = "prefix+i"
 type = "popup"
@@ -125,7 +125,7 @@ width = "90%"
 height = "90%"
 
 # 現在のワークスペースを終了 (実行中プロセスがあれば確認): tmux の Prefix+X
-# (tmux-kill-current-session) 相当。WezTerm 側の Cmd+Shift+W からも転送する。
+# (tmux-kill-current-session) 相当。Ghostty 側の Cmd+Shift+W からも転送する。
 # 注意: tmux の Prefix+W (一覧から他セッションを選んで削除) は別機能で未移植。
 [[keys.command]]
 key = "prefix+alt+x"
@@ -141,7 +141,7 @@ height = "40%"
 name = "tokyo-night"
 
 [theme.custom]
-# WezTerm 側の背景画像を透かすため、パネル背景を描かない。
+# 端末（Ghostty）の背景画像を透かすため、パネル背景を描かない。
 # reset にすると herdr が自前の塗りをやめて下の背景が見える。
 panel_bg = "reset"
 
@@ -162,7 +162,7 @@ overlay0 = "#545c7e" # 推測: tokyonight moon dark3 相当
 # tmux で「今ここが選択中」を示していた青をそのまま当てる。
 accent = "#82aaff"
 
-# リンクを Cmd+クリックでブラウザに開くため、マウス捕捉を端末（WezTerm）側に渡す。
+# リンクを Cmd+クリックでブラウザに開くため、マウス捕捉を端末（Ghostty）側に渡す。
 # 代償として herdr のマウス UI（サイドバーのクリック選択、ドラッグ自動コピー、
 # スクロールバー、右クリックメニュー、境界のドラッグリサイズ）を失う可能性がある。
 # 戻すにはこの行を削除するだけ（バックアップ: config.toml.bak4）。
@@ -199,10 +199,8 @@ prompt_new_tab_name = false
 # 表示される。10 並列時に「どのペインで何が動いているか」を一目で判別する用途。
 show_agent_labels_on_pane_borders = true
 
-# herdr が自分自身のホストターミナル (WezTerm-herdr) に書き込むウィンドウタイトル。
-# wezterm-herdr.lua の format-window-title がこの値をそのまま
-# "[herdr試用] " + タイトル として表示する作り（wezterm.lua 自体は編集対象外なので
-# 中身だけをここで決める）。既定は "{hostname}: {workspace}" だが、herdr machine は
+# herdr が自分自身のホストターミナル (Ghostty) に書き込むウィンドウタイトル。
+# 既定は "{hostname}: {workspace}" だが、herdr machine は
 # hermes へ SSH / --remote で繋ぐことがあるため {hostname} は残す。
 # このタイトルはサーバー側で解決されるので、hermes に繋いでいるときは hermes と出る。
 # どちらのマシンを見ているかが一目で分かる。
@@ -212,7 +210,7 @@ window_title = "{hostname}: {workspace}"
 
 # tmux-status-right の baton/project/日時セグメント相当。日時は同じ MM/DD HH:MM。
 # command エントリ (herdr-status-repo) がリポジトリ/ワークツリー名を出す
-# (tmux-session-icon / tmux-status-right のプロジェクトアイコン部分の移植)。
+# (旧 tmux-session-icon / tmux-status-right のプロジェクトアイコン部分の移植)。
 # サイドバー ([ui.sidebar.spaces] の workspace/branch/git_status) はフォーカス中の
 # ワークスペース固定なのに対し、tab_bar_right の command はアクティブペインの
 # cwd を都度見るため、リポジトリ配下で cd した先など細かい違いが出ることがある

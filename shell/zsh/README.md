@@ -16,6 +16,9 @@
 | `takt.zsh` | takt 会社アカウント切替 (taktw) |
 | `nix.zsh` | nix-darwin 反映コマンド (nxb, nxs, nxg 等) / Homebrew 更新 (bxu) / hermes リモート反映 (hxb, hxs, hxg 等) |
 | `screenpipe.zsh` | screenpipe の一時停止 / 再開 / 状態確認 / 実体の復旧 (spoff, spon, sps, spfix) |
+| `herdr.zsh` | herdr-automatic-rename のシェルフック（コマンド実行でタブ名を追従） |
+| `terminal-browser.zsh` | terminal-browser の起動ショートカット (tb) |
+| `prompt-marks.zsh` | OSC 133 の semantic prompt マーク（Ctrl+L でスクロールバックを失わない） |
 
 ## 外出時のスリープ防止 (`awake`、macOS 専用)
 

@@ -6,7 +6,7 @@
 |---|---|---|---|
 | `ctrl-1` | M1 | メインDELL | Google Chrome |
 | `ctrl-2` | M2 | メインDELL | Dia |
-| `ctrl-3` | M3 | メインDELL | WezTerm |
+| `ctrl-3` | M3 | メインDELL | Ghostty（常用）/ WezTerm（サブ） |
 | `ctrl-9` | M4 | メインDELL | （空き枠。Hermes の画面共有等） |
 | `ctrl-4` | S1 | サブDELL | Notion |
 | `ctrl-5` | S2 | サブDELL | Zed / VS Code / TablePlus |
@@ -169,10 +169,10 @@ BTT 版はフローティングウィンドウや AeroSpace 管理外のウィ�
 | レイアウト切替 | `alt-slash` / `alt-comma` | `ctrl-alt-a`（tiles ⇄ accordion）で実装済み |
 
 AeroSpace はキーを Accessibility API でグローバルに横取りするため、alt 系を取ると
-WezTerm 上の tmux が使えなくなる。tmux 側の定義は `config/tmux/conf/smart-splits.conf`
+herdr（Ghostty）と tmux（WezTerm）が使えなくなる。tmux 側の定義は `config/tmux/conf/smart-splits.conf`
 と `config/tmux/conf/session.conf` を参照。
 
-`ctrl-alt-*` は tmux / WezTerm / Karabiner のいずれも未使用のため、
+`ctrl-alt-*` は herdr / Ghostty / tmux / WezTerm / Karabiner のいずれも未使用のため、
 ウィンドウ移動（`ctrl-alt-1`〜`9`）とレイアウト切替（`ctrl-alt-a`）に割り当てた（2026-09-02）。
 ただし Karabiner が横取りする `b` / `f` / `h` / `n` / `p` / `q` / `space` は
 `ctrl-alt-*` でも変換されるため使えない。

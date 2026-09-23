@@ -19,10 +19,10 @@ AGENT_TITLES=0
 # ワークスペースには番号を付けない。
 # 理由 1: config.toml の switch_workspace が未設定で、番号ジャンプを使っていない。
 # 理由 2: herdr-agent-console の ws 列が "1:dotfiles" 形式で番号を自前で出しており、
-#         "1:[1] dotfiles" と二重になる。WezTerm のウィンドウタイトル
+#         "1:[1] dotfiles" と二重になる。Ghostty のウィンドウタイトル
 #         ({hostname}: {workspace}) にも乗る。
 # タブ側の番号 (AUTO_INDEX=1 の既定) は残す: switch_tab = "alt+1..9" に
-# WezTerm が Cmd+1..9 を転送しており、タブバーに飛び先が出ていなかったため。
+# Ghostty が Cmd+1..9 を転送しており、タブバーに飛び先が出ていなかったため。
 AUTO_INDEX_WORKSPACES=0
 
 # 参考: AGENT_TRANSCRIPT（既定 1）は、エージェントが端末タイトルを付けていないときに

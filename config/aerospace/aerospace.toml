@@ -52,7 +52,7 @@ ctrl-right = 'exec-and-forget ~/.config/aerospace/scripts/workspace-cycle.sh nex
 # キー割り当ては上の workspace 切替（ctrl-N）と同じ並びに揃えている。
 # --focus-follows-window は意図的に付けていない。ウィンドウだけ退避して
 # 今の画面で作業を続けたいため（モニター移動の alt-shift-←/→ とは方針が異なる）。
-# ctrl-alt-* は tmux / WezTerm / Karabiner のいずれも未使用の空き領域。
+# ctrl-alt-* は herdr / Ghostty / tmux / WezTerm / Karabiner のいずれも未使用の空き領域。
 ctrl-alt-1 = 'move-node-to-workspace M1'
 ctrl-alt-2 = 'move-node-to-workspace M2'
 ctrl-alt-3 = 'move-node-to-workspace M3'

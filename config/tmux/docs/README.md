@@ -16,4 +16,4 @@ tmux-first 環境の現行実装と移行計画に関するドキュメント群
 ## 関連リソース
 
 - 移行計画の原本: `~/ghq/github.com/yoshihiko555/digital-garden/content/notes/tech/2026-03-16_tmux-migration-plan.md`
-- dotfiles リポジトリ: tmux ブランチで作業中
+- dotfiles リポジトリ: `config/tmux/`（tmux ブランチでの並行開発は完了し main に統合済み）

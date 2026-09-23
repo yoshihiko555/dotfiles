@@ -5,7 +5,7 @@
 #   LABEL : 表示用ラベル（例: yoshihiko555/dotfiles）
 #   PATH  : 絶対パス
 #
-# WezTerm InputSelector と shell repo() の両方から利用する共有スクリプト
+# shell repo()、tmux-sessionizer、herdr-sessionizer から利用する共有スクリプト
 
 set -euo pipefail
 

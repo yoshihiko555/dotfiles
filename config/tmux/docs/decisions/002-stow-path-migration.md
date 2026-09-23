@@ -2,6 +2,7 @@
 
 - **状態**: 承認・実施済み
 - **日付**: 2026-03-16
+- **追記**: その後 stow 由来の `config/.config` 中間層を除去し、現在の配置は `config/tmux/`（home-manager の `mkOutOfStoreSymlink` で `~/.config/tmux/` に配線）
 
 ## コンテキスト
 

@@ -1,6 +1,5 @@
 #!/bin/bash
 # tmux-kill-session — セッション削除 picker
-# WezTerm の delete_workspace (Leader+W) 相当
 # 現在のセッションと claude-* セッションは除外
 
 set -euo pipefail

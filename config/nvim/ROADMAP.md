@@ -28,7 +28,7 @@ Vim操作を覚える段階。見た目を整えてモチベーションを維�
 
 | プラグイン | 用途 | 状態 |
 |-----------|------|------|
-| tokyonight.nvim (moon) | カラースキーム（WezTermと統一） | 導入済み |
+| tokyonight.nvim (moon) | カラースキーム（端末と統一） | 導入済み |
 | nvim-treesitter (main branch) | シンタックスハイライト強化 | 導入済み |
 | fzf-lua | ファジーファインダー（ファイル検索・grep・LSP連携） | 導入済み |
 | lualine.nvim | ステータスライン | 導入済み |

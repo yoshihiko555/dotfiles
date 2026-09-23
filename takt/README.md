@@ -105,7 +105,7 @@ taktw
   （`git clone --reference <project> --dissociate`）です。したがって:
   - `gtr`（`wt` コマンド）の `list` / `go` / `rm` からは見えません（gtr 管理外）。
   - `scripts/repo-list.sh` は `.worktrees/*` をディレクトリ走査するため、`repo` コマンドと
-    WezTerm セレクタからは拾えます。gtr と同居させているのはこのためです。
+    tmux / herdr の sessionizer からは拾えます。gtr と同居させているのはこのためです。
   - `--dissociate` なのでオブジェクトは実体コピーになります（容量 = タスク数 × リポジトリサイズ）。
 - takt を使うプロジェクトでは `.gitignore` に `.worktrees/` を追加してください。
 

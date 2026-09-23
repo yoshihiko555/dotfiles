@@ -221,20 +221,11 @@ ccw
 
 home-manager が Dropbox 配下へシンボリックリンクを作成して管理する。
 
-### WezTerm Open
+### Open-VS-or-IT
 
-Alfredから指定ディレクトリをWezTermで3分割ペインレイアウトで開く。
+Alfred からお気に入りフォルダを VSCode / Zed / herdr（Ghostty）で開く。
 
-**キーワード:** `wez`
-
-```
-3分割レイアウト:
-┌──────┬──────┐
-│      │  2   │
-│  1   ├──────┤
-│      │  3   │
-└──────┴──────┘
-```
+**キーワード:** `fav`（開き方は `vs` / `zed` / `wez` から選ぶ。`wez` は herdr のワークスペースを作って Ghostty を前面に出す）
 
 ### post
 

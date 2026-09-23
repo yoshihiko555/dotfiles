@@ -45,7 +45,7 @@ branch_name_strategy: ai
 #       (git clone --reference <project> --dissociate)。したがって:
 #       - gtr (wt コマンド) の list / go / rm からは見えない。gtr 管理外。
 #       - scripts/repo-list.sh は .worktrees/* をディレクトリ走査するため、
-#         repo コマンドと WezTerm セレクタからは拾える。これが同居させる理由。
+#         repo コマンドと tmux / herdr の sessionizer からは拾える。これが同居させる理由。
 #       - --dissociate なのでオブジェクトは実体コピー。容量はタスク数×リポジトリサイズ。
 # NOTE: 対象プロジェクトの .gitignore に .worktrees/ が必要。
 worktree_dir: .worktrees
