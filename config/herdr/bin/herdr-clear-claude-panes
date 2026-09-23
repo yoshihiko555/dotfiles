@@ -1,48 +1,15 @@
 #!/bin/bash
-# herdr-clear-claude-panes — 現在アクティブなタブの Claude Code ペインで /clear を実行する
+# herdr-clear-claude-panes — 現在のタブの Claude Code ペインで /clear を実行する
 #
 # Usage: herdr-clear-claude-panes [pane_id]
+#   Loupedeck の「アプリを実行」から呼ぶ想定（キーバインドは無い）。省略時はフォーカス中のタブが対象。
+#   TTY も HERDR_PANE_ID も無い状態で動くため、PATH を先頭で補う。
+#   HERDR_CLEAR_CLAUDE_CMD で送るコマンドを変えられる（既定: /clear）。
 #
-#   Loupedeck の「アプリを実行」から呼ばれる想定 (herdr のキーバインドは持たない)。
-#   省略時はフォーカス中のペイン (herdr pane current --current) が属するタブを対象にする。
-#   TTY も HERDR_PANE_ID も無い状態 (Loupedeck 経由) で動くため、launchd 経由の
-#   最小 PATH に無い herdr を先頭で補う。pane_id を渡した場合はそのタブが対象 (検証・手動用)。
-#
-#   herdr-launch-claude-work と対になるスクリプト。あちらは「シェル待機中のペイン」に
-#   claude を起動し、こちらは「claude が動いているペイン」の文脈を捨てる。
-#
-# 環境変数:
-#   HERDR_CLEAR_CLAUDE_CMD  送るスラッシュコマンド (既定: /clear)
-#
-# 対象ペインの選び方:
-#  - `herdr pane layout --pane <id>` でタブ内のペインを列挙し、rect を (y, x) 順に
-#    ソートして「左上→右上→左下→右下」の読み順とする (herdr-launch-claude-work と同じ方式)。
-#  - agent 判定は `herdr pane process-info` ではなく `herdr pane list --workspace <id>` の
-#    `agent` / `agent_status` を使う。herdr が claude のライフサイクルを直接持っているため、
-#    プロセス名から推測するより正確で、ワークスペース単位の 1 回の呼び出しで済む。
-#  - `agent` が claude でないペイン (シェル・nvim 等) はスキップする。
-#  - `agent_status` が working のペインもスキップする。実行中に /clear を打つと
-#    入力がキューされて次のターンに混ざるため。判定は一覧取得時と送信直前の 2 回行う。
-#    8 ペインを順に送る数秒の間に idle → working へ変わるとスナップショットだけでは
-#    取りこぼすため。
-#  - 呼び出し元のペイン自身も、対象タブの idle な claude ペインなら /clear される。
-#    Loupedeck 経由では HERDR_PANE_ID が渡らず自ペインを確実に除外できないうえ、
-#    「タブ内の全ペインを消す」という用途では除外しない方が期待どおりのため。
-#
-# キー送出の手順 (実測で確定。2026-09-23):
-#  1. `send-keys ctrl+u` — 入力欄に打ちかけのテキストが残っていると `foo/clear` になり
-#     スラッシュコマンドとして成立しないため、先に行削除する。
-#     **esc は使わない。** 1 回目の esc は「Esc again to clear」を出すだけで消えず、
-#     2 回目まで送ると入力欄が空のときに巻き戻しメニューが開いてしまう。
-#     ctrl+u は入力欄が空でも無害。
-#  2. `send-text /clear` — ここでスラッシュコマンドの補完メニューが出て /clear が先頭に来る。
-#  3. `send-keys Enter` — Enter 1 回で補完確定と実行が同時に起きる (2 回は不要)。
-#  `herdr pane run` は使わない。テキストと Enter を 1 回の書き込みで送るため、
-#  TUI 側でペースト扱いになって実行されない可能性がある。
-#
-# /clear は直前のセッションを消すわけではない (Claude Code 側の説明どおり
-# previous session は残る) ため、確認プロンプトは持たない。Loupedeck は
-# デタッチ実行で TTY が無く、そもそも read での確認ができない。
+# claude 以外のペインと作業中（working）のペインはスキップする（実行中に送ると次のターンに混ざる）。
+# 状態は一覧取得時と送信直前の 2 回確認する。
+# 送り方は ctrl+u → send-text → Enter（実測で確定）。esc は巻き戻しメニューを開くことがあり、
+# pane run はペースト扱いになって実行されないことがあるため使わない。
 
 set -euo pipefail
 

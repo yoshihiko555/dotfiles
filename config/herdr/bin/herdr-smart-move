@@ -1,32 +1,12 @@
 #!/usr/bin/env bash
-# herdr-smart-move — Alt+H/J/K/L によるペイン越境移動 (herdr 版 smart-splits 連携)
+# herdr-smart-move — Alt+H/J/K/L のペイン移動と Alt+Shift+H/J/K/L のリサイズ（smart-splits.nvim 連携）
 #
-# 元: dotfiles config/tmux/conf/smart-splits.conf の is_vim 判定
-#   is_vim="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\S+\/)?g?(view|n?vim?x?)(diff)?$'"
-#   bind -n M-h if-shell "$is_vim" "send-keys M-h" "select-pane -L"
-# tmux は「フォアグラウンドプロセスが vim/nvim 系かどうか」で分岐し、
-#   vim 系なら同じ Alt+方向キーをペインへ転送 (smart-splits.nvim が受け取る)、
-#   それ以外なら tmux 自身がペインを直接切り替える。
-# herdr にはこの分岐機構が無いため、`herdr pane process-info` で
-# フォアグラウンドプロセスを調べて同じ判定をここで再現する。
+# Usage: herdr-smart-move <left|right|up|down|resize-left|resize-right|resize-up|resize-down>
 #
-# Usage: herdr-smart-move <left|right|up|down>
-#
-# 性能上の注意:
-#   キー入力のたびに起動される。herdr CLI 呼び出しは通常 2 回
-#   (process-info 1回 + send-keys/focus 1回。$HERDR_PANE_ID が
-#   注入されない場合のみ pane current が追加で1回) に抑えている。
-#   スリープ・余計なプロセス起動は入れていない。
-#
-# エラー時の扱い:
-#   このスクリプトは type=shell (デタッチ実行) でキーバインドから
-#   起動されるため、標準エラーは誰にも見えない。実際の失敗
-#   (herdr/jq が無い、pane id が特定できない、CLI 呼び出し自体が
-#   失敗する) はログファイルに記録した上で herdr notification でも
-#   一度だけ知らせる。一方、移動先ペインが無い「端」のケースは
-#   `herdr pane focus` 自体が exit 0 / reason=no_neighbor を返す
-#   正常系なので、ここで特別扱いする必要はない
-#   (一時ワークスペースでの実機検証で確認済み)。
+# フォアグラウンドが vim / nvim 系ならキーをペインへ転送し（smart-splits.nvim が処理する）、
+# それ以外は herdr が隣のペインへ移動・リサイズする。判定の正規表現は tmux の smart-splits.conf と揃えている。
+# キー入力のたびに起動されるので、herdr CLI の呼び出しは通常 2 回に抑えている。
+# 失敗はログ（~/.config/herdr/herdr-smart-move.log）と herdr の通知に出す。端での no_neighbor は正常系。
 
 set -euo pipefail
 

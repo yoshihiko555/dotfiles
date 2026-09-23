@@ -1,30 +1,10 @@
 #!/usr/bin/env bash
-# herdr-split-layout — 現在のタブを N ペインに分割 (herdr 版)
+# herdr-split-layout — 現在のタブを N ペインに分割する（prefix+2..8）
 #
-# 元: dotfiles config/tmux/bin/tmux-split-layout (119行、読み取り専用で参照)
 # Usage: herdr-split-layout <N>
 #
-# tmux 版との違い:
-#  - 分割対象は tmux では引数の PANE_ID だったが、herdr ではキーバインド経由の
-#    実行時に herdr が注入する $HERDR_PANE_ID を使う (無ければ
-#    `herdr pane current --current` にフォールバック)。
-#  - tmux の `-p N` (split-window) は「新しく作るペイン」のサイズ%を指定するが、
-#    herdr の `pane split --ratio` は逆で「分割元(target)ペインが残す」比率を
-#    指定することを実機検証で確認した (一時ワークスペースを作って
-#    `--ratio 0.25` を投げ、`pane layout` の rect 幅が target側=25%・
-#    新規側=75% になることを確認、検証後そのワークスペースは close 済み)。
-#    そのため tmux の `-p N` は herdr の `--ratio = 1 - N/100` に変換している。
-#  - tmux の `-h`(左右分割) は herdr の `--direction right`、
-#    `-v`(上下分割) は `--direction down` に対応する。
-#  - 各分割には `--no-focus` を付与し、tmux 版の最後の
-#    `tmux select-pane -t PANE_ID` (元ペインへフォーカスを戻す) と同じ結果
-#    (元ペインがフォーカスされたまま) を得ている。
-#  - ペイン数チェックは `tmux list-panes` の代わりに
-#    `herdr pane layout --pane <id>` の `.result.layout.panes` 件数を使う。
-#
-# 破壊的操作 (実際に分割を実行する) を含むため、このスクリプト自体は
-# 動作確認のための実行はしていない (bash -n の構文チェックと、herdr CLI が
-# --help どおりの引数になっているかの確認に留めた)。
+# herdr pane split --ratio は「分割元が残す比率」を指定する（tmux の -p とは逆。実測）。
+# 分割はすべて --no-focus で行い、フォーカスは元のペインに残す。
 
 set -euo pipefail
 

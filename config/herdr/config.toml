@@ -1,39 +1,30 @@
 onboarding = false
 
 [keys]
-# Karabiner が Ctrl+B を left_arrow に変換するため、herdr 既定の ctrl+b は届かない。
-# tmux（WezTerm のサブ経路）と同じ ctrl+q に揃え、両方でキーを覚え直さずに済むようにする。
+# prefix は tmux と同じ Ctrl+Q（既定の Ctrl+B は Karabiner が left_arrow に変換して届かない）
 prefix = "ctrl+q"
 
-# tmux では Alt+; (prefix なし直接キー) でアクティブペインをズームしていた。
-# 8ペイン展開時の多用途のため、herdr でも同じ直接キーで zoom できるようにする。
-# 効かない/衝突する場合はこの行を削除すれば既定 (prefix+z) に戻る。
+# ペインのズーム（tmux と同じ Alt+;）
 zoom = "alt+semicolon"
 
-# エージェント選択（tmux の prefix+a / prefix+shift+A を転用。旧サブエージェント監視は不要判定済み）
+# エージェント選択
 next_agent = "prefix+a"
 previous_agent = "prefix+shift+a"
 focus_agent = "prefix+alt+1..9"
 
-# タブ切替: 既定の prefix+1..9 から退避。prefix+2..8 を将来 N 分割に使うため。
-# Ghostty 側（config/ghostty/herdr.conf）で Cmd+1..9 → Alt+1..9 を送る
+# タブ切替（prefix+2..8 は N 分割に使う。Ghostty の Cmd+1..9 がここに届く）
 switch_tab = "alt+1..9"
 
-# ワークスペースの番号による直接切替は用意していない。Cmd+Shift+1..9 は macOS の
-# スクリーンショットと衝突し、Ctrl+数字は 2..8 が制御文字に化けて届かず、prefix+1..9 は
-# N 分割で埋まっているため。prefix+w のピッカーで足りると判断した。
+# ワークスペースの番号切替は置かない（Cmd+Shift+数字は macOS のスクリーンショット、
+# prefix+数字は N 分割と衝突する）。prefix+w のピッカーを使う。
 
-# lazygit を tmux と同じ prefix+g に戻すため、herdr 既定の goto をここへ退避。
-# 一度 prefix+p（tmux の pane_mode と同じキー）に置いてみたが、ナビゲートモードは
-# 移動しかできず tmux の pane_mode とは別物だったため戻した。previous_tab も既定へ。
+# ナビゲート（既定の prefix+g は lazygit に譲った）
 goto = "prefix+m"
 
-# サイドバーの開閉。既定の prefix+b は承認コンソール（baton の Prefix+B 相当）に
-# 譲った。Ghostty 側で Cmd+S → Ctrl+Q, d を送る。prefix+d は tmux では縦分割だが
-# herdr では未割当なので空いている。
+# サイドバー開閉（既定の prefix+b はエージェント・コンソールに譲った。Ghostty の Cmd+S がここに届く）
 toggle_sidebar = "prefix+d"
 
-# lazygit: tmux の Prefix+g と同じ。herdr 既定の goto は prefix+m へ退避した
+# lazygit
 [[keys.command]]
 key = "prefix+g"
 type = "popup"
@@ -41,7 +32,7 @@ command = "zsh -ic 'lazygit'"
 width = "80%"
 height = "80%"
 
-# 一時シェル: tmux の Prefix+t と同じ
+# 一時シェル
 [[keys.command]]
 key = "prefix+t"
 type = "popup"
@@ -49,7 +40,7 @@ command = "zsh"
 width = "80%"
 height = "80%"
 
-# Claude Code: tmux の Prefix+C と同じ
+# Claude Code
 [[keys.command]]
 key = "prefix+shift+c"
 type = "popup"
@@ -57,16 +48,13 @@ command = "claude"
 width = "90%"
 height = "90%"
 
-# クリップボードの URL を開く: tmux-open の代替。コピーモードで yank したあとに使う
+# クリップボードの URL を開く（コピーモードで yank したあとに使う）
 [[keys.command]]
 key = "prefix+u"
 type = "shell"
 command = "open \"$(pbpaste)\""
 
-# --- tmux/bin から移植したスクリプト群 ---
-# 詳細は各スクリプト (~/.config/herdr/bin/herdr-*) 冒頭のコメントを参照。
-
-# GHQ プロジェクト picker: tmux の Prefix+f と同じ
+# GHQ プロジェクト picker
 [[keys.command]]
 key = "prefix+f"
 type = "popup"
@@ -74,7 +62,7 @@ command = "~/.config/herdr/bin/herdr-sessionizer"
 width = "80%"
 height = "70%"
 
-# N分割レイアウト: tmux の Prefix+2〜8 と同じ。現在のタブを N ペインに分割する
+# 現在のタブを N ペインに分割（prefix+2..8）
 [[keys.command]]
 key = "prefix+2"
 type = "shell"
@@ -110,13 +98,13 @@ key = "prefix+8"
 type = "shell"
 command = "~/.config/herdr/bin/herdr-split-layout 8"
 
-# ペイン初期化: tmux の Prefix+0 と同じ。ペイン数に応じて nvim/claude/codex を起動する
+# ペイン数に応じて nvim / claude / codex を起動
 [[keys.command]]
 key = "prefix+0"
 type = "shell"
 command = "~/.config/herdr/bin/herdr-init-panes"
 
-# チートシート表示: tmux の Prefix+. 相当。herdr 版は config.toml から動的生成する
+# チートシート（この config.toml から生成）
 [[keys.command]]
 key = "prefix+i"
 type = "popup"
@@ -124,9 +112,7 @@ command = "~/.config/herdr/bin/herdr-cheatsheet"
 width = "90%"
 height = "90%"
 
-# 現在のワークスペースを終了 (実行中プロセスがあれば確認): tmux の Prefix+X
-# (tmux-kill-current-session) 相当。Ghostty 側の Cmd+Shift+W からも転送する。
-# 注意: tmux の Prefix+W (一覧から他セッションを選んで削除) は別機能で未移植。
+# 現在のワークスペースを終了（実行中プロセスがあれば確認）。Ghostty の Cmd+Shift+W がここに届く
 [[keys.command]]
 key = "prefix+alt+x"
 type = "popup"
@@ -134,178 +120,74 @@ command = "~/.config/herdr/bin/herdr-kill-workspace-checked"
 width = "70%"
 height = "40%"
 
-# 唯一 [ui] 系ではない行。既定テーマ未指定時のベースが Tokyo Night Moon と
-# 系統の異なる配色（catppuccin 相当）になるため、近い組み込みテーマを土台にする。
-# 不要なら削除するだけで catppuccin 系に戻る。
+# Tokyo Night Moon に近い組み込みテーマを土台にする（未指定だと catppuccin 系になる）
 [theme]
 name = "tokyo-night"
 
 [theme.custom]
-# 端末（Ghostty）の背景画像を透かすため、パネル背景を描かない。
-# reset にすると herdr が自前の塗りをやめて下の背景が見える。
+# パネル背景を描かず、Ghostty の背景画像を見せる
 panel_bg = "reset"
-
-# サイドバーのコントラスト改善（Tokyo Night Moon 系統に揃える）。
-# panel_bg = "reset" で背景画像が透けるため、既定のグレー系文字が沈んで見づらかった。
-# text / subtext0 は tmux 側 (appearance.conf: window-active-style / window-style の fg)
-# で実際に使っている値をそのまま採用（config/tmux/conf/appearance.conf で確認済み）。
-text = "#c8d3f5" # 最上位テキスト。tmux window-active-style fg と同値
-subtext0 = "#828bb8" # 二次テキスト。tmux window-style(非アクティブ) fg と同値
-# overlay0 / overlay1 は tmux 側に対応する値が無いため、Tokyo Night Moon 公式パレットの
-# dark3 / dark5 から類推した値（未検証・推測）。どこに効くか実機で見比べて調整してほしい。
-overlay1 = "#737aa2" # 推測: tokyonight moon dark5 相当
-overlay0 = "#545c7e" # 推測: tokyonight moon dark3 相当
+# 背景画像の上でサイドバーの文字が沈まないよう、Tokyo Night Moon の値で明るめに寄せる
+text = "#c8d3f5"
+subtext0 = "#828bb8"
+overlay1 = "#737aa2"
+overlay0 = "#545c7e"
 
 [ui]
-# アクティブペインの枠色 (tmux: appearance.conf pane-active-border-style) を流用。
-# herdr の accent はハイライト/枠線/ナビゲーション全般に使われるため、
-# tmux で「今ここが選択中」を示していた青をそのまま当てる。
+# アクティブペインの枠やハイライトの色
 accent = "#82aaff"
 
-# リンクを Cmd+クリックでブラウザに開くため、マウス捕捉を端末（Ghostty）側に渡す。
-# 代償として herdr のマウス UI（サイドバーのクリック選択、ドラッグ自動コピー、
-# スクロールバー、右クリックメニュー、境界のドラッグリサイズ）を失う可能性がある。
-# 戻すにはこの行を削除するだけ（バックアップ: config.toml.bak4）。
-# mouse_capture = false  # 実測: リンクは開けるがサイドバークリック/ドラッグコピー/境界リサイズが死ぬため無効化
-
-# baton は 🤔(thinking)/✋(waiting)/💤(idle) のように状態ごとに異なる絵文字で
-# 示していたため、色のみの dots より字形が変わる symbols の方が見た目の連続性がある。
-# 元の dots が良ければこの1行を削除するだけで戻せる。
+# 状態表示を色の点ではなく記号にする
 status_indicators = "symbols"
 
-# 外枠と隙間は herdr の既定（true）のまま。tmux 風に消す案も試したが、
-# 実機で見比べて herdr の箱が分かれている見た目の方が良いと判断した。
-# 切り替えは ~/.config/herdr/bin/herdr-pane-style で行える。
-pane_outer_borders = true
-pane_gaps = true
-# スクロールバーだけは消す。tmux に無かったもので、横 1 桁分を内容に回せる。
+# スクロールバーは出さない（横 1 桁を内容に回す）
 pane_scrollbars = false
 
-# 新規タブ作成 (Cmd+T → prefix+c) のたびに出るタブ名入力を止める。tmux の Prefix+c は
-# 名前を聞かずに即作成だったため、同じ感覚で使えるよう既定 (true) から変える。
-# 名前は既定ラベルのままになるが、付けたくなったら prefix+y の
-# herdr-rename-tab-auto で全タブまとめて中身から付け直せる。
-# 聞いてほしくなったらこの行を削除すれば既定に戻る。
+# Cmd+T で新規タブを作るときに名前を聞かない（名前は herdr-automatic-rename が付ける）
 prompt_new_tab_name = false
 
-# tmux の automatic-rename (ウィンドウ名をフォアグラウンドのプロセス名で自動表示) に
-# 最も近い代替。herdr にはタブ名自体の自動追従は無い（キー 1 つで全タブを付け直す
-# ~/.config/herdr/bin/herdr-rename-tab-auto を prefix+y に割り当てて代替している。
-# 主プロセスは foreground_processes のうち pid == foreground_process_group_id のもので
-# 一意に特定できる＝tmux の pane_current_command 相当。実データで検証済み）。
-# ここでは補助として、検出済みエージェント
-# 名（claude/codex 等）をペイン境界へ直接表示する。手動でリネームしたペインには
-# 出ない仕様だが、herdr-init-panes は pane rename を呼ばないため通常フローでは常に
-# 表示される。10 並列時に「どのペインで何が動いているか」を一目で判別する用途。
+# 検出したエージェント名（claude / codex 等）をペイン境界に表示する
 show_agent_labels_on_pane_borders = true
 
-# herdr が自分自身のホストターミナル (Ghostty) に書き込むウィンドウタイトル。
-# 既定は "{hostname}: {workspace}" だが、herdr machine は
-# hermes へ SSH / --remote で繋ぐことがあるため {hostname} は残す。
-# このタイトルはサーバー側で解決されるので、hermes に繋いでいるときは hermes と出る。
-# どちらのマシンを見ているかが一目で分かる。
-# {terminal_title} は候補だったが、素の zsh は OSC タイトルを設定しないため
-# 値が空になり区切り文字だけが浮くので見送った。
-window_title = "{hostname}: {workspace}"
-
-# tmux-status-right の baton/project/日時セグメント相当。日時は同じ MM/DD HH:MM。
-# command エントリ (herdr-status-repo) がリポジトリ/ワークツリー名を出す
-# (旧 tmux-session-icon / tmux-status-right のプロジェクトアイコン部分の移植)。
-# サイドバー ([ui.sidebar.spaces] の workspace/branch/git_status) はフォーカス中の
-# ワークスペース固定なのに対し、tab_bar_right の command はアクティブペインの
-# cwd を都度見るため、リポジトリ配下で cd した先など細かい違いが出ることがある
-# (どちらも実質同じ情報のため許容)。zoom は各タブに既存の Z マーカーがあり冗長、
-# hostname は上記の理由で現状は情報価値が無し、そのため追加しなかった。
-#
-# command 型は ESC 制御が剥がされるため色を付けられない（herdr の仕様）。
-# 背景色も付けられないので、区切り文字だけは付けて視認性を確保する。
+# タブバー右: リポジトリ/ワークツリー名 + 日時。command 型は色を付けられないので区切り文字で見分ける
 tab_bar_right = [{ type = "command", command = "~/.config/herdr/bin/herdr-status-repo", interval_seconds = 5, timeout_seconds = 2 }, { type = "datetime", format = "%m/%d %H:%M" }]
 tab_bar_right_separator = " │ "
 
-# 承認待ちを一番上に出す。prefix+alt+1 が常に「いま待っているやつ」になる。
+# 承認待ちを一番上に出す（prefix+alt+1 が常に「いま待っているもの」になる）
 agent_panel_sort = "priority"
 
 [ui.sidebar.agents]
-# 1 エントリが 2 行なので、間を空けないとどこが区切りか分かりにくい。
-# 10 本並列でも 1 画面に収まる範囲で 1 行空ける。
 row_gap = 1
-# tmux の automatic-rename-format (#{pane_current_command}) と baton の
-# waiting 強調表示に相当する情報を並べる: 状態→ワークスペース/タブ→エージェント名/タイトル。
-#
-# 状態を最優先で強調: state_icon (記号) の直後に state_text を置き、色でも二重化する。
-# agent_status の実際の値は herdr api schema --json で確認済み (event.$defs.AgentStatus):
-# idle / working / blocked / done / unknown の5種類（"DONE" はビルドに埋め込まれた
-# kitty clipboard プロトコルの文字列で無関係、誤検出だったため除外）。
-# state_text の表示テキストの大文字/小文字は実機で未確認のため、rules は contains +
-# ignore_case で表記ゆれを吸収する。
-#
-# TOML 上の制約: インラインテーブル { ... } は途中改行不可のため、rules を持つ
-# 行は長くなるが1行で書く。
-#
-# 色は Tokyo Night Moon パレットから: blocked=red(#ff757f, 太字で最優先),
-# working=yellow(#ffc777), done=teal(#4fd6be, シアン系), idle/unknown は
-# tmux 側の控えめな fg (#828bb8 / コメント色 #636da6) で沈める。
-# dim は明示的に false にする: panel_bg=reset の上では SGR dim が背景色側へ
-# 減衰し、透過背景ではほぼ見えなくなるため（既定のグレーが見づらい主因と推測）。
+# 1 行目: 状態（色で強調）+ ワークスペース、2 行目: エージェント名 + タイトル。
+# インラインテーブルは途中で改行できないため rules を持つ行は長くなる。
+# dim = false は panel_bg = "reset" の上で SGR dim が背景に溶けて読めなくなるため。
 rows = [
+  ["state_icon", { token = "state_text", rules = [{ contains = "block", ignore_case = true, fg = "#ff757f", bold = true, dim = false }, { contains = "work", ignore_case = true, fg = "#ffc777", dim = false }, { contains = "done", ignore_case = true, fg = "#4fd6be", dim = false }, { contains = "idle", ignore_case = true, fg = "#828bb8", dim = false }, { contains = "unknown", ignore_case = true, fg = "#636da6", dim = false }] }, { token = "workspace", fg = "#c8d3f5", dim = false }],
   [
-    "state_icon",
-    { token = "state_text", rules = [{ contains = "block", ignore_case = true, fg = "#ff757f", bold = true, dim = false }, { contains = "work", ignore_case = true, fg = "#ffc777", dim = false }, { contains = "done", ignore_case = true, fg = "#4fd6be", dim = false }, { contains = "idle", ignore_case = true, fg = "#828bb8", dim = false }, { contains = "unknown", ignore_case = true, fg = "#636da6", dim = false }] },
-    { token = "workspace", fg = "#c8d3f5", dim = false },
-    # タブ名は下の行のツール名と重複ぎみで、横幅を食ってタイトルが切れるため外した。
-  ],
-  [
-    # ツールごとの色分け（状態より控えめな色相を選び、bold は付けない）。
-    # agent トークンの実際の値は herdr agent list で確認: claude / codex / opencode。
-    # 設定キー名の ui.sound.agents.open_code とは表記が違うので注意。
+    # agent トークンの値は claude / codex / opencode（設定キー名の open_code とは表記が違う）
     { token = "agent", rules = [{ contains = "claude", ignore_case = true, fg = "#ff966c", dim = false }, { contains = "codex", ignore_case = true, fg = "#65bcff", dim = false }, { contains = "opencode", ignore_case = true, fg = "#c099ff", dim = false }] },
     { token = "terminal_title_stripped", fg = "#828bb8", dim = false },
   ],
 ]
 
 [ui.sidebar.spaces]
-# tmux-status-right のプロジェクトアイコン(repo/worktree)+セッション名相当。
-# herdr は実際の branch/git_status を出せるため、tmux-session-icon の
-# ":" の有無による推測よりも正確。内容は herdr の既定と同じだが明示しておく。
-#
-# state_icon / git_status は固定スタイルのみで rules 不可のため未変更。
-# workspace / branch はコントラスト対策として明示的に fg / dim = false を当てる。
+# 並びは既定と同じ。背景画像の上で読めるよう色と dim = false だけ明示する
 rows = [["state_icon", { token = "workspace", fg = "#c8d3f5", dim = false }], [{ token = "branch", fg = "#828bb8", dim = false }, "git_status"]]
 
 [ui.toast]
-# tmux + baton は OS 通知を使わずステータスバー内で完結していたため、
-# herdr 内トーストに留める（terminal/system の OS 通知は使わない）。
+# 画面内トーストに出す（prefix+o で通知元のペインへ移動できるのは画面内トーストのとき）。
+# OS のバナーは herdr-terminal-notifier プラグインが herdr アイコンで出す
 delivery = "herdr"
 
 [ui.sound]
-# baton の waiting 強調表示(オレンジ色)に相当する聴覚的な合図。
-# herdr の既定と同じ値だが明示しておく。
-# 鳴るのは「バックグラウンドのワークスペース」でエージェントの状態が変わったときだけで、
-# フォアグラウンドのペインでは鳴らない (herdr の仕様)。
-enabled = true
-
-# 組み込み音からの差し替え。herdr が読めるのは mp3 のみ (wav / aiff は不可)。
-# 相対パスは symlink を辿らず ~/.config/herdr/ 基準で解決される (herdr config check の
-# 診断メッセージで実測)。config.toml 自体は mkOutOfStoreSymlink でリポジトリを指すが
-# そちらは基準にならないため、dotfiles.nix の mkLink で ~/.config/herdr/sounds を
-# config/herdr/sounds へ張ることが必須。張り忘れると "missing sound file" の診断が出て
-# 組み込み音に無言でフォールバックする。
-#
-# done    = タスク完了。ffmpeg で合成したマリンバ2音 (C6 -> G6)、約 0.9 秒。
-#           request と釣り合うよう合成後に -6dB している (実測 -20.3 LUFS)。
-# request = 承認待ち。ユーザーが用意した音源 (約 1.7 秒、実測 -19.3 LUFS) を
-#           再エンコードせずそのまま配置。リポジトリ内に生成手順は無い。
-# done より request の方が約 1LU 大きく、先に気付いてほしい側を目立たせてある。
-#
-# Claude Code の hook (claude_message.sh) も Glass / Ping / Basso を afplay しているため、
-# バックグラウンドのペインでは hook の音と二重に鳴る。herdr を常用すると決めた段階で
-# hook 側を止める想定 (現時点では両方鳴らしたまま)。
+# 通知音の差し替え（done = 完了、request = 承認待ち）。herdr が読めるのは mp3 のみ。
+# 相対パスは symlink を辿らず ~/.config/herdr/ 基準で解決されるため、dotfiles.nix で
+# ~/.config/herdr/sounds を張っている（無いと組み込み音に無言でフォールバックする）。
+# 要検討: バックグラウンドのペインでは Claude Code の hook（claude_message.sh）の音と二重に鳴る。
 done_path = "sounds/done.mp3"
 request_path = "sounds/request.mp3"
 
-# 承認待ちエージェント・コンソール: baton を出していた Prefix+B と同じ指の位置。
-# herdr 既定でここにあった toggle_sidebar は prefix+d へ退避した。
-# j/k で移動、w で承認待ちのみ絞り込み、a でその場承認（確認あり）、Enter でペインへ。
+# 承認待ちエージェント・コンソール（j/k で移動、w で承認待ちのみ、a で承認、Enter でペインへ）
 [[keys.command]]
 key = "prefix+b"
 type = "popup"
@@ -313,10 +195,7 @@ command = "~/.config/herdr/bin/herdr-agent-console"
 width = "90%"
 height = "80%"
 
-# Alt+H/J/K/L ペイン越境移動: tmux の smart-splits.conf (bind -n M-h ...) 相当。
-# フォアグラウンドが vim/nvim 系なら同じ Alt+方向キーをペインへ転送し
-# (smart-splits.nvim 側で処理させる)、それ以外は herdr が隣のペインへ直接フォーカスする。
-# 判定ロジック本体は herdr-smart-move 側 (tmux 版 is_vim 正規表現を移植)。
+# Alt+H/J/K/L: ペイン移動（フォアグラウンドが Neovim ならキーを転送して smart-splits.nvim に任せる）
 [[keys.command]]
 key = "alt+h"
 type = "shell"
@@ -337,9 +216,7 @@ key = "alt+l"
 type = "shell"
 command = "~/.config/herdr/bin/herdr-smart-move right"
 
-# Alt+Shift+H/J/K/L ペインリサイズ: tmux の smart-splits.conf (bind -n M-H ...) 相当。
-# 移動と同じく is_vim 判定を通し、Neovim なら Alt+Shift+大文字 を転送して
-# smart-splits.nvim に処理させ、それ以外は herdr pane resize で直接リサイズする。
+# Alt+Shift+H/J/K/L: ペインリサイズ（Neovim の判定は移動と同じ）
 [[keys.command]]
 key = "alt+shift+h"
 type = "shell"
@@ -360,32 +237,15 @@ key = "alt+shift+l"
 type = "shell"
 command = "~/.config/herdr/bin/herdr-smart-move resize-right"
 
-# タブ名を自動命名へ戻す: herdr-automatic-rename プラグインは、手動でリネームした
-# タブを「ユーザーが決めた名前」とみなして以後触らなくなる。reset はその opt-out を
-# 解除して自動命名に戻すアクション。
-#
-# もともとここは herdr-rename-tab-auto を叩くキーだった。タブ名の自動追従が herdr 本体に
-# 無いため手動で全タブを付け直していたが、押す手間を無くすためプラグインへ置き換えた。
-# スクリプトは退路として config/herdr/bin/ に残してある（キー割り当てのみ外した）。
-# 注意: プラグイン導入後にあのスクリプトを実行すると、書いたラベルが「手動リネーム」と
-# 判定されて全タブが自動命名から外れる。戻すにはこの reset を押す。
+# タブ名を自動命名に戻す（手動でリネームしたタブは herdr-automatic-rename の対象外になるため）
 [[keys.command]]
 key = "prefix+y"
 type = "plugin_action"
 command = "herdr-automatic-rename.reset"
 
-# terminal-browser（Chromium を Kitty graphics でペインに描くブラウザ）の試用に必要。
-# terminal-browser は herdr 内では kitty のエスケープを自分で書かず、herdr のソケット
-# (pane.graphics.info / pane.graphics.stream) 経由で direct-kitty 転送を要求する。
-# このフラグが無いと herdr が direct-kitty を advertise せず、terminal-browser 側は
-# 握り潰して無言の空白ペインになる（zenbu-labs/terminal-browser#89）。
-#
-# 前提条件（どれか欠けると direct-kitty は出ない）:
-#   - 外側の端末が ghostty / wezterm / kitty のいずれか
-#   - アタッチ中のクライアントがちょうど 1 つ（Moshi の 2 台目を繋ぐと落ちる）
-#   - ssh / tmux / herdr --remote 経由でないこと
-# 反映には reload-config だけでなくデタッチ→再アタッチが要る（cell_size_unavailable 対策）。
-#
-# 試用を止める場合はこのセクションごと削除する。
+# terminal-browser に必要。herdr のソケット経由で direct-kitty 転送を使えるようにする
+# （無いと terminal-browser が無言の空白ペインになる。zenbu-labs/terminal-browser#89）。
+# 条件: 外側の端末が Ghostty / kitty、アタッチ中のクライアントが 1 つ、ssh / tmux / --remote 経由でない。
+# 変更の反映には reload-config に加えてデタッチ → 再アタッチが要る。
 [experimental]
 kitty_graphics = true

@@ -2,6 +2,7 @@
 let
   username = config.hostSpec.username;
   dotfilesDir = config.hostSpec.dotfilesDir;
+  herdrBin = "${config.homebrew.prefix}/bin/herdr";
 in
 {
   home-manager.users.${username} =
@@ -31,12 +32,13 @@ in
         # 辿らず ~/.config/herdr/ 基準で解決するため、この link が無いと config.toml の
         # 相対パスが解決できず組み込み音へフォールバックする。
         "herdr/sounds".source = mkLink "config/herdr/sounds";
-        # herdr-automatic-rename (タブ名の自動追従プラグイン) の設定。
-        # プラグインは $HERDR_PLUGIN_CONFIG_DIR ではなくこの固定パスを読む
+        # herdr プラグインの設定。本体は下の home.activation.herdrPlugins が揃える。
+        # herdr-automatic-rename は $HERDR_PLUGIN_CONFIG_DIR ではなく固定パスを読む
         # （シェルフックが herdr の外で動くため両者が共有できる場所が要る、という設計）。
-        # プラグイン本体は herdr plugin install が ~/.config/herdr/plugins/ へ
-        # 命令的に入れるため Nix 管理外。設定だけをリポジトリ側に置く。
         "herdr-automatic-rename".source = mkLink "config/herdr/automatic-rename";
+        # herdr-terminal-notifier は herdr が用意する設定ディレクトリの config.env を読む
+        "herdr/plugins/config/dot.terminal-notifier/config.env".source =
+          mkLink "config/herdr/terminal-notifier/config.env";
         "karabiner".source = mkLink "config/karabiner";
         "lazygit".source = mkLink "config/lazygit";
         "nix".source = mkLink "config/nix";
@@ -265,6 +267,16 @@ in
       home.activation.loupedeckSync = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         RSYNC=${pkgs.rsync}/bin/rsync \
           ${pkgs.bash}/bin/bash "${dotfilesDir}/scripts/loupedeck-sync.sh" apply || true
+      '';
+
+      # herdr プラグイン本体を config/herdr/plugins.txt の固定リスト（commit SHA）に揃える。
+      # herdr plugin install は ~/.config/herdr/plugins/ へ clone する命令的な操作なので
+      # activation から呼ぶ（herdr サーバーが動いていなくても動くことを実測済み）。
+      # herdr が内部で git を使うため PATH に足す。ネットワークが無いなど失敗しても
+      # switch は止めず、次の switch で再試行する。
+      home.activation.herdrPlugins = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        run env PATH="${lib.makeBinPath [ pkgs.git ]}:$PATH" HERDR="${herdrBin}" \
+          ${pkgs.bash}/bin/bash "${dotfilesDir}/scripts/herdr-plugins-sync.sh" apply || true
       '';
     };
 }

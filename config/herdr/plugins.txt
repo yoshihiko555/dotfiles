@@ -1,0 +1,4 @@
+# herdr プラグインの固定リスト。switch 時に scripts/herdr-plugins-sync.sh が揃える。
+# 形式: <owner/repo> <commit SHA（40 桁）>。更新するときは中身を確認してから SHA を書き換える。
+qu8n/herdr-automatic-rename 081489b4d961d0d9c0c8b6a02d472e5cfe125ad5
+dot/herdr-terminal-notifier 321cb6e18df7c5e42030c019ed9e7c812f8998f5

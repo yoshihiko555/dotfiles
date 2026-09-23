@@ -1,33 +1,12 @@
 #!/usr/bin/env bash
-# herdr-init-panes — ペイン数に応じてプロセスを自動起動 (herdr 版)
+# herdr-init-panes — ペイン数に応じてプロセスを起動する（prefix+0、GHQ リポジトリ配下のみ）
 #
-# 元: dotfiles config/tmux/bin/tmux-init-panes (61行、読み取り専用で参照)
+#   2 ペイン: nvim / 空き
+#   3 ペイン: nvim / claude / 空き
+#   4 ペイン: claude / codex / 空き / 空き
 #
-# 2ペイン: pane0=nvim, pane1=free
-# 3ペイン: pane0=nvim, pane1=claude, pane2=free
-# 4ペイン: pane0=claude, pane1=codex, pane2=free, pane3=free
-#
-# tmux 版との違い:
-#  - 対象タブは $HERDR_PANE_ID (herdr がキーバインド実行時に注入する呼び出し元
-#    ペインID) を起点に特定する。無ければ `herdr pane current --current` に
-#    フォールバックする。
-#  - herdr にはペインの番号 (tmux の #{pane_index} 相当) がない。
-#    `herdr pane layout` が返す各ペインの rect (x, y) を (y, x) の順で
-#    ソートし、tmux の ASCII レイアウト図と同じ「左上→右上→左下→右下」の
-#    読み順を pane0..N-1 とみなす。
-#  - 二重起動防止 (tmux の alternate_on チェック) 相当の機能は herdr CLI に
-#    直接は無い。代わりに `herdr pane process-info` の foreground_processes を見て、
-#    「フォアグラウンドのプロセスがシェル1つだけ」でなければ「何か動いている」と
-#    みなす。tmux 版の alternate_on はエディタ/TUI 特有のフラグで、より狭い
-#    条件 (alt screen 使用時のみ検知) だったため、この判定はやや広め
-#    (alt screen を使わない常駐プロセスも検知しうる) になっている。
-#  - `tmux send-keys ... Enter` の代わりに `herdr pane run <pane_id> <command>`
-#    (コマンド文字列送出 + Enter を1コマンドで行う) を使う。
-#  - 最後の `tmux select-pane -t 0` に相当する明示的なフォーカス切り替えは
-#    行っていない。herdr の `pane focus` は隣接ペイン方向指定のみで
-#    pane_id 直接指定のフォーカスが無いため。このコマンド実行前から
-#    フォーカスされていたペインがそのままフォーカスされ続ける想定 (pane run
-#    自体はフォーカスを移動しないため、通常は呼び出し元ペイン=pane0 のまま)。
+# herdr にはペイン番号が無いため、rect を (y, x) 順に並べた「左上→右上→左下→右下」を番号とみなす。
+# フォアグラウンドがシェル 1 つだけでないペインがあれば、何か動いているとみなして中止する。
 
 set -euo pipefail
 

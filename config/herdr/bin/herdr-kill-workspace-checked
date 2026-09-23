@@ -1,34 +1,9 @@
 #!/usr/bin/env bash
-# herdr-kill-workspace-checked — 現在のワークスペースを終了する (確認付き, herdr 版)
+# herdr-kill-workspace-checked — 現在のワークスペースを閉じる（prefix+alt+x / Cmd+Shift+W）
 #
-# 元: dotfiles config/tmux/bin/tmux-kill-current-session (18行、読み取り専用で参照)
-#
-# tmux 版との違い:
-#  - tmux はセッション名を対象にした `kill-session` だが、herdr では workspace
-#    を対象にした `workspace close` を使う。対象は $HERDR_WORKSPACE_ID
-#    (herdr がキーバインド実行時に注入する呼び出し元ワークスペースID) を使い、
-#    無ければ `herdr pane current --current` から解決する。
-#  - 実行中プロセス判定: tmux 版は `pane_current_command` (フォアグラウンドの
-#    コマンド名ひとつ) をシェル名の一覧と比較するだけだった。herdr CLI には
-#    同等の「代表コマンド名ひとつ」を返す仕組みが無いため、
-#    `herdr pane process-info --pane <id>` の foreground_processes を使う。
-#    これはフォアグラウンドのプロセスグループ全体 (子プロセスも含む) を返すため、
-#    tmux 版より広め(誤検知しやすい)の判定になる。実機確認では、シェルの
-#    プロンプト待ちペインは foreground_processes が zsh 1件のみ、Claude Code
-#    実行中のペインは claude 本体に加えて配下の MCP サーバー等の node
-#    プロセスも列挙された。「フォアグラウンドプロセスがシェル1つだけでない」
-#    ことを「実行中」の判定条件にしている。
-#  - tmux の `confirm-before` ポップアップの代わりに、herdr の popup 型コマンドは
-#    通常の TTY を持つため `read -r -p` で確認する。
-#  - herdr の `workspace close` は、対象が worktree グループの親ワークスペース
-#    である場合 `workspace_group_close_required` エラーを返すことがある。
-#    herdr のスキルガイドが「バイパス目的で --group を付けない」ことを
-#    明示しているため、このスクリプトは --group を付けずエラーメッセージを
-#    そのまま表示して終了する (強制終了はしない)。
-#
-# 破壊的操作 (実際にワークスペースを閉じる) を含むため、このスクリプト自体は
-# 動作確認のための実行はしていない (bash -n の構文チェックと、herdr CLI が
-# --help どおりの引数になっているかの確認に留めた)。
+# フォアグラウンドがシェル 1 つだけでないペインがあれば、実行中とみなして y/N で確認する
+# （子プロセスも数えるので判定は広め）。worktree グループの親で workspace_group_close_required が
+# 返った場合は、--group で強制せずにエラーを表示して終わる。
 
 set -euo pipefail
 

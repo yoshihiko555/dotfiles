@@ -341,8 +341,10 @@ Cmd+1..9 を転送しているのに、タブバーには飛び先が出てい�
 空振りして無言で素通りし、`prefix+y` は plugin_action の解決に失敗する。再現手順は上記の
 install コマンドを打つこと。Nix の activation script で冪等に叩く案は、ネットワーク依存を
 activation に持ち込むうえ herdr 自体が採否判断前であるため、2026-09-27 の判断後に持ち越した。
+→ 採用確定後の 2026-09-23 に実装した（下記「影響」）。ネットワーク依存は、失敗しても switch を止めず
+次の switch で再試行する作りで受け入れた。
 
-スクリプト `herdr-rename-tab-auto` は退路として残し、キー割り当てのみ外してある。
+スクリプト `herdr-rename-tab-auto` は退路として残し、キー割り当てのみ外していた（採用確定後の 2026-09-23 に削除）。
 
 ## 採用の確定（2026-09-23）
 
@@ -371,6 +373,19 @@ activation に持ち込むうえ herdr 自体が採否判断前であるため�
 - Ghostty の設定を整理した（2026-09-23）。herdr.conf に上書きされていたキー、不透明の窓では効かない
   blur 系、既定値と同じ設定、Cmd+N の素のシェルでしか意味の無い分割移動・スクロール設定を削除。
   窓を透過させない理由と font-thicken の件は上記「常用端末を WezTerm から Ghostty へ移行する」節に残る
+- herdr の設定を整理した（2026-09-23）。既定値と同じ設定と無効化済みの mouse_capture を削除し、
+  config.toml と bin/ のコメントを簡潔にした（経緯はこの ADR に残る）。退路だった herdr-rename-tab-auto と
+  見比べ用の herdr-pane-style を削除
+- 通知を「画面内トースト（`delivery = "herdr"`、`prefix+o` で通知元へ移動）+ OS のバナーは
+  [dot/herdr-terminal-notifier](https://github.com/dot/herdr-terminal-notifier) プラグイン」の構成にした（2026-09-23）。
+  プラグインは herdr アイコンの通知アプリ（terminal-notifier 2.0.0 の作り直し）を同梱し、クリックで該当ペインへ移動する。
+  導入前にスクリプト全体と同梱アプリ（リンク先ライブラリ・文字列を本家 2.0.0 と照合）を確認し、commit を固定した。
+  通知音は herdr 本体に任せ、プラグイン側は鳴らさない（`config/herdr/terminal-notifier/config.env`）
+- herdr プラグイン本体を Nix の switch で揃えるようにした（2026-09-23）。固定リスト `config/herdr/plugins.txt`
+  （owner/repo と commit SHA）を `scripts/herdr-plugins-sync.sh` が `home.activation.herdrPlugins` から適用する。
+  herdr サーバーが動いていなくても install できることを実測済み。追加・更新のみで、削除は手作業
+- macOS の通知バナーは、screenpipe が画面を収録している間は出ない（「ミラーリング中または共有中に通知を許可」が
+  オフのため。収録が画面共有とみなされる）。許可はオフのまま運用し、screenpipe は 2026-09-23 に停止した
 - 採用確定に伴い、Alfred の `container`（shell）/ `taskfile`（ターミナル実行）/ `Open-VS-or-IT`（wez）を
   tmux・WezTerm から herdr のワークスペース + Ghostty へ向けた（2026-09-23）
 - tmux + baton の設定・スクリプトは WezTerm のサブ経路として残す
@@ -394,10 +409,15 @@ activation に持ち込むうえ herdr 自体が採否判断前であるため�
      番号を剥がしてから `herdr plugin uninstall herdr-automatic-rename` する
      （順序を逆にすると renames が番号付けフックを再発火する）。
      `~/.local/state/herdr-automatic-rename/` も削除する
+  4. プラグインを外すときは `config/herdr/plugins.txt` から行を消してから `herdr plugin uninstall <id>` する
+     （同期スクリプトは削除しないため）。herdr-terminal-notifier は加えて `dotfiles.nix` の config.env の配線を消し、
+     システム設定 → 通知 の「herdr」を削除する
 
 ## 未確定事項（将来の ADR で扱う）
 
-- herdr-automatic-rename の Nix 管理（activation での install。採否判断後に持ち越していたもの）
+- herdr の中では、Claude / Codex の hook（`claude_message.sh` / `codex_message.sh`）の OS 通知と
+  herdr-terminal-notifier の通知が二重に出る。hook 側を `HERDR_ENV` があるときは出さない形にするか
+- screenpipe を再開するか（再開すると通知バナーが出なくなる。Hermes の自動化提案の入力が止まっている）
 - リモート（iPhone からの接続）の使い勝手の評価（接続自体は確認済み。描画バグは上記）
 - Ghostty のメモリ長期観測の結果（2026-09-30 まで。上記「常用端末を WezTerm から Ghostty へ移行する」）
 - Cmd+クリックのリンクオープンは Ghostty でも効かない（2026-09-23 実測）。ただし WezTerm でも同じで、

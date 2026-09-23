@@ -1,27 +1,10 @@
 #!/usr/bin/env bash
-# herdr-status-repo — タブバー右端に、アクティブなワークスペースのリポジトリ名
-# (リンクされたワークツリーならブランチも) を表示する。
+# herdr-status-repo — タブバー右端にリポジトリ名（リンクされたワークツリーならブランチも）を出す
 #
-# 元: dotfiles の旧 tmux-session-icon（削除済み）/ tmux-status-right のプロジェクト
-#     アイコン部分（読み取り専用で参照。アイコンのコードポイントのみ流用した）。
-#
-# ~/.config/herdr/config.toml の [ui] tab_bar_right から
-# { type = "command", interval_seconds = 5 } で 5 秒おきに呼ばれる想定。
-#
-# herdr-init-panes と同じ3つの制約に従う:
-#  1. PATH が最小になることがあるので先頭で補う。
-#  2. 失敗が見えないが、この用途 (5秒毎の定期実行) で通知を出すと鳴りっぱなしに
-#     なるため出さない。失敗時は空文字を返して静かに終わる (exit は常に 0)。
-#  3. mapfile は使えない (bash 3.2) — 本スクリプトは配列を使わないので該当なし。
-#
-# コンテキスト変数について（実際に config.toml へ登録し reload-config させた上で
-# 実測した。ドキュメント化されていないため今後のバージョンで変わる可能性がある）:
-#   HERDR_ACTIVE_WORKSPACE_ID / HERDR_ACTIVE_TAB_ID / HERDR_ACTIVE_PANE_ID /
-#   HERDR_ACTIVE_PANE_CWD / HERDR_SOCKET_PATH / HERDR_BIN_PATH が渡ってくる。
-#   HERDR_ACTIVE_PANE_CWD を直接使えるため、通常経路では herdr CLI (ソケット経由)を
-#   一切呼ばない。サーバー自身がこのコマンドを実行している最中にソケットへ問い合わせて
-#   デッドロック/タイムアウトする懸念を避けるため。
-#   `timeout` コマンドは PATH 補強後も見つからなかった (exit 127) ため使わない。
+# config.toml の [ui] tab_bar_right から 5 秒ごとに呼ばれる。通知を出すと鳴り続けるため、
+# 失敗しても空文字を返して静かに終わる（exit は常に 0）。
+# herdr が渡す HERDR_ACTIVE_PANE_CWD を使い、herdr CLI は呼ばない（実行中のサーバーへ
+# ソケットで問い合わせるとデッドロックしうるため）。timeout コマンドは PATH に無いので使わない。
 
 set -u
 

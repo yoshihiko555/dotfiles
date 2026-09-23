@@ -1,28 +1,8 @@
 #!/usr/bin/env bash
-# herdr-cheatsheet — チートシート一覧とプレビューを同時表示する (herdr 版)
+# herdr-cheatsheet — チートシートの一覧とプレビューを同時表示する（prefix+i、fzf + glow）
 #
-# 元: dotfiles config/tmux/bin/tmux-cheatsheet-preview (165行) と
-#     旧 tmux-cheatsheet (46行、2026-09-23 削除済み)
-#
-# tmux 版との違い:
-#  - この2本は tmux の API を一切呼んでおらず、fzf + glow だけで完結する
-#    純粋なファイルビューアだったため、UI 部分 (fzf のレイアウト/キー/配色) は
-#    tmux-cheatsheet-preview からほぼそのまま流用している。
-#  - tmux-cheatsheet-preview は `~/.config/tmux/docs/CHEATSHEET.md` を
-#    「最初に並べる固定ファイル」として特別扱いしていた。このリポジトリでは
-#    dotfiles 配下にしかファイルを置けない制約があり、`~/.config/herdr/docs/`
-#    のような静的ファイルを新設できない (作成先は ~/.config/herdr/bin/ のみ)。
-#    そこで、tmux 用の特別扱いを herdr 用に差し替え、実行のたびに
-#    `~/.config/herdr/config.toml` の [keys] と [[keys.command]] を解析して
-#    Markdown を動的生成し、一時ファイルに書き出してから同じ仕組みで表示する。
-#    静的ファイルを持たないため、config.toml を直接編集した内容が
-#    次回起動時にそのまま反映される。
-#  - tmux-cheatsheet-preview は tool=="tmux" のときだけ "Prefix: Ctrl+Q" を
-#    プレビュー冒頭に固定表示していた。herdr 版では tool=="herdr" のときに
-#    config.toml から prefix の値を都度読み直して表示する (ハードコードしない)。
-#  - 依存コマンドの存在確認 (fzf, glow) はそのまま踏襲。加えて config.toml の
-#    解析に jq は使わず (TOML であり JSON ではないため)、コメント込みで
-#    行ベースに解析できる python3 を使う。
+# 先頭の herdr の項目は ~/.config/herdr/config.toml の [keys] / [[keys.command]] から毎回生成する
+# （キー設定の直前のコメントが説明になる）。続けて ~/.config/*/docs の CHEATSHEET を並べる。
 
 set -euo pipefail
 

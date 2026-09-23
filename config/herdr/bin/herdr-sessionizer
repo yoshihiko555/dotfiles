@@ -1,32 +1,9 @@
 #!/usr/bin/env bash
-# herdr-sessionizer — GHQ プロジェクト picker (herdr 版)
+# herdr-sessionizer — GHQ プロジェクト picker（prefix+f）
 #
-# 元: dotfiles config/tmux/bin/tmux-sessionizer (65行、読み取り専用で参照)
-#
-# tmux 版との違い:
-#  - 重複ワークスペース検出: tmux は `tmux has-session -t "=$session_name"` で
-#    セッション名の厳密一致を見ていた。herdr では label と pane の cwd の
-#    どちらも重複検出の根拠として不十分と判断した:
-#      * label は重複しうる (実機で確認: "learno" という label のワークスペースが
-#        w2 と w4 の2つ存在していた)
-#      * pane の cwd はユーザーが cd すると drift する上、上記 w2/w4 は
-#        cwd も完全に同じだったため cwd 一致でも一意に絞れなかった
-#    そこで `herdr worktree list --cwd <repo_root>` が返す `open_workspace_id`
-#    を使う。これは herdr 自身が git worktree ごとに追跡している対応表であり、
-#    通常のリポジトリ (worktree でない) でも repo_root を渡せば主チェックアウトの
-#    エントリとして同じ仕組みで open_workspace_id を返すことを実機で確認済み。
-#  - worktree の扱い: tmux 版は `.worktrees/<branch>` ディレクトリへ単に cd する
-#    だけだった (tmux は git worktree を認識しない)。herdr 版は
-#    `herdr worktree open --cwd <repo_root> --path <worktree_path>` を使い、
-#    herdr のワークツリー管理に正しく登録する。
-#  - display-popup 内で switch-client が効かない問題を tmux 版は一時ファイル
-#    経由で回避していたが、herdr は `workspace focus` / `--focus` でサーバー側
-#    から直接フォーカスを切り替えられるため、その回避策は不要。
-#  - セッション名の '.' → '-' 置換 (tmux のセッション名制約回避) は herdr の
-#    label には制約がないため行わない。
-#
-# 候補集合: repo-list.sh (dotfiles リポジトリ内、読み取りのみ) をそのまま使い、
-# tmux 版と全く同じ候補 (ghq list + 各リポジトリの .worktrees/* ) を列挙する。
+# 候補は scripts/repo-list.sh（ghq list + 各リポジトリの .worktrees/*）。
+# 開いているかは herdr worktree list の open_workspace_id で判定する（label も cwd も重複しうるため）。
+# worktree は herdr worktree open で開き、herdr のワークツリー管理に登録する。
 
 set -euo pipefail
 
