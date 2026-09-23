@@ -357,6 +357,8 @@ activation に持ち込むうえ herdr 自体が採否判断前であるため�
   （`cleanup = "zap"` のため宣言しないと switch のたびに消える）。見送る場合は両方を削除する
 - 常用端末を Ghostty に切り替えた。`config/ghostty/`（`config` / `herdr.conf` / `background.png`）と
   `config/aerospace/`（Ghostty のワークスペース割当）を変更。WezTerm の設定・cask は tmux 復帰経路として残す
+- WezTerm はサブ端末として常に tmux で起動する形に戻し、`~/.config/use-herdr` の切り替えと
+  `*-herdr.lua` を削除した。snacks.image の判定は `HERDR_ENV` へ移した（2026-09-23）
 - 試用期間中は tmux + baton の設定・スクリプトを削除せずそのまま残す（切替式のため）
 - hook は herdr 側（`session` のときのセッション ID 紐付けのみ）と baton 側（既存の 7 イベント）が
   並存する
@@ -368,8 +370,9 @@ activation に持ち込むうえ herdr 自体が採否判断前であるため�
 - 撤退条件: 2026-09-27（土）に「承認待ちの気づきの速さと検出精度で baton より明確に上、
   かつ操作数は同等以上」を満たすかで判断する。満たさない場合は不採用とする
 - ロールバック手順:
-  1. 即時: `~/.config/use-herdr` を `rm` すれば tmux + baton に戻る（1 回で完了）
-  2. 不採用が確定した場合は追加で `config/herdr/`、`config/wezterm/config/*-herdr.lua`、
+  1. 即時: WezTerm を起動すれば tmux + baton で使える
+  2. 不採用が確定した場合は追加で `config/herdr/`、`config/ghostty/herdr.conf`（と `config` の読み込み行・
+     `initial-command`）、
      `homebrew.nix` の herdr エントリ、baton の hook 7 イベントを削除する
   3. herdr-automatic-rename を入れたまま撤退する場合は、先に `clear` アクションで
      番号を剥がしてから `herdr plugin uninstall herdr-automatic-rename` する

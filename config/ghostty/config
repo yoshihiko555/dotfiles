@@ -1,38 +1,27 @@
-# 1) テーマ名は「正確な名前」にする（スペース/大小文字が重要）
-# 使えるテーマは `ghostty +list-themes` で確認できます
+# テーマ名は正確に（一覧: ghostty +list-themes）
 theme = TokyoNight Moon
 
-# 2) WezTerm相当の “背景だけ透過” と “すりガラス”
+# ---- 背景 ----
 background-blur = 20
-# 窓自体は不透明にする。0.7 にすると Ghostty は背景画像にも同じ透過をかけるため、
-# 下のデスクトップのブラー（明るい灰色）が全面に乗って白茶けた見た目になる（実測）。
-# WezTerm の見た目は「暗くした画像がほぼ不透明に敷かれている」状態なので、こちらで揃える。
+# 0.7 だと背景画像まで透けて白っぽくなるので不透明にする
 background-opacity = 1
 
-# 3) TUIが背景色を塗ると透過が効かない問題を避ける（WezTerm寄りの見え方になる）
+# TUI が背景色を塗っても透過を効かせる
 background-opacity-cells = true
-# WezTerm は同じ画像を hsb.brightness = 0.2 で「暗くして」重ねている（config/wezterm/config/window-appearance.lua）。
-# Ghostty には明度を下げる設定が無く、不透明度を下げると背景色やデスクトップが透けて白っぽくなる。
-# そのため事前に暗くした画像（background.png）を不透明度 1 で使う。JPEG だと暗部が階調割れするので PNG。
-# 元画像は config/wezterm/background.jpg（同一ファイル。こちらの jpg は削除済み）。
-# WezTerm と同じ明るさにする変換式は、両端末を並べたスクリーンショットの同一領域を画素比較して求めた:
-#   out = 0.50 × src − 6（sRGB、3 チャネルほぼ共通。WezTerm の brightness 0.2 はリニア光で
-#   掛かるため、sRGB 上では ×0.5 相当になる。この式の平均値は 17,28,40）
+# Ghostty には明度を下げる設定が無いため、事前に暗くした PNG を使う（JPEG は暗部が階調割れする）。
+# 元画像は config/wezterm/background.jpg。WezTerm の見た目に合わせた変換式:
 #   magick ../wezterm/background.jpg -colorspace sRGB -channel R -fx "u*0.498-5.69/255" \
 #     -channel G -fx "u*0.505-5.90/255" -channel B -fx "u*0.509-6.49/255" +channel background.png
-# 現在の background.png は式どおりの値より明るい（平均 28,37,47。式どおりなら 17,28,40）。
+# 現在の background.png は式より少し明るい（平均 28,37,47。式どおりなら 17,28,40）。
 background-image="background.png"
 background-image-fit= cover
-# WezTerm の background layer は既定で左寄せ（horizontal_align = Left）。Ghostty の既定 center だと
-# 同じ画像でも見える範囲がずれる（WezTerm は後頭部、Ghostty は顔が出る）ので左上基準に揃える
+# WezTerm と同じ左上基準（既定の center だと見える範囲がずれる）
 background-image-position = top-left
 background-image-opacity=1
-# linear-corrected は同じ値でも sRGB 合成より明るく見えるため、WezTerm と揃えて native
+# linear-corrected は明るく見えるため native
 alpha-blending = native
 
-# フォント: WezTerm（config/wezterm/config/font.lua）と揃える。
-# UDEV Gothic 35NFLG Bold 15pt、行間 1.2（adjust-cell-height = 20%）。
-# font-family を複数並べると後ろがフォールバックになる（WezTerm の font_with_fallback 相当）。
+# ---- フォント（WezTerm の font.lua と揃える）----
 font-family = UDEV Gothic 35NFLG
 font-family = Hiragino Sans
 font-family = PingFang SC
@@ -42,15 +31,12 @@ font-family = Apple Color Emoji
 font-style = Bold
 font-size = 15
 adjust-cell-height = 20%
-# font-thicken は macOS 専用でグリフを太らせる設定。WezTerm には無く、
-# 同じ UDEV Gothic Bold 15pt でも Ghostty だけ太く見えていた（実測）ため切る
+# 有効だと WezTerm より太く見える
 font-thicken=false
-# WezTerm と並べて画素比較すると G/B は一致するのに R だけ Ghostty が 3 割暗かった
-# （月の領域: WezTerm 43,77,98 / Ghostty 30,78,100）。srgb だと Ghostty が P3 ディスプレイ向けに
-# 色変換して赤の彩度が落ちる。WezTerm は変換せず生の値を出しているので display-p3 で揃える。
+# srgb だと P3 ディスプレイ向け変換で赤がくすむ
 window-colorspace = display-p3
 
-# ウィンドウ状態の保存
+# ---- ウィンドウ ----
 window-save-state = never
 window-position-x=0
 window-position-y=0
@@ -63,11 +49,7 @@ cursor-opacity = 0.7
 cursor-style = block
 cursor-style-blink=false
 shell-integration-features = no-cursor
-# スクロールバック行数（大量出力に対応）
 scrollback-limit = 100000
-
-
-# タイピング中にマウスカーソルを隠す
 mouse-hide-while-typing = true
 
 resize-overlay = never
@@ -75,28 +57,23 @@ quit-after-last-window-closed = true
 macos-titlebar-style = hidden
 window-new-tab-position=current
 
-# スプリット操作
+# ---- キーバインド ----
 keybind = cmd+d=new_split:right
 keybind = cmd+shift+d=new_split:down
 keybind = cmd+w=close_surface
 
-# スプリット間移動（Mac風）
 keybind = ctrl+cmd+h=goto_split:left
 keybind = ctrl+cmd+n=goto_split:bottom
 keybind = ctrl+cmd+p=goto_split:top
 keybind = ctrl+cmd+f=goto_split:right
-# herdr 用のキーバインド層（WezTerm の keybinds-herdr.lua 相当）。無ければ黙って無視する
+# herdr 用キーバインド（無ければ無視）
 config-file = ?herdr.conf
 
-# ---- herdr 常用化に伴う移植（WezTerm の window-herdr.lua / notification.lua 相当）----
-# 起動時に最初のウィンドウで herdr へアタッチする。WezTerm と同じく絶対パスにせず
-# ログインシェル経由で PATH 解決させる（GUI 起動の環境変数には Homebrew の PATH が無い）。
-# Cmd+N で開く 2 枚目以降は素のシェル。
+# ---- 起動・通知 ----
+# 最初のウィンドウで herdr にアタッチ。GUI 起動は Homebrew の PATH が無いのでログインシェル経由
 initial-command = /bin/zsh -lic herdr
-# OSC 9 / 777 のデスクトップ通知は出さない。Codex が osascript で直接通知するため二重になる
-# （WezTerm の notification_handling = "NeverShow" と同じ）
+# Codex が osascript で通知するため、OSC 通知は出さない（二重防止）
 desktop-notifications = false
-# ベルは WezTerm と同じく Purr.aiff を鳴らす（内蔵ベル音は使わない）。attention/title は既定のまま
 bell-features = audio,attention,title
 bell-audio-path = /System/Library/Sounds/Purr.aiff
 bell-audio-volume = 0.5

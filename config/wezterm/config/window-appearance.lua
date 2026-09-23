@@ -1,11 +1,6 @@
 local wezterm = require("wezterm")
 
--- ウィンドウの見た目設定（tmux 版・herdr 版で共通）
---
--- config/window.lua（既定・tmux 版）と config/window-herdr.lua（herdr 版）は
--- gui-startup ハンドラ（起動時にどちらのマルチプレクサを立ち上げるか）だけが
--- 異なり、背景・透過・装飾・タイトルバーの見た目は同一にしたい。二重管理を
--- 避けるため見た目部分だけをここに切り出し、両ファイルから require する。
+-- ウィンドウの見た目設定（背景・透過・装飾・タイトルバー）
 local M = {}
 
 -- ウィンドウ設定
