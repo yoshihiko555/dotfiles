@@ -147,6 +147,24 @@ removed = data.get("cost", {}).get("total_lines_removed", 0)
 if added or removed:
     line2_parts.append(f"✏️ {GREEN}+{added}{R} {RED}-{removed}{R}")
 
+# cache: セッションの入力のうちキャッシュから読めた割合。miss は作り直しの回数、cold は期限切れ
+cache = data.get("prompt_cache") or {}
+hit = cache.get("hit_ratio")
+if cache.get("caching_observed") and hit is not None:
+    hit_pct = round(hit * 100)
+    color = GREEN if hit_pct >= 90 else YELLOW if hit_pct >= 70 else RED
+    cache_str = f"{DIM}cache{R} {color}{hit_pct}%{R}"
+    misses = cache.get("misses") or 0
+    if misses:
+        cache_str += f" {YELLOW}miss {misses}{R}"
+    if not cache.get("warm", True):
+        cache_str += f" {RED}cold{R}"
+    line2_parts.append(cache_str)
+
+cost_usd = data.get("cost", {}).get("total_cost_usd")
+if cost_usd:
+    line2_parts.append(f"{DIM}≈${cost_usd:.2f}{R}")
+
 # ── Line 3 (bottom): 5h │ 7d ──
 line3_parts = []
 

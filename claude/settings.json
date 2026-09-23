@@ -87,7 +87,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/claude_message.sh success"
+            "command": "$HOME/.claude/claude_message.sh success",
+            "async": true
           }
         ]
       }
@@ -98,7 +99,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/claude_message.sh failure"
+            "command": "$HOME/.claude/claude_message.sh failure",
+            "async": true
           }
         ]
       }
