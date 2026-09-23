@@ -43,4 +43,7 @@ TPM 公式ドキュメントで推奨されている手法。別端末でも tmu
 
 - tmux-fingers は初回起動時に別途バイナリのインストールが必要 (`brew install` を選択)
 - `~/.tmux/plugins/` は dotfiles 管理外 (ランタイム依存)
+- 2026-09-23 追記: 設定が `~/.config/tmux/tmux.conf` にあるため TPM の実際のインストール先は
+  `~/.config/tmux/plugins/`（リポジトリでは gitignore）。上記のパスのままだと存在チェックが常に偽になり、
+  起動のたびに `install_plugins` が走っていたので、ブートストラップのパスをこちらに揃えた
 - resurrect/continuum は将来的にマシン再起動対策が必要になった段階で導入検討

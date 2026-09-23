@@ -7,7 +7,7 @@
 
 ## 環境
 
-- tmux: 3.6a
+- tmux: 3.7c（Nix のパッチ適用版）
 - 設定パス: `~/.config/tmux/tmux.conf`
 - 配線: home-manager の `mkOutOfStoreSymlink`
 
@@ -67,8 +67,6 @@
 - [x] Prefix+g で lazygit (80x80%)
 - [x] Prefix+t で一時シェル (80x80%)
 - [ ] Prefix+C で Claude Code (90x90%)
-- [ ] Prefix+a で AI サブエージェント履歴 (90x90%)
-- [ ] Prefix+A で AI 監視ペイン トグル
 - [x] Prefix+s でセッション一覧 (fzf)
 
 ## ウィンドウ直通切替 (session.conf)
@@ -111,7 +109,7 @@ WezTerm バックアップと現行 tmux 設定を照合（バックアップは
 - [ ] 4ペイン: pane1=claude, pane2=codex, pane3=free, pane4=free で起動する
 - [ ] GHQ リポジトリ外では拒否メッセージが出る
 - [ ] TUI プロセス実行中のペインがあると拒否される
-- [ ] **既知バグ**: `tmux-init-panes` に `tmux-split-layout` と同じターゲット未指定バグあり (要修正)
+- [x] ~~既知バグ: ターゲット未指定~~ → 2026-09-23 修正（`#{pane_id}` を渡し、ペイン ID で指定）
 
 ### WezTerm Cmd→tmux 変換 (keybinds.lua)
 
@@ -120,6 +118,7 @@ WezTerm バックアップと現行 tmux 設定を照合（バックアップは
 - [ ] Cmd+D でペイン横分割 (Prefix+r に変換)
 - [ ] Cmd+Shift+D でペイン縦分割 (Prefix+d に変換)
 - [ ] Cmd+W でペイン閉じ (Prefix+x に変換)
+- [ ] Cmd+Shift+W でセッション閉じ (Prefix+X に変換、確認付き)
 
 ### セッション管理
 
@@ -135,8 +134,8 @@ WezTerm バックアップと現行 tmux 設定を照合（バックアップは
 - [ ] Prefix+g で lazygit が起動する (WezTerm の overlay_lazygit 相当)
 - [ ] Prefix+t で一時シェルが開く (WezTerm の open_bottom_shell 相当)
 - [ ] Prefix+C で Claude Code が開く
-- [ ] Prefix+b で Claude Code pane ダッシュボードが開く
-- [ ] Prefix+? でチートシート (fzf + glow) が開く
+- [ ] Prefix+b で default セッション (baton) へ切り替わる / Prefix+B で baton popup が開く
+- [ ] Prefix+. でチートシート (トピック一覧 + プレビュー) が開く
 
 ### smart-splits.nvim 連携
 
@@ -157,11 +156,11 @@ WezTerm バックアップと現行 tmux 設定を照合（バックアップは
 |---|---|---|
 | QuickSelect (Leader+/) | 削除 | tmux-fingers (Prefix+F) |
 | yazi オーバーレイ (Leader+y) | 保留 | WezTerm クラッシュ問題あり |
-| baton オーバーレイ (Leader+B) | 削除 | Claude Code pane ダッシュボード (Prefix+b) に置換 |
+| baton オーバーレイ (Leader+B) | 削除 | baton popup (Prefix+B) に置換 |
 | ワークスペース復元 (Leader+r) | 保留 | tmux-resurrect (Phase 3 で検討) |
 | Alfred 外部トリガー | 削除 | tmux-sessionizer で代替 |
 | 画面クリア (Ctrl+L 拡張) | 削除 | tmux 標準のスクロールバック動作に依存 |
-| Cmd+Click で URL を開く | 維持 | WezTerm 側で引き続き動作 |
+| Cmd+Click で URL を開く | 削除 | tmux の `mouse on` 下では WezTerm に届かないため 2026-09-23 に設定ごと削除。URL は tmux-open / tmux-fingers で開く |
 
 ## 課題・気づき
 
@@ -172,7 +171,7 @@ WezTerm バックアップと現行 tmux 設定を照合（バックアップは
 | 3 | `Alt+1-9` は現状ウィンドウ切替。セッションの direct switch は popup (`Prefix+w`) のみ | 低 | 現行の運用で十分。必要になれば追加 |
 | 4 | ~~claude-squad の detach キー衝突~~ | ~~高~~ | **一時解消済み**: claude-squad は廃止。`claude-tmux` も試用終了し、現在は暫定 Claude pane ダッシュボードを運用 |
 | 5 | ~~claude-squad の popup スタック問題~~ | ~~高~~ | **解決済み**: claude-squad 廃止 |
-| 6 | `tmux-init-panes` に `tmux-split-layout` と同じターゲット未指定バグ | 高 | `list-panes` / `display-message -t` / `send-keys -t` / `select-pane -t` が全てターゲット未指定。`#{pane_id}` を渡す修正が必要 |
+| 6 | ~~`tmux-init-panes` に `tmux-split-layout` と同じターゲット未指定バグ~~ | ~~高~~ | **解決済み (2026-09-23)**: `#{pane_id}` を渡し、ペイン ID で全操作を指定。0 始まりの番号指定（`pane-base-index 1` と不一致）も解消 |
 | 7 | Claude Code pane ダッシュボードの status 判定が一部 UI 変更に追従できない可能性 | 低 | 実ペイン末尾のパターン依存。必要なら判定語彙を追加 |
 
 ## 検討課題 (将来)

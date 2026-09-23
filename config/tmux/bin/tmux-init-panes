@@ -1,6 +1,6 @@
 #!/bin/bash
 # tmux-init-panes — ペイン数に応じてプロセスを自動起動
-# WezTerm の layouts.init_panes 相当
+# Usage: tmux-init-panes <pane_id>
 #
 # 2ペイン: pane0=nvim, pane1=free
 # 3ペイン: pane0=nvim, pane1=claude, pane2=free
@@ -8,7 +8,19 @@
 
 set -euo pipefail
 
-pane_count=$(tmux list-panes | wc -l | tr -d ' ')
+PANE_ID="${1:-}"
+if [ -z "$PANE_ID" ]; then
+  tmux display-message "init-panes: pane_id が指定されていません"
+  exit 1
+fi
+
+# run-shell からは現在のクライアントが無く、-t 省略や番号指定は解決できない。
+# 対象ウィンドウのペイン ID を並び順（pane_index 順）で取り、以降はすべて ID で指定する。
+panes=()
+while IFS= read -r id; do
+  panes+=("$id")
+done < <(tmux list-panes -t "$PANE_ID" -F '#{pane_id}')
+pane_count=${#panes[@]}
 
 # 対応ペイン数チェック
 case "$pane_count" in
@@ -20,7 +32,7 @@ case "$pane_count" in
 esac
 
 # GHQ リポジトリ配下チェック
-cwd=$(tmux display-message -p '#{pane_current_path}')
+cwd=$(tmux display-message -t "$PANE_ID" -p '#{pane_current_path}')
 ghq_root="$HOME/ghq/"
 if [[ "$cwd" != "$ghq_root"* ]]; then
   tmux display-message "init-panes: GHQ リポジトリ配下でのみ実行できます"
@@ -28,34 +40,34 @@ if [[ "$cwd" != "$ghq_root"* ]]; then
 fi
 
 # TUI プロセスの二重起動防止（alt screen チェック）
-for i in $(seq 0 $((pane_count - 1))); do
-  in_alt=$(tmux display-message -t "$i" -p '#{alternate_on}')
+for i in "${!panes[@]}"; do
+  in_alt=$(tmux display-message -t "${panes[$i]}" -p '#{alternate_on}')
   if [ "$in_alt" = "1" ]; then
-    tmux display-message "init-panes: ペイン $i でプロセスが実行中です"
+    tmux display-message "init-panes: ペイン $((i + 1)) でプロセスが実行中です"
     exit 1
   fi
 done
 
 # 全ペインを同じディレクトリに移動
-for i in $(seq 1 $((pane_count - 1))); do
-  tmux send-keys -t "$i" "cd '${cwd}'" Enter
+for id in "${panes[@]:1}"; do
+  tmux send-keys -t "$id" "cd '${cwd}'" Enter
 done
 
 case "$pane_count" in
   2)
     # pane0=nvim, pane1=free
-    tmux send-keys -t 0 "nvim" Enter
+    tmux send-keys -t "${panes[0]}" "nvim" Enter
     ;;
   3)
     # pane0=nvim, pane1=claude, pane2=free
-    tmux send-keys -t 0 "nvim" Enter
-    tmux send-keys -t 1 "claude" Enter
+    tmux send-keys -t "${panes[0]}" "nvim" Enter
+    tmux send-keys -t "${panes[1]}" "claude" Enter
     ;;
   4)
     # pane0=claude, pane1=codex, pane2=free, pane3=free
-    tmux send-keys -t 0 "claude" Enter
-    tmux send-keys -t 1 "codex" Enter
+    tmux send-keys -t "${panes[0]}" "claude" Enter
+    tmux send-keys -t "${panes[1]}" "codex" Enter
     ;;
 esac
 
-tmux select-pane -t 0
+tmux select-pane -t "${panes[0]}"

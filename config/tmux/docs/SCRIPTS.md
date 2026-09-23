@@ -7,7 +7,7 @@
 | スクリプト | 状態 | 使用箇所 | 概要 |
 |-----------|------|----------|------|
 | tmux-apply-statusbar | 現役 | `statusbar.conf` | Powerline 付き `window-status-format` を適用 |
-| tmux-status-right | 現役 | `statusbar.conf` | セッション名 + 日時を右側に描画 |
+| tmux-status-right | 現役 | `statusbar.conf` | baton サマリ + プロジェクト + 日時を右側に描画 |
 | tmux-save-pane-snapshot | 現役 | `keybinds.conf`, `pane-mode.conf` | ペイン内容のスナップショット保存 |
 | tmux-split-layout | 現役 | `keybinds.conf` (`Prefix+2-8`) | 現在ウィンドウを N ペインに分割 |
 | tmux-launch-claude-work | 現役 | Loupedeck (tmux キーバインドなし) | 全ペインで会社用 Claude Code を auto モード起動 |
@@ -15,20 +15,13 @@
 | ~~tmux-list-claude-panes~~ | 撤去 | - | baton に移行済み |
 | ~~tmux-popup-claude-dashboard~~ | 撤去 | - | baton に移行済み |
 | ~~tmux-open-claude-target~~ | 撤去 | - | baton に移行済み |
-| tmux-toggle-claude | 現役 | `popup.conf` (`Prefix+A`) | AI 監視ペインをトグル |
-| tmux-pane-claude | 現役 | `tmux-toggle-claude` | 監視ペイン内の入口 |
-| tmux-popup-claude-history | 現役 | `popup.conf` (`Prefix+a`) | AI 履歴の選択と閲覧 |
-| tmux-list-orchestra-sessions | 現役 | AI 監視フロー内部 | ai-orchestra セッション一覧を取得 |
-| tmux-select-claude-session | 現役 | AI 監視フロー内部 | セッション選択 (fzf) |
-| tmux-select-claude-pane | 現役 | AI 履歴フロー内部 | ペイン選択 (fzf + preview) |
-| tmux-watch-claude-panes | 現役 | AI 監視フロー内部 | セッション全体をリアルタイム監視 |
-| tmux-follow-claude-pane | 現役 | AI 履歴フロー内部 | 単一ペインを `less +F` で追跡 |
-| tmux-popup-claude | 補助 | 手動実行用 | 監視ダッシュボードを popup で起動 |
-| tmux-switch-session | 補助 | 手動実行用 | N 番目の非 Claude セッションへ切替 |
-| tmux-status-left | 未接続 | - | モードバッジのスクリプト版。現行設定では inline format を採用 |
-| tmux-session-tabs | 未接続 | - | 旧セッションタブ表示ヘルパー |
-| tmux-window-status | 未接続 | - | 旧ウィンドウタブ描画ヘルパー |
-| tmux-session-icon | 未接続 | - | セッション名から repo/worktree アイコンを返す小ユーティリティ |
+| tmux-init-panes | 現役 | `keybinds.conf` (`Prefix+0`) | ペイン数に応じて nvim / claude / codex を起動 |
+| tmux-cheatsheet-preview | 現役 | `popup.conf` (`Prefix+.`) | チートシート (トピック一覧 + glow プレビュー) |
+| tmux-sessionizer | 現役 | `popup.conf` (`Prefix+f`) | GHQ リポジトリ + worktree の picker |
+| tmux-kill-session | 現役 | `popup.conf` (`Prefix+W`) | fzf でセッションを選んで削除 |
+| tmux-kill-current-session | 現役 | `keybinds.conf` (`Prefix+X`) | 現在のセッションを確認付きで削除 |
+| ~~ai-orchestra 監視系 8 本 / tmux-popup-claude / tmux-switch-session~~ | 撤去 | - | 2026-09-23 撤去（監視データが生成されなくなっていた） |
+| ~~tmux-cheatsheet~~ | 撤去 | - | 2026-09-23 撤去。`tmux-cheatsheet-preview` に一本化 |
 
 ---
 
@@ -51,82 +44,17 @@
 
 ### tmux-status-right
 
-右側にセッション名と日時を描画する。
+右側に baton の軽量サマリ（`baton --once --format tmux`）、プロジェクト名、日時を描画する。
 
 - セッション名に `:` を含む場合は worktree アイコン
 - それ以外は repo アイコン
 - 日時は `MM/DD HH:MM` 形式
 
-### 未接続の旧 UI ヘルパー
-
-- `tmux-session-tabs`: 旧 `status-left` 用。現在は使っていない
-- `tmux-window-status`: 旧ウィンドウ一覧用。現在は使っていない
-- `tmux-status-left`: モードバッジのスクリプト版。現在は shell 呼び出しを避けるため inline 化
-- `tmux-session-icon`: 単機能ユーティリティ。現行の右側表示は `tmux-status-right` 内で完結
-
----
-
-## ai-orchestra 監視系
-
-ai-orchestra のサブエージェント (Claude, Codex, Gemini 等) を tmux 上で監視するスクリプト群。
-
-### 呼出フロー
-
-```
-Prefix+A (トグル)
-  └→ tmux-toggle-claude
-       └→ tmux-pane-claude
-            ├→ tmux-select-claude-session (fzf)
-            └→ tmux-watch-claude-panes
-
-Prefix+a (履歴)
-  └→ tmux-popup-claude-history
-       ├→ tmux-select-claude-session (fzf)
-       ├→ tmux-select-claude-pane (fzf + preview)
-       └→ tmux-follow-claude-pane
-```
-
-### tmux-watch-claude-panes `<session>`
-
-セッション内の全ペインを縦積みでリアルタイム表示する。
-
-- 1 秒間隔で更新
-- `RUNNING` はシアン、`DONE` は緑
-- 差分がないときは再描画しない
-- 端末サイズに応じて表示行数を再計算
-
-### tmux-follow-claude-pane `<session> <pane_id> [status] [title]`
-
-単一ペインの出力を `less -R +F` で追跡する。
-
-- `Ctrl+C` で follow 停止
-- `F` で follow 再開
-- `q` で終了
-- pane reset / pane close をログに追記
-
-### tmux-select-claude-session
-
-`$CLAUDE_TMUX_SESSION_INFO_DIR` を元にアクティブな ai-orchestra セッションを選択する。
-
-- 候補が 1 件なら自動選択
-- 複数件なら fzf で選択
-
-### tmux-select-claude-pane `<session>`
-
-セッション内のペインを選択する。
-
-- 出力形式: `pane_id<TAB>status<TAB>title`
-- プレビューには末尾 120 行を表示
-
-### tmux-toggle-claude
-
-右 40% に AI 監視ペインを表示し、同じタイトル (`claude-watch`) のペインがあれば閉じる。
-
 ---
 
 ## Claude Code セッション管理 (baton)
 
-`Prefix+b` で `baton` TUI を popup 起動 (90x90%)。
+`Prefix+B` で `baton --exit` を popup 起動 (90x90%)。`Prefix+b` は常駐の default セッションへ切替。
 旧暫定ダッシュボードスクリプト (`tmux-popup-claude-dashboard`, `tmux-list-claude-panes`, `tmux-open-claude-target`) は撤去済み。
 
 ---
@@ -189,28 +117,9 @@ tmux 側のキーバインドは意図的に持たない。
 
 ---
 
-## 補助スクリプト
-
-### tmux-switch-session `<N>`
-
-N 番目の非 Claude セッションへ切り替える。
-
-- 現在の `session.conf` では未バインド
-- 直接 `tmux-switch-session 2` のように手動で使える
-
-### tmux-popup-claude
-
-AI 監視セッションを popup で開く入口。
-
-- 現在のキーバインドからは呼ばれない
-- 手動実行や将来の popup 導線用に残している
-
----
-
 ## 未実装 (移行計画で追加予定)
 
 | スクリプト | 概要 | Phase |
 |-----------|------|-------|
-| tmux-init-panes | ペイン数に応じて AI ツール自動起動 | 4 |
 | ~~tmux-baton-status~~ | baton TUI に統合済み。不要 | - |
 | tmux-command-menu | コマンドパレット (fzf) | 5 |

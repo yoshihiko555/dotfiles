@@ -48,6 +48,8 @@ claude-squad は Ctrl+Q 衝突問題と運用フロー重複のため保留。�
 - `Prefix+b` で `baton` を popup 起動 (90x90%)
 - 暫定ダッシュボードスクリプト (`tmux-popup-claude-dashboard`, `tmux-list-claude-panes`, `tmux-open-claude-target`) は撤去
 - `BATON-MIGRATION.md` も撤去
+- 2026-09-23 追記: 現在は `Prefix+B` で `baton --exit` を popup 起動し、`Prefix+b` は常駐の default セッションへの切替。
+  ai-orchestra 監視系スクリプト（`tmux-watch-claude-panes` ほか、`Prefix+a` / `Prefix+A`）は監視データが生成されなくなっていたため撤去
 
 ## 当時の影響
 

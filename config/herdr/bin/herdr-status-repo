@@ -2,7 +2,7 @@
 # herdr-status-repo — タブバー右端に、アクティブなワークスペースのリポジトリ名
 # (リンクされたワークツリーならブランチも) を表示する。
 #
-# 元: dotfiles config/tmux/bin/tmux-session-icon / tmux-status-right のプロジェクト
+# 元: dotfiles の旧 tmux-session-icon（削除済み）/ tmux-status-right のプロジェクト
 #     アイコン部分（読み取り専用で参照。アイコンのコードポイントのみ流用した）。
 #
 # ~/.config/herdr/config.toml の [ui] tab_bar_right から
@@ -48,7 +48,7 @@ repo_root=$(dirname "$git_common_dir")
 repo_name=$(basename "$repo_root")
 [ -n "$repo_name" ] || exit 0
 
-# Nerd Font アイコン。config/tmux/bin/tmux-session-icon / tmux-status-right と同じグリフ。
+# Nerd Font アイコン。tmux-status-right と同じグリフ。
 ICON_REPO=$(printf '\xee\xa9\xa2')     # nf-cod-repo (U+EA62)
 ICON_WORKTREE=$(printf '\xee\x9c\xa8') # nf-cod-git_merge (U+E728)
 

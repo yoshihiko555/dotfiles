@@ -9,6 +9,8 @@ Prefix: `Ctrl+Q`
 | `Prefix + r` | 横分割 |
 | `Prefix + d` | 縦分割 |
 | `Prefix + x` | ペイン閉じ |
+| `Prefix + X` | セッション閉じ (実行中プロセスがあれば確認) |
+| `Shift + Enter` | 改行 (takt 実行中は CSI u、それ以外は C-j を送り分け) |
 | `Prefix + z` | ペインズーム (スナップショット保存付き) |
 | `Alt + ;` | ペインズーム (Prefix 不要) |
 | `Prefix + h/j/k/l` | ペイン移動 |
@@ -54,9 +56,9 @@ Prefix: `Ctrl+Q`
 | `Prefix + g` | lazygit popup (80x80%) |
 | `Prefix + t` | 一時シェル popup (80x80%) |
 | `Prefix + C` | Claude Code popup (90x90%) |
-| `Prefix + b` | baton TUI popup (90x90%, Claude Code セッションモニター) |
-| `Prefix + a` | AI サブエージェント履歴 popup (90x90%) |
-| `Prefix + A` | AI 監視ペインの表示 / 非表示 |
+| `Prefix + b` | 常駐の default セッション (baton) へ切替 |
+| `Prefix + B` | baton TUI popup (90x90%, ジャンプ後に終了) |
+| `Prefix + .` | チートシート (トピック一覧 + プレビュー) |
 
 ## プラグイン
 
@@ -113,6 +115,7 @@ Prefix: `Ctrl+Q`
 | `Cmd + D` | ペイン横分割 (Prefix+r に変換) |
 | `Cmd + Shift + D` | ペイン縦分割 (Prefix+d に変換) |
 | `Cmd + W` | ペイン閉じ (Prefix+x に変換) |
+| `Cmd + Shift + W` | セッション閉じ (Prefix+X に変換、確認付き) |
 
 ## 既知の制限
 
