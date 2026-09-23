@@ -443,6 +443,19 @@ cmd_esc() {
   printf 'hide-input+rebind(j,k,a,d,w,r,q)+transform-header("%s" _header "%s")\n' "$SCRIPT" "$state_file"
 }
 
+# 罫線だけの行を preview の幅に切り詰める。
+# ペインの方が preview より広いと、罫線が折り返されて「↳ ────」の断片が出るため。
+_fit_rules() {
+  python3 -c '
+import re, sys
+w = int(sys.argv[1])
+rule = re.compile(r"^[─-╿ ]+$")
+for line in sys.stdin:
+    line = line.rstrip("\n")
+    print(line[:w] if rule.match(line) else line)
+' "${FZF_PREVIEW_COLUMNS:-80}"
+}
+
 cmd_preview() {
   local pane_id="${1:-}" kind="${2:-}"
   if [ -z "$pane_id" ]; then
@@ -452,7 +465,7 @@ cmd_preview() {
   echo "pane   : $pane_id"
   echo "tool   : ${kind:-?}"
   echo "------------------------------------------------------------"
-  if ! herdr agent read "$pane_id" --source visible --lines 60 --format text 2>&1; then
+  if ! herdr agent read "$pane_id" --source visible --lines 60 --format text 2>&1 | _fit_rules; then
     echo "(herdr agent read に失敗しました。ペインが既に閉じている可能性があります)"
   fi
 }
@@ -644,6 +657,8 @@ main_tui() {
   r_bind="r:execute-silent(echo all > \"$state_file\")+clear-query+reload(\"$SCRIPT\" _list \"$state_file\")+transform-header(\"$SCRIPT\" _header \"$state_file\")"
   every_bind="every(5):reload-sync(\"$SCRIPT\" _list \"$state_file\")+transform-header(\"$SCRIPT\" _header \"$state_file\")"
 
+  # preview は follow で末尾から表示する（承認ダイアログは画面の最下部に出るため）。
+  # ~N でヘッダ行を固定すると follow が効かなくなるので併用しない。
   printf '%s' "$initial_list" | fzf \
     --ansi \
     --no-input \
@@ -654,7 +669,7 @@ main_tui() {
     --layout=reverse \
     --header="$initial_header" \
     --preview="$preview_cmd" \
-    --preview-window='right:55%:wrap' \
+    --preview-window='right:55%:wrap:follow' \
     --bind 'j:down' \
     --bind 'k:up' \
     --bind 'q:abort' \
