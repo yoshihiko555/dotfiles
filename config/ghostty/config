@@ -2,14 +2,8 @@
 theme = TokyoNight Moon
 
 # ---- 背景 ----
-background-blur = 20
-# 0.7 だと背景画像まで透けて白っぽくなるので不透明にする
-background-opacity = 1
-
-# TUI が背景色を塗っても透過を効かせる
-background-opacity-cells = true
-# Ghostty には明度を下げる設定が無いため、事前に暗くした PNG を使う（JPEG は暗部が階調割れする）。
-# 元画像は config/wezterm/background.jpg。WezTerm の見た目に合わせた変換式:
+# 窓は不透明のまま（既定）。Ghostty には明度を下げる設定が無いため、事前に暗くした PNG を使う
+# （JPEG は暗部が階調割れする）。元画像は config/wezterm/background.jpg。WezTerm の見た目に合わせた変換式:
 #   magick ../wezterm/background.jpg -colorspace sRGB -channel R -fx "u*0.498-5.69/255" \
 #     -channel G -fx "u*0.505-5.90/255" -channel B -fx "u*0.509-6.49/255" +channel background.png
 # 現在の background.png は式より少し明るい（平均 28,37,47。式どおりなら 17,28,40）。
@@ -17,9 +11,6 @@ background-image="background.png"
 background-image-fit= cover
 # WezTerm と同じ左上基準（既定の center だと見える範囲がずれる）
 background-image-position = top-left
-background-image-opacity=1
-# linear-corrected は明るく見えるため native
-alpha-blending = native
 
 # ---- フォント（WezTerm の font.lua と揃える）----
 font-family = UDEV Gothic 35NFLG
@@ -31,8 +22,6 @@ font-family = Apple Color Emoji
 font-style = Bold
 font-size = 15
 adjust-cell-height = 20%
-# 有効だと WezTerm より太く見える
-font-thicken=false
 # srgb だと P3 ディスプレイ向け変換で赤がくすむ
 window-colorspace = display-p3
 
@@ -46,26 +35,15 @@ maximize=true
 
 # カーソル
 cursor-opacity = 0.7
-cursor-style = block
 cursor-style-blink=false
 shell-integration-features = no-cursor
-scrollback-limit = 100000
 mouse-hide-while-typing = true
 
 resize-overlay = never
 quit-after-last-window-closed = true
 macos-titlebar-style = hidden
-window-new-tab-position=current
 
 # ---- キーバインド ----
-keybind = cmd+d=new_split:right
-keybind = cmd+shift+d=new_split:down
-keybind = cmd+w=close_surface
-
-keybind = ctrl+cmd+h=goto_split:left
-keybind = ctrl+cmd+n=goto_split:bottom
-keybind = ctrl+cmd+p=goto_split:top
-keybind = ctrl+cmd+f=goto_split:right
 # herdr 用キーバインド（無ければ無視）
 config-file = ?herdr.conf
 
@@ -76,4 +54,3 @@ initial-command = /bin/zsh -lic herdr
 desktop-notifications = false
 bell-features = audio,attention,title
 bell-audio-path = /System/Library/Sounds/Purr.aiff
-bell-audio-volume = 0.5

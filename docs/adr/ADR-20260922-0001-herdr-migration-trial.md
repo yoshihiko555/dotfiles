@@ -367,6 +367,9 @@ activation に持ち込むうえ herdr 自体が採否判断前であるため�
   `config/aerospace/`（Ghostty のワークスペース割当）を変更。WezTerm の設定・cask は tmux 復帰経路として残す
 - WezTerm はサブ端末として常に tmux で起動する形に戻し、`~/.config/use-herdr` の切り替えと
   `*-herdr.lua` を削除した。snacks.image の判定は `HERDR_ENV` へ移した（2026-09-23）
+- Ghostty の設定を整理した（2026-09-23）。herdr.conf に上書きされていたキー、不透明の窓では効かない
+  blur 系、既定値と同じ設定、Cmd+N の素のシェルでしか意味の無い分割移動・スクロール設定を削除。
+  窓を透過させない理由と font-thicken の件は上記「常用端末を WezTerm から Ghostty へ移行する」節に残る
 - 採用確定に伴い、Alfred の `container`（shell）/ `taskfile`（ターミナル実行）/ `Open-VS-or-IT`（wez）を
   tmux・WezTerm から herdr のワークスペース + Ghostty へ向けた（2026-09-23）
 - tmux + baton の設定・スクリプトは WezTerm のサブ経路として残す
