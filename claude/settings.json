@@ -110,7 +110,6 @@
   },
   "enabledPlugins": {
     "context7@claude-plugins-official": true,
-    "code-simplifier@claude-plugins-official": true,
     "claude-mem@thedotmack": true,
     "frontend-design@claude-plugins-official": true,
     "playwright@claude-plugins-official": false,
@@ -128,13 +127,15 @@
       "source": {
         "source": "github",
         "repo": "mattpocock/skills"
-      }
+      },
+      "autoUpdate": true
     },
     "openai-codex": {
       "source": {
         "source": "github",
         "repo": "openai/codex-plugin-cc"
-      }
+      },
+      "autoUpdate": true
     }
   },
   "outputStyle": "Concise",
@@ -179,6 +180,9 @@
     },
     "claude-fable-5-1": {
       "effortLevel": "high"
+    },
+    "claude-opus-5-5": {
+      "effortLevel": "xhigh"
     }
   },
   "advisorModel": "fable",
