@@ -11,3 +11,4 @@ dotfiles リポジトリ全体の意思決定のうち、**設定領域をまた
 | ID | タイトル | ステータス | 決定日 | 主な理由 | タグ |
 |---|---|---|---|---|---|
 | [ADR-20260922-0001](ADR-20260922-0001-herdr-migration-trial.md) | tmux + baton から herdr へ移行する（試用を経て採用） | 採用 | 2026-09-23 | 効率の伸び/承認待ち検知精度/操作数 | Terminal/Workflow |
+| [ADR-20260923-0002](ADR-20260923-0002-terminal-browser-element-to-agent.md) | ブラウザの要素を AI に渡す経路を terminal-browser に寄せる | 採用 | 2026-09-23 | 組み込み機能で足りる/ブラウザ切替が不要 | Browser/Workflow |

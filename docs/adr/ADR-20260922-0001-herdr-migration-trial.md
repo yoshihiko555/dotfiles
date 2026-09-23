@@ -157,6 +157,7 @@ Chawan（`cha`）で検証した。以前 Chromium 系（carbonyl / browsh 相�
 そもそも求めていた「画面の要素を選んで AI に渡す」は CDP（Chrome DevTools Protocol）が
 本質であり、ターミナルかどうかは関係ない。この用途は agent-browser と Dia 自作拡張
 （ui-context）で別途進めているため、ターミナルブラウザは不要と判断した。
+（この用途は 2026-09-23 に terminal-browser へ寄せた。[ADR-20260923-0002](ADR-20260923-0002-terminal-browser-element-to-agent.md)）
 
 画像表示の解禁自体は herdr の採否とは独立に成立する（tmux に戻せば自動で無効に戻る）。
 
