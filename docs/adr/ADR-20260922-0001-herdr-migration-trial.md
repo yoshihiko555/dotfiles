@@ -1,7 +1,7 @@
-# ADR-20260922-0001: tmux + baton から herdr への移行を試用する
+# ADR-20260922-0001: tmux + baton から herdr へ移行する（試用を経て採用）
 
-- ステータス: 試用中（最終判断: 2026-09-27 予定）
-- 決定日: 2026-09-22
+- ステータス: 採用（2026-09-23 確定。当初の判断予定日 2026-09-27 から前倒し）
+- 決定日: 2026-09-22（試用開始） / 2026-09-23（採用確定）
 - 関連: なし（`docs/adr/` として最初の ADR）。tmux + baton の選定経緯は
   [config/tmux/docs/decisions/003-baton-vs-claude-squad.md](../../config/tmux/docs/decisions/003-baton-vs-claude-squad.md) /
   [007-ai-session-monitoring.md](../../config/tmux/docs/decisions/007-ai-session-monitoring.md) を参照
@@ -290,7 +290,7 @@ Ghostty の RSS を `~/.local/state/ghostty-mem.log` へ追記する。通常負
 1 日以内に 2GB を超えたら移行を取り消す。観測が終わったら
 `launchctl bootout gui/$(id -u)/local.ghostty-mem-watch && rm ~/Library/LaunchAgents/local.ghostty-mem-watch.plist`。
 
-**ロールバック**: `~/.config/wezterm-herdr` の WezTerm を起動して `herdr` でアタッチするだけ。
+**ロールバック**: WezTerm で herdr を起動してアタッチするだけ（WezTerm 自体は tmux で起動する）。
 Ghostty 側の設定は残しても害はない。
 
 ### タブ名の自動命名をプラグインへ置き換えた（2026-09-23）
@@ -343,6 +343,14 @@ activation に持ち込むうえ herdr 自体が採否判断前であるため�
 
 スクリプト `herdr-rename-tab-auto` は退路として残し、キー割り当てのみ外してある。
 
+## 採用の確定（2026-09-23）
+
+常用は **Ghostty + herdr** で確定した。WezTerm はサブ端末として残し、常に tmux + baton で起動する。
+
+- 判断基準（承認待ちの気づきの速さと検出精度で baton より明確に上、かつ操作数は同等以上）を満たした
+- Ghostty への移行で、herdr + Ghostty でしかできないこと（terminal-browser、Kitty graphics による
+  nvim の画像表示）が揃い、決め手になった
+
 ## 影響
 
 - `config/herdr/config.toml` と `config/herdr/bin/`（スクリプト 11 本）を dotfiles 管理下に置いた
@@ -359,21 +367,25 @@ activation に持ち込むうえ herdr 自体が採否判断前であるため�
   `config/aerospace/`（Ghostty のワークスペース割当）を変更。WezTerm の設定・cask は tmux 復帰経路として残す
 - WezTerm はサブ端末として常に tmux で起動する形に戻し、`~/.config/use-herdr` の切り替えと
   `*-herdr.lua` を削除した。snacks.image の判定は `HERDR_ENV` へ移した（2026-09-23）
-- 試用期間中は tmux + baton の設定・スクリプトを削除せずそのまま残す（切替式のため）
-- hook は herdr 側（`session` のときのセッション ID 紐付けのみ）と baton 側（既存の 7 イベント）が
-  並存する
+- 採用確定に伴い、Alfred の `container`（shell）/ `taskfile`（ターミナル実行）/ `Open-VS-or-IT`（wez）を
+  tmux・WezTerm から herdr のワークスペース + Ghostty へ向けた（2026-09-23）
+- tmux + baton の設定・スクリプトは WezTerm のサブ経路として残す
+- Claude Code の baton hook（7 イベント）と `claude/hooks/baton-hook.sh` は削除した（2026-09-23）。
+  hook は herdr 側（`session` のときのセッション ID 紐付けのみ）だけになり、WezTerm + tmux で
+  Claude を動かしても baton には状態（🤔/✋/💤）が出ない
 - リモート（iPhone の Moshi からの接続）は 2026-09-23 に接続を確認した。ただし上記の
   マルチクライアント時の描画バグがあり、スマホを使ったあとは PC 側で attach し直す運用になる
 
 ## 撤退条件とロールバック
 
-- 撤退条件: 2026-09-27（土）に「承認待ちの気づきの速さと検出精度で baton より明確に上、
-  かつ操作数は同等以上」を満たすかで判断する。満たさない場合は不採用とする
+- 撤退条件: 2026-09-23 に採用を確定したため、試用としての撤退判断は終了。
+  以下は将来 herdr をやめる場合の手順として残す
 - ロールバック手順:
-  1. 即時: WezTerm を起動すれば tmux + baton で使える
-  2. 不採用が確定した場合は追加で `config/herdr/`、`config/ghostty/herdr.conf`（と `config` の読み込み行・
-     `initial-command`）、
-     `homebrew.nix` の herdr エントリ、baton の hook 7 イベントを削除する
+  1. 即時: WezTerm を起動すれば tmux + baton で使える。ただし状態検出には baton hook の復元が要る
+     （`claude/hooks/baton-hook.sh` と `claude/settings.json` / `claude-work/settings.json` の
+     7 イベントを git 履歴から戻す）
+  2. herdr をやめる場合は追加で `config/herdr/`、`config/ghostty/herdr.conf`（と `config` の読み込み行・
+     `initial-command`）、Alfred の `container` / `taskfile` / `Open-VS-or-IT` の herdr 呼び出し（git 履歴の tmux 版へ戻す）、`homebrew.nix` の herdr エントリ、herdr の SessionStart hook を削除する
   3. herdr-automatic-rename を入れたまま撤退する場合は、先に `clear` アクションで
      番号を剥がしてから `herdr plugin uninstall herdr-automatic-rename` する
      （順序を逆にすると renames が番号付けフックを再発火する）。
@@ -381,7 +393,7 @@ activation に持ち込むうえ herdr 自体が採否判断前であるため�
 
 ## 未確定事項（将来の ADR で扱う）
 
-- 2026-09-27 の最終判断そのもの（試用継続の結果、herdr を採用するか tmux + baton に留まるか）
+- herdr-automatic-rename の Nix 管理（activation での install。採否判断後に持ち越していたもの）
 - リモート（iPhone からの接続）の使い勝手の評価（接続自体は確認済み。描画バグは上記）
 - Ghostty のメモリ長期観測の結果（2026-09-30 まで。上記「常用端末を WezTerm から Ghostty へ移行する」）
 - Cmd+クリックのリンクオープンは Ghostty でも効かない（2026-09-23 実測）。ただし WezTerm でも同じで、
