@@ -4,10 +4,10 @@
 
 # ---- 基本設定 ----
 # デフォルトで使うモデル
-model = "gpt-6-astra"
+model = "gpt-5.6-sol"
 
 # 推論の深さ（medium: バランス型 / high: より時間をかける）
-model_reasoning_effort = "xhigh"
+model_reasoning_effort = "medium"
 
 # 出力トーン
 personality = "pragmatic"
@@ -84,6 +84,7 @@ trust_level = "trusted"
 
 # ---- 機能フラグ（手動管理） ----
 [features]
+hooks = true
 # 安定機能だが、グローバルで常に有効にするため明示する
 multi_agent = true
 js_repl = false
@@ -235,6 +236,9 @@ trusted_hash = "sha256:94fc68b37f3ad900ca163e474943ae37efdc01918107d5887e416ef58
 
 [hooks.state."/Users/yoshihiko/ghq/github.com/yoshihiko555/learno/.codex/hooks.json:stop:0:0"]
 trusted_hash = "sha256:31875dd9f8b427fdb8095fd3a0f4f550e4331cf2511be57c5c4e84f976a54a55"
+
+[hooks.state."/Users/yoshihiko/.codex/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:8bc5e2ed66a97a95246f10256419d5afbe266d728f511fff9e29ba5f42cd9996"
 
 # ---- ChatGPTデスクトップアプリ設定 ----
 [desktop]
