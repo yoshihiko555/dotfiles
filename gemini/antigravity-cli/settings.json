@@ -63,6 +63,12 @@
   "trustedWorkspaces": [
     "/Users/yoshihiko/ghq/github.com/yoshihiko555/digital-garden",
     "/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles",
-    "/Users/yoshihiko"
+    "/Users/yoshihiko",
+    "/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra",
+    "/Users/yoshihiko/ghq/github.com/yoshihiko555/learno",
+    "/private/tmp/claude-501/-Users-yoshihiko-ghq-github-com-yoshihiko555-baton/f6242811-35d2-4cf2-849a-af1d17002a9c/scratchpad/capture-work",
+    "/private/tmp/claude-501/-Users-yoshihiko-ghq-github-com-yoshihiko555-baton/f6242811-35d2-4cf2-849a-af1d17002a9c/scratchpad/e2e-agy",
+    "/private/tmp/claude-501/-Users-yoshihiko-ghq-github-com-yoshihiko555-baton/f6242811-35d2-4cf2-849a-af1d17002a9c/scratchpad/e2e-agy2",
+    "/Users/yoshihiko/ghq/github.com/yoshihiko555/baton"
   ]
 }
