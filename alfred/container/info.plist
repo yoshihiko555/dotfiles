@@ -350,7 +350,7 @@ if kind == "compose":
 else:
     running = status.startswith("Up")
     if running:
-        items.append(item("shell — コンテナ内に入る", "shell", "tmux セッション containers に新しいタブを作成"))
+        items.append(item("shell — コンテナ内に入る", "shell", "herdr ワークスペース containers に新しいタブを作成"))
         items.append(item("restart — 再起動", "restart"))
         items.append(item("stop — 停止", "stop"))
     else:
@@ -389,7 +389,7 @@ print(json.dumps({"items": items}, ensure_ascii=False))
 				<string>#!/bin/zsh
 set -uo pipefail
 
-# tmux は nix profile 配下にしか無いため、そのパスを先頭に置く
+# GUI 起動の PATH には herdr（Homebrew）や docker（/usr/local/bin）が無いため補う
 export PATH="/etc/profiles/per-user/yoshihiko/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 
 kind="${kind:-}"
@@ -409,33 +409,49 @@ notify() {
   osascript -e "display notification \"$msg\" with title \"Container\" subtitle \"$sub\"" &gt;/dev/null 2&gt;&amp;1
 }
 
+# herdr のワークスペース &lt;label&gt; にタブを作り、そのペイン ID を出力する。
+# ワークスペースが無ければ作り、最初のタブをそのまま使う。
+# herdr サーバーが居なければ Ghostty を起動する（initial-command が herdr にアタッチし、サーバーも立ち上がる）。
+herdr_open_tab() {
+  local ws_label="$1" cwd="$2" tab_label="$3" ws_id created tab_id i
+  if ! herdr workspace list &amp;&gt;/dev/null; then
+    open -a Ghostty
+    for i in {1..100}; do
+      herdr workspace list &amp;&gt;/dev/null &amp;&amp; break
+      sleep 0.1
+    done
+  fi
+  ws_id="$(herdr workspace list 2&gt;/dev/null | jq -r --arg l "$ws_label" '.result.workspaces[] | select(.label == $l) | .workspace_id' | head -1)"
+  if [[ -z "$ws_id" ]]; then
+    created="$(herdr workspace create --cwd "$cwd" --label "$ws_label" --focus 2&gt;/dev/null)" || return 1
+    ws_id="$(jq -r '.result.workspace.workspace_id' &lt;&lt;&lt;"$created")"
+    tab_id="$(jq -r '.result.tab.tab_id' &lt;&lt;&lt;"$created")"
+    herdr tab rename "$tab_id" "$tab_label" &gt;/dev/null 2&gt;&amp;1
+  else
+    created="$(herdr tab create --workspace "$ws_id" --cwd "$cwd" --label "$tab_label" --focus 2&gt;/dev/null)" || return 1
+    tab_id="$(jq -r '.result.tab.tab_id' &lt;&lt;&lt;"$created")"
+  fi
+  herdr workspace focus "$ws_id" &gt;/dev/null 2&gt;&amp;1
+  herdr tab focus "$tab_id" &gt;/dev/null 2&gt;&amp;1
+  jq -r '.result.root_pane.pane_id // empty' &lt;&lt;&lt;"$created"
+}
+
 if [[ -z "$target" || -z "$action" ]]; then
   notify "エラー" "対象またはアクションが渡ってきていません"
   exit 1
 fi
 
-# --- shell: tmux セッション containers にタブを作って docker exec する ---
+# --- shell: herdr のワークスペース containers にタブを作って docker exec する ---
 if [[ "$action" == "shell" ]]; then
-  # attach 済みクライアントが無いとタブを作っても切り替えられないので先に確認する
-  client="$(tmux list-clients -F '#{client_tty}' 2&gt;/dev/null | head -1)"
-  if [[ -z "$client" ]]; then
-    notify "$target" "tmux クライアントが見つかりません。WezTerm で tmux に attach してから実行してください"
+  win="$(printf '%s' "$target" | tr -c 'a-zA-Z0-9_-' '-')"
+  pane_id="$(herdr_open_tab containers "$HOME" "$win")"
+  if [[ -z "$pane_id" ]]; then
+    notify "$target" "herdr にタブを作れませんでした"
     exit 1
   fi
 
-  if ! tmux has-session -t containers 2&gt;/dev/null; then
-    tmux new-session -d -s containers -n scratch
-  fi
-
-  win="$(printf '%s' "$target" | tr -c 'a-zA-Z0-9_-' '-')"
-  tmux new-window -t containers: -n "$win" \
-    "docker exec -it '$target' sh -c 'command -v bash &gt;/dev/null 2&gt;&amp;1 &amp;&amp; exec bash || exec sh'"
-
-  tmux switch-client -c "$client" -t containers
-
-  wez_app="WezTerm"
-  [[ -d "/Applications/WezTerm Nightly.app" ]] &amp;&amp; wez_app="WezTerm Nightly"
-  open -a "$wez_app"
+  herdr pane run "$pane_id" "docker exec -it '$target' sh -c 'command -v bash &gt;/dev/null 2&gt;&amp;1 &amp;&amp; exec bash || exec sh'"
+  open -a Ghostty
   exit 0
 fi
 

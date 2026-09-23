@@ -16,10 +16,8 @@ return {
     { key = 'Paste', mods = 'NONE', action = act.PasteFrom 'Clipboard' },
 
     ---------------------------------------------------------------------------
-    -- 検索・選択
+    -- 文字選択
     ---------------------------------------------------------------------------
-    { key = 'f', mods = 'SUPER', action = act.Search 'CurrentSelectionOrEmptyString' },
-    { key = 'x', mods = 'SHIFT|CTRL', action = act.ActivateCopyMode },
     { key = 'u', mods = 'SHIFT|CTRL', action = act.CharSelect{ copy_on_select = true, copy_to = 'ClipboardAndPrimarySelection' } },
 
     ---------------------------------------------------------------------------
@@ -30,14 +28,7 @@ return {
     { key = '0', mods = 'SUPER', action = act.ResetFontSize },
 
     ---------------------------------------------------------------------------
-    -- スクロール
-    ---------------------------------------------------------------------------
-    { key = 'PageUp', mods = 'SHIFT', action = act.ScrollByPage(-1) },
-    { key = 'PageDown', mods = 'SHIFT', action = act.ScrollByPage(1) },
-    { key = 'k', mods = 'SUPER', action = act.ClearScrollback 'ScrollbackAndViewport' },
-
-    ---------------------------------------------------------------------------
-    -- tmux 操作ショートカット (Cmd → tmux Prefix(Ctrl+T) に変換)
+    -- tmux 操作ショートカット (Cmd → tmux Prefix(Ctrl+Q) に変換)
     ---------------------------------------------------------------------------
     -- ウィンドウ切替 (Cmd+1-8 → Alt+1-8)
     { key = '1', mods = 'SUPER', action = act.SendKey{ key = '1', mods = 'ALT' } },
@@ -76,7 +67,6 @@ return {
     ---------------------------------------------------------------------------
     -- ウィンドウ・アプリケーション
     ---------------------------------------------------------------------------
-    { key = 'n', mods = 'SUPER', action = act.SpawnWindow },
     { key = 'Enter', mods = 'ALT', action = act.ToggleFullScreen },
     { key = 'h', mods = 'SUPER', action = act.HideApplication },
     { key = 'm', mods = 'SUPER', action = act.Hide },
@@ -89,75 +79,5 @@ return {
     { key = 'r', mods = 'SUPER', action = act.ReloadConfiguration },
     { key = 'p', mods = 'SUPER|SHIFT', action = act.ActivateCommandPalette },
     { key = 'l', mods = 'SHIFT|CTRL', action = act.ShowDebugOverlay },
-  },
-
-  ---------------------------------------------------------------------------
-  -- Key Tables
-  ---------------------------------------------------------------------------
-  key_tables = {
-    -- コピーモード (vim風)
-    copy_mode = {
-      -- 終了
-      { key = 'Escape', mods = 'NONE', action = act.Multiple{ 'ScrollToBottom', { CopyMode = 'Close' } } },
-      { key = 'q', mods = 'NONE', action = act.Multiple{ 'ScrollToBottom', { CopyMode = 'Close' } } },
-      { key = 'c', mods = 'CTRL', action = act.Multiple{ 'ScrollToBottom', { CopyMode = 'Close' } } },
-      -- 移動
-      { key = 'h', mods = 'NONE', action = act.CopyMode 'MoveLeft' },
-      { key = 'j', mods = 'NONE', action = act.CopyMode 'MoveDown' },
-      { key = 'k', mods = 'NONE', action = act.CopyMode 'MoveUp' },
-      { key = 'l', mods = 'NONE', action = act.CopyMode 'MoveRight' },
-      { key = 'w', mods = 'NONE', action = act.CopyMode 'MoveForwardWord' },
-      { key = 'b', mods = 'NONE', action = act.CopyMode 'MoveBackwardWord' },
-      { key = 'e', mods = 'NONE', action = act.CopyMode 'MoveForwardWordEnd' },
-      { key = '0', mods = 'NONE', action = act.CopyMode 'MoveToStartOfLine' },
-      { key = '$', mods = 'NONE', action = act.CopyMode 'MoveToEndOfLineContent' },
-      { key = '^', mods = 'NONE', action = act.CopyMode 'MoveToStartOfLineContent' },
-      { key = 'g', mods = 'NONE', action = act.CopyMode 'MoveToScrollbackTop' },
-      { key = 'G', mods = 'NONE', action = act.CopyMode 'MoveToScrollbackBottom' },
-      { key = 'H', mods = 'NONE', action = act.CopyMode 'MoveToViewportTop' },
-      { key = 'M', mods = 'NONE', action = act.CopyMode 'MoveToViewportMiddle' },
-      { key = 'L', mods = 'NONE', action = act.CopyMode 'MoveToViewportBottom' },
-      -- ページ移動
-      { key = 'f', mods = 'CTRL', action = act.CopyMode 'PageDown' },
-      { key = 'b', mods = 'CTRL', action = act.CopyMode 'PageUp' },
-      { key = 'd', mods = 'CTRL', action = act.CopyMode{ MoveByPage = 0.5 } },
-      { key = 'u', mods = 'CTRL', action = act.CopyMode{ MoveByPage = -0.5 } },
-      -- ジャンプ
-      { key = 'f', mods = 'NONE', action = act.CopyMode{ JumpForward = { prev_char = false } } },
-      { key = 'F', mods = 'NONE', action = act.CopyMode{ JumpBackward = { prev_char = false } } },
-      { key = 't', mods = 'NONE', action = act.CopyMode{ JumpForward = { prev_char = true } } },
-      { key = 'T', mods = 'NONE', action = act.CopyMode{ JumpBackward = { prev_char = true } } },
-      { key = ';', mods = 'NONE', action = act.CopyMode 'JumpAgain' },
-      { key = ',', mods = 'NONE', action = act.CopyMode 'JumpReverse' },
-      -- 選択
-      { key = 'v', mods = 'NONE', action = act.CopyMode{ SetSelectionMode = 'Cell' } },
-      { key = 'V', mods = 'NONE', action = act.CopyMode{ SetSelectionMode = 'Line' } },
-      { key = 'v', mods = 'CTRL', action = act.CopyMode{ SetSelectionMode = 'Block' } },
-      { key = 'o', mods = 'NONE', action = act.CopyMode 'MoveToSelectionOtherEnd' },
-      { key = 'O', mods = 'NONE', action = act.CopyMode 'MoveToSelectionOtherEndHoriz' },
-      -- コピー
-      { key = 'y', mods = 'NONE', action = act.Multiple{ { CopyTo = 'ClipboardAndPrimarySelection' }, { Multiple = { 'ScrollToBottom', { CopyMode = 'Close' } } } } },
-      -- 矢印キー
-      { key = 'LeftArrow', mods = 'NONE', action = act.CopyMode 'MoveLeft' },
-      { key = 'RightArrow', mods = 'NONE', action = act.CopyMode 'MoveRight' },
-      { key = 'UpArrow', mods = 'NONE', action = act.CopyMode 'MoveUp' },
-      { key = 'DownArrow', mods = 'NONE', action = act.CopyMode 'MoveDown' },
-      { key = 'PageUp', mods = 'NONE', action = act.CopyMode 'PageUp' },
-      { key = 'PageDown', mods = 'NONE', action = act.CopyMode 'PageDown' },
-    },
-
-    -- 検索モード
-    search_mode = {
-      { key = 'Enter', mods = 'NONE', action = act.CopyMode 'PriorMatch' },
-      { key = 'Escape', mods = 'NONE', action = act.CopyMode 'Close' },
-      { key = 'n', mods = 'CTRL', action = act.CopyMode 'NextMatch' },
-      { key = 'p', mods = 'CTRL', action = act.CopyMode 'PriorMatch' },
-      { key = 'r', mods = 'CTRL', action = act.CopyMode 'CycleMatchType' },
-      { key = 'u', mods = 'CTRL', action = act.CopyMode 'ClearPattern' },
-      { key = 'UpArrow', mods = 'NONE', action = act.CopyMode 'PriorMatch' },
-      { key = 'DownArrow', mods = 'NONE', action = act.CopyMode 'NextMatch' },
-      { key = 'PageUp', mods = 'NONE', action = act.CopyMode 'PriorMatchPage' },
-      { key = 'PageDown', mods = 'NONE', action = act.CopyMode 'NextMatchPage' },
-    },
   },
 }

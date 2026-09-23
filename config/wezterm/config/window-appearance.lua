@@ -1,6 +1,6 @@
 local wezterm = require("wezterm")
 
--- ウィンドウの見た目設定（背景・透過・装飾・タイトルバー）
+-- ウィンドウの見た目設定（背景・透過・装飾）
 local M = {}
 
 -- ウィンドウ設定
@@ -19,14 +19,6 @@ M.background = {
       brightness = 0.2,
     }
   }
-}
-
--- タイトルバーを透明化
-M.window_frame = {
-  inactive_titlebar_bg = "none",
-  active_titlebar_bg = "none",
-  font = wezterm.font("UDEV Gothic 35NFLG", { weight = "Bold" }),
-  font_size = 14,
 }
 
 return M

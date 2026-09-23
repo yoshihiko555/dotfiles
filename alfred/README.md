@@ -16,18 +16,18 @@ home-manager が Dropbox 配下のワークフローディレクトリへリン�
 
 ### Open-VS-or-IT
 
-お気に入りフォルダをVSCodeまたはWezTermで開くワークフロー。
+お気に入りフォルダを VSCode / Zed / herdr（Ghostty）で開くワークフロー。
 
 **キーワード:** `fav`
 
 **使い方:**
 1. Alfredで `fav` と入力
 2. お気に入りフォルダを選択
-3. `vs` (VSCode) または `wez` (WezTerm) を選択
+3. `vs` (VSCode) / `zed` (Zed) / `wez` (herdr) を選択
 
 **動作 (wezモード):**
-- WezTerm起動中: ワークスペースを作成して切替
-- WezTerm未起動: WezTermを起動し、ワークスペースを作成
+- herdr にワークスペースを作成して切替（リポジトリのルートなら `herdr worktree open`）
+- herdr が起動していなければ Ghostty を起動してから作成する
 - ワークスペース名はディレクトリ名（basename）を使用
 
 ### post
@@ -403,11 +403,11 @@ Docker / OrbStack のコンテナと Compose プロジェクトを操作する�
 
 **shell の動線:**
 
-tmux セッション `containers` にコンテナ名のウィンドウを作り、`docker exec -it` で入る。
-attach 済みの tmux クライアントを `switch-client` で `containers` に切り替え、WezTerm を前面に出す。
+herdr のワークスペース `containers` にコンテナ名のタブを作り、`docker exec -it` で入る。
+そのタブへフォーカスを移し、Ghostty を前面に出す。
 
-- `containers` セッションが無ければ自動で作成する
-- attach 済みクライアントが無い場合は実行せず通知で知らせる（WezTerm で tmux に入ってから実行する）
+- `containers` ワークスペースが無ければ自動で作成する（最初のタブをそのまま使う）
+- herdr が起動していなければ Ghostty を起動してから作成する
 
 **down 対策:**
 
@@ -508,7 +508,7 @@ bundleid を持つため `alfred_workflow_data` は Alfred のサポートフォ
 | 方法 | 動作 |
 |---|---|
 | バックグラウンド | `nohup` 相当で実行し、開始・終了（終了コード付き）を通知する |
-| ターミナル | tmux セッション `tasks` にウィンドウ `プロジェクト名:タスク名` を作り、`cd プロジェクト && task タスク名 引数...` を実行して WezTerm を前面に出す（`container` の `shell` と同じ動線。タスク終了と同時にウィンドウ内のプロセスも終わるため、失敗が一瞬で流れて見えることがある。引数トークンはシェル注入を避けるため `printf %q` でクォートする） |
+| ターミナル | herdr のワークスペース `tasks` にタブ `プロジェクト名:タスク名` を作り、プロジェクトのディレクトリで `task タスク名 引数...` を実行して Ghostty を前面に出す（`container` の `shell` と同じ動線。タスク終了後もシェルが残るので出力を確認できる。引数トークンはシェル注入を避けるため `printf %q` でクォートする） |
 
 **ログ:**
 

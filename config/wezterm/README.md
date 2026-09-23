@@ -16,8 +16,7 @@ wezterm/
     ├── window-appearance.lua # ウィンドウの見た目（背景, 透過, 装飾）
     ├── window.lua            # ウィンドウ設定（tmux 自動起動）
     ├── keybinds.lua          # キーバインド（Cmd→tmux 変換 + GUI 操作）
-    ├── notification.lua      # 通知設定（ベル音カスタマイズ）
-    └── baton-status.lua      # symlink → baton リポジトリ（別リポジトリ管理）
+    └── notification.lua      # 通知設定（ベル音カスタマイズ）
 ```
 
 ## 主な特徴
@@ -27,8 +26,10 @@ wezterm/
 - **カラースキーム**: Tokyo Night Moon
 - **背景**: 半透明ウィンドウ（70%透過）+ ぼかし効果 + 背景画像
 - **フォント**: UDEV Gothic 35NFLG (Bold), 15pt, 行の高さ 1.2
-- **起動時**: tmux default セッションに自動接続 + ウィンドウ最大化
+- **起動時**: tmux default セッション（baton 常駐）に自動接続。ウィンドウ配置は AeroSpace に任せる
 - **タブバー**: 無効化（tmux がウィンドウを管理）
+- **tmux 専用**: 新規ウィンドウ（`Cmd+N`）・WezTerm 側のスクロール/検索/コピーモード・マウス設定は持たない
+  （tmux 接続中は届かないため。tmux のコピーモード・tmux-fingers・tmux-open を使う）
 
 ### キーバインド方針
 

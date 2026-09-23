@@ -812,7 +812,7 @@ prefer_terminal = (
 
 def mode_detail(mode):
     if mode == "terminal":
-        return "tmux \"tasks\" セッションで実行 / 対話・sudo・長時間向け"
+        return "herdr \"tasks\" ワークスペースで実行 / 対話・sudo・長時間向け"
     detail = f"バックグラウンドで実行し通知 / {project_dir}"
     if prefer_terminal:
         detail += " ⚠ 設定でターミナル推奨"
@@ -1006,13 +1006,12 @@ print(json.dumps({"items": items}, ensure_ascii=False))
 				<string>#!/bin/zsh
 set -uo pipefail
 
-# task / tmux は nix profile 配下にしか無いため、そのパスを先頭に置く
+# task は nix profile、herdr は Homebrew にあり、GUI 起動の PATH には無いため補う
 export PATH="/etc/profiles/per-user/yoshihiko/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 # ロケール未設定だと printf %q が非ASCII引数をバイトエスケープしてしまうため明示する
 export LC_ALL="${LC_ALL:-en_US.UTF-8}"
 
 TASK_BIN="/etc/profiles/per-user/yoshihiko/bin/task"
-TMUX_BIN="/etc/profiles/per-user/yoshihiko/bin/tmux"
 
 project_name="${project_name:-}"
 project_dir="${project_dir:-}"
@@ -1035,6 +1034,33 @@ notify() {
   sub="$(sanitize "$1")"
   msg="$(sanitize "$2")"
   osascript -e "display notification \"$msg\" with title \"Taskfile\" subtitle \"$sub\"" &gt;/dev/null 2&gt;&amp;1
+}
+
+# herdr のワークスペース &lt;label&gt; にタブを作り、そのペイン ID を出力する。
+# ワークスペースが無ければ作り、最初のタブをそのまま使う。
+# herdr サーバーが居なければ Ghostty を起動する（initial-command が herdr にアタッチし、サーバーも立ち上がる）。
+herdr_open_tab() {
+  local ws_label="$1" cwd="$2" tab_label="$3" ws_id created tab_id i
+  if ! herdr workspace list &amp;&gt;/dev/null; then
+    open -a Ghostty
+    for i in {1..100}; do
+      herdr workspace list &amp;&gt;/dev/null &amp;&amp; break
+      sleep 0.1
+    done
+  fi
+  ws_id="$(herdr workspace list 2&gt;/dev/null | jq -r --arg l "$ws_label" '.result.workspaces[] | select(.label == $l) | .workspace_id' | head -1)"
+  if [[ -z "$ws_id" ]]; then
+    created="$(herdr workspace create --cwd "$cwd" --label "$ws_label" --focus 2&gt;/dev/null)" || return 1
+    ws_id="$(jq -r '.result.workspace.workspace_id' &lt;&lt;&lt;"$created")"
+    tab_id="$(jq -r '.result.tab.tab_id' &lt;&lt;&lt;"$created")"
+    herdr tab rename "$tab_id" "$tab_label" &gt;/dev/null 2&gt;&amp;1
+  else
+    created="$(herdr tab create --workspace "$ws_id" --cwd "$cwd" --label "$tab_label" --focus 2&gt;/dev/null)" || return 1
+    tab_id="$(jq -r '.result.tab.tab_id' &lt;&lt;&lt;"$created")"
+  fi
+  herdr workspace focus "$ws_id" &gt;/dev/null 2&gt;&amp;1
+  herdr tab focus "$tab_id" &gt;/dev/null 2&gt;&amp;1
+  jq -r '.result.root_pane.pane_id // empty' &lt;&lt;&lt;"$created"
 }
 
 if [[ -z "$project_dir" || -z "$task_name" ]]; then
@@ -1063,35 +1089,23 @@ if (( ${#args[@]} &gt; 0 )); then
   args_display="${(j: :)args}"
 fi
 
-# --- terminal: tmux セッション tasks にウィンドウを作って実行する ---
+# --- terminal: herdr のワークスペース tasks にタブを作って実行する ---
 if [[ "$mode" == "terminal" ]]; then
-  # attach 済みクライアントが無いとウィンドウを作っても切り替えられないので先に確認する
-  client="$("$TMUX_BIN" list-clients -F '#{client_tty}' 2&gt;/dev/null | head -1)"
-  if [[ -z "$client" ]]; then
-    notify "$project_name" "tmux クライアントが見つかりません。WezTerm で tmux に attach してから実行してください"
+  win="$(sanitize "${project_name}:${task_name}")"
+  pane_id="$(herdr_open_tab tasks "$project_dir" "$win")"
+  if [[ -z "$pane_id" ]]; then
+    notify "$project_name" "herdr にタブを作れませんでした"
     exit 1
   fi
 
-  if ! "$TMUX_BIN" has-session -t tasks 2&gt;/dev/null; then
-    "$TMUX_BIN" new-session -d -s tasks -n scratch
-  fi
-
-  win="$(sanitize "${project_name}:${task_name}")"
-
   # 各トークンをシェル注入を避けるため printf %q でクォートしてから連結する
-  quoted_args=""
+  cmd="$(printf '%q' "$TASK_BIN") $(printf '%q' "$task_name")"
   for a in "${args[@]}"; do
-    quoted_args+=" $(printf '%q' "$a")"
+    cmd+=" $(printf '%q' "$a")"
   done
 
-  "$TMUX_BIN" new-window -t tasks: -n "$win" \
-    "cd '$project_dir' &amp;&amp; '$TASK_BIN' '$task_name'$quoted_args"
-
-  "$TMUX_BIN" switch-client -c "$client" -t tasks
-
-  wez_app="WezTerm"
-  [[ -d "/Applications/WezTerm Nightly.app" ]] &amp;&amp; wez_app="WezTerm Nightly"
-  open -a "$wez_app"
+  herdr pane run "$pane_id" "$cmd"
+  open -a Ghostty
   exit 0
 fi
 
