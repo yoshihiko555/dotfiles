@@ -22,12 +22,12 @@
 | `<leader>hd` | Normal | diff this |
 | `ih` | Operator/Visual | hunk テキストオブジェクト |
 
-## Git Toggle (`<leader>t`)
+## Git Toggle (`<leader>u`)
 
 | キー | 説明 |
 |------|------|
-| `<leader>tb` | inline blame トグル |
-| `<leader>tw` | word diff トグル |
+| `<leader>ub` | inline blame トグル |
+| `<leader>uw` | word diff トグル |
 
 ## CodeDiff (diff viewer)
 

@@ -27,8 +27,8 @@
 
 | キー | 説明 |
 |------|------|
-| `<leader>tb` | inline blame トグル |
-| `<leader>tw` | word diff トグル |
+| `<leader>ub` | inline blame トグル |
+| `<leader>uw` | word diff トグル |
 
 ### FzfLua Git
 
@@ -71,9 +71,9 @@ hunk テキストオブジェクトの活用:
 ## 練習 3: blame と word diff
 
 1. 任意のファイルで `<leader>hb` → カーソル行の blame（コミット情報）がポップアップ
-2. `<leader>tb` → 全行に inline blame が表示される（トグル）
-3. `<leader>tw` → word diff モードに切り替え（行内の変更箇所がハイライト）
-4. もう一度 `<leader>tw` で解除
+2. `<leader>ub` → 全行に inline blame が表示される（トグル）
+3. `<leader>uw` → word diff モードに切り替え（行内の変更箇所がハイライト）
+4. もう一度 `<leader>uw` で解除
 
 ## 練習 4: FzfLua で Git 操作
 
@@ -111,7 +111,7 @@ hunk テキストオブジェクトの活用:
 - [x] `<leader>hs` で hunk 単位でステージできる
 - [x] `<leader>hr` で hunk をリセットできる
 - [x] `<leader>hp` で hunk のプレビューを表示できる
-- [x] `<leader>tb` で inline blame をトグルできる
+- [x] `<leader>ub` で inline blame をトグルできる
 - [x] `:CodeDiff` で diff ビューを開いて操作できる
 - [x] `ih` テキストオブジェクトで hunk を選択できる
 

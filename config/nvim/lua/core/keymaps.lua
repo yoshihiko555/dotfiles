@@ -17,16 +17,26 @@ map("n", "[<Space>", "<cmd>call append(line('.') - 1, '')<cr>", "上に空行を
 -- Alt+h/j/k/l で Neovim ↔ tmux シームレス移動
 
 -- バッファ操作
+map("n", "<S-h>", "<cmd>bprevious<cr>", "前のバッファへ")
+map("n", "<S-l>", "<cmd>bnext<cr>", "次のバッファへ")
 map("n", "<leader>bn", "<cmd>bnext<cr>", "次のバッファへ")
 map("n", "<leader>bp", "<cmd>bprevious<cr>", "前のバッファへ")
 map("n", "<leader>bd", "<cmd>bdelete<cr>", "バッファを閉じる")
 
--- タブ操作（<leader>t は表示切替グループで使用済みのため <leader>T を使う）
-map("n", "<leader>Tn", "<cmd>tabnew<cr>", "新しいタブ")
-map("n", "<leader>Tl", "<cmd>tabnext<cr>", "次のタブへ")
-map("n", "<leader>Th", "<cmd>tabprevious<cr>", "前のタブへ")
-map("n", "<leader>Td", "<cmd>tabclose<cr>", "タブを閉じる")
-map("n", "<leader>To", "<cmd>tabonly<cr>", "ほかのタブをすべて閉じる")
+-- タブ操作
+map("n", "<leader>tn", "<cmd>tabnew<cr>", "新しいタブ")
+map("n", "<leader>tl", "<cmd>tabnext<cr>", "次のタブへ")
+map("n", "<leader>th", "<cmd>tabprevious<cr>", "前のタブへ")
+map("n", "<leader>td", "<cmd>tabclose<cr>", "タブを閉じる")
+map("n", "<leader>to", "<cmd>tabonly<cr>", "ほかのタブをすべて閉じる")
+-- t:tabname は lualine の tabs 表示が読む（:LualineRenameTab と同じ変数）
+map("n", "<leader>tr", function()
+  vim.ui.input({ prompt = "タブ名（空で解除）: ", default = vim.t.tabname or "" }, function(name)
+    if name == nil then return end
+    vim.t.tabname = name ~= "" and name or nil
+    vim.cmd.redrawtabline()
+  end)
+end, "タブの名前を変更")
 
 -- Quickfix / location list 操作
 map("n", "]q", "<cmd>cnext<cr>", "次のQuickfixへ")

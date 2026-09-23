@@ -9,7 +9,7 @@
 | [tokyonight.nvim](https://github.com/folke/tokyonight.nvim) | `plugins/colorscheme.lua` | カラースキーム（moon テーマ） | 端末（Ghostty / WezTerm）と統一した配色でモチベーション維持 |
 | [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) | `plugins/treesitter.lua` | 構文解析ベースのハイライト・インデント | 正規表現ベースより正確なシンタックスハイライトを実現 |
 | [fzf-lua](https://github.com/ibhagwan/fzf-lua) | `plugins/fzf-lua.lua` | ファジーファインダー（ファイル検索・grep・LSP連携） | 素早いファイル移動・コード検索で編集効率を確保 |
-| [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim) | `plugins/lualine.lua` | ステータスライン | モード・ブランチ・ファイル情報を常時表示 |
+| [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim) | `plugins/lualine.lua` | ステータスライン・上部のバッファ / タブ一覧 | モード・ブランチ・ファイル情報と、開いているバッファ・タブを常時表示 |
 | [which-key.nvim](https://github.com/folke/which-key.nvim) | `plugins/which-key.lua` | キーマップのリアルタイム表示 | Vim キーバインドの学習補助 |
 | [neo-tree.nvim](https://github.com/nvim-neo-tree/neo-tree.nvim) | `plugins/neo-tree.lua` | ファイルエクスプローラー | VSCode のサイドバーに相当するファイルツリー |
 | [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) | — （依存として自動導入） | ファイルアイコン表示 | lualine / neo-tree / alpha 等のアイコン表示に必要 |

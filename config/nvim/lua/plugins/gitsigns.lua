@@ -65,8 +65,8 @@ return {
       map("n", "<leader>hd", gs.diffthis, { desc = "差分を表示" })
 
       -- Toggles
-      map("n", "<leader>tb", gs.toggle_current_line_blame, { desc = "行の変更者を切替" })
-      map("n", "<leader>tw", gs.toggle_word_diff, { desc = "単語差分を切替" })
+      map("n", "<leader>ub", gs.toggle_current_line_blame, { desc = "行の変更者を切替" })
+      map("n", "<leader>uw", gs.toggle_word_diff, { desc = "単語差分を切替" })
 
       -- Text object
       map({ "o", "x" }, "ih", gs.select_hunk, { desc = "変更箇所を選択" })
