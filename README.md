@@ -86,8 +86,6 @@ task sync-claude-work-skills # 会社用 Claude Code の work スキルを同期
 task mcp-list      # 個人用グローバル MCP の登録状況を表示（読み取り専用）
 task mcp-diff      # 共通定義との差分を表示（読み取り専用）
 task mcp-sync      # 共通定義を Claude / Codex へ同期（バックアップ付き）
-task mcp-apply-dry # mcp-diff の旧名
-task mcp-apply     # mcp-sync の旧名
 task clean-claude-dry # Claude デバッグログ削除の dry-run
 task clean-claude  # Claude デバッグログを削除
 task codex-trust-audit # Codex trust 設定を監査

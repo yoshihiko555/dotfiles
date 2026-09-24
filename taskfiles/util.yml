@@ -78,16 +78,6 @@ tasks:
     cmds:
       - bash "{{.ROOT_DIR}}/scripts/mcp-manage.sh" sync {{.CLI_ARGS}}
 
-  mcp-apply:
-    desc: mcp-sync の旧名（Claude / Codex の共通定義を同期）
-    cmds:
-      - bash {{.ROOT_DIR}}/scripts/mcp-apply.sh
-
-  mcp-apply-dry:
-    desc: mcp-diff の旧名（読み取り専用）
-    cmds:
-      - bash {{.ROOT_DIR}}/scripts/mcp-apply.sh --dry-run
-
   clean-claude:
     desc: Claude Code のログ容量を減らしたいときにデバッグログを削除
     cmds:
