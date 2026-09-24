@@ -8,6 +8,9 @@ uv = "latest"
 # mermaid を Unicode art に変換する CLI（nvim の mermaid-nvim が stdin 経由で呼ぶ）
 "pipx:termaid" = "latest"
 
+# ai-orchestra の CI（facet-format）と整形結果を揃えるため固定。CI を上げたらここも追従
+"npm:prettier" = "3.9.6"
+
 [settings]
 # pipx backend の実体を uv に寄せる（pipx 本体を別途入れずに済む）
 pipx.uvx = true
