@@ -2,16 +2,18 @@
 # herdr-agent-console — 承認待ちエージェント・コンソール（prefix+b の popup）
 #
 # herdr 上のエージェント一覧を fzf で表示する（数秒ごとに自動更新、ヘッダーに状態別の件数）。
-#   j/k ↑↓ 移動 / Enter ペインへ / a 承認 / d 拒否 / w 承認待ちのみ / r 再取得 / q 閉じる
+# 要対応(blocked)の行は画面を読み、承認ダイアログ / 質問フォーム / プラン承認を見分けて表示する。
+#   j/k ↑↓ 移動 / Enter ペインへ / a 承認 / d 拒否 / w 要対応のみ / r 再取得 / q 閉じる
 #   /  検索モード（中では a/d/w/r/q/j/k は文字入力になる。Esc で通常モードへ戻る）
 #
 # 対象は常に pane_id（例: w1:p4）で指定する。agent 名は種別名（claude 等）で重複しうるため。
 #
-# 承認・拒否は確認なしで送る。代わりに次の両方を満たすときだけ送り、結果は画面と $SEND_LOG に残す。
-#   1. 対象の状態が blocked（一覧は最大 5 秒古い。怪しければ r で再取得）
+# 承認・拒否は確認なしで送る。代わりに次を満たすときだけ送り、結果は $SEND_LOG に残す。
+#   1. 対象の状態が blocked（押した瞬間に herdr へ問い合わせ直す）
 #   2. ツールの送信キーが分かっている（claude: 1 / esc、codex: y / esc、opencode: y / esc は未検証）
-# 注意: blocked は承認ダイアログだけでなく AskUserQuestion などの質問フォームでも立つ。
-# 質問フォームに a を送ると 1 番目の選択肢で回答してしまうので、preview で本文を読んでから押す。
+#   3. 承認のみ: ペインの表示が承認ダイアログ（1 番目の選択肢が Yes）である
+# blocked は AskUserQuestion などの質問フォームやプラン承認でも立つ。そこへ a を送ると
+# 1 番目の選択肢で回答してしまうため、一覧では「質問」「プラン」と表示し、a は送らない。
 
 set -euo pipefail
 
@@ -53,12 +55,12 @@ usage() {
   キー割当:
     j/k, ↑↓   移動（検索モード中は ↑↓ / Ctrl-j / Ctrl-k のみ）
     Enter     選択エージェントのペインへフォーカスして終了
-    a         承認キーを送信（確認プロンプトなし。blocked 以外はスキップ）
-    d         拒否キー（Escape）を送信（同上の安全策）
+    a         承認キーを送信（確認プロンプトなし。承認ダイアログ以外はスキップ）
+    d         拒否キー（Escape）を送信（blocked 以外はスキップ）
     /         検索モードに入り、文字入力で絞り込む
     Esc       検索モード中: 検索モードを終了（絞り込みは保持）
               通常モード  : 閉じる
-    w         承認待ち(blocked)のみに絞り込む
+    w         要対応(blocked)のみに絞り込む
     r         全件再取得（絞り込み・検索文字列を解除）
     q         閉じる（検索モード中は効かない。先に Esc で通常モードへ）
 
@@ -85,20 +87,15 @@ else
 fi
 
 # jq 版: herdr agent list の JSON を TSV に変換する
-# 出力列: pane_id / kind_raw / status_raw / badge / ws表示名 / tab_id(接頭辞なし) / kind_display / title / cwd
+# 出力列: pane_id / kind / status / ws表示名 / タブ名 / title / cwd（ブランチ取得用の絶対パス）
 # ws表示名は fetch_workspace_map の "番号:リポジトリ名"。マップに無ければ workspace_id を出す。
-# tab_id は "w3:t1" の "w3:" を落として "t1" だけにする（ws 列と重複するため）。
+# タブ名は fetch_tab_map のラベル。マップに無ければ tab_id の "w3:" を落とした "t1" を出す。
+# 色付けと列揃えは _PY の rows が行う。
 json_to_tsv_jq() {
-  local filter="$1" home="$2" wsmap="${3:-}"
+  local filter="$1" wsmap="${2:-}" tabmap="${3:-}"
   [ -z "$wsmap" ] && wsmap='{}'
-  jq -r --arg filter "$filter" --arg home "$home" --argjson wsmap "$wsmap" '
-    def badge:
-      if .agent_status=="blocked" then "\u001b[1;31m● 承認待ち\u001b[0m"
-      elif .agent_status=="working" then "\u001b[1;33m◐ 作業中\u001b[0m"
-      elif .agent_status=="idle" then "\u001b[1;32m✓ 待機中\u001b[0m"
-      elif .agent_status=="done" then "\u001b[1;36m✓ 完了\u001b[0m"
-      else "\u001b[1;90m? 不明(" + (.agent_status // "null") + ")\u001b[0m"
-      end;
+  [ -z "$tabmap" ] && tabmap='{}'
+  jq -r --arg filter "$filter" --argjson wsmap "$wsmap" --argjson tabmap "$tabmap" '
     def prio:
       if .agent_status=="blocked" then 0
       elif .agent_status=="working" then 1
@@ -108,18 +105,17 @@ json_to_tsv_jq() {
       else 5 end;
     (.result.agents // [])
     | map(select($filter != "blocked" or .agent_status == "blocked"))
-    | sort_by(prio)
+    | map(. + {ws: ($wsmap[(.workspace_id // "")] // .workspace_id // "")})
+    | sort_by(prio, .ws)
     | .[]
     | [
         (.pane_id // ""),
         (.agent // "?"),
         (.agent_status // "unknown"),
-        badge,
-        ($wsmap[(.workspace_id // "")] // .workspace_id // ""),
-        ((.tab_id // "") | sub("^[^:]+:"; "")),
-        (.agent // "?"),
+        .ws,
+        ($tabmap[(.tab_id // "")] // ((.tab_id // "") | sub("^[^:]+:"; ""))),
         ((.terminal_title_stripped // .terminal_title // "") + (if .focused == true then " ★" else "" end)),
-        ((.cwd // "") | gsub("^" + $home; "~"))
+        (.foreground_cwd // .cwd // "")
       ]
     | @tsv
   '
@@ -127,17 +123,22 @@ json_to_tsv_jq() {
 
 # python3 版（jq が無い環境向けフォールバック）
 json_to_tsv_py() {
-  local filter="$1" home="$2" wsmap="${3:-}"
+  local filter="$1" wsmap="${2:-}" tabmap="${3:-}"
   [ -z "$wsmap" ] && wsmap='{}'
-  python3 - "$filter" "$home" "$wsmap" <<'PYEOF'
+  [ -z "$tabmap" ] && tabmap='{}'
+  python3 - "$filter" "$wsmap" "$tabmap" <<'PYEOF'
 import json
 import sys
 
-filt, home, wsmap_raw = sys.argv[1], sys.argv[2], sys.argv[3]
+filt, wsmap_raw, tabmap_raw = sys.argv[1], sys.argv[2], sys.argv[3]
 try:
     wsmap = json.loads(wsmap_raw)
 except Exception:
     wsmap = {}
+try:
+    tabmap = json.loads(tabmap_raw)
+except Exception:
+    tabmap = {}
 try:
     data = json.load(sys.stdin)
 except Exception:
@@ -145,42 +146,29 @@ except Exception:
 
 agents = ((data.get("result") or {}).get("agents")) or []
 
-def badge(a):
-    s = a.get("agent_status")
-    if s == "blocked":
-        return "\x1b[1;31m● 承認待ち\x1b[0m"
-    if s == "working":
-        return "\x1b[1;33m◐ 作業中\x1b[0m"
-    if s == "idle":
-        return "\x1b[1;32m✓ 待機中\x1b[0m"
-    if s == "done":
-        return "\x1b[1;36m✓ 完了\x1b[0m"
-    return f"\x1b[1;90m? 不明({s})\x1b[0m"
-
 def prio(a):
     return {"blocked": 0, "working": 1, "unknown": 2, "idle": 3, "done": 4}.get(a.get("agent_status"), 5)
+
+def ws_of(a):
+    ws_id = a.get("workspace_id") or ""
+    return wsmap.get(ws_id) or ws_id
 
 if filt == "blocked":
     agents = [a for a in agents if a.get("agent_status") == "blocked"]
 
-agents.sort(key=prio)
+agents.sort(key=lambda a: (prio(a), ws_of(a)))
 
 for a in agents:
     pane_id = a.get("pane_id") or ""
     kind = a.get("agent") or "?"
     status = a.get("agent_status") or "unknown"
-    ws_id = a.get("workspace_id") or ""
-    ws = wsmap.get(ws_id) or ws_id
-    tab = a.get("tab_id") or ""
-    if ":" in tab:
-        tab = tab.split(":", 1)[1]
+    tab_id = a.get("tab_id") or ""
+    tab = tabmap.get(tab_id) or (tab_id.split(":", 1)[1] if ":" in tab_id else tab_id)
     title = a.get("terminal_title_stripped") or a.get("terminal_title") or ""
     if a.get("focused"):
         title += " ★"
-    cwd = a.get("cwd") or ""
-    if home and cwd.startswith(home):
-        cwd = "~" + cwd[len(home):]
-    row = [pane_id, kind, status, badge(a), ws, tab, kind, title, cwd]
+    cwd = a.get("foreground_cwd") or a.get("cwd") or ""
+    row = [pane_id, kind, status, ws_of(a), tab, title, cwd]
     print("\t".join(row))
 PYEOF
 }
@@ -278,6 +266,37 @@ print(json.dumps(out))
   fi
 }
 
+# herdr tab list から「tab_id → タブ名」のマップを JSON で返す。
+# タブ名は herdr-automatic-rename が付けたラベル（例: "[1] claude"）。失敗時は空マップ。
+fetch_tab_map() {
+  local raw
+  if ! raw="$(herdr tab list 2>/dev/null)" || [ -z "$raw" ]; then
+    printf '{}'
+    return 0
+  fi
+  if [ "$JSON_TOOL" = "jq" ]; then
+    printf '%s' "$raw" | jq -c '
+      [ (.result.tabs // [])[]
+        | select((.tab_id // "") != "" and (.label // "") != "")
+        | { key: .tab_id, value: .label } ]
+      | from_entries' 2>/dev/null || printf '{}'
+  else
+    printf '%s' "$raw" | python3 -c '
+import json, sys
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    print("{}")
+    sys.exit(0)
+out = {}
+for t in ((data.get("result") or {}).get("tabs")) or []:
+    if t.get("tab_id") and t.get("label"):
+        out[t["tab_id"]] = t["label"]
+print(json.dumps(out))
+' 2>/dev/null || printf '{}'
+  fi
+}
+
 # raw JSON から件数 TSV を計算し out_file に書き込む（_header が読む）。
 write_counts() {
   local raw="$1" out_file="$2" line
@@ -293,16 +312,23 @@ write_counts() {
   printf '%s\n' "$line" >"$out_file" 2>/dev/null || true
 }
 
+# raw JSON から fzf に渡す行（pane_id / kind / status / 整形済み表示）を出す。
+_rows_from_raw() {
+  local raw="$1" filter="$2" wsmap tabmap
+  wsmap="$(fetch_workspace_map)"
+  tabmap="$(fetch_tab_map)"
+  if [ "$JSON_TOOL" = "jq" ]; then
+    printf '%s' "$raw" | json_to_tsv_jq "$filter" "$wsmap" "$tabmap" | _py rows || true
+  else
+    printf '%s' "$raw" | json_to_tsv_py "$filter" "$wsmap" "$tabmap" | _py rows || true
+  fi
+}
+
 list_agents_tsv() {
-  local filter="${1:-all}" raw wsmap
+  local filter="${1:-all}" raw
   raw="$(fetch_agents_raw)"
   [ -z "$raw" ] && return 0
-  wsmap="$(fetch_workspace_map)"
-  if [ "$JSON_TOOL" = "jq" ]; then
-    printf '%s' "$raw" | json_to_tsv_jq "$filter" "$HOME" "$wsmap" | _align_rows || true
-  else
-    printf '%s' "$raw" | json_to_tsv_py "$filter" "$HOME" "$wsmap" | _align_rows || true
-  fi
+  _rows_from_raw "$raw" "$filter"
 }
 
 pause_tty() {
@@ -313,64 +339,177 @@ pause_tty() {
 # ---- 隠しサブコマンド: fzf の reload / preview / bind から自分自身を呼び出す ----
 
 
-# 表示列を全角幅で揃える。タブ区切りのままだと日本語が全角のためタブ位置がずれ、
-# 「状態」(4桁) と「● 承認待ち」(10桁) が別のタブストップに落ちて列が崩れる。
-# フィールド 1-3（pane_id / kind / status）はそのまま残し、表示用の 4-9 を
-# 1 つの整形済みフィールドにまとめる。fzf 側は --with-nth=4 で表示する。
-COL_W_STATUS=12
-COL_W_WS=18
-COL_W_TAB=5
-COL_W_TOOL=8
-COL_W_TITLE=34
+# 表示の整形とダイアログ判定を行う Python。サブコマンド:
+#   rows     json_to_tsv_* の TSV を読み、pane_id / kind / status / 整形済み表示 の 4 列を出す
+#   header   rows と同じ列幅の列見出しを出す
+#   classify ペインの表示テキストを読み、「種別<TAB>要約」を出す
+#            種別: permission（承認ダイアログ）/ question（質問フォーム）/ plan / unknown
+# 日本語は全角のためタブ区切りでは列が揃わない。表示用の列は 1 つのフィールドに詰めて
+# 全角幅で揃え、fzf 側は --with-nth=4 で表示する。
+# 色は config.toml の [ui.sidebar.agents] と揃える。SGR dim は透過背景に溶けるため使わない。
+read -r -d '' _PY <<'PYEOF' || true
+import re
+import subprocess
+import sys
+import unicodedata
 
-_align_rows() {
-  python3 -c '
-import sys, re, unicodedata
-W = [int(x) for x in sys.argv[1:6]]
-ansi = re.compile(r"\x1b\[[0-9;]*m")
-def dw(s):
-    s = ansi.sub("", s)
-    return sum(2 if unicodedata.east_asian_width(c) in "WF" else 1 for c in s)
-def pad(s, w):
-    d = dw(s)
-    if d > w:
-        out, acc = "", 0
-        for c in ansi.sub("", s):
-            cw = 2 if unicodedata.east_asian_width(c) in "WF" else 1
-            if acc + cw > w - 2:
-                break
-            out += c; acc += cw
-        return out + "‥" + " " * max(0, w - acc - 2)
-    return s + " " * (w - d)
-for line in sys.stdin:
-    f = line.rstrip("\n").split("\t")
-    if len(f) < 9:
-        continue
-    disp = "".join([pad(f[3], W[0]), pad(f[4], W[1]), pad(f[5], W[2]),
-                    pad(f[6], W[3]), pad(f[7], W[4]), f[8]])
-    print("\t".join([f[0], f[1], f[2], disp]))
-' "$COL_W_STATUS" "$COL_W_WS" "$COL_W_TAB" "$COL_W_TOOL" "$COL_W_TITLE"
+W_STATUS, W_TOOL, W_WS, W_BRANCH, W_TAB = 10, 9, 14, 12, 12
+
+TEXT, SUB, OVERLAY = "#c8d3f5", "#828bb8", "#737aa2"
+AGENT_COLOR = {"claude": "#CC7C5E", "codex": "#49A3B0", "agy": "#60BA7E", "opencode": "#3B82F6"}
+# 表示キー: (ラベル, 色, 太字)。blocked は classify の結果で permission / question / plan に分ける
+STATE = {
+    "permission": ("● 承認", "#ff757f", True),
+    "question": ("? 質問", "#c099ff", True),
+    "plan": ("◇ プラン", "#c099ff", True),
+    "blocked": ("● 待ち", "#ff757f", True),
+    "working": ("◐ 作業中", "#ffc777", False),
+    "idle": ("✓ 待機中", "#c3e88d", False),
+    "done": ("✓ 完了", "#4fd6be", False),
 }
+UNKNOWN_STATE = ("? 不明", "#636da6", False)
 
-# 列見出しを一覧と同じ幅で整形する（_align_rows と同じ列幅を使う）。
-_align_header() {
-  python3 -c '
-import sys, unicodedata
-W = [int(x) for x in sys.argv[1:6]]
-def dw(s):
-    return sum(2 if unicodedata.east_asian_width(c) in "WF" else 1 for c in s)
-f = sys.stdin.read().rstrip("\n").split("\t")
-out = ""
-for i, w in enumerate(W):
-    out += f[i] + " " * max(0, w - dw(f[i]))
-out += f[5]
-print(out)
-' "$COL_W_STATUS" "$COL_W_WS" "$COL_W_TAB" "$COL_W_TOOL" "$COL_W_TITLE"
+OPT1 = re.compile(r"^\s*[❯›>]?\s*1\.\s")
+YES1 = re.compile(r"^\s*[❯›>]?\s*1\.\s+Yes\b")
+RULE = re.compile(r"^\s*[─━╌┄]{8,}\s*$")
+BOX = "│╭╮╰╯─┌┐└┘├┤ "
+ASK = ("Do you want", "Would you like")
+
+
+def cw(c):
+    return 2 if unicodedata.east_asian_width(c) in "WF" else 1
+
+
+def width(s):
+    return sum(cw(c) for c in s)
+
+
+def fit(s, w):
+    """全角幅 w に切り詰め・右パディングする（列の間に最低 1 桁空ける）。"""
+    if width(s) <= w - 1:
+        return s + " " * (w - width(s))
+    out, acc = "", 0
+    for c in s:
+        if acc + cw(c) > w - 2:
+            break
+        out += c
+        acc += cw(c)
+    return out + "‥" + " " * (w - acc - 1)
+
+
+def color(s, hexc, bold=False):
+    r, g, b = int(hexc[1:3], 16), int(hexc[3:5], 16), int(hexc[5:7], 16)
+    return "\x1b[%s38;2;%d;%d;%dm%s\x1b[0m" % ("1;" if bold else "", r, g, b, s)
+
+
+def run(cmd):
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=3).stdout.strip()
+    except Exception:
+        return ""
+
+
+def classify(text):
+    lines = [l.rstrip() for l in text.splitlines()]
+    opts = [i for i, l in enumerate(lines) if OPT1.match(l)]
+    if not opts:
+        return "unknown", ""
+    o = opts[-1]
+    # ダイアログは罫線で始まる。見つからなければ直前 20 行を対象にする
+    start = max(0, o - 20)
+    for j in range(o - 1, start - 1, -1):
+        if RULE.match(lines[j]):
+            start = j + 1
+            break
+    flat = " ".join(l.strip() for l in lines[start:])
+    above = [l.strip() for l in lines[start:o] if l.strip(BOX)]
+
+    if any(k in flat for k in ("Chat about this", "Type something", "Enter to select")):
+        q = [l for l in above if l[:1] not in "☐☒✔←→"]
+        return "question", (q[-1] if q else "")
+    if "written up a plan" in flat or "keep planning" in flat:
+        return "plan", "プランの承認"
+    if not YES1.match(lines[o]):
+        return "unknown", ""
+
+    # Codex: "$ コマンド" の行が承認対象
+    cmd = next((l for l in reversed(above) if l.startswith("$ ")), None)
+    if cmd:
+        return "permission", cmd
+    # Claude Code: 先頭行がツール名（Bash command / Edit file 等）、続く行が対象
+    ask = next((l for l in above if l.startswith(ASK)), "")
+    head = [l.strip(BOX) for l in above if not l.startswith(ASK)]
+    if not head:
+        return "permission", ask
+    m = re.search(r"(?:make this edit to|create|delete this cell from) (.+?)\?$", ask)
+    detail = m.group(1) if m else (head[1] if len(head) > 1 else "")
+    return "permission", (head[0] + ": " + detail) if detail else head[0]
+
+
+def branch_of(cwd, cache={}):
+    if not cwd:
+        return "-"
+    if cwd not in cache:
+        cache[cwd] = (run(["git", "-C", cwd, "branch", "--show-current"])
+                      or run(["git", "-C", cwd, "rev-parse", "--short", "HEAD"])
+                      or "-")
+    return cache[cwd]
+
+
+def rows():
+    prev_ws = None
+    for line in sys.stdin:
+        f = line.rstrip("\n").split("\t")
+        if len(f) < 7:
+            continue
+        pane, kind, status, ws, tab, title, cwd = f[:7]
+        key, summary = status, ""
+        if status == "blocked":
+            screen = run(["herdr", "agent", "read", pane, "--source", "visible",
+                          "--lines", "40", "--format", "text"])
+            kind_of_dialog, summary = classify(screen)
+            key = "blocked" if kind_of_dialog == "unknown" else kind_of_dialog
+        label, scolor, sbold = STATE.get(key, UNKNOWN_STATE)
+        # 待機中・完了は文字色を落として、見るべき行を目立たせる
+        base = SUB if status in ("idle", "done") else TEXT
+        cols = [
+            color(fit(label, W_STATUS), scolor, sbold),
+            color(fit(kind, W_TOOL), AGENT_COLOR.get(kind, base)),
+            color(fit(ws, W_WS), OVERLAY if ws == prev_ws else base),
+            color(fit(branch_of(cwd), W_BRANCH), SUB),
+            color(fit(tab, W_TAB), SUB),
+        ]
+        if summary:
+            cols.append(color(summary, TEXT, True) + "  " + color(title, OVERLAY))
+        else:
+            cols.append(color(title, base))
+        prev_ws = ws
+        print("\t".join([pane, kind, status, "".join(cols)]))
+
+
+def header():
+    names = ["状態", "tool", "ws", "branch", "tab"]
+    widths = [W_STATUS, W_TOOL, W_WS, W_BRANCH, W_TAB]
+    print("".join(fit(n, w) for n, w in zip(names, widths)) + "タイトル / 承認対象")
+
+
+if __name__ == "__main__":
+    mode = sys.argv[1] if len(sys.argv) > 1 else ""
+    if mode == "rows":
+        rows()
+    elif mode == "header":
+        header()
+    elif mode == "classify":
+        print("%s\t%s" % classify(sys.stdin.read()))
+PYEOF
+
+_py() {
+  python3 -c "$_PY" "$@"
 }
 
 cmd_list() {
   # $1: フィルタ状態を書いたファイルのパス（無ければ全件）
-  local state_file="${1:-}" filter="all" raw wsmap
+  local state_file="${1:-}" filter="all" raw
   if [ -n "$state_file" ] && [ -f "$state_file" ]; then
     filter="$(cat "$state_file" 2>/dev/null || echo all)"
   fi
@@ -379,60 +518,63 @@ cmd_list() {
     write_counts "$raw" "${state_file}.counts"
   fi
   [ -z "$raw" ] && return 0
-  wsmap="$(fetch_workspace_map)"
-  if [ "$JSON_TOOL" = "jq" ]; then
-    printf '%s' "$raw" | json_to_tsv_jq "$filter" "$HOME" "$wsmap" | _align_rows || true
-  else
-    printf '%s' "$raw" | json_to_tsv_py "$filter" "$HOME" "$wsmap" | _align_rows || true
-  fi
+  _rows_from_raw "$raw" "$filter"
 }
 
-# ヘッダー文字列を出力する。fzf の transform-header から呼ばれる想定で、
-# 実行中の fzf が渡す環境変数 FZF_INPUT_STATE / FZF_QUERY を見て
-# 通常モード / 検索モードでヘッダーの内容を切り替える。
+# ヘッダー（件数サマリ・絞り込み状態 + 列見出し）を出力する。fzf の transform-header から呼ばれる。
+# 色は config.toml の [ui.sidebar.agents] の状態色と揃える。
 cmd_header() {
-  local state_file="${1:-}"
-  local input_state="${FZF_INPUT_STATE:-hidden}"
+  local state_file="${1:-}" filter="all"
   local query="${FZF_QUERY:-}"
+  local b="?" w="?" i="?" o="?" t="?"
+  if [ -n "$state_file" ] && [ -f "${state_file}.counts" ]; then
+    IFS=$'\t' read -r b w i o t <"${state_file}.counts" 2>/dev/null || true
+  fi
+  if [ -n "$state_file" ] && [ -f "$state_file" ]; then
+    filter="$(cat "$state_file" 2>/dev/null || echo all)"
+  fi
+  local narrowed=""
+  [ "$filter" = "blocked" ] && narrowed="要対応のみ"
+  if [ -n "$query" ]; then
+    narrowed="${narrowed:+$narrowed / }\"$query\""
+  fi
 
-  if [ "$input_state" != "hidden" ]; then
-    printf '検索モード: 文字入力でツール名・ワークスペース名等を絞り込み\n'
-    printf '↑↓ / Ctrl-j / Ctrl-k で移動   Enter でフォーカス   Esc で検索終了・絞り込みは保持されます\n'
+  local counts_line
+  counts_line="$(printf '\033[1;38;2;255;117;127m● 要対応 %s\033[0m   \033[38;2;255;199;119m◐ 作業中 %s\033[0m   \033[38;2;195;232;141m✓ 待機中 %s\033[0m' "$b" "$w" "$i")"
+  if [ "$o" != "0" ] && [ "$o" != "?" ]; then
+    counts_line="${counts_line}   $(printf '\033[38;2;99;109;166mその他 %s\033[0m' "$o")"
+  fi
+  if [ -n "$narrowed" ]; then
+    counts_line="${counts_line}   $(printf '\033[38;2;255;199;119m絞り込み中: %s (r で解除)\033[0m' "$narrowed")"
+  fi
+  printf '%s\n' "$counts_line"
+  # 背景が透過しているため暗いグレーは読めない。下線付きの通常色にする。
+  printf '\033[4;38;2;200;211;245m%s\033[0m\n' "$(_py header)"
+}
+
+# フッター（キー操作の説明）を出力する。fzf の transform-footer から呼ばれる想定で、
+# 実行中の fzf が渡す環境変数 FZF_INPUT_STATE を見て通常モード / 検索モードで内容を切り替える。
+cmd_footer() {
+  # キー名だけ herdr の accent 色にする
+  local k=$'\033[38;2;130;170;255m' r=$'\033[0m'
+
+  if [ "${FZF_INPUT_STATE:-hidden}" != "hidden" ]; then
+    printf '検索モード: 文字入力で tool・ws・タイトル等を絞り込み\n'
+    printf '%s↑↓ / Ctrl-j / Ctrl-k%s 移動   %sEnter%s フォーカス   %sEsc%s 検索終了（絞り込みは保持）\n' \
+      "$k" "$r" "$k" "$r" "$k" "$r"
     return 0
   fi
 
-  local counts_file="" b="?" w="?" i="?" o="?" t="?"
-  if [ -n "$state_file" ]; then
-    counts_file="${state_file}.counts"
-    if [ -f "$counts_file" ]; then
-      IFS=$'\t' read -r b w i o t <"$counts_file" 2>/dev/null || true
-    fi
-  fi
-
-  printf 'j/k 移動   Enter フォーカス   a 承認   d 拒否   / 検索\n'
-  printf 'w 待ちのみ   r 再取得(絞り込み解除)   q 閉じる   (5秒ごとに自動更新)\n'
-
-  local counts_line
-  counts_line="$(printf '\033[1;31m● 承認待ち %s\033[0m   \033[1;33m◐ 作業中 %s\033[0m   \033[1;32m✓ 待機中 %s\033[0m' "$b" "$w" "$i")"
-  if [ "$o" != "0" ] && [ "$o" != "?" ]; then
-    counts_line="${counts_line}   $(printf '\033[1;90mその他 %s\033[0m' "$o")"
-  fi
-  # 件数サマリと一覧の間に 1 行空ける（区切りが無いと数字と行が地続きに見えるため）
-  printf '%s\n' "$counts_line"
-  # 列見出し。一覧と同じタブ区切りにして fzf のタブストップで揃える。
-  # 空行は fzf に落とされるため、区切りも兼ねてここに置く。
-  # 背景が透過しているため 1;90(暗いグレー)は読めない。下線付きの通常色にする。
-  printf '\033[4;37m%s\033[0m\n' "$(printf '状態\tws\ttab\ttool\tタイトル\tパス' | _align_header)"
-
-  if [ -n "$query" ]; then
-    printf '絞り込み中: %s   (r で解除)\n' "$query"
-  fi
+  printf '%sj/k%s 移動   %sEnter%s フォーカス   %sa%s 承認   %sd%s 拒否   %s/%s 検索\n' \
+    "$k" "$r" "$k" "$r" "$k" "$r" "$k" "$r" "$k" "$r"
+  printf '%sw%s 要対応のみ   %sr%s 再取得(絞り込み解除)   %sq%s 閉じる   (5秒ごとに自動更新)\n' \
+    "$k" "$r" "$k" "$r" "$k" "$r"
 }
 
 # Esc が押されたときに呼ばれる。fzf の transform アクション用で、
 # 実行すべきアクション列を標準出力に「1行」印字する。
 #   検索モード中 (FZF_INPUT_STATE != hidden): 入力欄を隠し、キーを rebind し、
-#     ヘッダーを通常モードのものへ戻す
+#     フッターを通常モードのものへ戻し、ヘッダーの絞り込み表示を更新する
 #   通常モード   (FZF_INPUT_STATE == hidden): 何もせず abort（= 閉じる）
 cmd_esc() {
   local state_file="${1:-}"
@@ -440,7 +582,8 @@ cmd_esc() {
     echo abort
     return 0
   fi
-  printf 'hide-input+rebind(j,k,a,d,w,r,q)+transform-header("%s" _header "%s")\n' "$SCRIPT" "$state_file"
+  printf 'hide-input+rebind(j,k,a,d,w,r,q)+transform-footer("%s" _footer)+transform-header("%s" _header "%s")\n' \
+    "$SCRIPT" "$SCRIPT" "$state_file"
 }
 
 # 罫線だけの行を preview の幅に切り詰める。
@@ -530,6 +673,17 @@ cmd_approve() {
   if [ "$status" != "blocked" ]; then
     _report_and_log "承認" "スキップ(承認待ちではありません)" "$pane_id" "$kind" "$status" "$title" "" \
       "対象は承認待ち(blocked)ではないため送信しませんでした。状態は押した時点で herdr に問い合わせた実際の値です。"
+    return 0
+  fi
+
+  # 質問フォームやプラン承認に '1' を送ると 1 番目の選択肢で回答してしまう。
+  # 押した瞬間の画面を読み、承認ダイアログのときだけ送る。
+  local dialog
+  dialog="$(herdr agent read "$pane_id" --source visible --lines 40 --format text 2>/dev/null |
+    _py classify | cut -f1)" || dialog="unknown"
+  if [ "$dialog" != "permission" ]; then
+    _report_and_log "承認" "スキップ(承認ダイアログではありません: ${dialog:-unknown})" "$pane_id" "$kind" "$status" "$title" "" \
+      "画面が質問フォーム・プラン承認・判定不能のいずれかだったため送信しませんでした。Enter でペインへ移動して回答してください。"
     return 0
   fi
 
@@ -635,28 +789,35 @@ main_tui() {
   echo all >"$state_file"
   trap 'rm -f "$state_file" "${state_file}.counts"' EXIT INT TERM
 
-  local initial_list initial_header
+  local initial_list initial_header initial_footer
   initial_list="$(cmd_list "$state_file")"
   # 起動元の環境に FZF_INPUT_STATE / FZF_QUERY が漏れ込んでいても（例えば
   # herdr-cheatsheet など別の fzf 上でこのスクリプトを叩いた場合）、初期表示は
-  # 必ず通常モードのヘッダーになるよう明示的に固定する。
-  initial_header="$(FZF_INPUT_STATE=hidden FZF_QUERY='' cmd_header "$state_file")"
+  # 必ず通常モードの表示になるよう明示的に固定する。
+  initial_header="$(FZF_QUERY='' cmd_header "$state_file")"
+  initial_footer="$(FZF_INPUT_STATE=hidden cmd_footer)"
 
-  local preview_cmd focus_bind approve_bind deny_bind search_bind esc_bind w_bind r_bind every_bind
+  local preview_cmd focus_bind approve_bind deny_bind search_bind esc_bind w_bind r_bind every_bind refresh
   preview_cmd="\"$SCRIPT\" _preview {1} {2}"
+  # 件数・絞り込み状態（ヘッダー）の更新
+  refresh="transform-header(\"$SCRIPT\" _header \"$state_file\")"
   focus_bind="enter:become(\"$SCRIPT\" _focus {1})"
-  approve_bind="a:execute-silent(\"$SCRIPT\" _approve {1})+reload-sync(\"$SCRIPT\" _list \"$state_file\")+transform-header(\"$SCRIPT\" _header \"$state_file\")"
-  deny_bind="d:execute-silent(\"$SCRIPT\" _deny {1})+reload-sync(\"$SCRIPT\" _list \"$state_file\")+transform-header(\"$SCRIPT\" _header \"$state_file\")"
-  # show-input で入力欄を出した後に transform-header を呼ぶことで、
-  # cmd_header が FZF_INPUT_STATE の更新後の値を見て検索モード用の文言を返す
-  # （esc_bind と同じ「show-input/hide-input を先に実行してから transform-header
+  approve_bind="a:execute-silent(\"$SCRIPT\" _approve {1})+reload-sync(\"$SCRIPT\" _list \"$state_file\")+$refresh"
+  deny_bind="d:execute-silent(\"$SCRIPT\" _deny {1})+reload-sync(\"$SCRIPT\" _list \"$state_file\")+$refresh"
+  # show-input で入力欄を出した後に transform-footer を呼ぶことで、
+  # cmd_footer が FZF_INPUT_STATE の更新後の値を見て検索モード用の文言を返す
+  # （esc_bind と同じ「show-input/hide-input を先に実行してから transform-footer
   # で読む」という順序に統一している）。
-  search_bind="/:show-input+unbind(j,k,a,d,w,r,q)+transform-header(\"$SCRIPT\" _header \"$state_file\")"
+  search_bind="/:show-input+unbind(j,k,a,d,w,r,q)+transform-footer(\"$SCRIPT\" _footer)"
   esc_bind="esc:transform(\"$SCRIPT\" _esc \"$state_file\")"
-  w_bind="w:execute-silent(echo blocked > \"$state_file\")+reload(\"$SCRIPT\" _list \"$state_file\")+transform-header(\"$SCRIPT\" _header \"$state_file\")"
-  r_bind="r:execute-silent(echo all > \"$state_file\")+clear-query+reload(\"$SCRIPT\" _list \"$state_file\")+transform-header(\"$SCRIPT\" _header \"$state_file\")"
-  every_bind="every(5):reload-sync(\"$SCRIPT\" _list \"$state_file\")+transform-header(\"$SCRIPT\" _header \"$state_file\")"
+  # reload（非同期）の後ろに繋いだアクションは実行されないため、ヘッダー更新を先に置く
+  w_bind="w:execute-silent(echo blocked > \"$state_file\")+$refresh+reload(\"$SCRIPT\" _list \"$state_file\")"
+  # 入力欄が隠れている間は clear-query が効かないため、一瞬だけ出して消す
+  r_bind="r:execute-silent(echo all > \"$state_file\")+show-input+clear-query+hide-input+$refresh+reload(\"$SCRIPT\" _list \"$state_file\")"
+  every_bind="every(5):reload-sync(\"$SCRIPT\" _list \"$state_file\")+$refresh"
 
+  # 一覧は枠で囲み、件数・列見出し（header）とキー説明（footer）を枠の中に埋め込む。
+  # 色は herdr のテーマ（Tokyo Night Moon と [ui] accent）に揃える。
   # preview は follow で末尾から表示する（承認ダイアログは画面の最下部に出るため）。
   # ~N でヘッダ行を固定すると follow が効かなくなるので併用しない。
   printf '%s' "$initial_list" | fzf \
@@ -667,7 +828,15 @@ main_tui() {
     --delimiter=$'\t' \
     --with-nth=4 \
     --layout=reverse \
+    --highlight-line \
+    --gutter=' ' \
+    --list-border=rounded \
+    --list-label=' エージェント ' \
     --header="$initial_header" \
+    --header-border=inline \
+    --footer="$initial_footer" \
+    --footer-border=inline \
+    --color='fg:#c8d3f5,fg+:#c8d3f5,bg+:#2f334d,gutter:-1,border:#545c7e,label:#82aaff,header:#c8d3f5,footer:#828bb8,pointer:#82aaff' \
     --preview="$preview_cmd" \
     --preview-window='right:55%:wrap:follow' \
     --bind 'j:down' \
@@ -693,6 +862,10 @@ main() {
     _header)
       shift
       cmd_header "$@"
+      ;;
+    _footer)
+      shift
+      cmd_footer "$@"
       ;;
     _esc)
       shift
