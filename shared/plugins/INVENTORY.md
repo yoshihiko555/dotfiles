@@ -61,9 +61,9 @@ MCP だけでなくフック・ワーカーを含むため、対応確認と有�
 | codex（openai-codex） | 有効 | Claude から Codex を呼ぶプラグイン。Codex 自身への導入は目的が異なる |
 | turn-receipt | 有効 | Claude の mod を含む自作プラグイン。両 CLI 向け移植は別作業 |
 | swift-lsp | 有効 | Claude 用 LSP 統合。Codex 対応の同等パッケージは今回確認できず |
-| gopls-lsp | 無効 | 同上。既存の無効状態を維持 |
-| typescript-lsp | 無効 | 同上。会社用の有効化は別設定 |
-| pyright-lsp | 無効 | 同上 |
+| gopls-lsp | 有効 | 同上。言語サーバー本体は Nix 共通層（ADR-20260925-0005） |
+| typescript-lsp | 有効 | 同上。会社用でも有効 |
+| pyright-lsp | 有効 | 同上 |
 | playwright | 無効 | 現在の導入物は Claude 向け MCP プラグイン。Codex は Browser を利用中。同等のプラグイン配布は今回確認できず |
 
 [mattpocock の上流 README](https://github.com/mattpocock/skills#installation) も参照。

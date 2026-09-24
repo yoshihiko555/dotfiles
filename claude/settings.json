@@ -42,6 +42,7 @@
       "/private/tmp/claude-501"
     ]
   },
+  "model": "opus",
   "hooks": {
     "SessionStart": [
       {
@@ -76,9 +77,9 @@
     "claude-mem@thedotmack": true,
     "frontend-design@claude-plugins-official": true,
     "playwright@claude-plugins-official": false,
-    "gopls-lsp@claude-plugins-official": false,
-    "typescript-lsp@claude-plugins-official": false,
-    "pyright-lsp@claude-plugins-official": false,
+    "gopls-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
     "swift-lsp@claude-plugins-official": true,
     "notion@claude-plugins-official": true,
@@ -196,6 +197,5 @@
       "**Org-specific CLIs**: None configured — routine repo-local tooling observed: task, takt, mise, nix, stow, agy (used repeatedly in this project's transcripts)",
       "routine under yoshihiko555/dotfiles/ prefix: task, nix, mise, takt, stow operations are part of normal repo workflow"
     ]
-  },
-  "model": "opus"
+  }
 }
