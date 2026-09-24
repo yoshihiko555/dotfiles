@@ -88,6 +88,16 @@ tasks:
     cmds:
       - bash {{.ROOT_DIR}}/scripts/clean-claude.sh --dry-run
 
+  clean-uv:
+    desc: uv キャッシュの不要エントリを prune（claude-mem の worker を一時停止して再起動）
+    cmds:
+      - bash {{.ROOT_DIR}}/scripts/clean-uv.sh {{.CLI_ARGS}}
+
+  clean-uv-dry:
+    desc: clean-uv を実行できる状態か（ロック保持プロセス・処理中の記録）を確認する dry-run
+    cmds:
+      - bash {{.ROOT_DIR}}/scripts/clean-uv.sh --dry-run
+
   # ====================
   # Nix flake（config/nix）
   # status タスク（symlink drift 確認）とは別軸。
