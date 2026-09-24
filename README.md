@@ -83,7 +83,6 @@ task sync-skills   # shared/skills のリンクを更新
 task sync-agents   # shared/agents から Codex/Gemini の AGENTS.md を生成
 task claude-work-init # 会社用 Claude Code 設定ディレクトリを初期化
 task sync-claude-work-skills # 会社用 Claude Code の work スキルを同期
-task edit          # VS Code で開く
 task mcp-list      # 個人用グローバル MCP の登録状況を表示（読み取り専用）
 task mcp-diff      # 共通定義との差分を表示（読み取り専用）
 task mcp-sync      # 共通定義を Claude / Codex へ同期（バックアップ付き）

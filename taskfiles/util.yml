@@ -63,11 +63,6 @@ tasks:
         show_link "Alfred" ~/Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.C9692AD7-2800-42B7-8F97-8F8CCD1CC88E
         bash "$root/scripts/loupedeck-sync.sh" status
 
-  edit:
-    desc: dotfiles を編集したいときに VS Code で開く
-    cmds:
-      - code {{.ROOT_DIR}}
-
   mcp-list:
     desc: 個人用グローバル MCP の共通定義と現在の登録状況を表示（読み取り専用）
     cmds:
