@@ -32,6 +32,7 @@ in
     (with pkgs; [
       # --- brew から移行（2026-08-02 棚卸しで nix新規 と判定）---
       go-task # 日常運用のタスクランナー
+      taplo # MCP 共通管理での TOML 読み取り・検証
       gopls
       opencode
       pyright

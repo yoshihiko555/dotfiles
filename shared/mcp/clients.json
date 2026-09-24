@@ -1,0 +1,12 @@
+{
+  "claude": {
+    "figma": {},
+    "pencil": {"args": ["--app", "desktop", "--agent", "claudeCodeCLI"]},
+    "drawio": {}
+  },
+  "codex": {
+    "figma": {},
+    "pencil": {"args": ["--app", "desktop", "--agent", "codexCLI"]},
+    "drawio": {}
+  }
+}

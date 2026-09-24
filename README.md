@@ -86,8 +86,11 @@ task sync-claude-work-skills # 会社用 Claude Code の work スキルを同期
 task edit          # VS Code で開く
 task mcp-init      # 最小構成の .mcp.json をコピー
 task mcp-show      # 最小構成テンプレートの内容を表示
-task mcp-apply-dry # user scope MCP 適用の dry-run
-task mcp-apply     # user scope MCP をリポジトリの正典から適用
+task mcp-list      # 個人用グローバル MCP の登録状況を表示（読み取り専用）
+task mcp-diff      # 共通定義との差分を表示（読み取り専用）
+task mcp-sync      # 共通定義を Claude / Codex へ同期（バックアップ付き）
+task mcp-apply-dry # mcp-diff の旧名
+task mcp-apply     # mcp-sync の旧名
 task clean-claude-dry # Claude デバッグログ削除の dry-run
 task clean-claude  # Claude デバッグログを削除
 task codex-trust-audit # Codex trust 設定を監査
@@ -139,7 +142,24 @@ task adopt-settings TARGET=all
 - Antigravity のグローバルスキルは `~/.gemini/config/skills/<skill-folder>/SKILL.md` として解決されます
 - リンク更新は `task sync-skills` で実行
 
-## MCP 運用方針（デフォルト無効）
+## MCP 運用方針
+
+### 個人用グローバル MCP の共通管理
+
+- Figma・Pencil・drawio を Claude Code / Codex 共通のグローバル管理対象にする。
+  この3件は共通利用の対象とし、それ以外の Codex MCP の既定方針は下記に従う。
+- `shared/mcp/servers/<名前>.json` に接続定義、`shared/mcp/clients.json` に
+  クライアント別の利用対象と引数の上書きを置く。詳細は [共通定義の説明](shared/mcp/README.md)。
+- Bash / jq / taplo で動く。`task mcp-list` / `task mcp-diff` は読み取り専用、
+  `task mcp-sync` で反映する。OAuth・接続の成否は検査しない。
+  taplo が PATH にない場合は、このリポジトリの Nix 入力に基づく一時環境で実行する。
+- cocoindex-code、プラグイン由来 MCP、会社用 `ccw` は今回の移行対象外。
+  グローバル登録先ではない `~/.claude/.mcp.json` への配布は廃止した。
+- 同期は個人用の `~/.claude.json` と `~/.codex/config.toml` の管理対象のみを更新する。
+  実体の symlink を保持し、更新前の設定を `~/.local/state/dotfiles/mcp-backups/` に保存する。
+  `task mcp-sync -- figma` のように1件だけ指定することもできる。
+
+### 既存の登録方法と既定方針
 
 - Codex (`codex/config.toml`) の MCP は必要最小限のみ有効にする方針です。追加する MCP は原則
   `enabled = false` を既定にし、実行時オーバーライドで有効化してください。
@@ -159,14 +179,13 @@ codex -c mcp_servers.notion.enabled=false
 
 - Claude Code 側は `--scope project` を基本にし、個人限定用途は `--scope local` / `--scope user` を使い分けてください。
 - 全プロジェクトで使いたい MCP（Figma など）は **user scope** に置きます。user scope の保存先
-  `~/.claude.json` は履歴を含む mutable state で symlink できないため、リポジトリ側の正典
-  `shared/mcp/user-servers.json` を `task mcp-apply` で流し込む方式にしています。
-  既存定義は skip されるので何度実行しても安全です（上書きしたい場合のみ `--force`）。
+  `~/.claude.json` は履歴を含む mutable state のため、`task mcp-sync` で管理対象の MCP のみを更新します。
+  差分がなければ書き込みません。管理対象から外した定義も自動削除はしません。
   OAuth が必要な MCP は適用後に Claude Code で `/mcp` を実行して認証してください。
 
 ```bash
-task mcp-apply-dry   # 適用対象を確認
-task mcp-apply       # user scope に適用
+task mcp-diff        # 適用対象を確認
+task mcp-sync        # Claude / Codex に適用
 ```
 
 - Claude Code プラグイン (`claude/settings.json`) もデフォルト無効です。必要時のみ有効化してください。

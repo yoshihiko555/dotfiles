@@ -1,9 +1,0 @@
-{
-  "_comment": "Claude Code の user scope（全プロジェクト共通）MCP の正典。~/.claude.json は履歴を含む mutable state で symlink できないため、task mcp-apply で流し込む。",
-  "mcpServers": {
-    "figma": {
-      "type": "http",
-      "url": "https://mcp.figma.com/mcp"
-    }
-  }
-}
