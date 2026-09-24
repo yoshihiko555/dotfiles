@@ -29,7 +29,10 @@ sandbox_mode = "workspace-write"
 
 # ---- 通知 ----
 # turn-ended は Computer Use 用。完了・承認待ちの通知は herdr に任せる
-notify = ["/Users/yoshihiko/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
+notify = [
+  "/Users/yoshihiko/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient",
+  "turn-ended",
+]
 
 # ---- 信頼済みプロジェクト ----
 # 現行形式: [projects."/absolute/path"] + trust_level = "trusted" | "untrusted"
@@ -66,7 +69,6 @@ trust_level = "trusted"
 
 [projects."/Users/yoshihiko/Documents/Codex/2026-07-25/realtime-voice-chat"]
 trust_level = "trusted"
-
 
 
 [projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/hermes-managements"]
@@ -166,7 +168,14 @@ animations = false
 notifications = ["approval-requested"]
 notification_method = "bel"
 notification_condition = "always"
-status_line = ["model-name", "project-root", "git-branch", "context-remaining", "context-used", "five-hour-limit"]
+status_line = [
+  "model-name",
+  "project-root",
+  "git-branch",
+  "context-remaining",
+  "context-used",
+  "five-hour-limit",
+]
 screen_reader_detection_done = true
 
 [tui.model_availability_nux]
@@ -183,6 +192,10 @@ source = "/Users/yoshihiko/.codex/.tmp/bundled-marketplaces/openai-bundled"
 last_updated = "2026-08-01T03:18:46Z"
 source_type = "local"
 source = "/Users/yoshihiko/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
+
+[marketplaces.context7-marketplace]
+source_type = "git"
+source = "https://github.com/upstash/context7.git"
 
 [plugins."sites@openai-bundled"]
 enabled = true
@@ -206,6 +219,9 @@ enabled = true
 enabled = true
 
 [plugins."browser@openai-bundled"]
+enabled = true
+
+[plugins."context7@context7-marketplace"]
 enabled = true
 
 # ---- フック信頼状態（自動管理） ----
