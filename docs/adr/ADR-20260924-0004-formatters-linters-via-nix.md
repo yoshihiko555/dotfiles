@@ -48,13 +48,16 @@ ai-orchestra の hook は導入先に prettier が無いと PATH 上の `prettie
 5. エディタも同じ解決順にする
    - Neovim: conform.nvim が `node_modules/.bin` → PATH の順で探す。prettier の対象に
      json / jsonc / yaml / markdown / css / html を加える
+   - Neovim の ts/js リント: nvim-lint は、ファイルから上へ辿って eslint の設定と
+     `node_modules/.bin/eslint` の両方が見つかったときだけ、設定のあるディレクトリで eslint を動かす
    - Zed: 同梱の prettier を無効にし、外部フォーマッタに `prettier-local-first`
      （`packages/prettier-local-first.nix`）を使う
 
 ### 入れないもの
 
 - eslint_d: eslint の設定が無いリポジトリでは、nvim-lint が ESLint 9 のエラー出力を解析できず、
-  1 行目にエラーを出す。ts/js のリントは当面なし
+  1 行目にエラーを出す。eslint はプロジェクトのローカル版だけを使う（決定 3・5）。
+  `node_modules/.bin/eslint` は間接依存でも置かれるため、設定ファイルの有無も条件にする
 
 ## 影響
 
