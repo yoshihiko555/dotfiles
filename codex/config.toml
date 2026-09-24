@@ -53,8 +53,6 @@ trust_level = "trusted"
 [projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/google-apps-scripts"]
 trust_level = "trusted"
 
-[projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/learno/dev"]
-trust_level = "trusted"
 
 [projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/rag-experiment"]
 trust_level = "trusted"
@@ -65,17 +63,11 @@ trust_level = "trusted"
 [projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/learno"]
 trust_level = "trusted"
 
-[projects."/private/tmp/claude-501/-Users-yoshihiko-ghq-github-com-yoshihiko555-ai-orchestra--worktrees-feat-loop/7d43b288-5755-4fc7-95c1-6fff6b2e1fca/scratchpad"]
-trust_level = "trusted"
 
 [projects."/Users/yoshihiko/Documents/Codex/2026-07-25/realtime-voice-chat"]
 trust_level = "trusted"
 
-[projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/learno/.worktrees/20260824T1058-expand-auth-guard-routes-384010ae66067131"]
-trust_level = "trusted"
 
-[projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/learno/.worktrees/20260907T1613-add-roadmap-item-generation-99e524289925f71e"]
-trust_level = "trusted"
 
 [projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/hermes-managements"]
 trust_level = "trusted"
