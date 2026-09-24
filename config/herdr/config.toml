@@ -183,7 +183,6 @@ delivery = "herdr"
 # 通知音の差し替え（done = 完了、request = 承認待ち）。herdr が読めるのは mp3 のみ。
 # 相対パスは symlink を辿らず ~/.config/herdr/ 基準で解決されるため、dotfiles.nix で
 # ~/.config/herdr/sounds を張っている（無いと組み込み音に無言でフォールバックする）。
-# 要検討: バックグラウンドのペインでは Claude Code の hook（claude_message.sh）の音と二重に鳴る。
 done_path = "sounds/done.mp3"
 request_path = "sounds/request.mp3"
 

@@ -41,17 +41,6 @@
           }
         ]
       }
-    ],
-    "Notification": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.claude-work/claude_message.sh notification"
-          }
-        ]
-      }
     ]
   },
   "statusLine": {

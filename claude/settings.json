@@ -61,45 +61,6 @@
           {
             "type": "command",
             "command": "$HOME/.claude/hooks/check-settings-drift.sh"
-          },
-          {
-            "type": "command",
-            "command": "$HOME/.claude/claude_message.sh stop"
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.claude/claude_message.sh notification"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.claude/claude_message.sh success",
-            "async": true
-          }
-        ]
-      }
-    ],
-    "PostToolUseFailure": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.claude/claude_message.sh failure",
-            "async": true
           }
         ]
       }

@@ -417,6 +417,7 @@ activation に持ち込むうえ herdr 自体が採否判断前であるため�
 
 - herdr の中では、Claude / Codex の hook（`claude_message.sh` / `codex_message.sh`）の OS 通知と
   herdr-terminal-notifier の通知が二重に出る。hook 側を `HERDR_ENV` があるときは出さない形にするか
+  → [ADR-20260924-0003](ADR-20260924-0003-agent-notifications-to-herdr.md) で hook / notify からの呼び出しをやめて解消
 - screenpipe を再開するか（再開すると通知バナーが出なくなる。Hermes の自動化提案の入力が止まっている）
 - リモート（iPhone からの接続）の使い勝手の評価（接続自体は確認済み。描画バグは上記）
 - Ghostty のメモリ長期観測の結果（2026-09-30 まで。上記「常用端末を WezTerm から Ghostty へ移行する」）

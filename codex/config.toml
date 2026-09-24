@@ -28,8 +28,8 @@ approvals_reviewer = "auto_review"
 sandbox_mode = "workspace-write"
 
 # ---- 通知 ----
-# 通知の設定（$HOME 展開のため bash -lc 経由で実行）
-notify = ["/Users/yoshihiko/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended", "--previous-notify", "[\"bash\",\"-lc\",\"$HOME\\/.codex\\/codex_message.sh \\\"$0\\\"\"]"]
+# turn-ended は Computer Use 用。完了・承認待ちの通知は herdr に任せる
+notify = ["/Users/yoshihiko/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
 
 # ---- 信頼済みプロジェクト ----
 # 現行形式: [projects."/absolute/path"] + trust_level = "trusted" | "untrusted"
