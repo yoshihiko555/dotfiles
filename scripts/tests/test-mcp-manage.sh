@@ -19,7 +19,7 @@ printf '%s\n' '{"history":{"keep":1},"mcpServers":{"other":{"command":"keep"}}}'
 printf '%s\n' '# 保持するコメント' 'model = "keep"' '[mcp_servers.other]' 'command = "keep"' >"$work/config.toml"
 ln -s "$work/config.toml" "$work/link.toml"
 run() {
-  bash "$ROOT/scripts/mcp-manage.sh" "$@" --definitions "$work/defs" --claude-config "$work/claude.json" --codex-config "$work/link.toml" --backup-dir "$work/backups"
+  python3 "$ROOT/scripts/mcp-manage.py" "$@" --definitions "$work/defs" --claude-config "$work/claude.json" --codex-config "$work/link.toml" --backup-dir "$work/backups"
 }
 cp "$work/claude.json" "$work/claude.original"
 cp "$work/config.toml" "$work/codex.original"
@@ -60,7 +60,7 @@ echo '成功: 未登録のサーバー名を拒否'
 # ファイル未作成時の追加と1件指定。他の定義は反映しない。
 cp "$ROOT/shared/mcp/servers/drawio.json" "$work/defs/servers/drawio.json"
 printf '%s\n' '{"claude":{"figma":{},"drawio":{}},"codex":{"figma":{},"drawio":{}}}' >"$work/defs/clients.json"
-bash "$ROOT/scripts/mcp-manage.sh" sync drawio --definitions "$work/defs" --claude-config "$work/new.json" --codex-config "$work/new.toml" --backup-dir "$work/new-backups" >"$work/output"
+python3 "$ROOT/scripts/mcp-manage.py" sync drawio --definitions "$work/defs" --claude-config "$work/new.json" --codex-config "$work/new.toml" --backup-dir "$work/new-backups" >"$work/output"
 jq -e '.mcpServers | keys == ["drawio"]' "$work/new.json" >/dev/null
 "${TAPLO_BIN:-taplo}" get -f "$work/new.toml" -o json | jq -e '.mcp_servers | keys == ["drawio"]' >/dev/null
 echo '成功: ファイル未作成時の追加・1件指定・stdio の生成'
@@ -68,7 +68,7 @@ echo '成功: ファイル未作成時の追加・1件指定・stdio の生成'
 # jq を直接呼ぶ場合も、構文エラーの原文や秘匿値を出力しない。
 cp "$work/new.toml" "$work/before-json-error.toml"
 printf '%s\n' '{"secret": "TEST_SECRET", invalid}' >"$work/new.json"
-if bash "$ROOT/scripts/mcp-manage.sh" sync --definitions "$work/defs" --claude-config "$work/new.json" --codex-config "$work/new.toml" --backup-dir "$work/new-backups" >"$work/output" 2>&1; then exit 1; fi
+if python3 "$ROOT/scripts/mcp-manage.py" sync --definitions "$work/defs" --claude-config "$work/new.json" --codex-config "$work/new.toml" --backup-dir "$work/new-backups" >"$work/output" 2>&1; then exit 1; fi
 if grep -q TEST_SECRET "$work/output"; then exit 1; fi
 cmp "$work/new.toml" "$work/before-json-error.toml"
 echo '成功: JSON 構文エラー時の停止・秘匿値非表示・実設定保持'

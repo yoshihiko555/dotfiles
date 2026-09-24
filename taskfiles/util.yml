@@ -66,17 +66,17 @@ tasks:
   mcp-list:
     desc: 個人用グローバル MCP の共通定義と現在の登録状況を表示（読み取り専用）
     cmds:
-      - bash "{{.ROOT_DIR}}/scripts/mcp-manage.sh" list {{.CLI_ARGS}}
+      - python3 "{{.ROOT_DIR}}/scripts/mcp-manage.py" list {{.CLI_ARGS}}
 
   mcp-diff:
     desc: Claude / Codex のグローバル MCP の追加・更新候補を表示（読み取り専用）
     cmds:
-      - bash "{{.ROOT_DIR}}/scripts/mcp-manage.sh" diff {{.CLI_ARGS}}
+      - python3 "{{.ROOT_DIR}}/scripts/mcp-manage.py" diff {{.CLI_ARGS}}
 
   mcp-sync:
     desc: 個人用グローバル MCP を共通定義から同期（バックアップ付き）
     cmds:
-      - bash "{{.ROOT_DIR}}/scripts/mcp-manage.sh" sync {{.CLI_ARGS}}
+      - python3 "{{.ROOT_DIR}}/scripts/mcp-manage.py" sync {{.CLI_ARGS}}
 
   plugin-list:
     desc: Claude / Codex の共通プラグイン対応表と登録状態を表示（読み取り専用）

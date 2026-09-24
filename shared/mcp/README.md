@@ -1,9 +1,9 @@
 # 個人用グローバル MCP
 
 Figma・Pencil・drawio を1件ずつ定義し、Claude Code / Codex に同期する。
-実装は Bash 3.2 対応の Shell。JSON は jq、TOML の読み取り・検証は taplo を利用する。
-taplo が PATH にない場合は `nix shell --inputs-from config/nix nixpkgs#taplo` で補う。
-任意の実行ファイルは `TAPLO_BIN` でも指定できる。Python は不要。
+実装は `scripts/mcp-manage.py`。mise 管理の Python 3.11 以上を使い、標準ライブラリの
+JSON / TOML パーサーで検証する。外部 Python パッケージ、実行時の jq / taplo は不要。
+Python 未導入なら既存の `mise install python` で準備し、mise が有効なシェルから実行する。
 
 ## 定義
 
@@ -24,6 +24,7 @@ task mcp-diff
 task mcp-sync
 task mcp-sync -- figma
 bash scripts/tests/test-mcp-manage.sh
+python3 scripts/tests/test-mcp-manage.py
 ```
 
 個人用の `~/.claude.json` と `~/.codex/config.toml` が対象。
@@ -40,7 +41,7 @@ MCP 自体は起動しないので、接続・OAuth 認証は各クライアン�
 
 ## 反映と復旧
 
-両クライアントの設定案を一時ディレクトリで作り、TOML の構文と設定全体の意味を検証してから反映する。
+両クライアントの設定案をメモリ上で作り、TOML の構文と設定全体の意味を検証してから反映する。
 Codex の管理対象テーブルは書き直すため、その内部の整形・コメント位置は変わることがある。
 通常の `[mcp_servers.NAME]` とそのサブテーブルを扱い、引用されたテーブル名などの未対応表記は
 検証エラーで停止する。対象外の設定値は変更しない。
@@ -57,11 +58,15 @@ Codex の管理対象テーブルは書き直すため、その内部の整形�
 `missing` なら同期が新規作成したファイルを確認して取り除く。
 後から加えた設定まで戻るため、復旧前に現在のファイルとの差分を確認すること。
 
+両クライアントの変更分の一時ファイルとバックアップをすべて揃えてから、置換を開始する。
 設定ごとの置換は同じディレクトリの一時ファイルから行い、symlink と既存ファイルの権限を保持する。
 反映直前にも原本との差分を確認するが、各アプリとの完全な排他はできないため、設定を同時編集しないこと。
 2ファイル全体のトランザクションではない。途中で権限エラーなどが起きたら、反映済み表示とバックアップを確認し、
 原因を解消して再実行する。差分なしなら書き込みを省略する。
 同期同士はバックアップ先の `.sync-lock` で排他する。強制終了後に残った場合は実行中でないことを確認して空ディレクトリを除去する。
+
+既存の Bash 統合テストだけは結果照合に jq / taplo を使う（`TAPLO_BIN` と Nix fallback も維持）。
+Python テストは標準ライブラリで動き、Task の入口検証だけは Task がある場合に実行する。
 
 ## 管理対象外
 

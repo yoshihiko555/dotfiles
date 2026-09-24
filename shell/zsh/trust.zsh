@@ -8,7 +8,7 @@ trust() {
   local repo_config="$DOTFILES/codex/config.toml"
   local home_config="$HOME/.codex/config.toml"
   local manager="$repo_root/scripts/codex-trust-manage.sh"
-  local auditor="$repo_root/scripts/codex-trust-audit.sh"
+  local auditor="$repo_root/scripts/codex-trust-audit.py"
   local config="${CODEX_CONFIG_PATH:-}"
   local cmd="${1:-}"
   local input_path level
@@ -45,7 +45,7 @@ trust() {
       CODEX_CONFIG_PATH="$config" bash "$manager" list
       ;;
     audit)
-      CODEX_CONFIG_PATH="$config" bash "$auditor"
+      CODEX_CONFIG_PATH="$config" python3 "$auditor"
       ;;
     prune)
       CODEX_CONFIG_PATH="$config" bash "$manager" prune "${@:2}"

@@ -65,7 +65,7 @@ tasks:
     desc: 新しい認証に置き換わって不要になった失効ファイルを削除 (既定は確認のみ)
     silent: true
     cmds:
-      - "{{.ROOT_DIR}}/scripts/cliproxy-auth-prune.sh {{.CLI_ARGS}}"
+      - 'python3 "{{.ROOT_DIR}}/scripts/cliproxy-auth-prune.py" {{.CLI_ARGS}}'
 
   cliproxy-status:
     desc: CLIProxyAPI の稼働状態・OAuth 期限・公開モデルを確認
