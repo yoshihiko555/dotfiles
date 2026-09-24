@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 役割:
-# - Codex trust 設定の更新（add / rm / list）を一元管理
+# - Codex trust 設定の更新（add / rm / list / prune）を一元管理
 # - [projects."..."] の定義を重複排除して管理ブロックに集約
 # - 設定全体を再構成して、trust 設定をまとまった位置で維持
 # 対象設定ファイル:
@@ -12,6 +12,11 @@ CONFIG_PATH="${CODEX_CONFIG_PATH:-$HOME/.codex/config.toml}"
 ACTION="${1:-}"
 INPUT_PATH="${2:-$PWD}"
 LEVEL="${3:-trusted}"
+
+if [[ "$ACTION" == prune ]]; then
+  shift
+  exec bash "$(dirname "${BASH_SOURCE[0]}")/codex-trust-prune.sh" "$@"
+fi
 
 if [[ ! -f "$CONFIG_PATH" ]]; then
   echo "config が見つかりません: $CONFIG_PATH"
@@ -277,6 +282,7 @@ Usage:
   codex-trust-manage.sh add [path] [trusted|untrusted]
   codex-trust-manage.sh rm [path]
   codex-trust-manage.sh list
+  codex-trust-manage.sh prune [--apply]
 HELP
     exit 1
     ;;

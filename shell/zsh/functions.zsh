@@ -93,7 +93,7 @@ cheat() {
   port NUM  ポート使用プロセス確認
   brewup    brew 管理ツールを一括更新 (-a で :latest cask も)
   cc_interrupt ... 中断証跡 (start|end|open|last|report)
-  trust ... Codex trust を add/rm/list/audit/where
+  trust ... Codex trust を add/rm/list/audit/prune/where
   cheat     このヘルプを表示
 HELP
 }

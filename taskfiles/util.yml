@@ -88,11 +88,6 @@ tasks:
     cmds:
       - bash {{.ROOT_DIR}}/scripts/clean-claude.sh --dry-run
 
-  codex-trust-audit:
-    desc: Codex の信頼済みプロジェクト設定を棚卸しして stale 設定を検知
-    cmds:
-      - bash {{.ROOT_DIR}}/scripts/codex-trust-audit.sh
-
   # ====================
   # Nix flake（config/nix）
   # status タスク（symlink drift 確認）とは別軸。

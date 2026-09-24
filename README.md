@@ -88,7 +88,6 @@ task mcp-diff      # 共通定義との差分を表示（読み取り専用）
 task mcp-sync      # 共通定義を Claude / Codex へ同期（バックアップ付き）
 task clean-claude-dry # Claude デバッグログ削除の dry-run
 task clean-claude  # Claude デバッグログを削除
-task codex-trust-audit # Codex trust 設定を監査
 task nix-check     # nix flake の評価とフォーマット検査（nix flake check）
 task nix-fmt       # nix + shell + yaml/toml を treefmt で整形（nix fmt）
 task cliproxy-setup  # CLIProxyAPI を導入しテンプレートから設定を生成
@@ -183,7 +182,8 @@ task mcp-diff        # 適用対象を確認
 task mcp-sync        # Claude / Codex に適用
 ```
 
-- Claude Code プラグイン (`claude/settings.json`) もデフォルト無効です。必要時のみ有効化してください。
+- Claude Code プラグインは `claude/settings.json` の `enabledPlugins` で個別に管理しています。
+  Notion・Context7 など、普段使うプラグインは有効です。プラグイン由来の MCP も各プラグインに管理を任せます。
 
 ```bash
 # Claude: プロジェクト限定でプラグインを有効化

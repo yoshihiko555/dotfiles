@@ -58,25 +58,25 @@ fi
 work=$(mktemp -d "${TMPDIR:-/tmp}/dotfiles-mcp.XXXXXX")
 
 # jq の診断に値が載ることがあるので、設定原文を出さずに停止する。
-jq_safe() { jq "$@" 2>"$work/error" || fail "JSON の構文・定義・参照が不正です（値は非表示）"; }
+jq_error() { fail "JSON の構文・定義・参照が不正です（値は非表示）"; }
 toml_json() {
   "$taplo_bin" get -f "$1" -o json >"$2" 2>"$work/error" || fail "TOML を解析できません: ${1}（値は非表示）"
 }
 
-jq_safe -en --slurpfile clients "$definitions/clients.json" '
+jq -en --slurpfile clients "$definitions/clients.json" '
   $clients | length == 1 and (.[0] | type == "object" and keys == ["claude", "codex"] and all(.[]; type == "object"))
-' >/dev/null
+' >/dev/null 2>"$work/error" || jq_error
 printf '{}\n' >"$work/servers.json"
 for file in "$definitions"/servers/*.json; do
   [[ -f "$file" ]] || fail "サーバー定義がありません"
   name="$(basename "$file" .json)"
   [[ "$name" =~ ^[a-zA-Z0-9_-]+$ ]] || fail "サーバー名が不正です"
-  jq_safe --arg name "$name" --slurpfile server "$file" '
+  jq --arg name "$name" --slurpfile server "$file" '
     if ($server|length) != 1 then error("定義は1件のみ") else . + {($name): $server[0]} end
-  ' "$work/servers.json" >"$work/next.json"
+  ' "$work/servers.json" >"$work/next.json" 2>"$work/error" || jq_error
   mv "$work/next.json" "$work/servers.json"
 done
-jq_safe -en --slurpfile servers "$work/servers.json" --slurpfile clients "$definitions/clients.json" '
+jq -en --slurpfile servers "$work/servers.json" --slurpfile clients "$definitions/clients.json" '
   def valid:
     type == "object" and
     (if .type == "http" then
@@ -92,9 +92,9 @@ jq_safe -en --slurpfile servers "$work/servers.json" --slurpfile clients "$defin
     . as $entry | ($servers[0] | has($entry.key)) and
     (.value | type == "object" and (keys - ["args"] | length == 0)) and
     ($servers[0][$entry.key] + $entry.value | valid))
-' >/dev/null
+' >/dev/null 2>"$work/error" || jq_error
 if [[ -n "$selected" ]]; then
-  jq_safe -e --arg name "$selected" 'any(.[]; has($name))' "$definitions/clients.json" >/dev/null
+  jq -e --arg name "$selected" 'any(.[]; has($name))' "$definitions/clients.json" >/dev/null 2>"$work/error" || jq_error
 fi
 
 # 同じ同期コマンドの並行実行を拒否する。アプリ自身の変更は書き込み直前にも比較する。
@@ -123,21 +123,21 @@ for client in claude codex; do
   fi
   printf '%s\n' "$target" >"$work/$client.path"
   if [[ "$client" == claude ]]; then
-    jq_safe . "$work/$client.before" >"$work/$client.json"
+    jq . "$work/$client.before" >"$work/$client.json" 2>"$work/error" || jq_error
     key=mcpServers
   else
     toml_json "$work/$client.before" "$work/$client.json"
     key=mcp_servers
   fi
-  jq_safe -e --arg key "$key" '
+  jq -e --arg key "$key" '
     type == "object" and ((.[$key] // {}) | type == "object" and all(.[]; type == "object"))
-  ' "$work/$client.json" >/dev/null
-  jq_safe --arg client "$client" --arg selected "$selected" --slurpfile servers "$work/servers.json" '
+  ' "$work/$client.json" >/dev/null 2>"$work/error" || jq_error
+  jq --arg client "$client" --arg selected "$selected" --slurpfile servers "$work/servers.json" '
     .[$client] | to_entries | map(select($selected == "" or .key == $selected) |
     .value = ($servers[0][.key] + .value | if $client == "codex" then del(.type) else . end)) | from_entries
-  ' "$definitions/clients.json" >"$work/$client.desired"
+  ' "$definitions/clients.json" >"$work/$client.desired" 2>"$work/error" || jq_error
   # 管理する接続定義だけを変更。認証・タイムアウト・ツール設定などは残す。
-  jq_safe --arg key "$key" --arg client "$client" --slurpfile desired "$work/$client.desired" '
+  jq --arg key "$key" --arg client "$client" --slurpfile desired "$work/$client.desired" '
     reduce ($desired[0] | to_entries[]) as $entry (. ;
       .[$key][$entry.key] = ((.[$key][$entry.key] // {}) as $old | $entry.value as $new |
         if (($old|has("command")) and ($new|has("url"))) or (($old|has("url")) and ($new|has("command")))
@@ -146,20 +146,20 @@ for client in claude codex; do
           if $new|has("command") then .args = ($new.args // []) | .env = (($old.env // {}) + ($new.env // {})) else . end |
           if $client == "codex" then .enabled = true else . end
         end))
-  ' "$work/$client.json" >"$work/$client.expected"
-  jq_safe -n --arg key "$key" --arg client "$client" --slurpfile before "$work/$client.json" --slurpfile after "$work/$client.expected" --slurpfile desired "$work/$client.desired" '
+  ' "$work/$client.json" >"$work/$client.expected" 2>"$work/error" || jq_error
+  jq -n --arg key "$key" --arg client "$client" --slurpfile before "$work/$client.json" --slurpfile after "$work/$client.expected" --slurpfile desired "$work/$client.desired" '
     def norm:
       if has("command") then .args //= [] | .env //= {} | if $client == "claude" then .type //= "stdio" else . end else . end |
       if $client == "codex" and (has("enabled") | not) then .enabled = true else . end;
     [$desired[0] | keys[] as $name |
       ($before[0][$key][$name] // null) as $old | $after[0][$key][$name] as $new |
       {name:$name, status:(if $old == null then "追加候補" elif ($old|norm) == ($new|norm) then "一致" else "更新候補" end)}]
-  ' >"$work/$client.rows"
-  jq_safe -r --arg client "$client" --arg action "$action" '.[] | select($action == "list" or .status != "一致") | [$client,.name,.status] | @tsv' "$work/$client.rows"
-  jq_safe -r '.[] | select(.status != "一致") | .name' "$work/$client.rows" >"$work/$client.changed"
-  jq_safe -r --arg client "$client" --arg key "$key" --slurpfile clients "$definitions/clients.json" '
+  ' >"$work/$client.rows" 2>"$work/error" || jq_error
+  jq -r --arg client "$client" --arg action "$action" '.[] | select($action == "list" or .status != "一致") | [$client,.name,.status] | @tsv' "$work/$client.rows" 2>"$work/error" || jq_error
+  jq -r '.[] | select(.status != "一致") | .name' "$work/$client.rows" >"$work/$client.changed" 2>"$work/error" || jq_error
+  jq -r --arg client "$client" --arg key "$key" --slurpfile clients "$definitions/clients.json" '
     "対象外 " + $client + ": " + (((.[$key] // {} | keys) - ($clients[0][$client] | keys)) | join(", "))
-  ' "$work/$client.json"
+  ' "$work/$client.json" 2>"$work/error" || jq_error
 done
 
 if [[ "$action" != sync ]]; then
@@ -171,19 +171,19 @@ fi
 for client in claude codex; do
   [[ -s "$work/$client.changed" ]] || continue
   if [[ "$client" == claude ]]; then
-    jq_safe --slurpfile expected "$work/claude.expected" --rawfile changed "$work/claude.changed" '
+    jq --slurpfile expected "$work/claude.expected" --rawfile changed "$work/claude.changed" '
       reduce ($changed | split("\n")[] | select(length > 0)) as $name (. ; .mcpServers[$name] = $expected[0].mcpServers[$name])
-    ' "$work/claude.json" >"$work/claude.after"
+    ' "$work/claude.json" >"$work/claude.after" 2>"$work/error" || jq_error
   else
     cp "$work/codex.before" "$work/codex.after"
     while IFS= read -r name; do
-      jq_safe -r --arg name "$name" '
+      jq -r --arg name "$name" '
         def toml:
           if type == "object" then "{ " + ([to_entries[] | (.key|tojson) + " = " + (.value|toml)]|join(", ")) + " }"
           elif type == "array" then "[" + (map(toml)|join(", ")) + "]"
           elif . == null then error("null は TOML に変換できません") else tojson end;
         "[mcp_servers." + $name + "]", (.mcp_servers[$name] | to_entries[] | (.key|tojson) + " = " + (.value|toml))
-      ' "$work/codex.expected" >"$work/section"
+      ' "$work/codex.expected" >"$work/section" 2>"$work/error" || jq_error
       # 通常のテーブル表記だけを編集。複雑な表記は後段の構文・全体比較で拒否する。
       awk -v name="$name" '
         /^[ \t]*\[/ {
@@ -198,10 +198,10 @@ for client in claude codex; do
     done <"$work/codex.changed"
     toml_json "$work/codex.after" "$work/codex.actual"
     # 一致判定で既定値だけ省略したサーバーは、元の表記・値を保つ。
-    jq_safe --slurpfile expected "$work/codex.expected" --rawfile changed "$work/codex.changed" '
+    jq --slurpfile expected "$work/codex.expected" --rawfile changed "$work/codex.changed" '
       reduce ($changed | split("\n")[] | select(length > 0)) as $name (. ; .mcp_servers[$name] = $expected[0].mcp_servers[$name])
-    ' "$work/codex.json" >"$work/codex.verify"
-    jq_safe -en --slurpfile actual "$work/codex.actual" --slurpfile expected "$work/codex.verify" '$actual == $expected' >/dev/null
+    ' "$work/codex.json" >"$work/codex.verify" 2>"$work/error" || jq_error
+    jq -en --slurpfile actual "$work/codex.actual" --slurpfile expected "$work/codex.verify" '$actual == $expected' >/dev/null 2>"$work/error" || jq_error
   fi
 done
 

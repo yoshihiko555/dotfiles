@@ -322,21 +322,24 @@ if [ -d "$DOTFILES_ROOT/codex/rules" ]; then
 fi
 
 # ---- A. dotfiles: MCP ---------------------------------------------------
-# claude/.mcp.json: 正しくは "mcpServers" 直下がスキーマだが、実ファイルには
-# "cocoindex-code" がトップレベルの兄弟キーとして紛れ込んでおり、これは
-# Claude Code から実際には読み込まれない設定ミスの疑いがある。存在は資産として
-# 記録しつつ notes で明示する。
-CLAUDE_MCP_JSON="$DOTFILES_ROOT/claude/.mcp.json"
+# 共通管理の利用先は clients.json、資産の実体は servers/ を参照する。
+# Codex 固有の直接登録は従来どおり config.toml から補う。
+MCP_CLIENTS_JSON="$DOTFILES_ROOT/shared/mcp/clients.json"
 declare -a CLAUDE_MCP_NAMES=()
-declare -a CLAUDE_MCP_BROKEN=()
-if [ -f "$CLAUDE_MCP_JSON" ]; then
+declare -a CODEX_SHARED_MCP_NAMES=()
+declare -a SHARED_MCP_NAMES=()
+if [ -f "$MCP_CLIENTS_JSON" ]; then
   while IFS= read -r n; do
     [ -n "$n" ] && CLAUDE_MCP_NAMES+=("$n")
-  done < <(jq -r '.mcpServers // {} | keys[]?' "$CLAUDE_MCP_JSON" 2>/dev/null)
+  done < <(jq -r '.claude // {} | keys[]?' "$MCP_CLIENTS_JSON" 2>/dev/null)
   while IFS= read -r n; do
-    [ -n "$n" ] && CLAUDE_MCP_BROKEN+=("$n")
-  done < <(jq -r 'to_entries[] | select(.key != "mcpServers") | select(.value.command or .value.url or .value.type) | .key' "$CLAUDE_MCP_JSON" 2>/dev/null)
+    [ -n "$n" ] && CODEX_SHARED_MCP_NAMES+=("$n")
+  done < <(jq -r '.codex // {} | keys[]?' "$MCP_CLIENTS_JSON" 2>/dev/null)
 fi
+for definition in "$DOTFILES_ROOT"/shared/mcp/servers/*.json; do
+  [ -f "$definition" ] || continue
+  SHARED_MCP_NAMES+=("$(basename "$definition" .json)")
+done
 
 CODEX_CONFIG="$DOTFILES_ROOT/codex/config.toml"
 declare -a CODEX_MCP_NAMES=()
@@ -346,9 +349,9 @@ if [ -f "$CODEX_CONFIG" ]; then
   done < <("$GREP" -oE '^\[mcp_servers\.[A-Za-z0-9_-]+\]' "$CODEX_CONFIG" | sed -E 's/^\[mcp_servers\.([A-Za-z0-9_-]+)\]/\1/' | sort -u)
 fi
 
-# claude側・codex側それぞれの正規名リストと壊れリストを合わせて集合を作る
+# 未割当の定義や、定義ファイルがない参照も棚卸し対象に含める。
 declare -a ALL_DOTFILES_MCP=()
-for n in "${CLAUDE_MCP_NAMES[@]:-}" "${CLAUDE_MCP_BROKEN[@]:-}" "${CODEX_MCP_NAMES[@]:-}"; do
+for n in "${SHARED_MCP_NAMES[@]:-}" "${CLAUDE_MCP_NAMES[@]:-}" "${CODEX_SHARED_MCP_NAMES[@]:-}" "${CODEX_MCP_NAMES[@]:-}"; do
   [ -z "$n" ] && continue
   found=0
   for x in "${ALL_DOTFILES_MCP[@]:-}"; do [ "$x" = "$n" ] && found=1 && break; done
@@ -364,18 +367,26 @@ in_list() {
 
 for n in "${ALL_DOTFILES_MCP[@]:-}"; do
   targets=""
-  in_list "$n" "${CLAUDE_MCP_NAMES[@]:-}" && targets="${targets:+$targets,}Claude"
-  in_list "$n" "${CLAUDE_MCP_BROKEN[@]:-}" && targets="${targets:+$targets,}Claude"
-  in_list "$n" "${CODEX_MCP_NAMES[@]:-}" && targets="${targets:+$targets,}Codex"
-  path="claude/.mcp.json, codex/config.toml"
   notes=""
-  if in_list "$n" "${CLAUDE_MCP_BROKEN[@]:-}"; then
-    notes="設定ミスの疑い: claude/.mcp.json の mcpServers 直下ではなくトップレベルに定義されており、実際には読み込まれない可能性が高い"
+  if in_list "$n" "${SHARED_MCP_NAMES[@]:-}" "${CLAUDE_MCP_NAMES[@]:-}" "${CODEX_SHARED_MCP_NAMES[@]:-}"; then
+    in_list "$n" "${CLAUDE_MCP_NAMES[@]:-}" && targets="${targets:+$targets,}Claude"
+    in_list "$n" "${CODEX_SHARED_MCP_NAMES[@]:-}" && targets="${targets:+$targets,}Codex"
+    path="shared/mcp/servers/$n.json, shared/mcp/clients.json"
+    notes="共通定義の利用先。実設定への反映状況は task mcp-diff で確認"
+    if ! in_list "$n" "${SHARED_MCP_NAMES[@]:-}"; then
+      notes="参照切れ: clients.json に対応するサーバー定義がありません"
+    elif [ -z "$targets" ]; then
+      notes="未割当: サーバー定義はありますが利用先がありません"
+    fi
+    lm="$(git_last_modified "$DOTFILES_ROOT" "shared/mcp/servers/$n.json")"
+    lm2="$(git_last_modified "$DOTFILES_ROOT" "shared/mcp/clients.json")"
+    [ -z "$lm" ] || { [ -n "$lm2" ] && [ "$lm2" \> "$lm" ] && lm="$lm2"; }
+    [ -z "$lm" ] && lm="$lm2"
+  else
+    targets="Codex"
+    path="codex/config.toml"
+    lm="$(git_last_modified "$DOTFILES_ROOT" "codex/config.toml")"
   fi
-  lm="$(git_last_modified "$DOTFILES_ROOT" "claude/.mcp.json")"
-  lm2="$(git_last_modified "$DOTFILES_ROOT" "codex/config.toml")"
-  [ -z "$lm" ] || { [ -n "$lm2" ] && [ "$lm2" \> "$lm" ] && lm="$lm2"; }
-  [ -z "$lm" ] && lm="$lm2"
   usage="$(get_mcp_usage "$n")"
   emit_asset "dotfiles:mcp:$n" "$n" "MCP" "自作" "dotfiles" "$targets" "$path" \
     "$usage" "true" "$lm" "$notes"

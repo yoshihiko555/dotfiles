@@ -64,3 +64,11 @@ bash "$ROOT/scripts/mcp-manage.sh" sync drawio --definitions "$work/defs" --clau
 jq -e '.mcpServers | keys == ["drawio"]' "$work/new.json" >/dev/null
 "${TAPLO_BIN:-taplo}" get -f "$work/new.toml" -o json | jq -e '.mcp_servers | keys == ["drawio"]' >/dev/null
 echo '成功: ファイル未作成時の追加・1件指定・stdio の生成'
+
+# jq を直接呼ぶ場合も、構文エラーの原文や秘匿値を出力しない。
+cp "$work/new.toml" "$work/before-json-error.toml"
+printf '%s\n' '{"secret": "TEST_SECRET", invalid}' >"$work/new.json"
+if bash "$ROOT/scripts/mcp-manage.sh" sync --definitions "$work/defs" --claude-config "$work/new.json" --codex-config "$work/new.toml" --backup-dir "$work/new-backups" >"$work/output" 2>&1; then exit 1; fi
+if grep -q TEST_SECRET "$work/output"; then exit 1; fi
+cmp "$work/new.toml" "$work/before-json-error.toml"
+echo '成功: JSON 構文エラー時の停止・秘匿値非表示・実設定保持'

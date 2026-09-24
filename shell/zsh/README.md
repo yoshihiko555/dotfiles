@@ -20,6 +20,22 @@
 | `terminal-browser.zsh` | terminal-browser の起動ショートカット (tb) |
 | `prompt-marks.zsh` | OSC 133 の semantic prompt マーク（Ctrl+L でスクロールバックを失わない） |
 
+## Codex の trust 設定 (`trust`)
+
+```sh
+trust audit          # 登録されたパスの状態を確認
+trust prune          # 存在しないパスの削除候補を表示（変更なし）
+trust prune --apply  # 候補のプロジェクト設定をバックアップ付きで削除
+```
+
+- `prune` は実在するパスと symlink を残す。一時ディレクトリも存在していれば削除しない。
+- パスそのものやファイルは削除せず、Codex 設定内の対応するプロジェクト項目だけを削除する。
+- jq / taplo を使用し、対象外の設定が変わらないことを検証する。未対応の TOML 表記は書き込み前に停止する。
+- バックアップは `~/.local/state/dotfiles/trust-backups/` に保存する。
+  復旧時は表示された `.before` を設定の実体へ戻す（その後の変更まで戻るので事前に差分を確認する）。
+- `CODEX_CONFIG_PATH` で対象設定、`TRUST_BACKUP_DIR` でバックアップ先を変更できる。
+- 新しいターミナル、または `source "$DOTFILES/shell/zsh/trust.zsh"` で追加したサブコマンドを利用できる。
+
 ## 外出時のスリープ防止 (`awake`、macOS 専用)
 
 `awake.zsh` の関数で macOS 標準の `caffeinate -i` を操作する。

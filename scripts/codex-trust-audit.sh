@@ -85,5 +85,6 @@ echo "  temp-like : $temp_like"
 
 echo ""
 echo "hint:"
-echo "  - missing / temp-like の trusted は untrusted へ戻す運用を推奨"
+echo "  - missing の削除候補は trust prune で確認し、trust prune --apply で設定から削除"
+echo "  - temp-like は用途を確認し、信頼が不要なら untrusted に変更"
 echo "  - 変更例: [projects.\"/path\"] の trust_level = \"untrusted\""

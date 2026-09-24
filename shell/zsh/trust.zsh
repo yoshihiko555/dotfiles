@@ -47,6 +47,9 @@ trust() {
     audit)
       CODEX_CONFIG_PATH="$config" bash "$auditor"
       ;;
+    prune)
+      CODEX_CONFIG_PATH="$config" bash "$manager" prune "${@:2}"
+      ;;
     where)
       echo "$config"
       ;;
@@ -57,6 +60,7 @@ Usage:
   trust rm [path]
   trust list
   trust audit
+  trust prune [--apply]
   trust where
 HELP
       return 1
