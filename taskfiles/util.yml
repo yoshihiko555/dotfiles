@@ -68,22 +68,6 @@ tasks:
     cmds:
       - code {{.ROOT_DIR}}
 
-  mcp-init:
-    desc: 新規プロジェクト向けに最小構成の .mcp.json を作成（MCP なし）
-    cmds:
-      - |
-        if [ -f .mcp.json ]; then
-          echo "⚠️  .mcp.json already exists. Use 'task mcp-show' to view template."
-        else
-          cp {{.ROOT_DIR}}/shared/mcp.template.json .mcp.json
-          echo "✅ .mcp.json (minimal) created. Edit as needed."
-        fi
-
-  mcp-show:
-    desc: mcp-init 用（最小構成）MCP テンプレート内容を確認
-    cmds:
-      - cat {{.ROOT_DIR}}/shared/mcp.template.json
-
   mcp-list:
     desc: 個人用グローバル MCP の共通定義と現在の登録状況を表示（読み取り専用）
     cmds:

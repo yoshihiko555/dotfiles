@@ -84,8 +84,6 @@ task sync-agents   # shared/agents から Codex/Gemini の AGENTS.md を生成
 task claude-work-init # 会社用 Claude Code 設定ディレクトリを初期化
 task sync-claude-work-skills # 会社用 Claude Code の work スキルを同期
 task edit          # VS Code で開く
-task mcp-init      # 最小構成の .mcp.json をコピー
-task mcp-show      # 最小構成テンプレートの内容を表示
 task mcp-list      # 個人用グローバル MCP の登録状況を表示（読み取り専用）
 task mcp-diff      # 共通定義との差分を表示（読み取り専用）
 task mcp-sync      # 共通定義を Claude / Codex へ同期（バックアップ付き）
@@ -166,7 +164,7 @@ task adopt-settings TARGET=all
 - ただし `notion` は例外で **デフォルト有効** です。`shared/skills/common/notion-task` スキルが
   会話の途中で呼ばれる前提のため、起動し直さずに使える必要があります。
   初回のみ `codex mcp login notion` で OAuth 認証してください（`codex mcp list` の Auth 列で確認できます）。
-- プロジェクトの `.mcp.json` は `task mcp-init` で空の `mcpServers`（通常作業向け）を作成し、必要なMCPだけ追記してください。
+- プロジェクト限定の MCP は、そのプロジェクトで `claude mcp add --scope project ...` を使って登録してください。
 - Codex で一時的に有効化する場合は実行時オーバーライドを使います。
 
 ```bash
