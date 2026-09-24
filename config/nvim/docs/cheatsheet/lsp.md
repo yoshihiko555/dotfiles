@@ -68,5 +68,4 @@
 |----------|----------|
 | `:checkhealth vim.lsp` | LSPの状態 |
 | `:lua =vim.lsp.get_clients({ bufnr = 0 })` | 現在のファイルへのLSP接続 |
-| `:Mason` | LSPサーバーのインストール状態 |
 | `:messages` | `No references found` などのメッセージ |

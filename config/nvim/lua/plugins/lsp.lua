@@ -1,16 +1,8 @@
 return {
   {
-    "williamboman/mason.nvim",
-    cmd = "Mason",
-    build = ":MasonUpdate",
-    opts = {},
-  },
-  {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
     dependencies = {
-      "williamboman/mason.nvim",
-      "williamboman/mason-lspconfig.nvim",
       "hrsh7th/cmp-nvim-lsp",
     },
     config = function()
@@ -35,17 +27,6 @@ return {
       if ok then
         capabilities = vim.tbl_deep_extend("force", capabilities, cmp_nvim_lsp.default_capabilities())
       end
-
-      -- mason-lspconfig: ensure_installed + automatic_enable
-      require("mason-lspconfig").setup({
-        ensure_installed = {
-          "gopls",
-          "pyright",
-          "ts_ls",
-          "lua_ls",
-        },
-        automatic_enable = true,
-      })
 
       -- サーバー固有設定を vim.lsp.config() で登録
       vim.lsp.config("lua_ls", {
@@ -86,6 +67,35 @@ return {
       vim.lsp.config("pyright", {
         capabilities = capabilities,
       })
+
+      -- nix-darwin / home-manager のオプション補完は、この設定の実体があるリポジトリの flake から読む
+      local flake = vim.fs.normalize(vim.fs.joinpath(vim.uv.fs_realpath(vim.fn.stdpath("config")), "..", "nix"))
+      local get_flake = ('(builtins.getFlake "%s")'):format(flake)
+      local nixd_options
+      if vim.fn.has("mac") == 1 then
+        local darwin = get_flake .. ".darwinConfigurations.macbook.options"
+        nixd_options = {
+          ["nix-darwin"] = { expr = darwin },
+          ["home-manager"] = { expr = darwin .. ".home-manager.users.type.getSubOptions []" },
+        }
+      else
+        nixd_options = {
+          ["home-manager"] = { expr = get_flake .. ".homeConfigurations.wsl.options" },
+        }
+      end
+
+      vim.lsp.config("nixd", {
+        capabilities = capabilities,
+        settings = {
+          nixd = {
+            nixpkgs = { expr = "import " .. get_flake .. ".inputs.nixpkgs { }" },
+            options = nixd_options,
+          },
+        },
+      })
+
+      -- サーバー本体は Nix で入れる（ADR-20260925-0005）
+      vim.lsp.enable({ "gopls", "lua_ls", "nixd", "pyright", "ts_ls" })
 
       -- diagnostics 表示設定
       vim.diagnostic.config({

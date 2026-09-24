@@ -7,6 +7,9 @@ return {
     lint.linters_by_ft = {
       go = { "golangcilint" },
       python = { "ruff" },
+      sh = { "shellcheck" },
+      bash = { "shellcheck" },
+      zsh = { "zsh" },
     }
 
     -- eslint はプロジェクトにローカル版と設定があるときだけ使う（ADR-20260924-0004）
@@ -64,6 +67,11 @@ return {
               end,
             })
           end
+        end
+
+        local file = vim.api.nvim_buf_get_name(args.buf)
+        if vim.bo[args.buf].filetype == "yaml" and file:find("/%.github/workflows/") then
+          lint.try_lint("actionlint")
         end
       end,
     })

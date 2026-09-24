@@ -36,5 +36,14 @@ in
     tree-sitter # nvim-treesitter（main branch）の grammar ビルドに必須。brew の tree-sitter-cli 相当
     yazi
     zoxide
+
+    # --- LSP（ADR-20260925-0005）---
+    # Neovim と Claude Code の LSP プラグインが PATH から使う。
+    # typescript は typescript-language-server が内部で参照するため別に入れない
+    gopls
+    lua-language-server
+    nixd
+    pyright
+    typescript-language-server
   ];
 }

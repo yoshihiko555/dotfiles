@@ -50,6 +50,9 @@ ai-orchestra の hook は導入先に prettier が無いと PATH 上の `prettie
      json / jsonc / yaml / markdown / css / html を加える
    - Neovim の ts/js リント: nvim-lint は、ファイルから上へ辿って eslint の設定と
      `node_modules/.bin/eslint` の両方が見つかったときだけ、設定のあるディレクトリで eslint を動かす
+   - Neovim の nix / sh / yaml / toml: dotfiles 内は treefmt（`dotfiles-treefmt --stdin`）で整形し、
+     対象・除外・オプションを `treefmt.nix` の 1 か所に揃える。dotfiles 外は nixfmt / shfmt / prettier / taplo を直接使う
+   - Neovim のリント: sh / bash は shellcheck、zsh は `zsh -n`、`.github/workflows/` の yaml は actionlint
    - Zed: 同梱の prettier を無効にし、外部フォーマッタに `prettier-local-first`
      （`packages/prettier-local-first.nix`）を使う
 
@@ -66,8 +69,8 @@ ai-orchestra の hook は導入先に prettier が無いと PATH 上の `prettie
   black は conform で ruff の代わりにしか使われないため置き換えない
 - stylua の導入で nvim の lua 整形が lua_ls から stylua に替わる。既存の lua は一度まとめて整形する
 - Neovim で md を保存すると prettier で整形される（treefmt の md 除外は `task nix-fmt` の範囲の話で、これとは別）
-- dotfiles の yaml は prettier と yamlfmt で整形結果が一致する（treefmt 対象外の `config/gh/config.yml` を除く）ため、
-  Neovim で保存しても pre-commit とは衝突しない
+- dotfiles 内の nix / sh / yaml / toml は Neovim でも treefmt を通すため、保存時整形と pre-commit の結果が一致する。
+  拡張子の無いスクリプトや `codex/config.toml` など treefmt の対象外は、保存しても整形されない
 - `node_modules` が未インストールのリポジトリ（tech-site 等）では Nix 版で整形される
 - Zed の Java は同梱 prettier のプラグインに頼るため対象外。同梱 prettier のディレクトリは Zed が管理するので残る
 - hermes には入れない（[config/nix ADR-20260801-0004](../../config/nix/docs/adr/ADR-20260801-0004-module-layer-design.md) ルール 3）。使い始めたら `home/packages.nix` へ昇格する

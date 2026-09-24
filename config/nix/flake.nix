@@ -132,8 +132,12 @@
         };
         macbook = darwin.lib.darwinSystem {
           inherit system;
-          # takt は macbook のみで使うため specialArgs で渡す（hermes へは配らない）
-          specialArgs = { inherit takt; };
+          # takt は macbook のみで使うため specialArgs で渡す（hermes へは配らない）。
+          # treefmtWrapper は Neovim が dotfiles 内の保存時整形に使う（ADR-20260924-0004）
+          specialArgs = {
+            inherit takt;
+            treefmtWrapper = treefmtEval.${system}.config.build.wrapper;
+          };
           modules = [ ./hosts/macbook ] ++ commonModules;
         };
       };

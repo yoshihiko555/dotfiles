@@ -3,6 +3,7 @@
   pkgs,
   lib,
   takt,
+  treefmtWrapper,
   ...
 }:
 let
@@ -33,13 +34,9 @@ in
       # --- brew から移行（2026-08-02 棚卸しで nix新規 と判定）---
       go-task # 日常運用のタスクランナー
       taplo # MCP 共通管理での TOML 読み取り・検証
-      gopls
       opencode
-      pyright
       sheldon
       switchaudio-osx
-      typescript
-      typescript-language-server
 
       # --- 新規導入 ---
       delve # Neovim の Go デバッグ。Go ランタイムは引き続き mise で管理
@@ -67,7 +64,14 @@ in
         mkdir -p $out/bin
         ln -s ${gotools}/bin/goimports $out/bin/goimports
       '')
+      # Neovim が dotfiles 内の nix / sh / yaml / toml を保存時に整形する。
+      # 対象・除外・オプションは treefmt.nix がそのまま効く
+      (runCommand "dotfiles-treefmt" { } ''
+        mkdir -p $out/bin
+        ln -s ${treefmtWrapper}/bin/treefmt $out/bin/dotfiles-treefmt
+      '')
       shfmt
+      nixfmt
       shellcheck
       actionlint
       markdownlint-cli2

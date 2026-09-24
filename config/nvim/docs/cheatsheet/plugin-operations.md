@@ -107,7 +107,6 @@
 | Comment.nvim | コメント切り替え |
 | nvim-surround | 囲み文字の追加・変更・削除 |
 | indent-blankline.nvim | インデントガイド |
-| mason.nvim | LSPサーバー自動インストール管理 |
 | nvim-lspconfig | LSP設定テンプレート |
 | conform.nvim | フォーマッタ統合（保存時自動） |
 | nvim-lint | リンター統合 |

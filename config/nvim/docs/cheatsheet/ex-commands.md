@@ -48,7 +48,6 @@ Visual モードで行を選択して `:CodeDiff history` を実行すると、�
 | コマンド | 説明 |
 |----------|------|
 | `:Lazy` | プラグインの状態確認・更新・同期 |
-| `:Mason` | LSPサーバー・Formatter・Linterを管理 |
 | `:ConformInfo` | 現在のファイルで使用する Formatter を確認 |
 | `:Copilot status` | Copilot の接続・認証状態を確認 |
 | `:Copilot enable` / `:Copilot disable` | Copilot を有効化 / 無効化 |
