@@ -14,10 +14,17 @@ return {
   opts = {
     formatters_by_ft = {
       go = { "goimports", "gofmt" },
-      typescript = { "prettierd", "prettier", stop_after_first = true },
-      typescriptreact = { "prettierd", "prettier", stop_after_first = true },
-      javascript = { "prettierd", "prettier", stop_after_first = true },
-      javascriptreact = { "prettierd", "prettier", stop_after_first = true },
+      -- prettierd は使わない（ローカル版が無いと同梱の prettier を使い、版が揃わない）
+      typescript = { "prettier" },
+      typescriptreact = { "prettier" },
+      javascript = { "prettier" },
+      javascriptreact = { "prettier" },
+      json = { "prettier" },
+      jsonc = { "prettier" },
+      yaml = { "prettier" },
+      markdown = { "prettier" },
+      css = { "prettier" },
+      html = { "prettier" },
       python = { "ruff_format", "black", stop_after_first = true },
       lua = { "stylua" },
     },

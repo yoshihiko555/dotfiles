@@ -65,4 +65,43 @@
   "ui_font_size": 16,
   "buffer_font_size": 14.0,
   "theme": "Tokyo Night Moon",
+  // 同梱の prettier は使わず、ローカル版 → Nix 版の順で解決する prettier-local-first を使う
+  "languages": {
+    "JavaScript": {
+      "prettier": { "allowed": false },
+      "formatter": { "external": { "command": "prettier-local-first", "arguments": ["--stdin-filepath", "{buffer_path}"] } },
+    },
+    "TypeScript": {
+      "prettier": { "allowed": false },
+      "formatter": { "external": { "command": "prettier-local-first", "arguments": ["--stdin-filepath", "{buffer_path}"] } },
+    },
+    "TSX": {
+      "prettier": { "allowed": false },
+      "formatter": { "external": { "command": "prettier-local-first", "arguments": ["--stdin-filepath", "{buffer_path}"] } },
+    },
+    "JSON": {
+      "prettier": { "allowed": false },
+      "formatter": { "external": { "command": "prettier-local-first", "arguments": ["--stdin-filepath", "{buffer_path}"] } },
+    },
+    "JSONC": {
+      "prettier": { "allowed": false },
+      "formatter": { "external": { "command": "prettier-local-first", "arguments": ["--stdin-filepath", "{buffer_path}"] } },
+    },
+    "CSS": {
+      "prettier": { "allowed": false },
+      "formatter": { "external": { "command": "prettier-local-first", "arguments": ["--stdin-filepath", "{buffer_path}"] } },
+    },
+    "HTML": {
+      "prettier": { "allowed": false },
+      "formatter": { "external": { "command": "prettier-local-first", "arguments": ["--stdin-filepath", "{buffer_path}"] } },
+    },
+    "Markdown": {
+      "prettier": { "allowed": false },
+      "formatter": { "external": { "command": "prettier-local-first", "arguments": ["--stdin-filepath", "{buffer_path}"] } },
+    },
+    "YAML": {
+      "prettier": { "allowed": false },
+      "formatter": { "external": { "command": "prettier-local-first", "arguments": ["--stdin-filepath", "{buffer_path}"] } },
+    },
+  },
 }

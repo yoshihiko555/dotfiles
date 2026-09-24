@@ -57,6 +57,21 @@ in
       age
       sops
 
+      # --- フォーマッタ・リンタ（ADR-20260924-0004）---
+      # プロジェクトにローカル版があればそちらが優先される。ここは無いときの基準版
+      prettier # ai-orchestra の CI（facet-format）はこの版に合わせる
+      ruff
+      stylua
+      # gotools を丸ごと入れると bundle が /usr/bin/bundle を隠すため goimports だけ出す
+      (runCommand "goimports" { } ''
+        mkdir -p $out/bin
+        ln -s ${gotools}/bin/goimports $out/bin/goimports
+      '')
+      shfmt
+      shellcheck
+      actionlint
+      markdownlint-cli2
+
       # --- 野良インストールから移行（宣言なし 9 件の解消）---
       antigravity-cli # agy。公式 curl インストーラ → nixpkgs へ（要 allowUnfree、上記）
       golangci-lint # mise から移送（境界違反の解消）
@@ -67,6 +82,9 @@ in
     ++ [
       # CodexBar で複数の Claude アカウントの利用状況を読む（docs/CLAUDE-SWAP.md）。
       (pkgs.callPackage ../../packages/claude-swap.nix { })
+
+      # Zed の外部フォーマッタ用。ローカルの prettier を優先し、無ければ上の prettier を使う
+      (pkgs.callPackage ../../packages/prettier-local-first.nix { })
 
       # nixpkgs 未収録だが公式 flake あり（npm -g から移行）
       # Phase 2 のツール呼び出しでプロセスが落ちる問題にパッチを当てている（上記 let）
