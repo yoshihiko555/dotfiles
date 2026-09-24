@@ -147,7 +147,7 @@ task adopt-settings TARGET=all
 - Bash / jq / taplo で動く。`task mcp-list` / `task mcp-diff` は読み取り専用、
   `task mcp-sync` で反映する。OAuth・接続の成否は検査しない。
   taplo が PATH にない場合は、このリポジトリの Nix 入力に基づく一時環境で実行する。
-- cocoindex-code、プラグイン由来 MCP、会社用 `ccw` は今回の移行対象外。
+- プラグイン由来 MCP、会社用 `ccw` は今回の移行対象外。
   グローバル登録先ではない `~/.claude/.mcp.json` への配布は廃止した。
 - 同期は個人用の `~/.claude.json` と `~/.codex/config.toml` の管理対象のみを更新する。
   実体の symlink を保持し、更新前の設定を `~/.local/state/dotfiles/mcp-backups/` に保存する。
