@@ -74,7 +74,6 @@ in
       nixfmt
       shellcheck
       actionlint
-      markdownlint-cli2
 
       # --- 野良インストールから移行（宣言なし 9 件の解消）---
       antigravity-cli # agy。公式 curl インストーラ → nixpkgs へ（要 allowUnfree、上記）

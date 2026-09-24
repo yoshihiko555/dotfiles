@@ -42,8 +42,8 @@ ai-orchestra の hook は導入先に prettier が無いと PATH 上の `prettie
 1. 解決順は「プロジェクトのローカル版 → Nix の基準版」。基準版は `hosts/macbook/packages.nix` に置く
 2. CI が版を固定しているプロジェクト（ai-orchestra）は、CI 側を Nix の版に合わせる。
    `nxu` の後は `nix eval --raw --inputs-from config/nix nixpkgs#prettier.version` で版を確認する
-3. リンターは単体で動くもの（ruff / shellcheck / actionlint / markdownlint-cli2 / golangci-lint）だけ
-   グローバルに置く。設定やプラグインに依存するもの（eslint 等）はプロジェクトのローカル版だけを使う
+3. リンターは単体で動くもの（ruff / shellcheck / actionlint / golangci-lint）だけ
+   グローバルに置く。設定やプラグインに依存するもの（eslint / markdownlint-cli2 等）はプロジェクトのローカル版だけを使う
 4. prettierd は使わない。ローカル版が無いと同梱の prettier を使い、基準版と揃わない
 5. エディタも同じ解決順にする
    - Neovim: conform.nvim が `node_modules/.bin` → PATH の順で探す。prettier の対象に
@@ -61,6 +61,8 @@ ai-orchestra の hook は導入先に prettier が無いと PATH 上の `prettie
 - eslint_d: eslint の設定が無いリポジトリでは、nvim-lint が ESLint 9 のエラー出力を解析できず、
   1 行目にエラーを出す。eslint はプロジェクトのローカル版だけを使う（決定 3・5）。
   `node_modules/.bin/eslint` は間接依存でも置かれるため、設定ファイルの有無も条件にする
+- markdownlint-cli2: 一度グローバルに入れたが、ルールを決める設定ファイルが前提で、設定を持つリポジトリが無く
+  どこからも使われていなかった（2026-09-25 に外した）。Markdown の整形は prettier が担う
 
 ## 影響
 
