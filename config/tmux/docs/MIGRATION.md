@@ -8,7 +8,7 @@ WezTerm のワークスペース管理を tmux セッションに移行し、tmu
 
 - **WezTerm の役割**: GUI レンダラー (背景画像, 透過, フォント) に限定
 - **tmux ブランチの資産**: 分割済み `conf/` 群 + 18 個のヘルパースクリプト
-- **ai-orchestra**: tmux-monitor は現行のまま維持
+- **ai-orchestra**: tmux-monitor は 2026-09-25 に ai-orchestra から削除（#450）
 
 ## 進捗
 
