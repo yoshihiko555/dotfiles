@@ -55,17 +55,35 @@ if [[ -n "$worker_script" && -x "$BUN" ]]; then
 fi
 
 # 処理開始（なければ作成）から 15 分を過ぎた processing は取り残された記録とみなし、中止の判定に使わない
+# DB を読めないときは processing を空（不明）にして、worker を止めずに中止する
 processing=0
 stale=0
-if [[ -f "$MEM_DB" ]] && command -v sqlite3 >/dev/null; then
-  counts=$(sqlite3 -readonly -separator ' ' "$MEM_DB" "
-    select
-      coalesce(sum(coalesce(started_processing_at_epoch, created_at_epoch) >= (strftime('%s', 'now') - 900) * 1000), 0),
-      coalesce(sum(coalesce(started_processing_at_epoch, created_at_epoch) < (strftime('%s', 'now') - 900) * 1000), 0)
-    from pending_messages where status = 'processing';" 2>/dev/null || echo "0 0")
-  processing=${counts%% *}
-  stale=${counts##* }
+if [[ -f "$MEM_DB" ]]; then
+  counts=""
+  if command -v sqlite3 >/dev/null; then
+    counts=$(sqlite3 -readonly -separator ' ' "$MEM_DB" "
+      select
+        coalesce(sum(coalesce(started_processing_at_epoch, created_at_epoch) >= (strftime('%s', 'now') - 900) * 1000), 0),
+        coalesce(sum(coalesce(started_processing_at_epoch, created_at_epoch) < (strftime('%s', 'now') - 900) * 1000), 0)
+      from pending_messages where status = 'processing';" 2>/dev/null || true)
+  fi
+  counts_pattern='^[0-9]+ [0-9]+$'
+  if [[ "$counts" =~ $counts_pattern ]]; then
+    processing=${counts%% *}
+    stale=${counts##* }
+  else
+    processing=""
+  fi
 fi
+
+# 処理中の記録がある、または確認できないときに理由を返す
+busy_reason() {
+  if [[ -z "$processing" ]]; then
+    echo "処理中の記録を確認できない"
+  elif [[ "$processing" -gt 0 ]]; then
+    echo "claude-mem が記録を $processing 件処理中の"
+  fi
+}
 
 # worker の子として動く uv（chroma-mcp）と、それ以外の uv プロセスを分ける
 chroma_pids=()
@@ -82,7 +100,7 @@ echo "=== uv キャッシュ クリーンアップ ==="
 echo ""
 echo "[uv] $(du -sh "$CACHE_DIR" 2>/dev/null | awk '{print $1}')（ディスク空き $(free_space)）"
 if [[ -n "$worker_pid" ]]; then
-  echo "[claude-mem] worker PID $worker_pid / chroma-mcp ${#chroma_pids[@]} 件 / 処理中の記録 $processing 件"
+  echo "[claude-mem] worker PID $worker_pid / chroma-mcp ${#chroma_pids[@]} 件 / 処理中の記録 ${processing:-不明（DB を読めません）}${processing:+ 件}"
   if [[ "$stale" -gt 0 ]]; then
     echo "  （15 分以上前から processing のまま取り残された記録 $stale 件は判定から除外）"
   fi
@@ -100,8 +118,8 @@ if [[ "$DRY_RUN" == true ]]; then
   echo ""
   if [[ ${#foreign_pids[@]} -gt 0 ]]; then
     echo "-> 他の uv プロセスが終わるまで実行できません"
-  elif [[ "$processing" -gt 0 ]]; then
-    echo "-> 処理中の記録があるため、落ち着いてから実行してください（強行は --allow-processing）"
+  elif [[ -n "$worker_pid" && -n "$(busy_reason)" ]]; then
+    echo "-> $(busy_reason)ため、落ち着いてから実行してください（強行は --allow-processing）"
   else
     echo "-> worker 停止 → uv cache prune → worker 再起動 を実行できます"
   fi
@@ -122,14 +140,18 @@ restart_worker() {
 }
 
 if [[ -n "$worker_pid" ]]; then
-  if [[ "$processing" -gt 0 && "$ALLOW_PROCESSING" != true ]]; then
-    echo "-> claude-mem が記録を $processing 件処理中のため中止（強行は --allow-processing）"
+  if [[ -n "$(busy_reason)" && "$ALLOW_PROCESSING" != true ]]; then
+    echo "-> $(busy_reason)ため中止（強行は --allow-processing）"
     exit 1
   fi
   echo ""
   echo "claude-mem の worker を停止..."
-  "$BUN" "$worker_script" stop
+  # stop が途中で失敗しても worker を起動し直せるよう、停止より先に登録する
   trap restart_worker EXIT
+  if ! "$BUN" "$worker_script" stop; then
+    echo "-> worker の停止に失敗したため中止"
+    exit 1
+  fi
 
   for pid in ${chroma_pids[@]+"${chroma_pids[@]}"}; do
     for _ in $(seq 20); do
