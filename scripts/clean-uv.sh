@@ -54,9 +54,17 @@ if [[ -n "$worker_script" && -x "$BUN" ]]; then
   worker_pid=$(awk '$1 == "PID:" {print $2}' <<<"$status")
 fi
 
+# 処理開始（なければ作成）から 15 分を過ぎた processing は取り残された記録とみなし、中止の判定に使わない
 processing=0
+stale=0
 if [[ -f "$MEM_DB" ]] && command -v sqlite3 >/dev/null; then
-  processing=$(sqlite3 -readonly "$MEM_DB" "select count(*) from pending_messages where status = 'processing';" 2>/dev/null || echo 0)
+  counts=$(sqlite3 -readonly -separator ' ' "$MEM_DB" "
+    select
+      coalesce(sum(coalesce(started_processing_at_epoch, created_at_epoch) >= (strftime('%s', 'now') - 900) * 1000), 0),
+      coalesce(sum(coalesce(started_processing_at_epoch, created_at_epoch) < (strftime('%s', 'now') - 900) * 1000), 0)
+    from pending_messages where status = 'processing';" 2>/dev/null || echo "0 0")
+  processing=${counts%% *}
+  stale=${counts##* }
 fi
 
 # worker の子として動く uv（chroma-mcp）と、それ以外の uv プロセスを分ける
@@ -75,6 +83,9 @@ echo ""
 echo "[uv] $(du -sh "$CACHE_DIR" 2>/dev/null | awk '{print $1}')（ディスク空き $(free_space)）"
 if [[ -n "$worker_pid" ]]; then
   echo "[claude-mem] worker PID $worker_pid / chroma-mcp ${#chroma_pids[@]} 件 / 処理中の記録 $processing 件"
+  if [[ "$stale" -gt 0 ]]; then
+    echo "  （15 分以上前から processing のまま取り残された記録 $stale 件は判定から除外）"
+  fi
 else
   echo "[claude-mem] worker は停止中"
 fi
