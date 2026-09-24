@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "plugins": {
+    "context7": {
+      "description": "ライブラリの最新ドキュメント検索。Claude は既存の公式配布、Codex は Upstash 配布を使う。",
+      "clients": {
+        "claude": {
+          "id": "context7@claude-plugins-official",
+          "mode": "sync",
+          "marketplace": "anthropics/claude-plugins-official"
+        },
+        "codex": {
+          "id": "context7@context7-marketplace",
+          "mode": "sync",
+          "marketplace": "upstash/context7"
+        }
+      }
+    },
+    "notion": {
+      "description": "Notion は両 CLI ともプラグインで同期。直接登録 MCP は使用しない。",
+      "clients": {
+        "claude": {
+          "id": "notion@claude-plugins-official",
+          "mode": "sync",
+          "marketplace": "anthropics/claude-plugins-official"
+        },
+        "codex": {
+          "id": "notion@openai-curated-remote",
+          "mode": "sync",
+          "marketplace": "remote",
+          "note": "codex plugin list / add でリモートの導入・有効化を同期する。初回のアカウント認証は別途必要。"
+        }
+      }
+    },
+    "claude-mem": {
+      "description": "セッション間メモリ。両 CLI のマニフェストがあるが、Codex のフック導入は任意。",
+      "clients": {
+        "claude": {
+          "id": "claude-mem@thedotmack",
+          "mode": "sync",
+          "marketplace": "thedotmack/claude-mem"
+        },
+        "codex": {
+          "id": "claude-mem@claude-mem-local",
+          "mode": "candidate",
+          "marketplace": "thedotmack/claude-mem",
+          "note": "Codex 用フックとワーカーの導入を伴う。採用する場合だけ mode を sync に変更する。"
+        }
+      }
+    }
+  }
+}

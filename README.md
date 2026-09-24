@@ -86,6 +86,9 @@ task sync-claude-work-skills # 会社用 Claude Code の work スキルを同期
 task mcp-list      # 個人用グローバル MCP の登録状況を表示（読み取り専用）
 task mcp-diff      # 共通定義との差分を表示（読み取り専用）
 task mcp-sync      # 共通定義を Claude / Codex へ同期（バックアップ付き）
+task plugin-list   # 共通プラグインの対応表と登録状態を表示
+task plugin-diff   # 導入・有効化候補と実行コマンドを確認（読み取り専用）
+task plugin-sync   # 同期対象の既存プラグインを各 CLI で導入・有効化
 task clean-claude-dry # Claude デバッグログ削除の dry-run
 task clean-claude  # Claude デバッグログを削除
 task clean-uv-dry  # uv キャッシュ prune を実行できる状態か確認
@@ -138,6 +141,17 @@ task adopt-settings TARGET=all
 - Antigravity のグローバルスキルは `~/.gemini/config/skills/<skill-folder>/SKILL.md` として解決されます
 - リンク更新は `task sync-skills` で実行
 
+## プラグインの共通管理
+
+Claude Code / Codex で利用できる既存プラグインを `shared/plugins/plugins.json` にまとめる。
+Context7・Notion・claude-mem のクライアント別 ID と導入方針を管理し、
+CLI 同期・アプリ管理・採用候補を区別する。Python 3.11 以上が必要。
+
+`task plugin-list` / `task plugin-diff` は読み取り専用。
+`task plugin-sync -- context7` のように個別導入できる。
+詳細は [共通プラグイン管理](shared/plugins/README.md)、
+対象外を含む選定理由は [対象調査](shared/plugins/INVENTORY.md) を参照。
+
 ## MCP 運用方針
 
 ### 個人用グローバル MCP の共通管理
@@ -159,9 +173,9 @@ task adopt-settings TARGET=all
 
 - Codex (`codex/config.toml`) の MCP は必要最小限のみ有効にする方針です。追加する MCP は原則
   `enabled = false` を既定にし、実行時オーバーライドで有効化してください。
-- ただし `notion` は例外で **デフォルト有効** です。`shared/skills/common/notion-task` スキルが
-  会話の途中で呼ばれる前提のため、起動し直さずに使える必要があります。
-  初回のみ `codex mcp login notion` で OAuth 認証してください（`codex mcp list` の Auth 列で確認できます）。
+- Notion は両 CLI ともプラグイン経由に統一し、Codex の直接登録 MCP は廃止しました。
+  `task plugin-sync -- notion` で導入・有効化を同期します。`notion-task` もプラグイン由来のツールを使います。
+  Codex のリモート状態確認にはネットワークとログインが必要で、初回の Notion 認証は別途行います。
 - プロジェクト限定の MCP は、そのプロジェクトで `claude mcp add --scope project ...` を使って登録してください。
 - Codex で一時的に有効化する場合は実行時オーバーライドを使います。
 
@@ -169,8 +183,6 @@ task adopt-settings TARGET=all
 # 無効化している MCP を一時的に有効化する例
 codex -c mcp_servers.computer-use.enabled=true
 
-# 逆に Notion を一時的に無効化したい場合
-codex -c mcp_servers.notion.enabled=false
 ```
 
 - Claude Code 側は `--scope project` を基本にし、個人限定用途は `--scope local` / `--scope user` を使い分けてください。
@@ -190,7 +202,7 @@ task mcp-sync        # Claude / Codex に適用
 ```bash
 # Claude: プロジェクト限定でプラグインを有効化
 claude plugin enable context7@claude-plugins-official --scope project
-claude plugin enable Notion@claude-plugins-official --scope project
+claude plugin enable notion@claude-plugins-official --scope project
 
 # Claude: 一括無効化（最小構成に戻す）
 claude plugin disable --all --scope user

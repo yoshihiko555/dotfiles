@@ -78,6 +78,21 @@ tasks:
     cmds:
       - bash "{{.ROOT_DIR}}/scripts/mcp-manage.sh" sync {{.CLI_ARGS}}
 
+  plugin-list:
+    desc: Claude / Codex の共通プラグイン対応表と登録状態を表示（読み取り専用）
+    cmds:
+      - python3 "{{.ROOT_DIR}}/scripts/plugin-manage.py" list {{.CLI_ARGS}}
+
+  plugin-diff:
+    desc: 共通プラグインの導入・有効化候補と実行コマンドを表示（読み取り専用）
+    cmds:
+      - python3 "{{.ROOT_DIR}}/scripts/plugin-manage.py" diff {{.CLI_ARGS}}
+
+  plugin-sync:
+    desc: 共通プラグインを各 CLI で導入・有効化（設定バックアップ付き）
+    cmds:
+      - python3 "{{.ROOT_DIR}}/scripts/plugin-manage.py" sync {{.CLI_ARGS}}
+
   clean-claude:
     desc: Claude Code のログ容量を減らしたいときにデバッグログを削除
     cmds:
