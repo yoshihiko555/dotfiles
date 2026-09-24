@@ -16,7 +16,10 @@ focus_agent = "prefix+alt+1..9"
 switch_tab = "alt+1..9"
 
 # ワークスペースの番号切替は置かない（Cmd+Shift+数字は macOS のスクリーンショット、
-# prefix+数字は N 分割と衝突する）。prefix+w のピッカーを使う。
+# prefix+数字は N 分割と衝突する）。番号で移るときはナビゲートモードで数字を押す。
+
+# ナビゲートモード（既定の prefix+w は fzf のワークスペース切替に譲った。数字で番号のワークスペースへ）
+workspace_picker = "prefix+space"
 
 # ナビゲート（既定の prefix+g は lazygit に譲った）
 goto = "prefix+m"
@@ -61,6 +64,14 @@ type = "popup"
 command = "~/.config/herdr/bin/herdr-sessionizer"
 width = "80%"
 height = "70%"
+
+# 開いているワークスペースを曖昧検索して切替
+[[keys.command]]
+key = "prefix+w"
+type = "popup"
+command = "~/.config/herdr/bin/herdr-workspace-picker"
+width = "60%"
+height = "60%"
 
 # 現在のタブを N ペインに分割（prefix+2..8）
 [[keys.command]]

@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# herdr-workspace-picker — 開いているワークスペースを fzf で選んで切り替える（prefix+w）
+#
+# 候補は herdr workspace list の並び（サイドバーと同じ順）。切替は herdr workspace focus。
+
+set -euo pipefail
+
+# type = "shell" のデタッチ実行は PATH が最小で /opt/homebrew/bin が入らず、
+# herdr / jq / fzf が見つからずに exit 127 になる。ここで補う。
+# herdr 自身の場所は HERDR_BIN_PATH がペインに渡されていればそれを使う。
+if [ -n "${HERDR_BIN_PATH:-}" ]; then
+  PATH="$(dirname "$HERDR_BIN_PATH"):$PATH"
+fi
+PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+export PATH
+
+# popup で実行されると終了と同時に窓が閉じ、エラーが読めない。
+# 異常終了の直前に必ず呼んで、ユーザーがメッセージを読めるようにする。
+_pause_on_error() {
+  echo >&2
+  echo "Enter で閉じます" >&2
+  read -r _ </dev/tty 2>/dev/null || true
+}
+trap '[ $? -ne 0 ] && _pause_on_error' EXIT
+
+for cmd in herdr fzf jq; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "herdr-workspace-picker: 必要なコマンドが見つかりません: $cmd" >&2
+    exit 1
+  fi
+done
+
+# 表示\tワークスペース ID
+candidates=$(herdr workspace list | jq -r '
+  .result.workspaces[]
+  | [
+      "\(.number)  \(.label)\(if .focused then "  (current)" else "" end)",
+      .workspace_id
+    ]
+  | @tsv')
+
+# Esc / Ctrl+C での中断は正常終了として扱う（fzf は 130 を返す）
+selected=$(printf '%s\n' "$candidates" | fzf \
+  --delimiter=$'\t' \
+  --with-nth=1 \
+  --header="Switch workspace (herdr)") || exit 0
+
+[ -z "$selected" ] && exit 0
+
+herdr workspace focus "$(printf '%s' "$selected" | cut -f2)" >/dev/null
