@@ -186,7 +186,7 @@ delivery = "herdr"
 done_path = "sounds/done.mp3"
 request_path = "sounds/request.mp3"
 
-# 承認待ちエージェント・コンソール（j/k で移動、w で承認待ちのみ、a で承認、Enter でペインへ）
+# 承認待ちエージェント・コンソール（j/k で移動、c で次の完了へ、w で承認待ちのみ、a で承認、Enter でペインへ）
 [[keys.command]]
 key = "prefix+b"
 type = "popup"

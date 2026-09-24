@@ -3,8 +3,8 @@
 #
 # herdr 上のエージェント一覧を fzf で表示する（数秒ごとに自動更新、ヘッダーに状態別の件数）。
 # 要対応(blocked)の行は画面を読み、承認ダイアログ / 質問フォーム / プラン承認を見分けて表示する。
-#   j/k ↑↓ 移動 / Enter ペインへ / a 承認 / d 拒否 / w 要対応のみ / r 再取得 / q 閉じる
-#   /  検索モード（中では a/d/w/r/q/j/k は文字入力になる。Esc で通常モードへ戻る）
+#   j/k ↑↓ 移動 / c 次の完了へ / Enter ペインへ / a 承認 / d 拒否 / w 要対応のみ / r 再取得 / q 閉じる
+#   /  検索モード（中では a/d/w/r/q/j/k/c は文字入力になる。Esc で通常モードへ戻る）
 #
 # 対象は常に pane_id（例: w1:p4）で指定する。agent 名は種別名（claude 等）で重複しうるため。
 #
@@ -54,6 +54,7 @@ usage() {
 
   キー割当:
     j/k, ↑↓   移動（検索モード中は ↑↓ / Ctrl-j / Ctrl-k のみ）
+    c         次の完了(done)の行へカーソルを移動（末尾まで行ったら先頭の完了へ戻る）
     Enter     選択エージェントのペインへフォーカスして終了
     a         承認キーを送信（確認プロンプトなし。承認ダイアログ以外はスキップ）
     d         拒否キー（Escape）を送信（blocked 以外はスキップ）
@@ -174,7 +175,7 @@ PYEOF
 }
 
 # jq 版: herdr agent list の生 JSON から件数を計算する。
-# 出力: blocked \t working \t idle \t other \t total の 1 行 TSV（常に全件が対象）
+# 出力: blocked \t working \t idle \t done \t other \t total の 1 行 TSV（常に全件が対象）
 count_agents_jq() {
   jq -r '
     (.result.agents // []) as $a
@@ -182,8 +183,9 @@ count_agents_jq() {
     | ($a | map(select(.agent_status=="blocked")) | length) as $b
     | ($a | map(select(.agent_status=="working")) | length) as $w
     | ($a | map(select(.agent_status=="idle")) | length) as $i
-    | ($total - $b - $w - $i) as $o
-    | [$b, $w, $i, $o, $total] | @tsv
+    | ($a | map(select(.agent_status=="done")) | length) as $d
+    | ($total - $b - $w - $i - $d) as $o
+    | [$b, $w, $i, $d, $o, $total] | @tsv
   '
 }
 
@@ -196,7 +198,7 @@ import sys
 try:
     data = json.load(sys.stdin)
 except Exception:
-    print("?\t?\t?\t?\t?")
+    print("?\t?\t?\t?\t?\t?")
     sys.exit(0)
 
 agents = ((data.get("result") or {}).get("agents")) or []
@@ -204,10 +206,10 @@ agents = ((data.get("result") or {}).get("agents")) or []
 def c(s):
     return sum(1 for a in agents if a.get("agent_status") == s)
 
-b, w, i = c("blocked"), c("working"), c("idle")
+b, w, i, d = c("blocked"), c("working"), c("idle"), c("done")
 total = len(agents)
-o = total - b - w - i
-print(f"{b}\t{w}\t{i}\t{o}\t{total}")
+o = total - b - w - i - d
+print(f"{b}\t{w}\t{i}\t{d}\t{o}\t{total}")
 PYEOF
 }
 
@@ -302,13 +304,13 @@ write_counts() {
   local raw="$1" out_file="$2" line
   [ -z "$out_file" ] && return 0
   if [ -z "$raw" ]; then
-    line=$'?\t?\t?\t?\t?'
+    line=$'?\t?\t?\t?\t?\t?'
   elif [ "$JSON_TOOL" = "jq" ]; then
     line="$(printf '%s' "$raw" | count_agents_jq)"
   else
     line="$(printf '%s' "$raw" | count_agents_py)"
   fi
-  [ -z "$line" ] && line=$'?\t?\t?\t?\t?'
+  [ -z "$line" ] && line=$'?\t?\t?\t?\t?\t?'
   printf '%s\n' "$line" >"$out_file" 2>/dev/null || true
 }
 
@@ -526,9 +528,9 @@ cmd_list() {
 cmd_header() {
   local state_file="${1:-}" filter="all"
   local query="${FZF_QUERY:-}"
-  local b="?" w="?" i="?" o="?" t="?"
+  local b="?" w="?" i="?" d="?" o="?" t="?"
   if [ -n "$state_file" ] && [ -f "${state_file}.counts" ]; then
-    IFS=$'\t' read -r b w i o t <"${state_file}.counts" 2>/dev/null || true
+    IFS=$'\t' read -r b w i d o t <"${state_file}.counts" 2>/dev/null || true
   fi
   if [ -n "$state_file" ] && [ -f "$state_file" ]; then
     filter="$(cat "$state_file" 2>/dev/null || echo all)"
@@ -540,7 +542,7 @@ cmd_header() {
   fi
 
   local counts_line
-  counts_line="$(printf '\033[1;38;2;255;117;127m● 要対応 %s\033[0m   \033[38;2;255;199;119m◐ 作業中 %s\033[0m   \033[38;2;195;232;141m✓ 待機中 %s\033[0m' "$b" "$w" "$i")"
+  counts_line="$(printf '\033[1;38;2;255;117;127m● 要対応 %s\033[0m   \033[38;2;255;199;119m◐ 作業中 %s\033[0m   \033[38;2;195;232;141m✓ 待機中 %s\033[0m   \033[38;2;79;214;190m✓ 完了 %s\033[0m' "$b" "$w" "$i" "$d")"
   if [ "$o" != "0" ] && [ "$o" != "?" ]; then
     counts_line="${counts_line}   $(printf '\033[38;2;99;109;166mその他 %s\033[0m' "$o")"
   fi
@@ -565,8 +567,8 @@ cmd_footer() {
     return 0
   fi
 
-  printf '%sj/k%s 移動   %sEnter%s フォーカス   %sa%s 承認   %sd%s 拒否   %s/%s 検索\n' \
-    "$k" "$r" "$k" "$r" "$k" "$r" "$k" "$r" "$k" "$r"
+  printf '%sj/k%s 移動   %sc%s 次の完了   %sEnter%s フォーカス   %sa%s 承認   %sd%s 拒否   %s/%s 検索\n' \
+    "$k" "$r" "$k" "$r" "$k" "$r" "$k" "$r" "$k" "$r" "$k" "$r"
   printf '%sw%s 要対応のみ   %sr%s 再取得(絞り込み解除)   %sq%s 閉じる   (5秒ごとに自動更新)\n' \
     "$k" "$r" "$k" "$r" "$k" "$r"
 }
@@ -582,8 +584,28 @@ cmd_esc() {
     echo abort
     return 0
   fi
-  printf 'hide-input+rebind(j,k,a,d,w,r,q)+transform-footer("%s" _footer)+transform-header("%s" _header "%s")\n' \
+  printf 'hide-input+rebind(j,k,a,d,w,r,q,c)+transform-footer("%s" _footer)+transform-header("%s" _header "%s")\n' \
     "$SCRIPT" "$SCRIPT" "$state_file"
+}
+
+# c が押されたときに呼ばれる。fzf の transform アクション用。
+# $1 は表示中の行の状態列（{*f3}、表示順に 1 行ずつ）。カーソル位置 FZF_POS より下にある
+# 最初の done へ pos(N) で移動し、無ければ先頭側の最初の done へ戻る。done が無ければ何もしない。
+cmd_next_done() {
+  local status_file="${1:-}" cur="${FZF_POS:-0}" n=0 first="" next="" st
+  [ -n "$status_file" ] && [ -f "$status_file" ] || return 0
+  while IFS= read -r st || [ -n "$st" ]; do
+    n=$((n + 1))
+    [ "$st" = "done" ] || continue
+    [ -z "$first" ] && first="$n"
+    if [ "$n" -gt "$cur" ]; then
+      next="$n"
+      break
+    fi
+  done <"$status_file"
+  next="${next:-$first}"
+  [ -n "$next" ] && printf 'pos(%s)\n' "$next"
+  return 0
 }
 
 # 罫線だけの行を preview の幅に切り詰める。
@@ -797,7 +819,7 @@ main_tui() {
   initial_header="$(FZF_QUERY='' cmd_header "$state_file")"
   initial_footer="$(FZF_INPUT_STATE=hidden cmd_footer)"
 
-  local preview_cmd focus_bind approve_bind deny_bind search_bind esc_bind w_bind r_bind every_bind refresh
+  local preview_cmd focus_bind approve_bind deny_bind search_bind esc_bind w_bind r_bind c_bind every_bind refresh
   preview_cmd="\"$SCRIPT\" _preview {1} {2}"
   # 件数・絞り込み状態（ヘッダー）の更新
   refresh="transform-header(\"$SCRIPT\" _header \"$state_file\")"
@@ -808,12 +830,13 @@ main_tui() {
   # cmd_footer が FZF_INPUT_STATE の更新後の値を見て検索モード用の文言を返す
   # （esc_bind と同じ「show-input/hide-input を先に実行してから transform-footer
   # で読む」という順序に統一している）。
-  search_bind="/:show-input+unbind(j,k,a,d,w,r,q)+transform-footer(\"$SCRIPT\" _footer)"
+  search_bind="/:show-input+unbind(j,k,a,d,w,r,q,c)+transform-footer(\"$SCRIPT\" _footer)"
   esc_bind="esc:transform(\"$SCRIPT\" _esc \"$state_file\")"
   # reload（非同期）の後ろに繋いだアクションは実行されないため、ヘッダー更新を先に置く
   w_bind="w:execute-silent(echo blocked > \"$state_file\")+$refresh+reload(\"$SCRIPT\" _list \"$state_file\")"
   # 入力欄が隠れている間は clear-query が効かないため、一瞬だけ出して消す
   r_bind="r:execute-silent(echo all > \"$state_file\")+show-input+clear-query+hide-input+$refresh+reload(\"$SCRIPT\" _list \"$state_file\")"
+  c_bind="c:transform(\"$SCRIPT\" _next_done {*f3})"
   every_bind="every(5):reload-sync(\"$SCRIPT\" _list \"$state_file\")+$refresh"
 
   # 一覧は枠で囲み、件数・列見出し（header）とキー説明（footer）を枠の中に埋め込む。
@@ -845,6 +868,7 @@ main_tui() {
     --bind "$every_bind" \
     --bind "$w_bind" \
     --bind "$r_bind" \
+    --bind "$c_bind" \
     --bind "$focus_bind" \
     --bind "$approve_bind" \
     --bind "$deny_bind" \
@@ -870,6 +894,10 @@ main() {
     _esc)
       shift
       cmd_esc "$@"
+      ;;
+    _next_done)
+      shift
+      cmd_next_done "$@"
       ;;
     _preview)
       shift
