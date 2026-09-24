@@ -1,0 +1,13 @@
+{
+  "name": "dotfiles",
+  "owner": {
+    "name": "yoshihiko555"
+  },
+  "plugins": [
+    {
+      "name": "turn-receipt",
+      "source": "./turn-receipt",
+      "description": "ターンごとの編集・実行件数をフッターに出し、編集したのに実行していないターンと未検証の完了宣言を知らせる mod"
+    }
+  ]
+}

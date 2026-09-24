@@ -4,7 +4,8 @@
     "AI_ORCHESTRA_DIR": "/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra",
     "CLAUDE_AFK_TIMEOUT_MS": "3600000",
     "NODE_OPTIONS": "--use-env-proxy",
-    "AI_ORCHESTRA_PYTHON": "/Users/yoshihiko/.local/share/mise/installs/python/latest/bin/python3"
+    "AI_ORCHESTRA_PYTHON": "/Users/yoshihiko/.local/share/mise/installs/python/latest/bin/python3",
+    "CLAUDE_CODE_ENABLE_FUNCTION_HOOKS": "1"
   },
   "permissions": {
     "allow": [
@@ -82,9 +83,16 @@
     "swift-lsp@claude-plugins-official": true,
     "notion@claude-plugins-official": true,
     "codex@openai-codex": true,
-    "mattpocock-skills@mattpocock": true
+    "mattpocock-skills@mattpocock": true,
+    "turn-receipt@dotfiles": true
   },
   "extraKnownMarketplaces": {
+    "dotfiles": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles/claude/plugins"
+      }
+    },
     "mattpocock": {
       "source": {
         "source": "github",

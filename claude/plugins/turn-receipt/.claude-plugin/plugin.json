@@ -1,0 +1,13 @@
+{
+  "name": "turn-receipt",
+  "description": "Keeps a per-turn tally of edits, runs, curls and destructive commands and shows it on the turn footer; any non-read-only Bash counts as a run, a claim (English or Japanese) with no run flags the spinner, a destructive Bash unfolds its tool group, and an edit-without-run turn suggests running the tests.",
+  "author": {
+    "name": "yoshihiko555"
+  },
+  "license": "MIT",
+  "keywords": [
+    "claude-code-plugin",
+    "claude-mod",
+    "function-hooks"
+  ]
+}
