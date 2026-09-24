@@ -57,7 +57,10 @@ local function run(prompt, continue_conv)
     return
   end
   if vim.fn.executable("claude") ~= 1 then
-    vim.notify("claude コマンドが見つかりません（PATH を確認してください）", vim.log.levels.ERROR)
+    vim.notify(
+      "claude コマンドが見つかりません（PATH を確認してください）",
+      vim.log.levels.ERROR
+    )
     return
   end
 
@@ -98,39 +101,43 @@ local function run(prompt, continue_conv)
   )
 
   state.running = true
-  vim.system(cmd, {
-    -- プロンプトがフラグとして誤解釈されないよう stdin で渡す
-    stdin = prompt,
-    cwd = vim.fn.stdpath("config"),
-    timeout = TIMEOUT_MS,
-  }, vim.schedule_wrap(function(out)
-    state.running = false
-    timer:stop()
-    timer:close()
+  vim.system(
+    cmd,
+    {
+      -- プロンプトがフラグとして誤解釈されないよう stdin で渡す
+      stdin = prompt,
+      cwd = vim.fn.stdpath("config"),
+      timeout = TIMEOUT_MS,
+    },
+    vim.schedule_wrap(function(out)
+      state.running = false
+      timer:stop()
+      timer:close()
 
-    local lines
-    if out.code == 0 then
-      lines = vim.list_extend(vim.list_slice(header), vim.split(vim.trim(out.stdout or ""), "\n"))
-      state.last_answer = lines
-    else
-      lines = vim.list_extend(vim.list_slice(header), {
-        "**エラー** (exit code: " .. tostring(out.code) .. ")",
-        "",
-      })
-      vim.list_extend(lines, vim.split(vim.trim(out.stderr or "") .. "\n" .. vim.trim(out.stdout or ""), "\n"))
-      if out.signal == 15 then
-        table.insert(lines, "")
-        table.insert(lines, "タイムアウトした可能性があります（" .. TIMEOUT_MS / 1000 .. "秒）")
+      local lines
+      if out.code == 0 then
+        lines = vim.list_extend(vim.list_slice(header), vim.split(vim.trim(out.stdout or ""), "\n"))
+        state.last_answer = lines
+      else
+        lines = vim.list_extend(vim.list_slice(header), {
+          "**エラー** (exit code: " .. tostring(out.code) .. ")",
+          "",
+        })
+        vim.list_extend(lines, vim.split(vim.trim(out.stderr or "") .. "\n" .. vim.trim(out.stdout or ""), "\n"))
+        if out.signal == 15 then
+          table.insert(lines, "")
+          table.insert(lines, "タイムアウトした可能性があります（" .. TIMEOUT_MS / 1000 .. "秒）")
+        end
       end
-    end
 
-    if vim.api.nvim_buf_is_valid(buf) then
-      set_lines(buf, lines)
-    else
-      -- 待っている間にウィンドウを閉じていた場合
-      vim.notify("Claude の回答を受信しました（<leader>al で表示）", vim.log.levels.INFO)
-    end
-  end))
+      if vim.api.nvim_buf_is_valid(buf) then
+        set_lines(buf, lines)
+      else
+        -- 待っている間にウィンドウを閉じていた場合
+        vim.notify("Claude の回答を受信しました（<leader>al で表示）", vim.log.levels.INFO)
+      end
+    end)
+  )
 end
 
 -- 1行入力用フロート。<CR> で送信、ノーマルモードの <Esc> でキャンセル

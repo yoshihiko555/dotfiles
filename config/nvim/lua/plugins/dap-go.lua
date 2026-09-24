@@ -4,8 +4,22 @@ return {
   -- Go の FileType 時に共通操作と UI を読み込み、その後 Go 構成を登録する。
   dependencies = { "rcarriga/nvim-dap-ui" },
   keys = {
-    { "<leader>dt", function() require("dap-go").debug_test() end, ft = "go", desc = "付近のGoテストをデバッグ" },
-    { "<leader>dT", function() require("dap-go").debug_last_test() end, ft = "go", desc = "前回のGoテストを再実行" },
+    {
+      "<leader>dt",
+      function()
+        require("dap-go").debug_test()
+      end,
+      ft = "go",
+      desc = "付近のGoテストをデバッグ",
+    },
+    {
+      "<leader>dT",
+      function()
+        require("dap-go").debug_last_test()
+      end,
+      ft = "go",
+      desc = "前回のGoテストを再実行",
+    },
   },
   opts = {
     -- 成功したテストの t.Log も DAP REPL で確認する。

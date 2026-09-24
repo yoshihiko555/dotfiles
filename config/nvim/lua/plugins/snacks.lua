@@ -24,9 +24,13 @@ return {
     vim.api.nvim_create_autocmd({ "BufLeave", "WinLeave", "FocusLost", "ExitPre" }, {
       group = group,
       callback = function(ev)
-        if ev.event == "FocusLost" then focused = false end
+        if ev.event == "FocusLost" then
+          focused = false
+        end
         local buf = ev.buf
-        if vim.bo[buf].filetype ~= "image" or hidden_images[buf] then return end
+        if vim.bo[buf].filetype ~= "image" or hidden_images[buf] then
+          return
+        end
         hidden_images[buf] = true
         snacks.image.placement.clean(buf)
         snacks.image.terminal.request({ a = "d", d = "a" })
@@ -36,12 +40,20 @@ return {
     vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter", "FocusGained" }, {
       group = group,
       callback = function(ev)
-        if ev.event == "FocusGained" then focused = true end
+        if ev.event == "FocusGained" then
+          focused = true
+        end
         local buf = ev.buf
         vim.schedule(function()
-          if not focused or not hidden_images[buf] then return end
-          if not vim.api.nvim_buf_is_valid(buf) or vim.api.nvim_get_current_buf() ~= buf then return end
-          if vim.bo[buf].filetype ~= "image" then return end
+          if not focused or not hidden_images[buf] then
+            return
+          end
+          if not vim.api.nvim_buf_is_valid(buf) or vim.api.nvim_get_current_buf() ~= buf then
+            return
+          end
+          if vim.bo[buf].filetype ~= "image" then
+            return
+          end
           hidden_images[buf] = nil
           snacks.image.buf.attach(buf)
         end)
@@ -49,7 +61,9 @@ return {
     })
     vim.api.nvim_create_autocmd("BufWipeout", {
       group = group,
-      callback = function(ev) hidden_images[ev.buf] = nil end,
+      callback = function(ev)
+        hidden_images[ev.buf] = nil
+      end,
     })
 
     -- 緊急用（他ペインの画像も消える）

@@ -12,19 +12,33 @@ return {
     -- パーサーのインストール（インストール済みならスキップ）
     require("nvim-treesitter").install({
       -- 対象言語
-      "go", "gomod", "gosum",
-      "typescript", "tsx", "javascript", "jsdoc",
+      "go",
+      "gomod",
+      "gosum",
+      "typescript",
+      "tsx",
+      "javascript",
+      "jsdoc",
       "python",
-      "lua", "luadoc",
+      "lua",
+      "luadoc",
       -- 設定ファイル系
-      "json", "yaml", "toml",
-      "markdown", "markdown_inline",
-      "html", "css",
+      "json",
+      "yaml",
+      "toml",
+      "markdown",
+      "markdown_inline",
+      "html",
+      "css",
       "bash",
       -- Neovim設定用
-      "vim", "vimdoc", "query",
+      "vim",
+      "vimdoc",
+      "query",
       -- その他
-      "regex", "diff", "xml",
+      "regex",
+      "diff",
+      "xml",
       "c", -- treesitter自体が依存
     })
 
@@ -34,7 +48,9 @@ return {
       pattern = "*",
       callback = function(ev)
         local ok = pcall(vim.treesitter.start, ev.buf)
-        if not ok then return end
+        if not ok then
+          return
+        end
         vim.bo[ev.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
       end,
     })

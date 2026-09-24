@@ -31,7 +31,9 @@ return {
             return tab.tabnr == 1 and ("󰓩 " .. label) or label
           end,
           tabs_color = { active = "lualine_a_terminal", inactive = "lualine_b_terminal" },
-          cond = function() return vim.fn.tabpagenr("$") > 1 end,
+          cond = function()
+            return vim.fn.tabpagenr("$") > 1
+          end,
         },
       },
     },

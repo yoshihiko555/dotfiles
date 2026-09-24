@@ -32,7 +32,9 @@ map("n", "<leader>to", "<cmd>tabonly<cr>", "ほかのタブをすべて閉じる
 -- t:tabname は lualine の tabs 表示が読む（:LualineRenameTab と同じ変数）
 map("n", "<leader>tr", function()
   vim.ui.input({ prompt = "タブ名（空で解除）: ", default = vim.t.tabname or "" }, function(name)
-    if name == nil then return end
+    if name == nil then
+      return
+    end
     vim.t.tabname = name ~= "" and name or nil
     vim.cmd.redrawtabline()
   end)
