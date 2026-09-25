@@ -240,7 +240,7 @@ Ghostty に切り替える。tmux + baton への復帰経路は WezTerm のま�
 | --- | --- |
 | WezTerm の herdr 用キーバインド 23 個 | Ghostty で全部再現。takt の Shift+Enter も既定挙動で通る |
 | 見た目（フォント・太さ・背景画像） | 画素比較で一致（下記） |
-| 長時間メモリ（Claude Code 起因のリーク報告） | 1.3.1 に修正が入っている。1 時間で 191→202MB。**1 週間観測を継続** |
+| 長時間メモリ（Claude Code 起因のリーク報告） | 1.3.1 に修正が入っている。1 時間で 191→202MB。約 44 時間の観測でも横ばいで採用確定（下記「観測」） |
 | 他ホストとの統一 | macOS のみでよいと判断（Ghostty に Windows 版はないが WSL2 は対象外） |
 
 **Ghostty 側の実装（`config/ghostty/`）**
@@ -284,12 +284,19 @@ Ghostty に切り替える。tmux + baton への復帰経路は WezTerm のま�
 - 文字・絵文字ピッカー（`Ctrl+Shift+U`）— macOS の Ctrl+Cmd+Space で代替
 - 設定の自動リロード — `Cmd+R` 手動
 
-**観測（1 週間、2026-09-30 まで）**
+**観測（2026-09-23〜09-25、予定の 09-30 を待たず終了）**
 
-launchd agent `local.ghostty-mem-watch`（`~/Library/LaunchAgents/`、dotfiles 管理外・一時的）が 10 分ごとに
-Ghostty の RSS を `~/.local/state/ghostty-mem.log` へ追記する。通常負荷（Claude ペイン 4〜8 本）で
-1 日以内に 2GB を超えたら移行を取り消す。観測が終わったら
-`launchctl bootout gui/$(id -u)/local.ghostty-mem-watch && rm ~/Library/LaunchAgents/local.ghostty-mem-watch.plist`。
+一時的な launchd agent（dotfiles 管理外）で Ghostty の RSS を 10 分ごとに記録した。判定基準は
+「通常負荷（Claude ペイン 4〜8 本）で 1 日以内に 2GB 超なら移行を取り消す」。
+
+- 同一プロセスを約 44 時間連続で観測し、RSS は 184〜200MB で横ばい（ピーク 395MB、その後ベースラインへ戻る）。
+  単調増加は見られない
+- RSS は圧縮されたページを含まないため、終了時に `top` の実使用量も取った: 465MB（うち圧縮 132MB）
+- 移行前の WezTerm は 2 日間で 316MB → 2.4GB に増えていた。同じ 2 日の時点で Ghostty は約 1/5〜1/10
+- 観測中の Claude ペイン数は記録していない（終了時点は 2 本）
+
+リークがあれば WezTerm と同様に 2 日以内に表れ、44 時間で表れない速度のリークは 1 日 2GB に届かないため、
+1 週間待たずに**採用確定**とした。agent とログは撤去済み。
 
 **ロールバック**: WezTerm で herdr を起動してアタッチするだけ（WezTerm 自体は tmux で起動する）。
 Ghostty 側の設定は残しても害はない。
@@ -420,7 +427,8 @@ activation に持ち込むうえ herdr 自体が採否判断前であるため�
   → [ADR-20260924-0003](ADR-20260924-0003-agent-notifications-to-herdr.md) で hook / notify からの呼び出しをやめて解消
 - screenpipe を再開するか（再開すると通知バナーが出なくなる。Hermes の自動化提案の入力が止まっている）
 - リモート（iPhone からの接続）の使い勝手の評価（接続自体は確認済み。描画バグは上記）
-- Ghostty のメモリ長期観測の結果（2026-09-30 まで。上記「常用端末を WezTerm から Ghostty へ移行する」）
+- Ghostty のメモリ長期観測の結果
+  → 2026-09-25 に終了。RSS は 200MB 前後で横ばい、2GB に届かず採用確定（上記「常用端末を WezTerm から Ghostty へ移行する」の「観測」）
 - Cmd+クリックのリンクオープンは Ghostty でも効かない（2026-09-23 実測）。ただし WezTerm でも同じで、
   herdr がマウスを捕捉しているため端末に届かない（`mouse_capture = false` は上記「できないこと」のとおり
   副作用が大きく無効化済み）。端末の差ではなく herdr の制約
