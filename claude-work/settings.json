@@ -29,7 +29,6 @@
       "/private/tmp/claude-501"
     ]
   },
-  "model": "opus[1m]",
   "hooks": {
     "Stop": [
       {
@@ -56,5 +55,6 @@
   "autoDreamEnabled": true,
   "skipWorkflowUsageWarning": true,
   "theme": "dark-ansi",
-  "autoContinueAtUsageLimit": true
+  "autoContinueAtUsageLimit": true,
+  "model": "opus"
 }
