@@ -141,6 +141,7 @@ dotfiles/
 |---|---|---|
 | **配線・回収** | `task status` | home-manager の配線と mutable 設定の drift を確認 |
 | | `task adopt-settings` | アプリが変更した mutable 設定を repo へ回収 |
+| | `task apply-settings` | repo の mutable 設定を実機へ反映（switch でも自動実行） |
 | | `task btt-export` | BetterTouchTool の現在のトリガー設定を repo へ回収 |
 | | `task btt-apply` | repo の BetterTouchTool 設定を実機へ適用（switch でも自動実行） |
 | | `task loupedeck-export` | Loupedeck Live のプロファイルを `config/loupedeck/`（git 管理外）へ回収 |
@@ -186,7 +187,7 @@ dotfiles/
 
 | 対象 | 方式 | 回収 |
 |---|---|---|
-| Claude Code / Antigravity CLI の JSON | 実ファイルとして生成し、前回 switch 時の参照コピーとの差分で drift を検知 | `task adopt-settings` |
+| Claude Code / Antigravity CLI の JSON | 実ファイルとして生成し、前回反映時の参照コピーとの差分で drift を検知。反映は switch か `task apply-settings` | `task adopt-settings` |
 | BetterTouchTool | 設定実体が SQLite のため、switch 時に AppleScript API で repo の JSON を流し込む（追加・更新のみ） | `task btt-export` |
 | Loupedeck Live | switch 時にプロファイルを適用。drift 中は警告のみでスキップ | `task loupedeck-export` |
 | herdr プラグイン | switch 時に `config/herdr/plugins.txt` の固定リストへ揃える | — |
@@ -194,6 +195,7 @@ dotfiles/
 ```bash
 task status                  # 配線と drift の確認
 task adopt-settings TARGET=all
+task apply-settings TARGET=all   # repo の JSON を switch なしで実機へ反映
 ```
 
 ## 🤖 AI エージェント資産

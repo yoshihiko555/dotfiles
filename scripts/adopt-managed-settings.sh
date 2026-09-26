@@ -35,9 +35,13 @@ adopt() {
   local label="$1"
   local current="$2"
   local source="$3"
-  # 第4引数: public リポジトリへ載せないトップレベルキー（空白区切り・省略可）。
+  # 第4引数: 参照コピー（前回反映時の内容）。回収後は実ファイルに合わせ、
+  # 「実ファイルの変更は repo へ取り込み済み」と記録する。これがないと回収後に
+  # repo を編集した場合、switch / apply-settings が drift と判定して止まる。
+  local reference="$4"
+  # 第5引数: public リポジトリへ載せないトップレベルキー（空白区切り・省略可）。
   # 会社用の autoMode / modelSettings は Claude Code が自動生成するため回収しない。
-  local exclude="${4:-}"
+  local exclude="${5:-}"
   local staged
 
   if [[ ! -f "$current" ]]; then
@@ -65,48 +69,70 @@ adopt() {
   if json_equal "$staged" "$source"; then
     echo "$label: drift なし"
     rm -f "$staged"
+    sync_reference "$current" "$reference"
     return 0
   fi
 
   install -m 0644 "$staged" "$source"
   rm -f "$staged"
+  sync_reference "$current" "$reference"
   adopted=1
   echo "$label: repo へ回収しました -> ${source#"$repo_root"/}"
 }
 
+# 参照コピーを実ファイルに合わせる（除外キーも含めて丸ごと。比較時は除外される）
+sync_reference() {
+  local current="$1"
+  local reference="$2"
+
+  if [[ -f "$reference" ]] && json_equal "$current" "$reference"; then
+    return 0
+  fi
+  mkdir -p "${reference%/*}"
+  install -m 0644 "$current" "$reference"
+  echo "  参照コピーを更新しました -> $reference"
+}
+
+adopt_claude() {
+  adopt claude \
+    "$HOME/.claude/settings.json" \
+    "$repo_root/claude/settings.json" \
+    "$HOME/.claude/.settings.json.nix-managed"
+}
+
+adopt_claude_work() {
+  adopt claude-work \
+    "$HOME/.claude-work/settings.json" \
+    "$repo_root/claude-work/settings.json" \
+    "$HOME/.claude-work/.settings.json.nix-managed" \
+    "autoMode modelSettings"
+}
+
+adopt_antigravity_settings() {
+  adopt antigravity-settings \
+    "$HOME/.gemini/antigravity-cli/settings.json" \
+    "$repo_root/gemini/antigravity-cli/settings.json" \
+    "$HOME/.gemini/antigravity-cli/.settings.json.nix-managed"
+}
+
+adopt_antigravity_keybindings() {
+  adopt antigravity-keybindings \
+    "$HOME/.gemini/antigravity-cli/keybindings.json" \
+    "$repo_root/gemini/antigravity-cli/keybindings.json" \
+    "$HOME/.gemini/antigravity-cli/.keybindings.json.nix-managed"
+}
+
 case "$target" in
   all)
-    adopt claude "$HOME/.claude/settings.json" "$repo_root/claude/settings.json"
-    adopt claude-work \
-      "$HOME/.claude-work/settings.json" \
-      "$repo_root/claude-work/settings.json" \
-      "autoMode modelSettings"
-    adopt antigravity-settings \
-      "$HOME/.gemini/antigravity-cli/settings.json" \
-      "$repo_root/gemini/antigravity-cli/settings.json"
-    adopt antigravity-keybindings \
-      "$HOME/.gemini/antigravity-cli/keybindings.json" \
-      "$repo_root/gemini/antigravity-cli/keybindings.json"
+    adopt_claude
+    adopt_claude_work
+    adopt_antigravity_settings
+    adopt_antigravity_keybindings
     ;;
-  claude)
-    adopt claude "$HOME/.claude/settings.json" "$repo_root/claude/settings.json"
-    ;;
-  claude-work)
-    adopt claude-work \
-      "$HOME/.claude-work/settings.json" \
-      "$repo_root/claude-work/settings.json" \
-      "autoMode modelSettings"
-    ;;
-  antigravity-settings)
-    adopt antigravity-settings \
-      "$HOME/.gemini/antigravity-cli/settings.json" \
-      "$repo_root/gemini/antigravity-cli/settings.json"
-    ;;
-  antigravity-keybindings)
-    adopt antigravity-keybindings \
-      "$HOME/.gemini/antigravity-cli/keybindings.json" \
-      "$repo_root/gemini/antigravity-cli/keybindings.json"
-    ;;
+  claude) adopt_claude ;;
+  claude-work) adopt_claude_work ;;
+  antigravity-settings) adopt_antigravity_settings ;;
+  antigravity-keybindings) adopt_antigravity_keybindings ;;
   *)
     echo "usage: task adopt-settings TARGET=all|claude|claude-work|antigravity-settings|antigravity-keybindings" >&2
     exit 2
@@ -114,5 +140,5 @@ case "$target" in
 esac
 
 if [[ "$adopted" -eq 1 ]]; then
-  echo "内容を確認後、nix-darwin を switch すると参照コピーが更新されます。"
+  echo "内容を確認してコミットしてください（参照コピーは更新済みのため、repo を編集後に task apply-settings / switch で反映できます）。"
 fi

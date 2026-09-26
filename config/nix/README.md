@@ -83,7 +83,7 @@ config/nix/
 | 系統 | 対象 | 仕組み | 反映タイミング |
 |---|---|---|---|
 | **symlink**（原則） | 大半の dotfiles | `mkOutOfStoreSymlink` で store 経由リポジトリの実体を指す | **repo を編集した時点で即反映**。switch が要るのは配線を増減したときだけ |
-| **mutable 実ファイル**（例外） | `~/.claude/settings.json`、`~/.claude-work/settings.json`、Antigravity の `settings.json` / `keybindings.json` の 4 件（`hosts/macbook/dotfiles.nix` で定義） | activation が repo からコピーし、`.nix-managed` の参照コピーも保存 | **switch のときだけ**。drift 検出中は上書きを拒否 |
+| **mutable 実ファイル**（例外） | `~/.claude/settings.json`、`~/.claude-work/settings.json`、Antigravity の `settings.json` / `keybindings.json` の 4 件（`hosts/macbook/dotfiles.nix` で定義） | activation が `scripts/apply-managed-settings.sh` を呼び、repo からコピーして `.nix-managed` の参照コピーも保存 | **switch か `task apply-settings` のとき**。drift 検出中は上書きを拒否 |
 | **snapshot**（例外） | BetterTouchTool（`config/btt/triggers.json`）、Loupedeck Live（`config/loupedeck/Loupedeck50/`。私的な設定を含むため `.gitignore` 済みのローカルコピー） | activation が `scripts/btt-sync.sh` / `scripts/loupedeck-sync.sh` を呼び、参照コピー（ハッシュ）と実機が一致するときだけ流し込む | **switch のときだけ**。drift 検出中は上書きを拒否。回収は `task btt-export` / `task loupedeck-export` |
 | **パッケージ** | CLI / cask | `flake.lock` でバージョンを固定 | **switch のときだけ** |
 
@@ -95,10 +95,12 @@ symlink を実ファイルに置換してしまう問題への対処。正は re
   ③ `task status`
 - 判定は `jq -S` で正規化してから比較するため、キー順の入れ替えは drift 扱いにしない
 - 回収は `task adopt-settings TARGET=claude|claude-work|antigravity-settings|antigravity-keybindings|all`。
-  home 側の内容を repo へ取り込み、`git diff` で確認してから commit → switch
+  home 側の内容を repo へ取り込み、参照コピーも実ファイルに合わせる（取り込み済みと記録する）。
+  `git diff` で確認してから commit。そのあと repo を編集しても drift 扱いにならず、
+  `task apply-settings`（sudo 不要）か switch で反映できる
 - `claude-work` だけは `autoMode` を除外する。Claude Code が起動環境から自動生成するキーで、
   社内情報を含みうるため public な当リポジトリには載せない。比較・回収の両方から外し、
-  switch 時は実ファイル側の値を引き継ぐ（`manage_mutable_json` の第 5 引数）
+  switch 時は実ファイル側の値を引き継ぐ（`scripts/apply-managed-settings.sh` の `manage_mutable_json` の第 5 引数）
 
 > **ロールバック（`nxrb`）が戻すのはパッケージと配線だけ。**
 > symlink 先も activation の参照元も `dotfilesDir` の生パスであり store のスナップショットではないため、

@@ -11,6 +11,16 @@ tasks:
     cmds:
       - bash "{{.ROOT_DIR}}/scripts/adopt-managed-settings.sh" "{{.TARGET}}"
 
+  apply-settings:
+    desc: repo の mutable 設定を実機へ反映（switch でも自動実行される。drift 中は上書きしない）
+    summary: |
+      使い方: TARGET=all|claude|claude-work|antigravity-settings|antigravity-keybindings
+      例: task apply-settings TARGET=claude-work
+    vars:
+      TARGET: '{{default "all" .TARGET}}'
+    cmds:
+      - bash "{{.ROOT_DIR}}/scripts/apply-managed-settings.sh" "{{.TARGET}}"
+
   btt-export:
     desc: BetterTouchTool の現在のトリガー設定を repo へ回収
     cmds:

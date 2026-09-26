@@ -8,7 +8,7 @@ current="$claude_dir/settings.json"
 reference="$claude_dir/.settings.json.nix-managed"
 
 # 会社アカウント（~/.claude-work）の autoMode / modelSettings は repo で管理しないため
-# 比較から除く。除外キーは dotfiles.nix の manage_mutable_json の preserve 引数と揃える。
+# 比較から除く。除外キーは scripts/apply-managed-settings.sh の manage_mutable_json の preserve 引数と揃える。
 case "$claude_dir" in
   */.claude-work)
     label="claude-work"
