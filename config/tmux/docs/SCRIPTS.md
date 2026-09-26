@@ -10,7 +10,7 @@
 | tmux-status-right | 現役 | `statusbar.conf` | baton サマリ + プロジェクト + 日時を右側に描画 |
 | tmux-save-pane-snapshot | 現役 | `keybinds.conf`, `pane-mode.conf` | ペイン内容のスナップショット保存 |
 | tmux-split-layout | 現役 | `keybinds.conf` (`Prefix+2-8`) | 現在ウィンドウを N ペインに分割 |
-| tmux-launch-claude-work | 現役 | Loupedeck (tmux キーバインドなし) | 全ペインで会社用 Claude Code を auto モード起動 |
+| tmux-launch-claude-work | 現役 | Loupedeck (tmux キーバインドなし) | 全ペインで会社用 Claude Code を一斉起動 |
 | tmux-open-pane-snapshot | 現役 | `copy-mode.conf` | 保存済みスナップショットを popup で表示 |
 | ~~tmux-list-claude-panes~~ | 撤去 | - | baton に移行済み |
 | ~~tmux-popup-claude-dashboard~~ | 撤去 | - | baton に移行済み |
@@ -101,8 +101,8 @@ fzf でセッション選択 → 削除。プレビューにウィンドウ一�
 
 ### tmux-launch-claude-work `[pane_id]`
 
-対象ウィンドウの全ペインへ `ccw --permission-mode auto` を送り、会社用 Claude Code を
-auto モードで一斉起動する。`Prefix+8` で 8 分割したあと Loupedeck のボタンで押す想定で、
+対象ウィンドウの全ペインへ `ccw` を送り、会社用 Claude Code を一斉起動する。
+起動モードは `claude-work/settings.json` の `permissions.defaultMode`（現在は `auto`）に従う。`Prefix+8` で 8 分割したあと Loupedeck のボタンで押す想定で、
 tmux 側のキーバインドは意図的に持たない。
 
 - 省略時は最後に操作した tmux クライアントのアクティブウィンドウが対象。

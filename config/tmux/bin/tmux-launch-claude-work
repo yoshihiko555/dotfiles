@@ -1,5 +1,5 @@
 #!/bin/bash
-# tmux-launch-claude-work — 現在ウィンドウの全ペインで会社用 Claude Code を auto モード起動
+# tmux-launch-claude-work — 現在ウィンドウの全ペインで会社用 Claude Code を起動
 #
 # Usage: tmux-launch-claude-work [pane_id]
 #
@@ -12,14 +12,14 @@
 #   動いているペインはスキップし、二重起動を防ぐ。
 #
 # 環境変数:
-#   TMUX_CLAUDE_WORK_CMD  送るコマンド (既定: ccw --permission-mode auto)
+#   TMUX_CLAUDE_WORK_CMD  送るコマンド (既定: ccw。起動モードは settings.json の defaultMode に従う)
 #   TMUX_LAUNCH_SOCKET    tmux -L のソケット名 (検証用。実運用では未設定)
 
 set -euo pipefail
 
 export PATH="/opt/homebrew/bin:/etc/profiles/per-user/${USER:-$(id -un)}/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 
-launch_cmd="${TMUX_CLAUDE_WORK_CMD:-ccw --permission-mode auto}"
+launch_cmd="${TMUX_CLAUDE_WORK_CMD:-ccw}"
 
 tmux_cmd=(tmux)
 if [ -n "${TMUX_LAUNCH_SOCKET:-}" ]; then

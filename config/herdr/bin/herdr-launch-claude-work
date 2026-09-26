@@ -1,10 +1,10 @@
 #!/bin/bash
-# herdr-launch-claude-work — 現在のタブの全ペインで会社用 Claude Code を auto モード起動する
+# herdr-launch-claude-work — 現在のタブの全ペインで会社用 Claude Code を起動する
 #
 # Usage: herdr-launch-claude-work [pane_id]
 #   Loupedeck の「アプリを実行」から呼ぶ想定（キーバインドは無い）。省略時はフォーカス中のタブが対象。
 #   TTY も HERDR_PANE_ID も無い状態で動くため、PATH を先頭で補う。
-#   HERDR_CLAUDE_WORK_CMD で送るコマンドを変えられる（既定: ccw --permission-mode auto）。
+#   HERDR_CLAUDE_WORK_CMD で送るコマンドを変えられる（既定: ccw。起動モードは settings.json の defaultMode に従う）。
 #
 # シェルが待機しているペイン（フォアグラウンドがシェル 1 つだけ）にだけ送り、結果は herdr の通知に出す。
 
@@ -34,7 +34,7 @@ for cmd in herdr jq; do
   fi
 done
 
-launch_cmd="${HERDR_CLAUDE_WORK_CMD:-ccw --permission-mode auto}"
+launch_cmd="${HERDR_CLAUDE_WORK_CMD:-ccw}"
 
 # 対象ペインの解決 (このペインが属するタブを起動対象にする)
 PANE_ID="${1:-}"
