@@ -15,3 +15,4 @@ dotfiles リポジトリ全体の意思決定のうち、**設定領域をまた
 | [ADR-20260924-0003](ADR-20260924-0003-agent-notifications-to-herdr.md) | エージェントの完了・承認待ちの通知を herdr に一本化する | 採用 | 2026-09-24 | 二重通知の解消/herdr はフォーカスを見て抑止する | Terminal/Notification |
 | [ADR-20260924-0004](ADR-20260924-0004-formatters-linters-via-nix.md) | フォーマッタ・リンタの基準版を Nix に集約する | 採用 | 2026-09-24 | CLI は Nix の境界どおり/エディタ・hook で同じ版を使う | Editor/Nix |
 | [ADR-20260925-0005](ADR-20260925-0005-lsp-via-nix.md) | LSP サーバーを mason から Nix に移す | 採用 | 2026-09-25 | 版の固定と再現/Claude Code の LSP プラグインと共有 | Editor/Nix |
+| [ADR-20260928-0006](ADR-20260928-0006-zsh-startup-tuning.md) | 対話 zsh を /bin/zsh に揃え、起動処理をキャッシュと遅延ロードで短縮する | 採用 | 2026-09-28 | 補完キャッシュの取り合い解消/外部コマンドの起動削減/安全な範囲だけ遅延 | Shell/Performance |
