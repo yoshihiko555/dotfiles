@@ -89,6 +89,9 @@ in
       # Zed の外部フォーマッタ用。ローカルの prettier を優先し、無ければ上の prettier を使う
       (pkgs.callPackage ../../packages/prettier-local-first.nix { })
 
+      # 対話 zsh のレイテンシ計測（nixpkgs 未収録）
+      (pkgs.callPackage ../../packages/zsh-bench.nix { })
+
       # nixpkgs 未収録だが公式 flake あり（npm -g から移行）
       # Phase 2 のツール呼び出しでプロセスが落ちる問題にパッチを当てている（上記 let）
       taktPackage
