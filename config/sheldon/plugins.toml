@@ -2,15 +2,28 @@ shell = "zsh"
 
 [plugins]
 
+# プロンプト表示後に読み込む仕組み。defer テンプレートを使うプラグインより前に置く
+[plugins.zsh-defer]
+github = "romkatv/zsh-defer"
+
 [plugins.zsh-completions]
 github = "zsh-users/zsh-completions"
 
-# compinit を fzf-tab より前に実行する
+# compinit を fzf-tab より前に実行する。
+# compinit はプロンプト表示後に遅延実行するため、それまでの compdef 呼び出しは溜めて後で再実行する
 [plugins.compinit]
-inline = 'autoload -Uz compinit && compinit'
+inline = '''
+autoload -Uz compinit
+typeset -ga _deferred_compdefs
+compdef() { local -a a; a=("${(q)@}"); _deferred_compdefs+=("${(j: :)a}") }
+zsh-defer -dmp -c 'compinit -i
+  local _c; for _c in $_deferred_compdefs; do eval "compdef $_c"; done
+  unset _deferred_compdefs'
+'''
 
 [plugins.zsh-autosuggestions]
 github = "zsh-users/zsh-autosuggestions"
+apply = ["defer-autosuggest"]
 
 # zsh-autosuggestions のスタイル設定（背景なし）
 [plugins.autosuggestions-config]
@@ -20,6 +33,7 @@ ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#7aa2f7'
 
 [plugins.fzf-tab]
 github = "Aloxaf/fzf-tab"
+apply = ["defer"]
 
 # fzf-tab UI カスタマイズ（tmux popup）
 [plugins.fzf-tab-config]
@@ -44,3 +58,9 @@ zstyle ':fzf-tab:*' show-group brief
 # パディング
 zstyle ':fzf-tab:*' fzf-pad 4
 '''
+
+# 遅延読み込み。precmd / chpwd フックの再実行と再描画は副作用が出るため止める（-dmp）
+[templates]
+defer = "{% for file in files %}zsh-defer -dmp source \"{{ file }}\"\n{% endfor %}"
+# 自動提案は precmd で開始するため、読み込み直後に開始処理を直接呼ぶ
+defer-autosuggest = "{% for file in files %}zsh-defer -dmp -c 'source \"{{ file }}\" && _zsh_autosuggest_start'\n{% endfor %}"
