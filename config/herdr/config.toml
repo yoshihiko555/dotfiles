@@ -31,7 +31,7 @@ toggle_sidebar = "prefix+d"
 [[keys.command]]
 key = "prefix+g"
 type = "popup"
-command = "zsh -ic 'lazygit'"
+command = "/bin/zsh -ic 'lazygit'"
 width = "80%"
 height = "80%"
 
@@ -39,7 +39,7 @@ height = "80%"
 [[keys.command]]
 key = "prefix+t"
 type = "popup"
-command = "zsh"
+command = "/bin/zsh"
 width = "80%"
 height = "80%"
 
