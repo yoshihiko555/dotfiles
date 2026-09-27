@@ -30,8 +30,22 @@ stty -ixon
 
 # mise は .zshenv で activate 済み
 # sheldon (compinit を含む) を先にロード
+# 生成スクリプトはキャッシュし、plugins.toml / plugins.lock か sheldon 本体が更新されたら作り直す
 if command -v sheldon >/dev/null 2>&1; then
-  eval "$(sheldon source)"
+  _sheldon_cache=${XDG_CACHE_HOME:-$HOME/.cache}/zsh/sheldon-${${commands[sheldon]:A:h:h}:t}.zsh
+  if [[ ! -r $_sheldon_cache ||
+    ~/.config/sheldon/plugins.toml -nt $_sheldon_cache ||
+    ~/.local/share/sheldon/plugins.lock -nt $_sheldon_cache ]]; then
+    mkdir -p ${_sheldon_cache:h}
+    if sheldon source >| $_sheldon_cache.tmp; then
+      rm -f ${_sheldon_cache:h}/sheldon-*.zsh(N)
+      mv -f $_sheldon_cache.tmp $_sheldon_cache
+    else
+      rm -f $_sheldon_cache.tmp
+    fi
+  fi
+  [[ -r $_sheldon_cache ]] && source $_sheldon_cache
+  unset _sheldon_cache
 fi
 
 if command -v zoxide >/dev/null 2>&1; then
