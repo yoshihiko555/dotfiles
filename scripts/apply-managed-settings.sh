@@ -104,6 +104,16 @@ manage_mutable_json() {
       "$source" "$target" >"$generated"
   fi
 
+  # 実体・参照コピーとも生成内容と一致していれば書き込まない
+  if [[ -f "$target" && ! -L "$target" && -f "$reference" ]] \
+    && cmp -s "$generated" "$target" && cmp -s "$generated" "$reference"; then
+    if [[ "$generated" != "$source" ]]; then
+      rm -f "$generated"
+    fi
+    echo "$label: 変更なし"
+    return 0
+  fi
+
   if [[ -L "$target" ]]; then
     rm -f "$target"
   fi
@@ -113,7 +123,7 @@ manage_mutable_json() {
   if [[ "$generated" != "$source" ]]; then
     rm -f "$generated"
   fi
-  echo "$label: 反映しました -> $target"
+  echo "$label: 更新しました -> $target"
 }
 
 apply_claude() {
