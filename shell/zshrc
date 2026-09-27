@@ -38,8 +38,16 @@ if command -v zoxide >/dev/null 2>&1; then
   eval "$(zoxide init zsh)"
 fi
 
+# init の出力は brew の版ごとにキャッシュし、起動のたびに bash を立ち上げない
 if command -v git-gtr >/dev/null 2>&1; then
-  eval "$(git gtr init zsh)"
+  _gtr_cache=${XDG_CACHE_HOME:-$HOME/.cache}/zsh/gtr-init-${${commands[git-gtr]:A:h:h}:t}.zsh
+  if [[ ! -r $_gtr_cache ]]; then
+    mkdir -p ${_gtr_cache:h}
+    rm -f ${_gtr_cache:h}/gtr-init-*.zsh(N)
+    git gtr init zsh >| $_gtr_cache.tmp && mv -f $_gtr_cache.tmp $_gtr_cache
+  fi
+  [[ -r $_gtr_cache ]] && source $_gtr_cache
+  unset _gtr_cache
 fi
 
 # Starship prompt
