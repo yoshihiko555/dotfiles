@@ -54,6 +54,8 @@ fi
 if command -v starship >/dev/null 2>&1; then
   export STARSHIP_CONFIG=~/.config/starship/starship.toml
   eval "$(starship init zsh)"
+  # right_format 未使用なので、毎プロンプトの starship --right 呼び出しを止める
+  RPROMPT=''
 fi
 
 # fzf tmux フローティング連携（display-popup で表示）
