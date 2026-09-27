@@ -10,6 +10,7 @@
   #   nix-builders.nix — hermes を distributed build のビルドマシンに登録（Phase 4-1）
   #   nix-gc.nix — Nix store の自動 GC（hermes と同一設定）
   #   remote-access.nix — モバイルからの接続に使う Tailscale
+  #   zsh.nix — /etc/zshrc の compinit / promptinit を止める（sheldon に一本化）
   imports = [
     ./homebrew.nix
     ./packages.nix
@@ -19,6 +20,7 @@
     ./nix-builders.nix
     ./nix-gc.nix
     ./remote-access.nix
+    ./zsh.nix
   ];
 
   hostSpec = {
