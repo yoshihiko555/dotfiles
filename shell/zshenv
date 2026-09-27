@@ -20,8 +20,35 @@ if [[ -f /opt/homebrew/bin/brew && "$PATH:" != /opt/homebrew/bin:/opt/homebrew/s
 fi
 
 # mise (runtime version manager)
+# activate の出力は mise の実体（Nix store のパス）ごとにキャッシュし、設定を変えたら作り直す。
+# 冒頭の PATH 等を戻す行は生成時の環境を埋め込むため、フック定義以降だけを保存する
 if command -v mise &>/dev/null; then
-  eval "$(mise activate zsh)"
+  _mise_cache=${XDG_CACHE_HOME:-$HOME/.cache}/zsh/mise-activate-${${commands[mise]:A:h:h}:t}.zsh
+  if [[ ! -r $_mise_cache || ~/.config/mise/config.toml -nt $_mise_cache ]]; then
+    mkdir -p ${_mise_cache:h}
+    rm -f ${_mise_cache:h}/mise-activate-*.zsh(N)
+    mise activate zsh | sed -n '/^autoload -Uz add-zsh-hook$/,$p' >| $_mise_cache.tmp
+    if [[ -s $_mise_cache.tmp ]]; then
+      mv -f $_mise_cache.tmp $_mise_cache
+    else
+      rm -f $_mise_cache.tmp
+    fi
+  fi
+  if [[ -r $_mise_cache ]]; then
+    source $_mise_cache
+  else
+    eval "$(mise activate zsh)"
+  fi
+  unset _mise_cache
+
+  # Enter ごとの hook-env は直前に mise を実行したときだけにする（cd 時の切り替えは従来どおり）
+  if (( $+functions[_mise_hook_precmd] )); then
+    add-zsh-hook -d precmd _mise_hook_precmd
+    _mise_preexec_mark() { [[ $1 == mise || $1 == mise\ * ]] && _mise_ran=1 }
+    _mise_precmd_if_ran() { (( ${_mise_ran:-0} )) && { _mise_ran=0; _mise_hook --reason precmd; } }
+    add-zsh-hook preexec _mise_preexec_mark
+    add-zsh-hook precmd _mise_precmd_if_ran
+  fi
 fi
 
 # ユーザーローカルの実行ファイル（claude code の native install 等）
