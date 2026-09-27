@@ -65,9 +65,25 @@ if command -v git-gtr >/dev/null 2>&1; then
 fi
 
 # Starship prompt
+# init の出力は starship の実体ごとにキャッシュする。init 内の PROMPT2 も starship を起動するため、
+# 値を展開して保存し、starship.toml を変えたら作り直す
 if command -v starship >/dev/null 2>&1; then
   export STARSHIP_CONFIG=~/.config/starship/starship.toml
-  eval "$(starship init zsh)"
+  _starship_cache=${XDG_CACHE_HOME:-$HOME/.cache}/zsh/starship-init-${${commands[starship]:A:h:h}:t}.zsh
+  if [[ ! -r $_starship_cache || $STARSHIP_CONFIG -nt $_starship_cache ]]; then
+    mkdir -p ${_starship_cache:h}
+    if {
+      starship init zsh | grep -v '^PROMPT2='
+      print -r -- "PROMPT2=${(qq)$(starship prompt --continuation)}"
+    } >| $_starship_cache.tmp; then
+      rm -f ${_starship_cache:h}/starship-init-*.zsh(N)
+      mv -f $_starship_cache.tmp $_starship_cache
+    else
+      rm -f $_starship_cache.tmp
+    fi
+  fi
+  [[ -r $_starship_cache ]] && source $_starship_cache
+  unset _starship_cache
   # right_format 未使用なので、毎プロンプトの starship --right 呼び出しを止める
   RPROMPT=''
 fi
