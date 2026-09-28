@@ -63,13 +63,20 @@ alias cc-r='claude --resume'
 # [mcp_servers.computer-use] が存在するマシンでのみ無効化フラグを付ける。
 # table が無いマシン（Mac mini 等）で -c を付けると transport の無い不完全な
 # table が生成され、起動時に "invalid transport" で落ちる。
+# herdr 内では HERDR_* を Codex のシェルツールにも渡す必要がある。
+# core に HERDR_* を追加できないため、この起動に限り all + allowlist を使う。
+# core の変数と config.toml の set で指定した連携変数だけを維持する。
 # 判定は起動ごとに行いたいので alias ではなく関数にしてある。
 codex() {
-  if grep -q '^\[mcp_servers\.computer-use\]' "${CODEX_HOME:-$HOME/.codex}/config.toml" 2>/dev/null; then
-    command codex -c mcp_servers.computer-use.enabled=false "$@"
-  else
-    command codex "$@"
+  local -a codex_args=()
+  if [[ ${HERDR_ENV:-} == 1 ]]; then
+    codex_args+=(-c shell_environment_policy.inherit=all)
+    codex_args+=(-c 'shell_environment_policy.include_only=["PATH","SHELL","TMPDIR","TEMP","TMP","HOME","LANG","LC_ALL","LC_CTYPE","LOGNAME","USER","HERDR_*","BROWSER_USE_*","NODE_REPL_*"]')
   fi
+  if grep -q '^\[mcp_servers\.computer-use\]' "${CODEX_HOME:-$HOME/.codex}/config.toml" 2>/dev/null; then
+    codex_args+=(-c mcp_servers.computer-use.enabled=false)
+  fi
+  command codex "${codex_args[@]}" "$@"
 }
 alias cx='codex'
 
