@@ -12,6 +12,16 @@ return {
       zsh = { "zsh" },
     }
 
+    -- nvim-lint は cwd で `go env GOMOD` が見つからないとファイル単体を golangci-lint に渡す。
+    -- go.work だけがあるモノレポの直下で開くとこれに当たり、同じパッケージの別ファイルの定義を
+    -- undefined と誤検出するため、常にパッケージのディレクトリを渡す。
+    local golangcilint = lint.linters.golangcilint
+    if type(golangcilint) == "table" and type(golangcilint.args) == "table" then
+      golangcilint.args[#golangcilint.args] = function()
+        return vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":p:h")
+      end
+    end
+
     -- eslint はプロジェクトにローカル版と設定があるときだけ使う（ADR-20260924-0004）
     local eslint_fts = {
       javascript = true,
