@@ -218,6 +218,7 @@ def plain_text(parts)
 end
 
 # 完了・中断したプロジェクトは候補に出しても意味がないので除外する。
+# 親プロジェクト（サブアイテムあり）にはタスクを紐づけない運用なので、これも除外する。
 def fetch_projects
   projects = []
   cursor = nil
@@ -234,7 +235,8 @@ def fetch_projects
       "filter" =&gt; {
         "and" =&gt; [
           { "property" =&gt; "ステータス", "status" =&gt; { "does_not_equal" =&gt; "完了" } },
-          { "property" =&gt; "ステータス", "status" =&gt; { "does_not_equal" =&gt; "中断" } }
+          { "property" =&gt; "ステータス", "status" =&gt; { "does_not_equal" =&gt; "中断" } },
+          { "property" =&gt; "サブアイテム", "relation" =&gt; { "is_empty" =&gt; true } }
         ]
       }
     }
