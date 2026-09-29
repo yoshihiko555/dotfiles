@@ -201,7 +201,12 @@ dotfiles には共通操作と nvim-dap-go の汎用構成を置く。
 ```
 
 末尾カンマのない標準 JSON で書く。VS Code のすべての機能が動くわけではない。
-Learno の Docker 接続は別タスクで、Delve の起動方式と接続方法、ソースパス対応を検証する。
+
+launch.json の Go 構成は、`.env` など Go 以外のバッファからも `dc` で選べる。
+最初の実行時に nvim-dap-go を読み込み、そのアダプターへ渡す。
+`"request": "attach"`・`"mode": "remote"` で `port` を持つ構成は、コンテナ等で待ち受けている
+Delve の `host` / `port` へ直接つなぐ。ローカルの `dlv` は起動しないので、未導入でも接続できる。
+Learno の Docker 接続の手順は Learno の README（デバッグ起動の節）を参照。
 
 ## トラブルシュート
 
@@ -219,8 +224,10 @@ Learno の Docker 接続は別タスクで、Delve の起動方式と接続方�
   同じ症状ならプロセス一覧で対象を特定して終了する。別のデバッグセッションを一括終了しない。
   手元で Developer Tools Access を認証した後は、起動・実停止・終了が成功した。
   Developer mode は無効のままで動作しており、恒久的な権限設定の変更は行っていない。
-- **構成が出ない**: Go ファイルを開き、`:set filetype?` と `:pwd` を確認。
+- **構成が出ない**: `Debug Package` 等の汎用構成は Go バッファでだけ出る。
+  Go ファイルを開き、`:set filetype?` と `:pwd` を確認。
   `:lua print(vim.inspect(require('dap').configurations.go))` で汎用構成を確認できる。
+  launch.json の構成はバッファを問わないので、出なければ `:pwd` がプロジェクトのルートか確認する。
 - **outside main module**: 作業ディレクトリとファイルの実体が同じモジュール内か確認。
   macOS の `/tmp` は `/private/tmp` へのリンクなので、一時サンプルへは `cd -P` で移動してから起動する。
 - **付近のテストが見つからない**: `*_test.go` のテスト関数内へ移動。

@@ -123,6 +123,23 @@ return {
     local dap, dapui = require("dap"), require("dapui")
     dapui.setup()
 
+    -- nvim-dap-go は Go の FileType で読み込むため、Go 以外のバッファで launch.json の
+    -- Go 構成を選ぶとアダプターが無い。最初の実行時に読み込み、dap-go.lua が登録した
+    -- 本来のアダプターへ渡す。dap-go は dap-ui に依存するので、この仮関数が先に登録される。
+    local function load_go_adapter(callback, config)
+      require("lazy").load({ plugins = { "nvim-dap-go" } })
+      local adapter = dap.adapters.go
+      if type(adapter) ~= "function" or adapter == load_go_adapter then
+        vim.notify(
+          "nvim-dap-go を読み込めませんでした。:Lazy で状態を確認してください。",
+          vim.log.levels.ERROR
+        )
+        return
+      end
+      adapter(callback, config)
+    end
+    dap.adapters.go = dap.adapters.go or load_go_adapter
+
     dap.listeners.after.event_initialized["dotfiles-dapui"] = function()
       dapui.open()
     end

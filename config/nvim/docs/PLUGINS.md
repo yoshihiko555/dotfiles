@@ -61,6 +61,7 @@
 
 Delve 実行ファイルは MacBook の Nix `hosts/macbook/packages.nix`、Go は mise で管理する。
 共通キーで dap-ui と依存を読み込み、Go バッファでは dap-go が UI 初期化後に構成を登録する。
+Go 以外のバッファで launch.json の Go 構成を実行したときも、その時点で dap-go を読み込む。
 導入・操作・実機検証の状況は [デバッグガイド](cheatsheet/debugging.md) を参照。
 
 ## tmux 連携
