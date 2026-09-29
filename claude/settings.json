@@ -8,7 +8,6 @@
     "CLAUDE_CODE_ENABLE_FUNCTION_HOOKS": "1"
   },
   "permissions": {
-    "defaultMode": "auto",
     "allow": [
       "Read",
       "Search",
@@ -38,6 +37,7 @@
       "Bash(*password*)",
       "Read(.env)"
     ],
+    "defaultMode": "auto",
     "additionalDirectories": [
       "/tmp/claude-501",
       "/private/tmp/claude-501"
@@ -86,7 +86,8 @@
     "notion@claude-plugins-official": true,
     "codex@openai-codex": true,
     "mattpocock-skills@mattpocock": true,
-    "turn-receipt@dotfiles": true
+    "turn-receipt@dotfiles": true,
+    "lua-lsp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "dotfiles": {
