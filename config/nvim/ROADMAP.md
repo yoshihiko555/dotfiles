@@ -138,10 +138,12 @@ IDE級の最終ピース。ブレークポイント・ステップ実行をNeovi
 | nvim-dap-ui | デバッグUI | 必須 | 導入済み・実セッションの自動開閉と式評価を確認 |
 | nvim-nio | dap-ui の非同期処理 | 必須（依存） | 導入済み |
 | nvim-dap-go | Go用DAP設定 | 必須 | 導入済み・パッケージ / 付近 / 前回テストを確認 |
+| nvim-dap-python | Python用DAP設定 | 必須 | 導入済み・headless で実停止を確認 |
+| （js-debug 直結） | TypeScript / JavaScript | 必須 | 導入済み・Next.js の server-side で実停止を確認 |
 | neotest | テストランナー統合 | 推奨 | 後続 |
 | toggleterm.nvim | ターミナル統合（テスト実行用） | 推奨 | 後続 |
 
-共通操作は `<leader>d`。Delve は MacBook の Nix、Go は mise で管理する。
+共通操作は `<leader>d`。Delve・debugpy・js-debug は MacBook の Nix、ランタイムは mise で管理する。
 導入と再現手順、確認状況は [デバッグガイド](docs/cheatsheet/debugging.md) を参照。
 
 ### 検証ポイント
@@ -154,7 +156,7 @@ IDE級の最終ピース。ブレークポイント・ステップ実行をNeovi
 - [x] 実セッションでの UI 自動開閉・手動終了・再デバッグ
 - [x] 実端末の Normal / Visual 式評価・REPL、新規 Neovim の実行 / テストの初回停止
 - [ ] Learno の Docker 接続（プロジェクト側設定・API リクエストでの停止）
-- [ ] TypeScript / Python のデバッグ
+- [x] TypeScript / Python のデバッグ（headless で実停止。実端末の確認と Nix switch は未完了）
 
 ---
 
@@ -193,7 +195,7 @@ IDE級の最終ピース。ブレークポイント・ステップ実行をNeovi
 - [x] Phase 2: 編集効率
 - [x] Phase 3: Git連携
 - [x] Phase 4: LSP強化 & コード品質
-- [ ] Phase 5: デバッグ & テスト（共通基盤・Go 実デバッグ検証済み、Nix switch と後続対象は未完了）
+- [ ] Phase 5: デバッグ & テスト（共通基盤・Go 実デバッグ・Python / TS の headless 実停止は検証済み、Nix switch と後続対象は未完了）
 - [ ] Phase 6: 仕上げ
 
 ## 運用メモ
@@ -204,4 +206,6 @@ IDE級の最終ピース。ブレークポイント・ステップ実行をNeovi
   Developer Tools Access 認証後、Go の実停止・変数・ステップ・3 種類のテスト・UI を検証済み。
   検証時は Nix store の Delve を PATH に追加。恒久適用の Nix switch は sudo 認証待ち。
   Learno の Docker 接続、他言語、neotest 等は後続に分ける。
+- （2026-09-29）Python（nvim-dap-python + debugpy）と TypeScript / Next.js（js-debug 直結）を追加。
+  言語ごとのアダプター登録を `dap.lua` の `opts` に集約（ADR-20260929-014）。Java は必要になるまで見送り。
 - （2026-07-30）AI質問フロート（`lua/ai/claude.lua`、自作）を導入。`<leader>aa` で claude -p (sonnet) に一問一答

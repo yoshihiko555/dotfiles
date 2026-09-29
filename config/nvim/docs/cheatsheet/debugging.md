@@ -1,17 +1,22 @@
-# Go のデバッグ
+# デバッグ（Go / Python / TypeScript）
 
-Leader は `Space`。共通操作は `lua/plugins/dap.lua`、Go の構成は `dap-go.lua`。
+Leader は `Space`。共通操作は `lua/plugins/dap.lua`、言語ごとの構成は
+`dap-go.lua` / `dap-python.lua` / `dap-js.lua`。
 Go のファイルを開くと Delve 用の構成が登録される。Delve が未導入でも通常編集はでき、
 デバッグ開始時に Nix の適用を案内する。
+「最初の実行」から「外部依存のない練習用サンプル」までは Go の手順。
+Python と TypeScript / JavaScript は [Python](#python) と [TypeScript / JavaScript](#typescript--javascriptnextjs) を参照。
 
 ## 導入と反映
 
-- Neovim のプラグイン: nvim-dap / nvim-dap-ui / nvim-nio / nvim-dap-go。
+- Neovim のプラグイン: nvim-dap / nvim-dap-ui / nvim-nio / nvim-dap-go / nvim-dap-python。
+  TypeScript / JavaScript は専用プラグインを使わない。
   解決したコミットは `config/nvim/lazy-lock.json` に固定する。
-- デバッガーの実行ファイル: Nix の `delve`。今回の利用ホストである
-  `config/nix/hosts/macbook/packages.nix` に置く。Go ランタイムは引き続き mise。
-- Mason / Homebrew / `go install` では Delve を追加しない。2 台以上で使い始めたときに
-  Nix の共通層へ移す。
+- デバッガーの実行ファイル: Nix の `delve`（`dlv`）、`python3Packages.debugpy`（`debugpy-adapter`）、
+  `vscode-js-debug`（`js-debug`）。今回の利用ホストである
+  `config/nix/hosts/macbook/packages.nix` に置く。Go / Python / Node のランタイムは引き続き mise。
+- Mason / Homebrew / `go install` / `pip` / `npm` ではデバッガーを追加しない。
+  2 台以上で使い始めたときに Nix の共通層へ移す。
 
 MacBook でパッケージを適用する手順（dotfiles のルートから実行）:
 
@@ -23,11 +28,11 @@ sudo darwin-rebuild switch --flake ./config/nix#macbook --option builders ''
 ```
 
 `--option builders ''` は手元だけでビルドする指定。
-適用後、新しいシェルで `command -v dlv` と `dlv version` を確認し、Neovim を再起動する。
-プラグインがまだ入っていなければ、必要な 4 件だけをインストールする:
+適用後、新しいシェルで `command -v dlv debugpy-adapter js-debug` と `dlv version` を確認し、
+Neovim を再起動する。プラグインがまだ入っていなければ、必要な 5 件だけをインストールする:
 
 ```vim
-:Lazy install nvim-dap nvim-dap-ui nvim-nio nvim-dap-go
+:Lazy install nvim-dap nvim-dap-ui nvim-nio nvim-dap-go nvim-dap-python
 ```
 
 インストール後も Neovim を再起動する。
@@ -41,9 +46,12 @@ Neovim 内で利用する実体も確認する:
 :lua print(vim.fn.system({'dlv', 'version'}))
 :lua print(vim.fn.exepath('go'))
 :lua print(vim.fn.system({'go', 'version'}))
+:lua print(vim.fn.exepath('debugpy-adapter'))
+:lua print(vim.fn.exepath('js-debug'))
 ```
 
 `dlv` が Nix の profile または `/nix/store/...-delve-.../bin/dlv` に解決されること。
+`debugpy-adapter` / `js-debug` も同様に Nix の profile を指すこと。
 Mason の `bin` 等が先に見つかる場合は二重管理を解消する。
 プロジェクトごとの mise 設定や `go.mod` の toolchain により、使われる Go は変わりうる。
 プロジェクトのルートで Neovim を起動し、その中でもバージョンを確認する。
@@ -169,9 +177,52 @@ nvim main.go
 7. `main.go` に戻り `dT` で再停止。`dq` で終了し、通常編集に戻れるか確認する。
 8. 新しい Neovim で 1 と 6 を再実行する。`Space → d` を待つと日本語のキー案内が出る。
 
+## Python
+
+`.py` を開くと nvim-dap-python が読み込まれ、`file` / `file:args` などの汎用構成が登録される。
+止めたい行で `db` → `dc` → `file` で現在のファイルを実行する。操作キーは Go と同じ。
+
+- アダプターは Nix の `debugpy-adapter`。プロジェクト側に debugpy を入れる必要はない。
+- 実行する Python は `VIRTUAL_ENV` → `CONDA_PREFIX` → プロジェクトの `.venv` / `venv` の順で探す。
+  見つからなければ debugpy と同じ Nix の Python 3.14 で動き、プロジェクトの依存は読めない。
+  uv などで venv を作るか、launch.json に `"python": "<パス>"` を指定する。
+- 作業ディレクトリの `.env` は環境変数として渡される（VSCode の Python 拡張と同じ既定）。
+- コンテナ等で `python -m debugpy --listen 0.0.0.0:5678` しているプロセスへは、
+  `"request": "attach"` と `"connect": { "host": "127.0.0.1", "port": 5678 }` でつなぐ。ローカルの debugpy は起動しない。
+- テスト用のキー（Go の `dt` / `dT` 相当）は割り当てていない。
+
+## TypeScript / JavaScript（Next.js）
+
+専用プラグインは使わず、Nix の `js-debug`（VSCode の JavaScript デバッガー）へ直接つなぐ。
+汎用構成は登録しないので、プロジェクトの launch.json から選ぶ。対応する `type` は次のとおり。
+
+| type | 扱い |
+|------|------|
+| `pwa-node` / `node` | Node の launch / attach。`node` は `pwa-node` に読み替える |
+| `node-terminal` | `sh -c "<command>"` を起動する `pwa-node` に読み替える。子プロセスの Node へは自動で接続する |
+| `pwa-chrome` / `chrome` | ブラウザ側。登録のみで未検証。起動するのは Google Chrome（Dia ではない） |
+
+[Next.js 公式の launch.json](https://nextjs.org/docs/app/guides/debugging) の server-side 構成はそのまま使える:
+
+```json
+{
+  "name": "Next.js: debug server-side",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "npm run dev -- --inspect"
+}
+```
+
+- `cwd` を省略すると Neovim の作業ディレクトリ（launch.json を読んだルート）で実行する。
+  Turborepo などでアプリがサブディレクトリにあるときは `"cwd": "${workspaceFolder}/apps/web"` を足す。
+- コマンドの出力は端末ではなく DAP REPL に出る。サーバーを止めるときは `dq`。
+- VSCode 固有の `serverReadyAction`（ブラウザの自動起動）は無視される。
+- 別の端末で `npm run dev -- --inspect` 済みなら、`{ "type": "pwa-node", "request": "attach", "port": 9229 }` でもつなげる。
+- `.ts` はソースマップで元の行に止まる。Node 23.6 以降なら `node`（`pwa-node`）で `.ts` を直接起動できる。
+
 ## プロジェクト設定との境界
 
-dotfiles には共通操作と nvim-dap-go の汎用構成を置く。
+dotfiles には共通操作と言語プラグインの汎用構成を置く。
 接続先・ポート・コンテナ側のパス・`substitutePath` はプロジェクトが持つ。
 
 採用版の nvim-dap は、**新規セッションの選択時**に
@@ -202,8 +253,8 @@ dotfiles には共通操作と nvim-dap-go の汎用構成を置く。
 
 末尾カンマのない標準 JSON で書く。VS Code のすべての機能が動くわけではない。
 
-launch.json の Go 構成は、`.env` など Go 以外のバッファからも `dc` で選べる。
-最初の実行時に nvim-dap-go を読み込み、そのアダプターへ渡す。
+launch.json の構成は、`.env` など別の言語のバッファからも `dc` で選べる。
+最初の実行時にその言語のプラグイン（nvim-dap-go / nvim-dap-python）を読み込み、そのアダプターへ渡す。
 `"request": "attach"`・`"mode": "remote"` で `port` を持つ構成は、コンテナ等で待ち受けている
 Delve の `host` / `port` へ直接つなぐ。ローカルの `dlv` は起動しないので、未導入でも接続できる。
 Learno の Docker 接続の手順は Learno の README（デバッグ起動の節）を参照。
@@ -214,6 +265,12 @@ Learno の Docker 接続の手順は Learno の README（デバッグ起動の�
   一時的な確認なら、同じ固定版を `nix shell` で使える（恒久適用ではない）:
   `nix shell ./config/nix#darwinConfigurations.macbook.pkgs.delve --command nvim`。
   Neovim 起動後に対象プロジェクトへ `:cd` して Go ファイルを開く。
+- **`Executable debugpy-adapter` / `js-debug` not found**: Nix switch 後に Neovim を再起動し、
+  `exepath('debugpy-adapter')` / `exepath('js-debug')` を確認する。Delve と同じく `nix shell` でも一時確認できる。
+- **Python で import に失敗する**: プロジェクトの venv が使われていない。`:pwd` がプロジェクトのルートか、
+  `.venv` があるかを確認する。無ければ launch.json に `python` を指定する。
+- **`node-terminal` が起動直後に終わる**: REPL の `Process exited with code ...` を確認する。
+  `npm` の 254 は package.json が見つからない（作業ディレクトリ違い）。`cwd` を指定する。
 - **Go と Delve の非互換**: プロジェクト内の `go version` と `dlv version` を確認。
   互換性チェックを無効にせず、プロジェクトの Go toolchain または Delve の対象版を見直す。
   無関係な flake 入力は一括更新しない。
@@ -284,8 +341,26 @@ dap-ui / nio の README に独立した最小 Neovim 版の指定はなく、上
 - **残件**: Nix switch 後、通常の PATH から `dlv` が見つかることを新しいシェル・Neovim で確認する。
   Learno の Docker 接続、他言語、後続プラグインは今回の実セッション検証に含めない。
 
+## 検証記録（2026-09-29、Python / TypeScript）
+
+| 対象 | 版 / 状態 |
+|------|-----------|
+| debugpy | Nix の 1.8.21（Python 3.14） |
+| js-debug | Nix の vscode-js-debug 1.117.0（内包の Node 24） |
+| nvim-dap-python | `1808458eba2b` |
+| Node / Next.js | mise の Node 25.2.1、Next.js 16.2.11（Turbopack） |
+
+headless の Neovim で、`.env` バッファから次の実停止を確認した。Nix switch 前のため、検証プロセスだけ
+Nix store の debugpy と js-debug を PATH に追加した。詳細は [ADR-20260929-014](../adr/ADR-20260929-014.md)。
+
+- Python: `debugpy` の launch（`.venv` の Python と `.env` の値を確認）、venv 無しでの Nix の Python。
+- TypeScript / JavaScript: `pwa-node` の `.js`、`node` の `.ts`、`node --inspect` への attach、`node-terminal`。
+- Next.js: 公式の server-side 構成で `app/api/hello/route.ts` に実停止し、続行後にレスポンスを確認。
+- **未確認**: 実端末での UI・REPL、`chrome` / `pwa-chrome`、Next.js の full stack 構成、Python の attach。
+
 ## 後続タスク
 
 - Learno: Docker 内の Delve 起動確認、接続先・ソースパスの対応設定、API リクエストでの実停止確認。
-- TypeScript / Next.js と Python のアダプター。
+- Nix switch 後、`debugpy-adapter` / `js-debug` が通常の PATH から見つかることを確認する。
+- Java（jdtls の整備が先）。必要になったら追加する。
 - neotest、toggleterm.nvim、変数のインライン表示、ブレークポイントの永続化。

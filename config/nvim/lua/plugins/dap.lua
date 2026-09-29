@@ -1,7 +1,8 @@
 return {
   "rcarriga/nvim-dap-ui",
-  -- 共通キー、または dap-go の依存として、最初の実行前に UI も初期化する。
-  dependencies = { "mfussenegger/nvim-dap", "nvim-neotest/nvim-nio" },
+  -- 共通キー、または言語プラグインの依存として、最初の実行前に UI も初期化する。
+  -- nvim-dap-python の rockspec が nvim-dap を起動時読み込みで追加するため、遅延を明示する。
+  dependencies = { { "mfussenegger/nvim-dap", lazy = true }, "nvim-neotest/nvim-nio" },
   keys = {
     {
       "<leader>db",
@@ -119,26 +120,41 @@ return {
       desc = "ステップアウト",
     },
   },
-  config = function()
+  -- 言語ごとの登録は dap-<言語>.lua がここへ追加する。
+  opts = {
+    -- 構成の type → アダプターを登録する言語プラグイン
+    adapter_plugins = {},
+    -- 構成の type → アダプター（プラグインを使わない言語）
+    adapters = {},
+  },
+  config = function(_, opts)
     local dap, dapui = require("dap"), require("dapui")
     dapui.setup()
 
-    -- nvim-dap-go は Go の FileType で読み込むため、Go 以外のバッファで launch.json の
-    -- Go 構成を選ぶとアダプターが無い。最初の実行時に読み込み、dap-go.lua が登録した
-    -- 本来のアダプターへ渡す。dap-go は dap-ui に依存するので、この仮関数が先に登録される。
-    local function load_go_adapter(callback, config)
-      require("lazy").load({ plugins = { "nvim-dap-go" } })
-      local adapter = dap.adapters.go
-      if type(adapter) ~= "function" or adapter == load_go_adapter then
-        vim.notify(
-          "nvim-dap-go を読み込めませんでした。:Lazy で状態を確認してください。",
-          vim.log.levels.ERROR
-        )
-        return
-      end
-      adapter(callback, config)
+    for adapter_type, adapter in pairs(opts.adapters) do
+      dap.adapters[adapter_type] = adapter
     end
-    dap.adapters.go = dap.adapters.go or load_go_adapter
+
+    -- 言語プラグインは FileType で読み込むため、他のバッファで launch.json の構成を選ぶと
+    -- アダプターが無い。最初の実行時に読み込み、プラグインが登録したアダプターへ渡す。
+    -- 言語プラグインは dap-ui に依存するので、この仮関数が先に登録される。
+    for adapter_type, plugin in pairs(opts.adapter_plugins) do
+      local function load_adapter(callback, config)
+        require("lazy").load({ plugins = { plugin } })
+        local adapter = dap.adapters[adapter_type]
+        if adapter == nil or adapter == load_adapter then
+          vim.notify(
+            plugin .. " を読み込めませんでした。:Lazy で状態を確認してください。",
+            vim.log.levels.ERROR
+          )
+        elseif type(adapter) == "function" then
+          adapter(callback, config)
+        else
+          callback(adapter)
+        end
+      end
+      dap.adapters[adapter_type] = dap.adapters[adapter_type] or load_adapter
+    end
 
     dap.listeners.after.event_initialized["dotfiles-dapui"] = function()
       dapui.open()
