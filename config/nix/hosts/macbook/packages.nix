@@ -25,9 +25,14 @@ in
   # ADR-0004 ルール 3 に従い、まず使うホストの hosts/macbook/ に置く。
   # hermes でも使い始めたら home/packages.nix（共通層）へ昇格する。
 
-  # agy（antigravity-cli）は unfree ライセンスのため個別に許可する。
+  # agy（antigravity-cli）と pen-cli は unfree ライセンスのため個別に許可する。
   # allowUnfree = true の全面許可はせず、対象を明示する。
-  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "antigravity-cli" ];
+  nixpkgs.config.allowUnfreePredicate =
+    pkg:
+    builtins.elem (lib.getName pkg) [
+      "antigravity-cli"
+      "pen-cli"
+    ];
 
   home-manager.users.${config.hostSpec.username}.home.packages =
     (with pkgs; [
@@ -93,6 +98,10 @@ in
 
       # 対話 zsh のレイテンシ計測（nixpkgs 未収録）
       (pkgs.callPackage ../../packages/zsh-bench.nix { })
+
+      # Pencil 公式 CLI（pen / pencil）。.pen のヘッドレス編集に使う（nixpkgs 未収録）。
+      # プロプライエタリのため改変・再配布しない前提で組んでいる（packages/pen-cli/default.nix）
+      (pkgs.callPackage ../../packages/pen-cli { })
 
       # nixpkgs 未収録だが公式 flake あり（npm -g から移行）
       # Phase 2 のツール呼び出しでプロセスが落ちる問題にパッチを当てている（上記 let）

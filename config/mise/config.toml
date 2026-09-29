@@ -1,12 +1,15 @@
 [tools]
 go = "latest"
 node = "25"
+# グローバルの Python はツール実行用。ライブラリは pip install せず、各プロジェクトの .venv（uv）に入れる
 python = "latest"
 rust = "latest"
 uv = "latest"
 
 # mermaid を Unicode art に変換する CLI（nvim の mermaid-nvim が stdin 経由で呼ぶ）
 "pipx:termaid" = "latest"
+# pre-commit フレームワーク（learno 等の git フックが使う）
+"pipx:pre-commit" = "latest"
 
 [settings]
 # pipx backend の実体を uv に寄せる（pipx 本体を別途入れずに済む）
