@@ -50,6 +50,7 @@ Neovim 内で利用する実体も確認する:
 
 `dlv` が Nix の profile または `/nix/store/...-delve-.../bin/dlv` に解決されること。
 `debugpy-adapter` / `js-debug` も同様に Nix の profile を指すこと。
+mise の Python に `pip` で入れた debugpy が先に見つかる場合は、`python -m pip uninstall debugpy` で外す。
 Mason の `bin` 等が先に見つかる場合は二重管理を解消する。
 プロジェクトごとの mise 設定や `go.mod` の toolchain により、使われる Go は変わりうる。
 プロジェクトのルートで Neovim を起動し、その中でもバージョンを確認する。
