@@ -216,6 +216,7 @@ nvim main.go
 - `cwd` を省略すると Neovim の作業ディレクトリ（launch.json を読んだルート）で実行する。
   Turborepo などでアプリがサブディレクトリにあるときは `"cwd": "${workspaceFolder}/apps/web"` を足す。
 - コマンドの出力は端末ではなく DAP REPL に出る。サーバーを止めるときは `dq`。
+  js-debug は子プロセスごとに子セッションを作るが、`dq` は親から全体を終了する。
 - VSCode 固有の `serverReadyAction`（ブラウザの自動起動）は無視される。
 - 別の端末で `npm run dev -- --inspect` 済みなら、`{ "type": "pwa-node", "request": "attach", "port": 9229 }` でもつなげる。
 - `.ts` はソースマップで元の行に止まる。Node 23.6 以降なら `node`（`pwa-node`）で `.ts` を直接起動できる。
@@ -356,7 +357,9 @@ Nix store の debugpy と js-debug を PATH に追加した。詳細は [ADR-202
 - Python: `debugpy` の launch（`.venv` の Python と `.env` の値を確認）、venv 無しでの Nix の Python。
 - TypeScript / JavaScript: `pwa-node` の `.js`、`node` の `.ts`、`node --inspect` への attach、`node-terminal`。
 - Next.js: 公式の server-side 構成で `app/api/hello/route.ts` に実停止し、続行後にレスポンスを確認。
-- **未確認**: 実端末での UI・REPL、`chrome` / `pwa-chrome`、Next.js の full stack 構成、Python の attach。
+- `dq`: ブレークポイントで止まった後でも、1 回で全セッションと Next.js のプロセスが終了することを確認した。
+- **未確認**: 実端末での UI・REPL、`chrome` / `pwa-chrome`、Next.js の full stack 構成、Python の attach、
+  3.14 以外の Python の venv。
 
 ## 後続タスク
 

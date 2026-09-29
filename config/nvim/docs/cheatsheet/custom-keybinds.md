@@ -134,7 +134,7 @@ which-key により `<leader>w` が `Ctrl+w` のプロキシとして動作:
 | `<leader>do` | Normal | ステップオーバー |
 | `<leader>di` | Normal | ステップイン |
 | `<leader>dO` | Normal | ステップアウト |
-| `<leader>dq` | Normal | デバッグ終了・UI を閉じる |
+| `<leader>dq` | Normal | デバッグ終了（子セッションも含む）・UI を閉じる |
 | `<leader>du` | Normal | デバッグ UI を切り替え |
 | `<leader>de` | Normal / Visual | カーソル位置 / 選択範囲の式を評価 |
 | `<leader>dr` | Normal | DAP REPL を切り替え |

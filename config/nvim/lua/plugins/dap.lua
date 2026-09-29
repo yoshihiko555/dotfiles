@@ -53,7 +53,8 @@ return {
     {
       "<leader>dq",
       function()
-        require("dap").terminate()
+        -- 子セッション（js-debug が接続した子プロセス等）で止まっていても、親から全体を終了する。
+        require("dap").terminate({ hierarchy = true })
         -- 起動・接続失敗で終了イベントが届かない場合も閉じられる。
         require("dapui").close()
       end,
