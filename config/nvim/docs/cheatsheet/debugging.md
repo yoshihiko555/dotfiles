@@ -18,16 +18,14 @@ Python と TypeScript / JavaScript は [Python](#python) と [TypeScript / JavaS
 - Mason / Homebrew / `go install` / `pip` / `npm` ではデバッガーを追加しない。
   2 台以上で使い始めたときに Nix の共通層へ移す。
 
-MacBook でパッケージを適用する手順（dotfiles のルートから実行）:
+MacBook でパッケージを適用する手順:
 
 ```sh
-task nix-fmt
-task nix-check
-nix build ./config/nix#darwinConfigurations.macbook.system --no-link --option builders ''
-sudo darwin-rebuild switch --flake ./config/nix#macbook --option builders ''
+nxbd   # ビルドして現行世代との差分を確認（sudo 不要）
+nxs    # 適用（switch）
 ```
 
-`--option builders ''` は手元だけでビルドする指定。
+日常運用のコマンドは [Nix のチートシート](../../../nix/docs/CHEATSHEET.md) を参照。
 適用後、新しいシェルで `command -v dlv debugpy-adapter js-debug` と `dlv version` を確認し、
 Neovim を再起動する。プラグインがまだ入っていなければ、必要な 5 件だけをインストールする:
 
