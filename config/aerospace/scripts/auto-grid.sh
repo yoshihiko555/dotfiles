@@ -37,46 +37,46 @@ while IFS='|' read -r wid ws window_layout; do
 done <<<"$windows"
 [[ -n "$workspace" ]] || exit 0
 
+# list-windows の出力は画面上の順番ではない。ID 順に並べ直してペアを確定する。
 ids=()
 while IFS='|' read -r wid ws window_layout; do
   [[ "$ws" == "$workspace" ]] || continue
   # Aqua Voice など、タイル管理外のオーバーレイは数に含めない。
   [[ "$window_layout" != floating ]] || continue
+  [[ "$wid" =~ ^[0-9]+$ ]] || exit 0
   ids+=("$wid")
-done <<<"$windows"
+done < <(sort -t '|' -k1,1n <<<"$windows")
 
 count=${#ids[@]}
 ((count >= 2 && count <= 4)) || exit 0
 
-"$AEROSPACE" flatten-workspace-tree --workspace "$workspace"
-"$AEROSPACE" layout --workspace "$workspace" --root h_tiles
-
-# list-windows の出力は画面上の順番ではない。ID 順に並べ直してペアを確定する。
-ordered=$("$AEROSPACE" list-windows --workspace "$workspace" --format '%{window-id}|%{window-layout}' | sort -t '|' -k1,1n)
-ids=()
-while IFS='|' read -r wid window_layout; do
-  [[ "$window_layout" != floating ]] || continue
-  [[ "$wid" =~ ^[0-9]+$ ]] || exit 0
-  ids+=("$wid")
-done <<<"$ordered"
-# 整列途中に枚数が変わった場合、古い ID で join しない。
-((${#ids[@]} == count)) || exit 0
+# 整列コマンドは 1 回の eval にまとめて送る（2026-09-30）。
+# AeroSpace は CLI 呼び出しごとに画面を再配置するため、コマンドを個別に送ると
+# 途中経過（一列に並ぶ・縦に積まれる等）がそのまま描画されてガチャガチャ動いていた。
+# eval 内の `;` は失敗しても後続を実行し、再配置は最後に 1 回だけ行われる。
+cmds=("flatten-workspace-tree --workspace $workspace"
+  "layout --workspace $workspace --root h_tiles")
 
 # 大きい ID から左端へ寄せると、最終的に左から ID の昇順になる。
-# 左端に到達すると move は失敗するので、そのウィンドウの移動を終了する。
+# 現在の並びは取得できないため、各ウィンドウに最大回数分の move を積む。
+# --boundaries-action fail を明示し、左端に着いた後の move を何もしない失敗にする
+# （既定の create-implicit-container は左端でも成功し、残りを入れ子コンテナで包み直す）。
 for ((i = count - 1; i >= 0; i--)); do
   for ((step = 1; step < count; step++)); do
-    "$AEROSPACE" move --window-id "${ids[i]}" --boundaries workspace left || break
+    cmds+=("move --window-id ${ids[i]} --boundaries workspace --boundaries-action fail left")
   done
 done
 
 case "$count" in
   3)
-    "$AEROSPACE" join-with --window-id "${ids[1]}" right
+    cmds+=("join-with --window-id ${ids[1]} right")
     ;;
   4)
-    "$AEROSPACE" join-with --window-id "${ids[0]}" right
-    "$AEROSPACE" join-with --window-id "${ids[2]}" right
+    cmds+=("join-with --window-id ${ids[0]} right"
+      "join-with --window-id ${ids[2]} right")
     ;;
 esac
-"$AEROSPACE" balance-sizes --workspace "$workspace"
+cmds+=("balance-sizes --workspace $workspace")
+
+expr=$(printf '%s; ' "${cmds[@]}")
+"$AEROSPACE" eval "${expr%; }"

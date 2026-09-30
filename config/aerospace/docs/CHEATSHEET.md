@@ -10,15 +10,22 @@
 | `ctrl-9` | M4 | メインDELL | （空き枠。Hermes の画面共有等） |
 | `ctrl-4` | S1 | サブDELL | Notion |
 | `ctrl-5` | S2 | サブDELL | Zed / VS Code / TablePlus |
-| `ctrl-6` | S3 | サブDELL | システム設定 / Activity Monitor / CotEditor |
+| `ctrl-6` | S3 | サブDELL | Finder |
+| `ctrl-0` | S4 | サブDELL | システム設定 / Activity Monitor / CotEditor |
 | `ctrl-7` | B1 | Mac本体 | Slack / Discord / Teams |
 | `ctrl-8` | B2 | Mac本体 | Mail / Notion Calendar |
+| `ctrl-shift-1` | B3 | Mac本体 | OrbStack |
 
 配置方針は M 系＝常時見るもの、S 系＝参照・開発・雑務、B 系＝コミュニケーション。
 キーは M → S → B の並び順どおりに `ctrl-1`〜`8` を割り当てている。
 M4 だけは空き枠のため末尾の `ctrl-9` に置いている。
-雑アプリは当初 Mac 本体側の B3 に置いていたが、本体の画面が小さく確認しづらいため
-サブ DELL の S3 へ移し、B3 は廃止した（2026-09-02）。
+S4 / B3 は後から追加したため、既存の並びを崩さず空いている `ctrl-0` / `ctrl-shift-1` に置いた（2026-09-30）。
+
+経緯:
+- 雑アプリは当初 Mac 本体側の B3 に置いていたが、本体の画面が小さく確認しづらいため
+  サブ DELL の S3 へ移し、B3 は廃止した（2026-09-02）。
+- Finder・OrbStack はルールが無く、フォーカス中の WS（開発中は S2 が多い）に溜まっていた。
+  そこで S3 を Finder 専用、雑アプリを新設の S4、OrbStack を再設の B3 へ振り分けた（2026-09-30）。
 
 上記アプリは起動時に `on-window-detected` ルールで自動配置される。
 ルールに無いアプリは、その時フォーカス中のワークスペースに留まる（catch-all は意図的に置いていない）。
@@ -42,6 +49,8 @@ M4 だけは空き枠のため末尾の `ctrl-9` に置いている。
 新しく開いたときは、手動調整した分割比率や accordion もこのタイル配置に戻る。
 
 `on-window-detected` → `scripts/auto-grid.sh` で実行する。
+整列コマンドは 1 回の `aerospace eval` にまとめて送り、画面の再配置を最後の 1 回に抑えている
+（個別に送ると途中経過が描画されてガチャガチャ動くため。2026-09-30 に変更）。
 閉じる・別 WS へ移す操作ではこのスクリプトは動かず、AeroSpace 標準の詰め方になる。
 次にウィンドウを新しく開くと、現在の枚数に合わせて再整列する。
 
@@ -64,7 +73,7 @@ AeroSpace には sticky window（全ワークスペース表示）が無く（Gi
 | ワークスペース切り替え | `ctrl-1` 〜 `9` |
 | 同じモニター内で次のWSへ | `ctrl-→` |
 | 同じモニター内で前のWSへ | `ctrl-←` |
-| アクティブなウィンドウを別WSに移動 | `ctrl-alt-1` 〜 `9` |
+| アクティブなウィンドウを別WSに移動 | `ctrl-cmd-1` 〜 `0`（B3 はキーなし） |
 
 `ctrl-←` / `ctrl-→` は macOS の「スペースを左右に移動」の操作感を再現したもの（2026-09-02 追加）。
 巡回対象は**フォーカス中のモニターに割り当てられた WS だけ**で、端まで行くと反対側へ回り込む。
@@ -72,11 +81,11 @@ AeroSpace には sticky window（全ワークスペース表示）が無く（Gi
 | フォーカス中のモニター | 巡回順 |
 |---|---|
 | メインDELL | M1 → M2 → M3 → M4 →（M1へ戻る） |
-| サブDELL | S1 → S2 → S3 →（S1へ戻る） |
-| Mac本体 | B1 → B2 →（B1へ戻る） |
+| サブDELL | S1 → S2 → S3 → S4 →（S1へ戻る） |
+| Mac本体 | B1 → B2 → B3 →（B1へ戻る） |
 
-AeroSpace 標準の `workspace next|prev` は全 9 WS をアルファベット順
-（B1→B2→M1→…→S3）に回るため、3 回押すごとにフォーカスが別モニターへ飛ぶ。
+AeroSpace 標準の `workspace next|prev` は全 WS をアルファベット順
+（B1→B2→B3→M1→…→S4）に回るため、3 回押すごとにフォーカスが別モニターへ飛ぶ。
 そこで `workspace --stdin` に `list-workspaces --monitor focused` の出力を渡す
 `scripts/workspace-cycle.sh` を経由させている。BTT のスワイプも同じスクリプトを呼ぶ。
 
@@ -85,7 +94,8 @@ symbolichotkeys 79 / 81 を無効化済みのため衝突しない。
 Karabiner の `ctrl-b` / `ctrl-f` → `←` / `→` 変換は ctrl を落として素の矢印を送るので、
 ターミナルでの `ctrl-b` / `ctrl-f` がここに誤爆することもない。
 
-移動先の割り当ては `ctrl-N`（切替）と同じ並び。`ctrl-alt-9` で空き枠の M4 へ送れる。
+移動先の割り当ては `ctrl-N`（切替）と同じ並び。`ctrl-cmd-9` で空き枠の M4、`ctrl-cmd-0` で S4 へ送れる。
+B3（OrbStack）は自動配置ルールで入るため、送るキーは設けていない。
 フォーカスは元のワークスペースに留まる（`--focus-follows-window` を意図的に付けていない）。
 ウィンドウだけ退避して今の画面で作業を続ける想定のため、モニター移動（`shift-alt-←/→`）
 とは方針が異なる。
@@ -173,28 +183,25 @@ herdr（Ghostty）と tmux（WezTerm）が使えなくなる。tmux 側の定義
 と `config/tmux/conf/session.conf` を参照。
 
 `ctrl-alt-*` は herdr / Ghostty / tmux / WezTerm / Karabiner のいずれも未使用のため、
-ウィンドウ移動（`ctrl-alt-1`〜`9`）とレイアウト切替（`ctrl-alt-a`）に割り当てた（2026-09-02）。
+分割方式の切替（`ctrl-alt-a`）に割り当てている。
+ウィンドウ移動は当初 `ctrl-alt-1`〜`9` だったが、2026-09-30 に `ctrl-cmd-1`〜`9` へ移した。
 ただし Karabiner が横取りする `b` / `f` / `h` / `n` / `p` / `q` / `space` は
 `ctrl-alt-*` でも変換されるため使えない。
 
-## レイアウトプリセット
+## 既存ウィンドウの一括配置（default.sh）
 
-シェルスクリプトでアプリ配置を一括切り替え。
+`layouts/default.sh` は `aerospace.toml` の `on-window-detected` にある
+「`if.app-id` → `move-node-to-workspace`」ルールを読み取り、既に開いているウィンドウへ一括適用する。
+AeroSpace 起動時に `after-startup-command` から実行される。
 
-| キー | プリセット | 内容 |
-|---|---|---|
-| `ctrl-shift-1` | デフォルト | `on-window-detected` と同じ対応表を既存ウィンドウへ一括適用 |
-| `ctrl-shift-2` | 開発モード | Chrome を M4 へ退避し、M1 に Zed / VS Code を置く（TablePlus は S2 のまま） |
+- 対応表は `aerospace.toml` だけを正とする。アプリの追加・移設は toml のルールを直せばスクリプトにも反映される
+- `if.app-id` 以外の条件を持つルールや、移動を伴わないルール（floating 化など）は対象外
+- app-id は完全一致で照合し、既に目的の WS にいるウィンドウは動かさない
+- 簡易パーサーのため、ルールは 1 キー 1 行・シングルクォートの書式で書く（崩れると `tests/test_default_layout.py` が落ちる）
 
-開発モードはメインモニターの使い方だけを変える。B 系（コミュニケーション）は共通。
-
-### プリセットの追加方法
-
-1. `~/.config/aerospace/layouts/` にスクリプトを作成（`default.sh` をコピーして編集）
-2. `aerospace.toml` にキーバインドを追加:
-   ```toml
-   ctrl-shift-3 = 'exec-and-forget ~/.config/aerospace/layouts/my-layout.sh'
-   ```
+キーバインド（旧 `ctrl-shift-1`）と開発モード（旧 `ctrl-shift-2` / `dev.sh`）は 2026-09-30 に廃止した。
+開発モードはほぼ使われず、実態は「通常配置を土台にアプリを個別に動かす」使い方だったため
+（個別の移動は `ctrl-cmd-N` で行う）。
 
 ### スクリプトで使える主なコマンド
 
@@ -223,8 +230,10 @@ M4 = 2
 S1 = 3  # DELL G2422HS（サブ）
 S2 = 3
 S3 = 3
+S4 = 3
 B1 = 1  # Built-in Retina Display（本体）
 B2 = 1
+B3 = 1
 ```
 
 モニター番号は `aerospace list-monitors` で確認できる。
@@ -235,8 +244,7 @@ B2 = 1
 ~/.config/aerospace/
 ├── aerospace.toml       # メイン設定
 ├── layouts/
-│   ├── default.sh       # プリセット1: デフォルト
-│   └── dev.sh           # プリセット2: 開発モード
+│   └── default.sh       # 既存ウィンドウの一括配置（起動時に実行）
 ├── scripts/
 │   ├── follow-overlay.sh   # オーバーレイ追従（exec-on-workspace-change）
 │   └── workspace-cycle.sh  # モニター内WS巡回（ctrl-←/→ と BTT スワイプ）

@@ -12,7 +12,7 @@ start-at-login = true
 exec-on-workspace-change = ['/bin/bash', '-c', '~/.config/aerospace/scripts/follow-overlay.sh']
 
 # ウィンドウが無くても残すワークスペース（v1 では自動推論されていた）
-persistent-workspaces = ['M1', 'M2', 'M3', 'M4', 'S1', 'S2', 'S3', 'B1', 'B2']
+persistent-workspaces = ['M1', 'M2', 'M3', 'M4', 'S1', 'S2', 'S3', 'S4', 'B1', 'B2', 'B3']
 
 default-root-container-layout = 'tiles'
 default-root-container-orientation = 'auto'
@@ -35,13 +35,17 @@ ctrl-6 = 'workspace S3'
 ctrl-7 = 'workspace B1'
 ctrl-8 = 'workspace B2'
 ctrl-9 = 'workspace M4'
+# S4 / B3 は 2026-09-30 に追加。既存の並びを崩さないよう空いているキーへ割り当てた。
+# 数字キーが足りないため B3 は ctrl-shift-1（元はレイアウトプリセット）を使う。
+ctrl-0 = 'workspace S4'
+ctrl-shift-1 = 'workspace B3'
 
 # 同じモニター内でワークスペースを左右に巡回（2026-09-02 追加）
 # macOS の「スペースを左右に移動」（ctrl-←/→）の操作感を再現するもの。
 # その ctrl-←/→ は symbolichotkeys 79/81 を無効化済みなので空いている。
 # Karabiner の ctrl-b/f → ←/→ 変換は ctrl を落として素の矢印を送るため、
 # ターミナルでの ctrl-b / ctrl-f が誤ってここに当たることはない。
-# 標準の `workspace next|prev` は全 9 WS をアルファベット順に回り
+# 標準の `workspace next|prev` は全 WS をアルファベット順に回り
 # 3 回押すごとにフォーカスが別モニターへ飛ぶため、スクリプトで
 # 「今いるモニターの WS だけ」に絞っている（詳細は scripts/workspace-cycle.sh）。
 # BTT のトラックパッドスワイプからも同じスクリプトを呼ぶ。
@@ -52,16 +56,19 @@ ctrl-right = 'exec-and-forget ~/.config/aerospace/scripts/workspace-cycle.sh nex
 # キー割り当ては上の workspace 切替（ctrl-N）と同じ並びに揃えている。
 # --focus-follows-window は意図的に付けていない。ウィンドウだけ退避して
 # 今の画面で作業を続けたいため（モニター移動の alt-shift-←/→ とは方針が異なる）。
-# ctrl-alt-* は herdr / Ghostty / tmux / WezTerm / Karabiner のいずれも未使用の空き領域。
-ctrl-alt-1 = 'move-node-to-workspace M1'
-ctrl-alt-2 = 'move-node-to-workspace M2'
-ctrl-alt-3 = 'move-node-to-workspace M3'
-ctrl-alt-4 = 'move-node-to-workspace S1'
-ctrl-alt-5 = 'move-node-to-workspace S2'
-ctrl-alt-6 = 'move-node-to-workspace S3'
-ctrl-alt-7 = 'move-node-to-workspace B1'
-ctrl-alt-8 = 'move-node-to-workspace B2'
-ctrl-alt-9 = 'move-node-to-workspace M4'
+# ctrl-cmd-数字 は macOS 標準・herdr / Ghostty / tmux / WezTerm / Karabiner のいずれも未使用。
+# 当初は ctrl-alt-N だったが、2026-09-30 に ctrl-cmd-N へ変更。
+ctrl-cmd-1 = 'move-node-to-workspace M1'
+ctrl-cmd-2 = 'move-node-to-workspace M2'
+ctrl-cmd-3 = 'move-node-to-workspace M3'
+ctrl-cmd-4 = 'move-node-to-workspace S1'
+ctrl-cmd-5 = 'move-node-to-workspace S2'
+ctrl-cmd-6 = 'move-node-to-workspace S3'
+ctrl-cmd-7 = 'move-node-to-workspace B1'
+ctrl-cmd-8 = 'move-node-to-workspace B2'
+ctrl-cmd-9 = 'move-node-to-workspace M4'
+ctrl-cmd-0 = 'move-node-to-workspace S4'
+# B3（OrbStack）は自動配置ルールで入るため、送るキーは設けていない。
 
 # ウィンドウを隣のモニターへ移動（BetterTouchTool から移管、2026-09-02）
 # BTT 版はウィンドウを物理的に動かすだけで AeroSpace のワークスペース把握とズレるため、
@@ -90,8 +97,8 @@ alt-up = 'fullscreen'
 # a = accordion。Karabiner が横取りする b/f/h/n/p/q/space を避けた選択。
 ctrl-alt-a = 'layout accordion tiles'
 
-ctrl-shift-1 = 'exec-and-forget ~/.config/aerospace/layouts/default.sh'
-ctrl-shift-2 = 'exec-and-forget ~/.config/aerospace/layouts/dev.sh'
+# レイアウトプリセットのキー（ctrl-shift-1 = default.sh / ctrl-shift-2 = dev.sh）は
+# 2026-09-30 に廃止。default.sh は after-startup-command からのみ実行する。
 
 # アプリを問わず、新規ウィンドウの移動先 WS を枚数に応じて整列する。
 # 後続の floating / move ルールも実行し、スクリプト側で反映を待つ。
@@ -155,20 +162,28 @@ run = ['move-node-to-workspace S2']
 if.app-id = 'com.tinyapp.TablePlus'
 run = ['move-node-to-workspace S2']
 
-# S3: 雑アプリ・一時ウィンドウ
-# 元は本体側の B3 に置いていたが、本体の画面が小さく確認しづらいため
-# サブ DELL へ移設した（2026-09-02）。B3 は廃止。
+# S3: Finder（2026-09-30 追加）
+# ルールが無いとフォーカス中の WS（開発中は S2 が多い）に溜まっていくため専用枠にした。
+[[on-window-detected]]
+if.app-id = 'com.apple.finder'
+run = ['move-node-to-workspace S3']
+
+# S4: 雑アプリ・一時ウィンドウ
+# 元は本体側の B3 → S3 に置いていた（2026-09-02 に本体からサブ DELL へ移設）。
+# 2026-09-30 に S3 を Finder に譲り S4 へ移した。
+# ルールの無いアプリをまとめて S4 へ送る catch-all は意図的に置かない
+# （開いたウィンドウが目の前に出ず、ダイアログ類も飛ぶため。2026-03-20 にも一度撤回済み）。
 [[on-window-detected]]
 if.app-id = 'com.apple.systempreferences'
-run = ['move-node-to-workspace S3']
+run = ['move-node-to-workspace S4']
 
 [[on-window-detected]]
 if.app-id = 'com.apple.ActivityMonitor'
-run = ['move-node-to-workspace S3']
+run = ['move-node-to-workspace S4']
 
 [[on-window-detected]]
 if.app-id = 'com.coteditor.CotEditor'
-run = ['move-node-to-workspace S3']
+run = ['move-node-to-workspace S4']
 
 # --- B 系: Mac 本体 ---
 # B1: チャット
@@ -193,6 +208,12 @@ run = ['move-node-to-workspace B2']
 if.app-id = 'com.cron.electron'
 run = ['move-node-to-workspace B2']
 
+# B3: 開発用の常駐ツール（2026-09-30 追加）
+# 2026-09-02 に廃止した旧 B3（雑アプリ）とは別用途で再設。
+[[on-window-detected]]
+if.app-id = 'dev.kdrag0n.MacVirt'
+run = ['move-node-to-workspace B3']
+
 # ルールにないアプリは現在フォーカス中のワークスペースに留まる
 # (catch-all の move を削除し、デフォルト動作に任せる)
 
@@ -208,5 +229,7 @@ M4 = 2
 S1 = 3
 S2 = 3
 S3 = 3
+S4 = 3
 B1 = 1
 B2 = 1
+B3 = 1

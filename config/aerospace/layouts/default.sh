@@ -1,46 +1,57 @@
 #!/bin/bash
-# Layout 1: デフォルト配置
-# aerospace.toml の on-window-detected と同じ対応表を、既に開いているウィンドウへ
-# 一括適用する。ルール追加前から開いていたウィンドウを揃え直す用途。
+# デフォルト配置: aerospace.toml の on-window-detected にある
+# 「app-id → move-node-to-workspace」ルールを、既に開いているウィンドウへ一括適用する。
+# AeroSpace 起動前から開いていたウィンドウを揃え直すため after-startup-command から呼ぶ。
 #
-# 使える aerospace コマンド:
-#   aerospace list-windows --all           # 全ウィンドウ一覧
-#   aerospace move-node-to-workspace <WS>  # ウィンドウを移動
-#   aerospace focus --window-id <ID>       # 特定ウィンドウにフォーカス
-#   aerospace workspace <WS>               # ワークスペース切り替え
-#   aerospace layout tiles horizontal      # レイアウト変更
+# 対応表は aerospace.toml だけを正とする（2026-09-30 にスクリプト内の重複表を廃止）。
+# 次のブロックは起動時に評価できないため対象外にする:
+#   - if.app-id 以外の条件（if.window-title-regex-substring 等）を持つブロック
+#   - run に move-node-to-workspace を含まないブロック（floating 化など）
+# 同じ app-id が複数あるときは、AeroSpace と同じく先に書いたルールを採用する。
 
-move_app_to_workspace() {
-  local app_id="$1"
-  local workspace="$2"
-  aerospace list-windows --all --format '%{window-id} %{app-bundle-id}' \
-    | grep -F "$app_id" \
-    | while read -r wid _; do
-        aerospace move-node-to-workspace --window-id "$wid" "$workspace"
-      done
+set -u
+
+AEROSPACE=${AEROSPACE_BIN:-/opt/homebrew/bin/aerospace}
+CONFIG=${AEROSPACE_CONFIG:-"$(dirname "$0")/../aerospace.toml"}
+
+if [[ ! -r "$CONFIG" ]]; then
+  echo "${0##*/}: 設定ファイルを読めません: $CONFIG" >&2
+  exit 1
+fi
+
+# aerospace.toml から「app-id|ワークスペース」を 1 行ずつ出力する。
+# 当リポジトリの書式（1 キー 1 行・シングルクォート）を前提にした簡易パーサー。
+# 書式の前提が崩れたときは tests/test_default_layout.py で検出する。
+list_rules() {
+  awk -v q="'" '
+    function flush() {
+      if (in_block && app != "" && ws != "" && other_if == 0) print app "|" ws
+      app = ""; ws = ""; other_if = 0
+    }
+    /^\[\[on-window-detected\]\]/ { flush(); in_block = 1; next }
+    /^\[/                         { flush(); in_block = 0; next }
+    !in_block                     { next }
+    /^if\.app-id[ \t]*=/          { split($0, parts, q); app = parts[2]; next }
+    /^if\./                       { other_if++; next }
+    /^run[ \t]*=/ && match($0, /move-node-to-workspace [A-Za-z0-9_-]+/) {
+      split(substr($0, RSTART, RLENGTH), parts, " "); ws = parts[2]
+    }
+    END { flush() }
+  ' "$CONFIG"
 }
 
-# Main Monitor
-move_app_to_workspace 'com.google.Chrome'       'M1'
-move_app_to_workspace 'company.thebrowser.dia'  'M2'
-move_app_to_workspace 'com.github.wez.wezterm'  'M3'
-move_app_to_workspace 'com.mitchellh.ghostty'   'M3'
-# M4 は空き枠（Hermes 画面共有等）。ルールを持たない。
+windows=$("$AEROSPACE" list-windows --all --format '%{window-id}|%{app-bundle-id}|%{workspace}') || exit 1
 
-# Sub Monitor
-move_app_to_workspace 'notion.id'               'S1'
-move_app_to_workspace 'dev.zed.Zed'             'S2'
-move_app_to_workspace 'com.microsoft.VSCode'    'S2'
-move_app_to_workspace 'com.tinyapp.TablePlus'   'S2'
-move_app_to_workspace 'com.apple.systempreferences' 'S3'
-move_app_to_workspace 'com.apple.ActivityMonitor'   'S3'
-move_app_to_workspace 'com.coteditor.CotEditor'     'S3'
+# app-id は完全一致で照合する（旧実装の grep -F は前方一致する別アプリも巻き込んだ）。
+# 既に目的の WS にいるウィンドウは動かさない（起動直後の無駄な再描画を減らす）。
+moves=$(awk -F'|' '
+  NR == FNR { if (!($1 in target)) target[$1] = $2; next }
+  ($2 in target) && $3 != target[$2] { print $1 " " target[$2] }
+' <(list_rules) <(printf '%s\n' "$windows"))
 
-# Mac Built-in
-move_app_to_workspace 'com.tinyspeck.slackmacgap' 'B1'
-move_app_to_workspace 'com.hnc.Discord'           'B1'
-move_app_to_workspace 'com.microsoft.teams2'      'B1'
-move_app_to_workspace 'com.apple.mail'            'B2'
-move_app_to_workspace 'com.cron.electron'         'B2'
+while read -r wid ws; do
+  [[ -n "$wid" ]] || continue
+  "$AEROSPACE" move-node-to-workspace --window-id "$wid" "$ws"
+done <<<"$moves"
 
-aerospace workspace M1
+"$AEROSPACE" workspace M1

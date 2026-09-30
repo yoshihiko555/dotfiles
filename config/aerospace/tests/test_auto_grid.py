@@ -39,29 +39,46 @@ if command == "list-windows":
         print(output)
     sys.exit(0)
 
-state["commands"].append(args)
-tree = state["tree"]
-if command == "flatten-workspace-tree":
-    assert option("--workspace") == "S2"
-    state["tree"] = leaves(tree)
-elif command == "layout":
-    assert args == ["layout", "--workspace", "S2", "--root", "h_tiles"]
-elif command == "move":
-    assert option("--boundaries") == "workspace" and args[-1] == "left"
-    index = tree.index(int(option("--window-id")))
-    if index == 0:
-        sys.exit(1)
-    tree[index - 1], tree[index] = tree[index], tree[index - 1]
-elif command == "join-with":
-    assert args[-1] == "right"
-    index = tree.index(int(option("--window-id")))
-    assert index + 1 < len(tree)
-    assert isinstance(tree[index + 1], int)
-    tree[index:index + 2] = [tree[index:index + 2]]
-elif command == "balance-sizes":
-    assert option("--workspace") == "S2"
-else:
-    raise AssertionError("想定外の操作: " + repr(args))
+# 整列は 1 回の eval で送る前提。CLI 呼び出し回数を記録して、ちらつきの再発を検出する。
+state["calls"].append(args)
+assert command == "eval", "整列コマンドが eval にまとめられていない: " + repr(args)
+assert len(args) == 2
+
+def run(args):
+    command = args[0]
+    state["commands"].append(args)
+    tree = state["tree"]
+    def option(name):
+        return args[args.index(name) + 1]
+    if command == "flatten-workspace-tree":
+        assert option("--workspace") == "S2"
+        state["tree"] = leaves(tree)
+    elif command == "layout":
+        assert args == ["layout", "--workspace", "S2", "--root", "h_tiles"]
+    elif command == "move":
+        assert option("--boundaries") == "workspace" and args[-1] == "left"
+        # 既定の create-implicit-container だと左端でも成功して入れ子を作るため、fail を必須にする。
+        assert option("--boundaries-action") == "fail"
+        index = tree.index(int(option("--window-id")))
+        if index == 0:
+            return 1
+        tree[index - 1], tree[index] = tree[index], tree[index - 1]
+    elif command == "join-with":
+        assert args[-1] == "right"
+        index = tree.index(int(option("--window-id")))
+        assert index + 1 < len(tree)
+        assert isinstance(tree[index + 1], int)
+        tree[index:index + 2] = [tree[index:index + 2]]
+    elif command == "balance-sizes":
+        assert option("--workspace") == "S2"
+    else:
+        raise AssertionError("想定外の操作: " + repr(args))
+    return 0
+
+# AeroSpace の shell と同じく、`;` 区切りは失敗しても後続を実行する。
+for part in args[1].split(";"):
+    run(part.split())
+
 path.write_text(json.dumps(state))
 '''
 
@@ -89,7 +106,7 @@ class AutoGridTest(unittest.TestCase):
             # 既存の入れ子も組み直せることを確認する。
             if count >= 3:
                 tree = [tree[0], tree[1:]]
-            state = {"windows": windows, "tree": tree, "commands": []}
+            state = {"windows": windows, "tree": tree, "commands": [], "calls": []}
             state_path = directory / "state.json"
             state_path.write_text(json.dumps(state))
             env = dict(os.environ, AEROSPACE_BIN=str(mock),
@@ -111,6 +128,7 @@ class AutoGridTest(unittest.TestCase):
                 result = self.run_grid(count)
                 self.assertEqual(result["tree"], expected)
                 self.assertEqual(result["commands"][-1][0], "balance-sizes")
+                self.assertEqual(len(result["calls"]), 1)
 
     def test_out_of_scope(self):
         for options in [{"count": 1}, {"count": 5}, {"count": 4, "floating": True},
