@@ -9,7 +9,7 @@
 | `ctrl-3` | M3 | メインDELL | Ghostty（常用）/ WezTerm（サブ） |
 | `ctrl-9` | M4 | メインDELL | （空き枠。Hermes の画面共有等） |
 | `ctrl-4` | S1 | サブDELL | Notion |
-| `ctrl-5` | S2 | サブDELL | Zed / VS Code / TablePlus |
+| `ctrl-5` | S2 | サブDELL | Zed / VS Code / TablePro |
 | `ctrl-6` | S3 | サブDELL | Finder |
 | `ctrl-0` | S4 | サブDELL | システム設定 / Activity Monitor / CotEditor |
 | `ctrl-7` | B1 | Mac本体 | Slack / Discord / Teams |

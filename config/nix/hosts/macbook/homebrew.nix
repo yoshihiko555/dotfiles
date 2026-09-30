@@ -36,6 +36,7 @@
     "ghostty"
     "orbstack"
     "proxy-audio-device"
+    "tablepro"
     # terminal-browser: Chromium を Kitty graphics でペインに描くブラウザ。試用中
     # （2026-09-23〜）。herdr 内での描画可否を検証する目的で、宣言が無いと zap で
     # switch のたびに消えるためここに置く。見送る場合はこの行を消し、

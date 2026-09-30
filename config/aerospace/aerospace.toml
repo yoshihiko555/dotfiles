@@ -159,7 +159,7 @@ if.app-id = 'com.microsoft.VSCode'
 run = ['move-node-to-workspace S2']
 
 [[on-window-detected]]
-if.app-id = 'com.tinyapp.TablePlus'
+if.app-id = 'com.TablePro'
 run = ['move-node-to-workspace S2']
 
 # S3: Finder（2026-09-30 追加）

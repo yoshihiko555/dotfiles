@@ -47,7 +47,6 @@ Nix（home-manager）/ Homebrew（nix-darwin `homebrew.*` 宣言）のいずれ�
 | `onedrive` | クラウドストレージ | |
 | `slack` | | |
 | `soundsource` | オーディオ管理 | |
-| `tableplus` | DB クライアント | |
 | `visual-studio-code` | エディタ | |
 | `wezterm` | ターミナル | `wezterm@nightly` は別 cask として `hosts/macbook/homebrew.nix` で宣言済み（Nix 管理下）。無印 `wezterm` は別物で保留中 |
 | `yoink` | ドラッグ&ドロップ補助 | |
