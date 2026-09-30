@@ -7,16 +7,6 @@
   "mcpServers": {
     "notion": {
       "httpUrl": "https://mcp.notion.com/mcp"
-    },
-    "pencil": {
-      "command": "/Applications/Pen.app/Contents/Resources/app.asar.unpacked/out/mcp-server-darwin-arm64",
-      "args": [
-        "--app",
-        "desktop",
-        "--agent",
-        "geminiCLI"
-      ],
-      "env": {}
     }
   },
   "ui": {
