@@ -56,7 +56,7 @@
   "tui": "fullscreen",
   "autoDreamEnabled": true,
   "skipWorkflowUsageWarning": true,
-  "theme": "dark-ansi",
+  "theme": "custom:tokyonight-moon",
   "autoContinueAtUsageLimit": true,
   "model": "opus"
 }

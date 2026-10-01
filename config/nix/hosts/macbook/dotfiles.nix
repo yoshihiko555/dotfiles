@@ -69,6 +69,7 @@ in
         ".claude/skills".source = mkLink "claude/skills";
         ".claude/statusline.py".source = mkLink "claude/statusline.py";
         ".claude/templates".source = mkLink "claude/templates";
+        ".claude/themes".source = mkLink "claude/themes";
 
         # 会社アカウント用（ccw / CLAUDE_CONFIG_DIR=~/.claude-work）。
         # statusline.py と claude_message.sh は ~/.claude 非依存のため実体を共有する。
@@ -78,6 +79,7 @@ in
         ".claude-work/claude_message.sh".source = mkLink "claude/claude_message.sh";
         ".claude-work/hooks".source = mkLink "claude/hooks";
         ".claude-work/statusline.py".source = mkLink "claude/statusline.py";
+        ".claude-work/themes".source = mkLink "claude/themes";
 
         ".codex/AGENTS.md".source = mkLink "codex/AGENTS.md";
         ".codex/codex_message.sh".source = mkLink "codex/codex_message.sh";

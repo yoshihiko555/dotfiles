@@ -1,0 +1,7 @@
+{
+  "name": "TokyoNight Moon",
+  "base": "dark-ansi",
+  "overrides": {
+    "selectionBg": "#2d3f76"
+  }
+}
