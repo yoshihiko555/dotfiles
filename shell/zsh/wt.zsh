@@ -228,6 +228,8 @@ _wt_rm() {
 
   if (( ${#branches[@]} == 0 )); then
     picked=("${(@f)$(_wt_pick_branches)}")
+    # fzf キャンセル時は出力が空でも 1 要素の空文字になるため除く（空のまま gtr rm に渡すと .worktrees/ 自体が対象になる）
+    picked=(${picked:#})
     [[ ${#picked[@]} -eq 0 ]] && return 0
     branches=("${picked[@]}")
   fi
