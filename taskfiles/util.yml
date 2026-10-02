@@ -113,6 +113,16 @@ tasks:
     cmds:
       - bash {{.ROOT_DIR}}/scripts/clean-uv.sh --dry-run
 
+  clean-codex-images:
+    desc: Codex の image_gen が溜めた画像のうち 30 日超のものをゴミ箱へ（--days N で変更）
+    cmds:
+      - bash {{.ROOT_DIR}}/scripts/clean-codex-images.sh {{.CLI_ARGS}}
+
+  clean-codex-images-dry:
+    desc: clean-codex-images 実行前に対象だけ確認する dry-run
+    cmds:
+      - bash {{.ROOT_DIR}}/scripts/clean-codex-images.sh --dry-run {{.CLI_ARGS}}
+
   # ====================
   # Nix flake（config/nix）
   # status タスク（symlink drift 確認）とは別軸。
