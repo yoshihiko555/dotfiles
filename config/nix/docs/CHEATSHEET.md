@@ -30,7 +30,7 @@ ssh -t macmini-admin 'sudo darwin-rebuild switch --flake /Users/agent/hermes-wor
 
 | ローカル | リモート | 内容 |
 | --- | --- | --- |
-| `nxu` | — | flake input のピンを進める（`nxu takt` で個別指定） |
+| `nxu` | — | flake input のピンを進める（`nxu takt` で個別指定。`nxu pen[@版]` で自前パッケージを更新） |
 | `bxu` | — | Homebrew の update → outdated 確認 → upgrade |
 | `nxb` | — | 適用せずビルドのみ（sudo 不要） |
 | `nxd` | `hxd` | 現行世代とビルド結果の差分を表示 |
@@ -88,6 +88,7 @@ nix develop ~/.config/nix             # リポジトリの devShell（git/jq/rip
 # MacBook Pro 側で実行し、flake.lock の変更を commit → push する
 nxu                                    # = nix flake update --flake "$DOTFILES/config/nix"
 nxu takt                               # input を指定して個別更新（複数指定も可）
+nxu pen                                # 自前パッケージ（packages/*/update.sh）を latest へ。pen@0.3.10 で版指定
 nxbd                                   # build → 現行世代との差分確認
 nxs                                    # 問題なければ適用
 nix build ./config/nix#darwinConfigurations.hermes.system --no-link  # hermes 側のビルド確認

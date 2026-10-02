@@ -1,11 +1,28 @@
 #!/usr/bin/env bash
-# pen-cli（@pen.dev/cli）の package.json / package-lock.json を指定バージョンで作り直す。
-#   使い方: ./update.sh 0.3.10
-# 実行後、default.nix の version と npmDepsHash を更新する（手順は default.nix 冒頭）。
+# pen-cli（@pen.dev/cli）を指定バージョン（省略時は npm の latest）へ上げる。
+#   使い方: ./update.sh [version]   … 通常は `nxu pen` から呼ぶ
+# package.json / package-lock.json を作り直し、default.nix の version・hash・
+# npmDepsHash を書き換えて、パッケージ単体のビルドで確認するまでを行う。
+# 適用（nxs）はしない。
 set -euo pipefail
 
-version=${1:?usage: update.sh <version>}
+pkg="@pen.dev/cli"
 here=$(cd -- "$(dirname -- "$0")" && pwd)
+flake=$(cd -- "$here/../.." && pwd)
+nixfile="$here/default.nix"
+
+version=${1:-$(npm view "$pkg" version)}
+current=$(sed -n 's/^  version = "\(.*\)";$/\1/p' "$nixfile")
+if [ -z "$current" ]; then
+  echo "default.nix から現在の version を読めません" >&2
+  exit 1
+fi
+if [ "$version" = "$current" ]; then
+  echo "pen-cli は ${current} のままです（更新不要）"
+  exit 0
+fi
+echo "pen-cli: ${current} → ${version}"
+
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
@@ -16,7 +33,7 @@ cat >"$work/package.json" <<EOF
   "name": "pen-cli-wrapper",
   "private": true,
   "dependencies": {
-    "@pen.dev/cli": "${version}"
+    "${pkg}": "${version}"
   }
 }
 EOF
@@ -68,3 +85,38 @@ fs.writeFileSync(dst, JSON.stringify(lock, null, 2) + "\n");
 EOF
 
 cp "$work/package.json" "$here/package.json"
+
+# 本体 tarball の hash。fetchurl は SRI なら sha512 も受け付けるので、
+# registry の dist.integrity をそのまま使えばダウンロードせずに済む
+pristine_hash=$(npm view "${pkg}@${version}" dist.integrity)
+# npmDepsHash は lock から計算する。fetchNpmDeps と同じ実装を使うため、
+# flake.lock でピンした nixpkgs の prefetch-npm-deps を呼ぶ
+deps_hash=$(nix run --inputs-from "$flake" nixpkgs#prefetch-npm-deps -- "$here/package-lock.json")
+
+# default.nix の 3 か所を書き換える。どれかが 1 件に一致しなければ書き換えずに止める
+node - "$nixfile" "$version" "$pristine_hash" "$deps_hash" <<'EOF'
+const fs = require("fs");
+const [file, version, pristineHash, depsHash] = process.argv.slice(2);
+let src = fs.readFileSync(file, "utf8");
+const rules = [
+  [/^  version = ".*";$/m, `  version = "${version}";`],
+  [/^    hash = ".*";$/m, `    hash = "${pristineHash}";`],
+  [/^  npmDepsHash = ".*";$/m, `  npmDepsHash = "${depsHash}";`],
+];
+for (const [re, line] of rules) {
+  const hits = src.match(new RegExp(re.source, "gm")) || [];
+  if (hits.length !== 1) throw new Error(`default.nix で ${re} が ${hits.length} 件一致`);
+  src = src.replace(re, line);
+}
+fs.writeFileSync(file, src);
+EOF
+
+# パッケージ単体をビルドしてハッシュの正しさを確かめる（システムには適用しない）。
+# unfree の許可はホスト設定側にあるため、ここでは環境変数で一時的に許す
+echo "ビルド確認中..."
+NIXPKGS_ALLOW_UNFREE=1 nix build --impure --no-link --print-out-paths --expr "
+  (builtins.getFlake \"path:${flake}\").inputs.nixpkgs.legacyPackages.aarch64-darwin.callPackage ${here} { }
+"
+
+echo "完了: pen-cli ${version}。nxbd で差分確認 → nxs で適用 → pen version"
+echo "戻すとき: git -C \"${here}\" checkout -- ."

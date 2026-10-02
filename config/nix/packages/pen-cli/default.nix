@@ -17,17 +17,16 @@
 #     リポジトリに置くのはこの式と package.json / lockfile（依存の URL とハッシュ）だけ
 #
 # 更新手順:
-#   1. ./update.sh <version>  … package.json / package-lock.json を作り直す
-#   2. 下の version を書き換え、pristine の hash と npmDepsHash を lib.fakeHash にしてビルド
-#   3. エラーに出る正しいハッシュに順に置き換える
-#   4. nxbd でビルド確認 → nxs で適用 → pen version
+#   1. nxu pen [version]  … update.sh が lockfile を作り直し、下の version・hash・
+#      npmDepsHash を書き換えて単体ビルドまで確認する（version 省略時は latest）
+#   2. nxbd で差分確認 → nxs で適用 → pen version
 let
-  version = "0.3.9";
+  version = "0.3.10";
 
   # 改変のない本体。npm の公開 tarball そのもの
   pristine = fetchurl {
     url = "https://registry.npmjs.org/@pen.dev/cli/-/cli-${version}.tgz";
-    hash = "sha256-iyQNbsShi06YQYh6BEohpyVgmXJ8KrWNjLeasg7WFGY=";
+    hash = "sha512-TE7Pu8mcvnw06xKUmtUaeBAcGff30RfVYWCsQ4bGAtWanOhW5CUGF+3K+8GK/4FHfkiGQVXDfFQqxSPNUmAiHA==";
   };
 in
 buildNpmPackage {
@@ -42,7 +41,7 @@ buildNpmPackage {
     ];
   };
 
-  npmDepsHash = "sha256-vdVQ6jR96QzmOVHqM5tSrnaOe82o99MLePMjk8RYFXA=";
+  npmDepsHash = "sha256-jqyak8K8Zseqb6rMV7oFJalopNyOny3q3nh/1o6XgW8=";
 
   inherit nodejs; # engines: node >=22.19.0
 

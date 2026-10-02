@@ -8,6 +8,63 @@ NIX_FLAKE="$DOTFILES/config/nix"
 NIX_HERMES_DOTFILES="/Users/agent/hermes-workspace/ghq/github.com/yoshihiko555/dotfiles"
 
 # --------------------------------------------
+# 更新（OS 共通）
+# --------------------------------------------
+# flake input（nixpkgs / takt 等）のピンを進める。実行後は nxbd で差分確認 → nxs
+#
+# flake.nix は repo 直下ではなく config/nix 配下にあるため、cwd に依存する形
+# （素の `nix flake update`）は repo ルートや任意のディレクトリから叩くと
+#   error: path "..." is not part of a flake
+# で落ちる。--flake で対象を明示して cwd 非依存にしている。
+#
+# 引数は「更新する input 名」として nix にそのまま渡す（Nix 2.19 以降の仕様。
+# 位置引数は flake のパスではなく input 名である点に注意）:
+#   nxu            全 input を更新
+#   nxu takt       takt だけ更新
+#   nxu nixpkgs darwin  複数指定も可
+#
+# config/nix/packages/<名前>/update.sh を持つ自前パッケージも名前で指定できる。
+# 名前は前方一致（一意な場合のみ）で、input より優先する。版は @ で指定（省略時 latest）:
+#   nxu pen            pen-cli を latest へ
+#   nxu pen@0.3.10     版を指定
+#   nxu pen takt       自前パッケージと input の混在も可（パッケージを先に更新）
+#
+# flake.lock / パッケージ定義は git 管理下なので、戻したいときは
+#   git -C "$DOTFILES" checkout -- config/nix/flake.lock config/nix/packages
+nxu() {
+  local arg name ver
+  local -a inputs scripts vers hits
+  for arg in "$@"; do
+    name=${arg%%@*}
+    ver=${arg#"$name"}
+    ver=${ver#@}
+    hits=("$NIX_FLAKE"/packages/"$name"/update.sh(N))
+    ((${#hits})) || hits=("$NIX_FLAKE"/packages/"$name"*/update.sh(N))
+    if ((${#hits} > 1)); then
+      echo "nxu: '$name' に一致するパッケージが複数あります: ${(j:, :)${hits[@]:h:t}}" >&2
+      return 1
+    elif ((${#hits} == 1)); then
+      scripts+=("$hits[1]")
+      vers+=("$ver")
+    elif [[ -n $ver ]]; then
+      echo "nxu: '$name' は update.sh を持つパッケージではないため @版 を指定できません" >&2
+      return 1
+    else
+      inputs+=("$arg")
+    fi
+  done
+
+  local i
+  for ((i = 1; i <= ${#scripts}; i++)); do
+    "$scripts[$i]" ${vers[$i]:+"$vers[$i]"} || return 1
+  done
+  # 引数なし（全 input）か、input の指定があるときだけ flake update を走らせる
+  if (($# == 0 || ${#inputs})); then
+    nix flake update --flake "$NIX_FLAKE" "${inputs[@]}"
+  fi
+}
+
+# --------------------------------------------
 # WSL2 / Linux（standalone home-manager）
 # --------------------------------------------
 # WSL は nix-darwin ではなく standalone home-manager（flake の
@@ -29,12 +86,7 @@ if [ "$(uname -s)" = "Linux" ]; then
   # 世代一覧。darwin の nxg（darwin-rebuild --list-generations）に相当。
   alias nxg='home-manager generations'
 
-  # flake input（nixpkgs 等）のピンを進める。OS 非依存なので darwin 側と同一実装。
-  # 実行後は nxb で確認 → nxs。戻したいときは
-  #   git -C "$DOTFILES" checkout -- config/nix/flake.lock
-  nxu() {
-    nix flake update --flake "$NIX_FLAKE" "$@"
-  }
+  # nxu は OS 非依存のため、この分岐より前で共通定義している
 
   return
 fi
@@ -69,25 +121,6 @@ nxd() {
 # build → diff。適用前の確認はこれ一本で足りる
 nxbd() {
   nxb && nxd
-}
-
-# flake input（nixpkgs / takt 等）のピンを進める。実行後は nxbd で差分確認 → nxs
-#
-# flake.nix は repo 直下ではなく config/nix 配下にあるため、cwd に依存する形
-# （素の `nix flake update`）は repo ルートや任意のディレクトリから叩くと
-#   error: path "..." is not part of a flake
-# で落ちる。--flake で対象を明示して cwd 非依存にしている。
-#
-# 引数は「更新する input 名」として nix にそのまま渡す（Nix 2.19 以降の仕様。
-# 位置引数は flake のパスではなく input 名である点に注意）:
-#   nxu            全 input を更新
-#   nxu takt       takt だけ更新
-#   nxu nixpkgs darwin  複数指定も可
-#
-# flake.lock は git 管理下なので、戻したいときは
-#   git -C "$DOTFILES" checkout -- config/nix/flake.lock
-nxu() {
-  nix flake update --flake "$NIX_FLAKE" "$@"
 }
 
 # 適用。sudo が要る（hermes では admin ユーザーで実行すること）

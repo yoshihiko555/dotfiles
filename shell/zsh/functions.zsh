@@ -50,6 +50,7 @@ cheat() {
   nx*       ローカル実行 (ホスト自動判定: hermes/macbook)
   nxu       flake update (ピンを進める, cwd 非依存)
             nxu takt のように input 名を指定すると個別更新
+            nxu pen[@版] で自前パッケージ (packages/*/update.sh) を更新
   nxb       ビルドのみ (適用なし, sudo 不要)
   nxd       現行世代との差分   nxbd  build→diff
   nxs       switch で適用
