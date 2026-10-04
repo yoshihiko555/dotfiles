@@ -64,7 +64,6 @@ MCP だけでなくフック・ワーカーを含むため、対応確認と有�
 | gopls-lsp | 有効 | 同上。言語サーバー本体は Nix 共通層（ADR-20260925-0005） |
 | typescript-lsp | 有効 | 同上。会社用でも有効 |
 | pyright-lsp | 有効 | 同上 |
-| playwright | 無効 | 現在の導入物は Claude 向け MCP プラグイン。Codex は Browser を利用中。同等のプラグイン配布は今回確認できず |
 
 [mattpocock の上流 README](https://github.com/mattpocock/skills#installation) も参照。
 スキルや MCP を直接配布できることと、プラグインとしての対応は区別する。
