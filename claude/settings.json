@@ -86,7 +86,10 @@
     "codex@openai-codex": true,
     "mattpocock-skills@mattpocock": true,
     "turn-receipt@dotfiles": true,
-    "lua-lsp@claude-plugins-official": true
+    "lua-lsp@claude-plugins-official": true,
+    "prompt-rail@oikon48": true,
+    "md-prompt@nogu66": true,
+    "qa-guide@claude-qamods": true
   },
   "extraKnownMarketplaces": {
     "dotfiles": {
@@ -108,6 +111,24 @@
         "repo": "openai/codex-plugin-cc"
       },
       "autoUpdate": true
+    },
+    "oikon48": {
+      "source": {
+        "source": "github",
+        "repo": "oikon48/prompt-rail"
+      }
+    },
+    "nogu66": {
+      "source": {
+        "source": "github",
+        "repo": "nogu66/md-prompt"
+      }
+    },
+    "claude-qamods": {
+      "source": {
+        "source": "github",
+        "repo": "aieo-product/claude_qamods"
+      }
     }
   },
   "outputStyle": "Concise",
@@ -162,6 +183,21 @@
     "agents-md@builtin": {
       "options": {
         "instructionFiles": "claude-md-or-agents-md"
+      }
+    },
+    "prompt-rail@oikon48": {
+      "options": {
+        "mode": "horizontal"
+      }
+    },
+    "md-prompt@nogu66": {
+      "options": {
+        "enabled": true
+      }
+    },
+    "qa-guide@claude-qamods": {
+      "options": {
+        "language": "ja"
       }
     }
   },
