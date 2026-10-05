@@ -70,6 +70,15 @@ alias cc-r='claude --resume'
 codex() {
   local -a codex_args=()
   if [[ ${HERDR_ENV:-} == 1 ]]; then
+    # embedded を明示し、設定上書きによる共有サーバーへの接続回避の警告を出さない。
+    # agents / --remote はサーバー接続を使うため対象外にする。
+    local embedded=1 arg
+    for arg in "$@"; do
+      case "$arg" in
+        agents|--remote|--remote=*) embedded=0; break ;;
+      esac
+    done
+    (( embedded )) && codex_args+=(--no-daemon)
     codex_args+=(-c shell_environment_policy.inherit=all)
     codex_args+=(-c 'shell_environment_policy.include_only=["PATH","SHELL","TMPDIR","TEMP","TMP","HOME","LANG","LC_ALL","LC_CTYPE","LOGNAME","USER","HERDR_*","BROWSER_USE_*","NODE_REPL_*"]')
   fi
