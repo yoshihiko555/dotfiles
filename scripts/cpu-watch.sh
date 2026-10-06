@@ -2,8 +2,8 @@
 # CPU が張り付いた時点のスナップショットを記録する調査用スクリプト
 # 全体のアイドル% を一定間隔で監視し、閾値未満が続いたら上位プロセス・メモリ状況・
 # 最も重いユーザープロセスの sample を ~/Library/Logs/cpu-watch/ に残す
-# 常駐は LaunchAgent（リポジトリ管理外）で行い、調査が終わったら --uninstall で外す
-# 使い方: bash scripts/cpu-watch.sh [--once | --install | --uninstall]
+# 常駐は --install で登録する LaunchAgent（nix 管理外）で行い、不要になったら --uninstall で外す
+# 使い方: bash scripts/cpu-watch.sh [--report [YYYY-MM-DD] | --once | --install | --uninstall]
 set -euo pipefail
 
 LOG_DIR="${CPU_WATCH_LOG_DIR:-$HOME/Library/Logs/cpu-watch}"
@@ -125,6 +125,70 @@ uninstall_agent() {
   echo "停止・削除しました: ${LABEL}（ログは $LOG_DIR に残っています）"
 }
 
+# 指定日のログから高負荷の区間と、60 秒ごとの記録から見たメモリの状況をまとめる
+report() {
+  local day="${1:-$(date +%F)}" file
+  file="$LOG_DIR/$day.log"
+  if [[ ! -f "$file" ]]; then
+    echo "ログがありません: $file" >&2
+    return 1
+  fi
+
+  echo "cpu-watch レポート: ${day}（アイドル ${IDLE_THRESHOLD}% 未満が ${CONSECUTIVE} 回以上連続した区間）"
+  echo "  開始      継続      記録時の上位コマンド（%CPU）"
+  awk -v interval="$INTERVAL" -v consecutive="$CONSECUTIVE" '
+    function secs(s, t) { split(s, t, ":"); return t[1] * 3600 + t[2] * 60 + t[3] }
+    function flush() {
+      if (n >= consecutive) {
+        eps++
+        total += n * interval
+        printf "  %s  約%3d秒  %s\n", start, n * interval, (top == "" ? "（直前の記録から 60 秒以内のため記録なし）" : top)
+      }
+      n = 0; top = ""; grab = 0
+    }
+    / high: / {
+      t = secs($1)
+      # 記録処理の分だけ間隔が空くため、少し余裕を持たせて同じ区間とみなす
+      if (n > 0 && t - last > interval * 2 + 20) flush()
+      if (n == 0) start = $1
+      n++; last = t
+      next
+    }
+    / recovered: / || / start: / { flush(); next }
+    /^===== / { if (n > 0 && top == "") grab = 1; next }
+    grab && /^-- %CPU by command/ { inby = 1; k = 0; next }
+    inby && /^-- / { inby = 0; grab = 0; next }
+    inby && k < 3 {
+      cpu = $1; $1 = ""; name = substr($0, 2); sub(/ \(x[0-9]+\)$/, "", name)
+      top = top (k ? " / " : "") name " " cpu
+      k++
+      next
+    }
+    / hb: / {
+      if (match($0, /free=[0-9]+/)) {
+        f = substr($0, RSTART + 5, RLENGTH - 5) + 0
+        if (minfree == "" || f < minfree) { minfree = f; minfree_t = $1 }
+      }
+      if (match($0, /comp=[0-9]+/)) {
+        c = substr($0, RSTART + 5, RLENGTH - 5) + 0
+        if (c > maxcomp) { maxcomp = c; maxcomp_t = $1 }
+      }
+      if (match($0, /pressure=[0-9]+/) && substr($0, RSTART + 9, RLENGTH - 9) + 0 >= 2) {
+        pc++
+        if (pc <= 5) pt = pt " " $1
+      }
+    }
+    END {
+      flush()
+      printf "  計 %d 回・約 %d 秒\n", eps, total
+      if (minfree != "") {
+        printf "メモリ: 空き最小 %dMB（%s）/ 圧縮最大 %dMB（%s）/ 逼迫（警告以上）%d 回%s\n",
+          minfree, minfree_t, maxcomp, maxcomp_t, pc, (pc ? ":" pt (pc > 5 ? " ..." : "") : "")
+      }
+    }' "$file"
+  echo "詳細: ${file}（すぐ終わるプロセスは上位コマンドに出ないことがある）"
+}
+
 case "${1:-}" in
   --install)
     install_agent
@@ -133,6 +197,10 @@ case "${1:-}" in
   --uninstall)
     uninstall_agent
     exit 0
+    ;;
+  --report)
+    report "${2:-}"
+    exit $?
     ;;
   --once)
     mkdir -p "$LOG_DIR/samples"

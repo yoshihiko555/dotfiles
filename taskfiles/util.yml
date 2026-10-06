@@ -123,6 +123,11 @@ tasks:
     cmds:
       - bash {{.ROOT_DIR}}/scripts/clean-codex-images.sh --dry-run {{.CLI_ARGS}}
 
+  cpu-report:
+    desc: cpu-watch の記録から高負荷の区間とメモリ状況を一覧（既定は今日。日付は -- YYYY-MM-DD）
+    cmds:
+      - bash {{.ROOT_DIR}}/scripts/cpu-watch.sh --report {{.CLI_ARGS}}
+
   # ====================
   # Nix flake（config/nix）
   # status タスク（symlink drift 確認）とは別軸。
