@@ -1,6 +1,7 @@
 {
   "env": {
     "CLAUDE_CODE_SHELL": "bash",
+    "CLAUDE_CODE_SHELL_PREFIX": "/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles/scripts/claude-shell-prefix.sh",
     "AI_ORCHESTRA_DIR": "/Users/yoshihiko/ghq/github.com/yoshihiko555/ai-orchestra",
     "CLAUDE_AFK_TIMEOUT_MS": "3600000",
     "NODE_OPTIONS": "--use-env-proxy",

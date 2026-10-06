@@ -85,7 +85,8 @@ codex() {
   if grep -q '^\[mcp_servers\.computer-use\]' "${CODEX_HOME:-$HOME/.codex}/config.toml" 2>/dev/null; then
     codex_args+=(-c mcp_servers.computer-use.enabled=false)
   fi
-  command codex "${codex_args[@]}" "$@"
+  # Codex が走らせるビルドやテストより対話操作を優先させる（子プロセスに引き継がれる）
+  nice -n 10 codex "${codex_args[@]}" "$@"
 }
 alias cx='codex'
 
