@@ -41,7 +41,7 @@ cheat() {
   ccw       会社Claude      cc-dg  権限スキップ
   cc-r      claude resume    cx     codex
   ccf       claude subagent委譲モード
-  ccx       claude 切替式 (/model claude-gpt-5.6-sol)  ccx -f 委譲モード
+  ccx       claude 切替式 (/model claude-gpt-6.1-sol)  ccx -f 委譲モード
   gm        gemini
   wails     Wails v2         wails3 Wails v3
   orche     ai-orchestra manager

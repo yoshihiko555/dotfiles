@@ -6,6 +6,9 @@
 # api-keys のプレースホルダはセットアップ時にランダム生成キーへ置換される。
 # 書いていない項目は CLIProxyAPI のデフォルト値。全項目は同ディレクトリの
 # cliproxyapi.conf.default を参照。
+# 書式は v7 のフラット形式。v8 (2026-09) 以降も legacy document として読まれる。
+# 新しい Claude モデルが「Claude Code x.y.z does not support this model」で拒否される
+# ときは、プロキシが上流へ送る Claude Code 偽装バージョンが古い。brew upgrade で直る。
 #
 # 構成:
 #   1. サーバ           待ち受け先
@@ -55,13 +58,29 @@ claude-code:
 # -----------------------------------------------------------------------------
 # 4. 公開モデルの取捨
 # -----------------------------------------------------------------------------
-# GPT-5.6 系に claude- 接頭辞のエイリアスを追加して /model ピッカーに並べる。
+# GPT 系に claude- 接頭辞のエイリアスを追加して /model ピッカーに並べる。
 #   fork: true          上流の素の ID も残したまま、別名として追加公開する
 #   force-mapping: true レスポンス中のモデル名をエイリアス側へ書き戻す
 # 注意: oauth-model-alias が効くのは OAuth 系チャネルのみ。openai-compatibility
 # には適用されないので、そちらのエイリアスは provider の models[].alias で指定する。
 oauth-model-alias:
   codex:
+    - name: "gpt-6.1-sol"
+      alias: "claude-gpt-6.1-sol"
+      fork: true
+      force-mapping: true
+    - name: "gpt-6-sol"
+      alias: "claude-gpt-6-sol"
+      fork: true
+      force-mapping: true
+    - name: "gpt-6-luna"
+      alias: "claude-gpt-6-luna"
+      fork: true
+      force-mapping: true
+    - name: "gpt-6-astra"
+      alias: "claude-gpt-6-astra"
+      fork: true
+      force-mapping: true
     - name: "gpt-5.6-sol"
       alias: "claude-gpt-5.6-sol"
       fork: true
@@ -77,7 +96,9 @@ oauth-model-alias:
 
 # /model ピッカーを最新世代だけに絞る。除外モデルはルーティングからも消えるため、
 # 古いモデルを使いたくなったらここから外して task cliproxy-setup を再実行する。
-# 残すもの: claude-fable-5 / claude-opus-4-8 / claude-sonnet-5 / claude-haiku-4-5
+# 一致は完全一致 (`*` を書いたときだけワイルドカード)。
+# 残すもの: claude-fable-5-1 / claude-opus-5-5 / claude-sonnet-5-5 / claude-haiku-5-5
+#           / claude-haiku-4-5-20251001
 # (haiku-4-5 はバックグラウンド処理用の haiku エイリアス解決先なので除外しない)
 oauth-excluded-models:
   claude:
@@ -87,9 +108,13 @@ oauth-excluded-models:
     - "claude-opus-4-5-20251101"
     - "claude-opus-4-6"
     - "claude-opus-4-7"
+    - "claude-opus-4-8"
+    - "claude-opus-5"
     - "claude-sonnet-4-20250514"
     - "claude-sonnet-4-5-20250929"
     - "claude-sonnet-4-6"
+    - "claude-sonnet-5"
+    - "claude-fable-5"
 
 
 # -----------------------------------------------------------------------------
