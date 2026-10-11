@@ -1,0 +1,46 @@
+# OpenCode Go プロバイダ (dotfiles 管理)
+# ---------------------------------------------------------------------------
+# api-keys.openai-compatibility の 1 項目 (v8 レイアウト、インデント 4)。
+# `task cliproxy-setup` が ~/.config/cliproxyapi/secrets.env に OPENCODE_GO_API_KEY
+# がある場合だけ、ヘッダ (`api-keys:` / `  openai-compatibility:`) の後ろへ追記する。
+#
+# - Go は Zen と別エンドポイント (/zen/go/v1)。Zen 側 (/zen/v1) に Go のキーを送ると
+#   403 / 402 になる。
+# - ここで扱えるのは Go の /chat/completions 経路のモデルのみ。/messages 経路
+#   (Qwen3.8 / MiniMax M3) と /responses 経路 (Grok / GPT-6 Luna) は載せない。
+# - alias が claude- 始まりのもの (kimi-k3 / glm-5.3) は /model ピッカーに出る。
+#   go- 始まりのものはピッカーに出さず、直打ちか環境変数からだけ使う。
+#   ccx -f の subagent 既定は CLIPROXY_DELEGATE_SUBAGENT_MODEL (claude-go-kimi-k3)。
+# - モデルごとに月額ドル上限があり、Go は入れ替えが頻繁。ID が通らなくなったら
+#   https://opencode.ai/docs/go/ の Endpoints 表を見て差し替える。
+# - 一部モデル (DeepSeek V4 Pro 等) はワークスペースの処理リージョンが Global で
+#   ないと「requires Global regions」で拒否される。
+    - name: "opencode-go"
+      base-url: "https://opencode.ai/zen/go/v1"
+      keys:
+        - api-key: "__OPENCODE_GO_API_KEY__"
+      headers:
+        # Go が求める安定したセッション ID。Claude Code が送る X-Claude-Code-Session-Id を
+        # 転送する ($ 始まりは下流リクエストのヘッダをコピー。無ければ省略される)。
+        x-opencode-session: "$X-Claude-Code-Session-Id"
+      models:
+        - name: "kimi-k3"
+          alias: "claude-go-kimi-k3"
+          display-name: "Kimi K3 (OpenCode Go)"
+          thinking:
+            levels: ["low", "medium", "high"]
+        - name: "glm-5.3"
+          alias: "claude-go-glm-5.3"
+          display-name: "GLM-5.3 (OpenCode Go)"
+          thinking:
+            levels: ["low", "medium", "high"]
+        - name: "mimo-v2.6-pro"
+          alias: "go-mimo-v2.6-pro"
+          display-name: "MiMo-V2.6-Pro (OpenCode Go)"
+          thinking:
+            levels: ["low", "medium", "high"]
+        - name: "kimi-k2.7-code"
+          alias: "go-kimi-k2.7-code"
+          display-name: "Kimi K2.7 Code (OpenCode Go)"
+          thinking:
+            levels: ["low", "medium", "high"]

@@ -12,43 +12,80 @@ tasks:
         CONF="$(brew --prefix)/etc/cliproxyapi.conf"
         TMPL="{{.ROOT_DIR}}/shared/cliproxyapi/conf.tmpl"
         FRAG="{{.ROOT_DIR}}/shared/cliproxyapi/openai-compat.tmpl"
+        GO_FRAG="{{.ROOT_DIR}}/shared/cliproxyapi/opencode-go.tmpl"
         SECRETS="${XDG_CONFIG_HOME:-$HOME/.config}/cliproxyapi/secrets.env"
 
         command -v cliproxyapi >/dev/null || brew install cliproxyapi
 
         # 既存 conf のキーを引き継ぎ、なければ新規生成 (テンプレートのプレースホルダは Git 管理外の実体だけに展開)
+        # クライアント認証キーは v8 レイアウトの access.api-keys。ルートの api-keys: は
+        # 上流プロバイダ群なので、access ブロック内の最初の引用符付き項目だけを読む。
+        # (ccx / cliproxy-status も同じ awk を使う。変えるときは 3 箇所揃える)
         KEY=""
         if [ -f "$CONF" ]; then
-          KEY=$(sed -n '/^api-keys:/{n;s/.*"\(.*\)".*/\1/p;}' "$CONF")
+          KEY=$(awk '/^access:/{f=1;next} f&&/^[^ #]/{exit} f&&/^  api-keys:/{getline; if (match($0,/"[^"]*"/)) print substr($0,RSTART+1,RLENGTH-2); exit}' "$CONF")
+          # 旧 (v7 フラット) レイアウトの conf からの移行用: ルート api-keys: 直下の引用符付き項目
+          if [ -z "$KEY" ]; then
+            KEY=$(awk '/^api-keys:/{getline; if (match($0,/"[^"]*"/)) print substr($0,RSTART+1,RLENGTH-2); exit}' "$CONF")
+          fi
+          if [ -z "$KEY" ]; then
+            echo "❌ 既存の $CONF からクライアント認証キーを読めなかった。キーを勝手に作り直すと ccx 以外のクライアントが壊れるため中断する" >&2
+            echo "   手で確認: grep -n -A2 '^access:' \"$CONF\"" >&2
+            exit 1
+          fi
         fi
         case "$KEY" in ""|your-api-key-*|__CLIPROXY_API_KEY__) KEY=$(openssl rand -hex 24);; esac
         sed "s/__CLIPROXY_API_KEY__/$KEY/" "$TMPL" > "$CONF"
         echo "✅ 設定を生成: $CONF"
 
-        # OpenAI 互換プロバイダ: secrets.env がある場合のみ雛形を展開して追記
+        # OpenAI 互換プロバイダ: secrets.env があり、キーが揃っているものだけ項目を追記
+        # (各 *.tmpl は openai-compatibility の 1 項目。ヘッダはここで 1 回だけ出す)
         if [ -f "$SECRETS" ]; then
           set -a; . "$SECRETS"; set +a
           # コピペで混入しがちなゼロ幅文字・CR・前後空白を除去する。
           # (U+200B 混入で上流が 401 → auth_unavailable になる事故があったため)
-          MISSING=""
-          for v in OPENAI_COMPAT_NAME OPENAI_COMPAT_BASE_URL OPENAI_COMPAT_API_KEY; do
+          for v in OPENAI_COMPAT_NAME OPENAI_COMPAT_BASE_URL OPENAI_COMPAT_API_KEY OPENCODE_GO_API_KEY; do
             eval "val=\${$v:-}"
             clean=$(printf '%s' "$val" | perl -CSD -pe 's/[\x{200B}-\x{200F}\x{FEFF}\x{2060}\r]//g; s/^\s+|\s+$//g')
             if [ "$val" != "$clean" ]; then
               echo "⚠️  $v に不可視文字/余分な空白を検出したため除去した ($SECRETS も直すこと)"
               eval "$v=\$clean"
             fi
-            [ -n "$clean" ] || MISSING="$MISSING $v"
           done
-          if [ -n "$MISSING" ]; then
-            echo "⚠️  $SECRETS の未設定項目:$MISSING → openai-compatibility はスキップ"
-          else
-            printf '\n' >> "$CONF"
+          HEADER_DONE=0
+          emit_header() {
+            if [ "$HEADER_DONE" = 0 ]; then
+              printf '\napi-keys:\n  openai-compatibility:\n' >> "$CONF"
+              HEADER_DONE=1
+            fi
+          }
+
+          # 汎用プロバイダ (openai-compat.tmpl): 3 つ揃っている時だけ
+          MISSING=""
+          for v in OPENAI_COMPAT_NAME OPENAI_COMPAT_BASE_URL OPENAI_COMPAT_API_KEY; do
+            eval "val=\${$v:-}"
+            [ -n "$val" ] || MISSING="$MISSING $v"
+          done
+          if [ -z "$MISSING" ]; then
+            emit_header
             sed -e "s|__OPENAI_COMPAT_NAME__|$OPENAI_COMPAT_NAME|" \
                 -e "s|__OPENAI_COMPAT_BASE_URL__|$OPENAI_COMPAT_BASE_URL|" \
                 -e "s|__OPENAI_COMPAT_API_KEY__|$OPENAI_COMPAT_API_KEY|" \
                 "$FRAG" >> "$CONF"
             echo "✅ openai-compatibility を追記: $OPENAI_COMPAT_NAME"
+          elif [ "$MISSING" = " OPENAI_COMPAT_NAME OPENAI_COMPAT_BASE_URL OPENAI_COMPAT_API_KEY" ]; then
+            echo "ℹ️  OPENAI_COMPAT_* が未設定のため汎用プロバイダはスキップ"
+          else
+            echo "⚠️  $SECRETS の未設定項目:$MISSING → 汎用プロバイダはスキップ"
+          fi
+
+          # OpenCode Go (opencode-go.tmpl): キーがある時だけ
+          if [ -n "${OPENCODE_GO_API_KEY:-}" ]; then
+            emit_header
+            sed -e "s|__OPENCODE_GO_API_KEY__|$OPENCODE_GO_API_KEY|" "$GO_FRAG" >> "$CONF"
+            echo "✅ openai-compatibility を追記: opencode-go"
+          else
+            echo "ℹ️  OPENCODE_GO_API_KEY が未設定のため OpenCode Go はスキップ"
           fi
         else
           echo "ℹ️  $SECRETS が無いため openai-compatibility はスキップ"
@@ -73,7 +110,8 @@ tasks:
     cmds:
       - |
         CONF="$(brew --prefix)/etc/cliproxyapi.conf"
-        KEY=$(sed -n '/^api-keys:/{n;s/.*"\(.*\)".*/\1/p;}' "$CONF")
+        # クライアント認証キーは access.api-keys (cliproxy-setup / ccx と同じ awk)
+        KEY=$(awk '/^access:/{f=1;next} f&&/^[^ #]/{exit} f&&/^  api-keys:/{getline; if (match($0,/"[^"]*"/)) print substr($0,RSTART+1,RLENGTH-2); exit}' "$CONF")
 
         echo "── サービス ──────────────────────────────"
         brew services info cliproxyapi | sed 's/^/  /'

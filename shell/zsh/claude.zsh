@@ -27,7 +27,7 @@ ccf() {
 }
 
 # ============================================
-# Claude Code × Codex (GPT-6 / 5.6) via CLIProxyAPI
+# Claude Code × Codex (GPT-6) / OpenCode Go via CLIProxyAPI
 # ============================================
 
 # Claude Code のハーネスを CLIProxyAPI (localhost:8317) に向ける切替式 (ルートB-2)。
@@ -47,6 +47,16 @@ export CLIPROXY_URL="${CLIPROXY_URL:-http://127.0.0.1:8317}"
 # ([1m] の 1M コンテキストはプロキシ経由では使えない)
 CLIPROXY_DEFAULT_MODEL="${CLIPROXY_DEFAULT_MODEL:-claude-opus-5-5}"
 
+# ccx -f の subagent モデル。OpenCode Go のオープンモデルを subagent に振る試行
+# (2026-10-11〜)。プロキシに alias が無い環境では ccf と同じ
+# CLAUDE_DELEGATE_SUBAGENT_MODEL へ自動で戻す。
+CLIPROXY_DELEGATE_SUBAGENT_MODEL="${CLIPROXY_DELEGATE_SUBAGENT_MODEL:-claude-go-kimi-k3}"
+
+# バックグラウンド処理 (会話要約など) が使う haiku。プロキシ側で haiku-4-5 を
+# ピッカーから除外した (ルーティングからも消える) ため、Claude 側の 5.5 に固定する。
+# Claude → Claude の差し替えなので Codex 枠は消費しない。
+CLIPROXY_HAIKU_MODEL="${CLIPROXY_HAIKU_MODEL:-claude-haiku-5-5}"
+
 #   ccx        通常起動 (~/.claude の設定・skills・plugins はそのまま共有)
 #   ccx -f     ccf と同じ subagent 委譲モードをプロキシ経由で使う
 ccx() {
@@ -55,18 +65,26 @@ ccx() {
     delegate=1
     shift
   fi
-  key="$(sed -n '/^api-keys:/{n;s/.*"\(.*\)".*/\1/p;}' "$CLIPROXY_CONF" 2>/dev/null)"
+  # クライアント認証キーは v8 レイアウトの access.api-keys (ルートの api-keys: は上流群)。
+  # taskfiles/cliproxy.yml の setup / status と同じ awk。変えるときは 3 箇所揃える。
+  key="$(awk '/^access:/{f=1;next} f&&/^[^ #]/{exit} f&&/^  api-keys:/{getline; if (match($0,/"[^"]*"/)) print substr($0,RSTART+1,RLENGTH-2); exit}' "$CLIPROXY_CONF" 2>/dev/null)"
   if [[ -z "$key" ]]; then
     echo "ccx: $CLIPROXY_CONF から api-keys を読めない (brew install cliproxyapi 済み?)" >&2
     return 1
   fi
-  if ! curl -sf -m 2 -o /dev/null "$CLIPROXY_URL/v1/models" -H "Authorization: Bearer $key"; then
+  local models
+  if ! models="$(curl -sf -m 2 "$CLIPROXY_URL/v1/models" -H "Authorization: Bearer $key")"; then
     echo "ccx: CLIProxyAPI に接続できない (brew services start cliproxyapi)" >&2
     return 1
   fi
   local -a extra_env extra_args
   if (( delegate )); then
-    extra_env=(CLAUDE_CODE_SUBAGENT_MODEL="$CLAUDE_DELEGATE_SUBAGENT_MODEL")
+    local sub="$CLIPROXY_DELEGATE_SUBAGENT_MODEL"
+    if [[ "$models" != *"\"$sub\""* ]]; then
+      echo "ccx: プロキシに $sub が無いため subagent は $CLAUDE_DELEGATE_SUBAGENT_MODEL を使う" >&2
+      sub="$CLAUDE_DELEGATE_SUBAGENT_MODEL"
+    fi
+    extra_env=(CLAUDE_CODE_SUBAGENT_MODEL="$sub")
     extra_args=(--append-system-prompt "$CLAUDE_DELEGATE_PROMPT")
   fi
   # 呼び出し側が --model を渡していなければ既定モデルを補う。
@@ -76,15 +94,18 @@ ccx() {
   fi
 
   # /model ピッカーは gateway model discovery で claude* 始まりの ID だけ自動追加される。
-  # GPT 系は cliproxyapi.conf の oauth-model-alias で claude-gpt-* に fork 公開
-  # してあるため、Claude 系 (fable/opus/sonnet/haiku) と GPT 系 (6.x / 5.6) が両方並ぶ。
+  # GPT 系は cliproxyapi.conf の oauth.model-alias で claude-gpt-* に fork 公開、
+  # OpenCode Go の一部は provider 側 alias で claude-go-* にしてあるため、
+  # Claude 系 (fable/opus/sonnet/haiku) と GPT 6.x、Go (kimi-k3 / glm-5.3) が並ぶ。
   #
   # 注意: ピッカーで選んだモデルは共有の ~/.claude/settings.json に永続化される。
-  # プロキシ専用の ID のまま終了すると、次に素の cc / ccf を起動したときに
-  # api.anthropic.com が知らないモデル名になって壊れる。抜ける前に /model で戻すこと。
+  # プロキシ専用の ID (claude-gpt-* / claude-go-* / claude-cosmo-*) のまま終了すると、
+  # 次に素の cc / ccf を起動したときに api.anthropic.com が知らないモデル名になって
+  # 壊れる。抜ける前に /model で戻すこと。
   env \
     ANTHROPIC_BASE_URL="$CLIPROXY_URL" \
     ANTHROPIC_AUTH_TOKEN="$key" \
+    ANTHROPIC_DEFAULT_HAIKU_MODEL="$CLIPROXY_HAIKU_MODEL" \
     CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1 \
     CLAUDE_CODE_ALWAYS_ENABLE_EFFORT=1 \
     CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY=3 \
