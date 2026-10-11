@@ -102,10 +102,14 @@ ccx() {
   # プロキシ専用の ID (claude-gpt-* / claude-go-* / claude-cosmo-*) のまま終了すると、
   # 次に素の cc / ccf を起動したときに api.anthropic.com が知らないモデル名になって
   # 壊れる。抜ける前に /model で戻すこと。
+  #
+  # CLIProxyAPI は safeguards を中継しないため、auto mode の判定は最初から
+  # クライアント側で行わせる (サーバー側判定の不適格通知を出さない)。
   env \
     ANTHROPIC_BASE_URL="$CLIPROXY_URL" \
     ANTHROPIC_AUTH_TOKEN="$key" \
     ANTHROPIC_DEFAULT_HAIKU_MODEL="$CLIPROXY_HAIKU_MODEL" \
+    CLAUDE_CODE_AUTO_MODE_SERVER=0 \
     CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1 \
     CLAUDE_CODE_ALWAYS_ENABLE_EFFORT=1 \
     CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY=3 \
