@@ -10,3 +10,4 @@ Nix 関連の意思決定の一覧。詳細は各 ADR ファイルを参照。
 | [ADR-20260801-0004](ADR-20260801-0004-module-layer-design.md) | Nix 設定のディレクトリ層設計（darwin/home/hosts） | 採用 | 2026-08-01 | 運用コスト/WSL2 非対称性/規約明文化 | Structure |
 | [ADR-20260802-0005](ADR-20260802-0005-upstream-nix-migration.md) | hermes を素の Nix へ移行（Determinate Nix からの離脱） | 採用 | 2026-08-02 | 移植コスト/系統統一/機能制約の解消 | Migration/Infra |
 | [ADR-20260814-0006](ADR-20260814-0006-flatten-repo-layout.md) | リポジトリのディレクトリ構成をフラット化（stow 由来の中間層を除去） | 採用 | 2026-08-14 | 死んだ命名規約の解消/運用負荷 | Structure |
+| [ADR-20261013-0007](ADR-20261013-0007-omp-prebuilt-binary.md) | oh-my-pi（omp）は公式 flake ではなく公式バイナリを自前パッケージで取得する | 採用 | 2026-10-13 | 手元ビルドの規模/更新頻度/宣言とロールバックの維持 | Packages |

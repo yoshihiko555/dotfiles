@@ -113,6 +113,9 @@ in
       # プロプライエタリのため改変・再配布しない前提で組んでいる（packages/pen-cli/default.nix）
       (pkgs.callPackage ../../packages/pen-cli { })
 
+      # oh-my-pi（omp）。pi のフォーク。nixpkgs 未収録のため公式バイナリを取得する（packages/omp/default.nix）
+      (pkgs.callPackage ../../packages/omp { })
+
       # nixpkgs 未収録だが公式 flake あり（npm -g から移行）
       # Phase 2 のツール呼び出しでプロセスが落ちる問題にパッチを当てている（上記 let）
       taktPackage
