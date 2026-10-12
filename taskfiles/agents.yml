@@ -5,7 +5,7 @@ tasks:
   # Agent コンテキストファイル同期
   # ====================
   sync-agents:
-    desc: shared/agents/core.md + diff-*.md から Codex/Gemini の AGENTS.md を生成
+    desc: shared/agents/core.md + diff-*.md から Codex/Gemini/pi の AGENTS.md を生成
     cmds:
       - |
         set -eu
@@ -28,3 +28,4 @@ tasks:
 
         gen diff-codex.md  "$root/codex/AGENTS.md"
         gen diff-gemini.md "$root/gemini/AGENTS.md"
+        gen diff-pi.md     "$root/pi/AGENTS.md"

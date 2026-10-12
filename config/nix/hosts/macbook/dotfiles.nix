@@ -92,6 +92,10 @@ in
         ".gemini/config/skills".source = mkLink "gemini/config/skills";
         ".gemini/settings.json".source = mkLink "gemini/settings.json";
 
+        # ~/.pi/agent には pi が書く認証情報・セッション・settings.json が同居するため、
+        # ディレクトリごとは張らずファイル単位で配る。拡張は別リポジトリ pi-harness
+        ".pi/agent/AGENTS.md".source = mkLink "pi/AGENTS.md";
+
         ".takt/config.yaml".source = mkLink "takt/config.yaml";
 
         "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.C9692AD7-2800-42B7-8F97-8F8CCD1CC88E".source =

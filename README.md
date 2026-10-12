@@ -148,7 +148,7 @@ dotfiles/
 | | `task loupedeck-apply` | repo の Loupedeck Live プロファイルを実機へ適用（switch でも自動実行） |
 | **Nix** | `task nix-check` | nix flake の評価とフォーマット検査（`nix flake check`） |
 | | `task nix-fmt` | nix + shell + yaml/toml を treefmt で整形（`nix fmt`）。lua/md/json は対象外 |
-| **エージェント資産** | `task sync-agents` | `shared/agents` から Codex / Gemini の AGENTS.md を生成 |
+| **エージェント資産** | `task sync-agents` | `shared/agents` から Codex / Gemini / pi の AGENTS.md を生成 |
 | | `task sync-skills` | `shared/skills` のリンクを更新 |
 | | `task claude-work-init` | 会社用 Claude Code 設定ディレクトリを初期化 |
 | | `task sync-claude-work-skills` | 会社用 Claude Code の common + work スキルを同期 |
@@ -207,9 +207,9 @@ Claude Code / Codex / Antigravity（Gemini）で共有する資産は `shared/` 
 
 - CLAUDE.md / AGENTS.md の実体は `shared/agents/` に集約
   - `core.md`: 全エージェント共通ルール（唯一の編集対象）
-  - `diff-claude.md` / `diff-codex.md` / `diff-gemini.md`: CLI 固有の差分
+  - `diff-claude.md` / `diff-codex.md` / `diff-gemini.md` / `diff-pi.md`: CLI 固有の差分
 - Claude Code: `claude/CLAUDE.md` が `@import` で core + diff を参照（生成不要）
-- Codex / Gemini: `task sync-agents` で core + diff を連結して各 AGENTS.md を生成
+- Codex / Gemini / pi: `task sync-agents` で core + diff を連結して各 AGENTS.md を生成（pi は `~/.pi/agent/AGENTS.md` へリンク。拡張は別リポジトリ [pi-harness](https://github.com/yoshihiko555/pi-harness)）
 - リポジトリルートの `AGENTS.md` は当リポジトリ固有ルールのみ（`CLAUDE.md` は `@AGENTS.md` で橋渡し）
 - core.md / diff-*.md を編集したら `task sync-agents` を実行すること
 
