@@ -58,6 +58,7 @@ in
       vscode-js-debug # Neovim の TypeScript / JavaScript デバッグ（js-debug）。Node は内包版を使う
       imagemagick # Neovim の snacks.image で画像の変換・サイズ取得に使用
       resvg # SVG→PNG ラスタライザ。logo-design スキルの export.sh が最優先で検出する
+      pi-coding-agent # pi（コーディングエージェント）
 
       # PDF 処理 CLI（pdftotext / pdfimages 等）。2026-08-02 に brew から削除したが
       # その後手動で brew 再導入されていた（drift）。Nix 管理へ移す。
