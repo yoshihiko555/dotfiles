@@ -19,6 +19,15 @@ let
         < ${../../patches/takt-report-phase-stream-guard.patch}
     '';
   });
+
+  # 1.8.22 の test_lldb_command が darwin で落ちる問題の上流修正（NixOS/nixpkgs#572564）を先取りする。
+  # 修正が nixpkgs-unstable に届くと --replace-fail でビルドが落ちるので、そのとき素の debugpy に戻す
+  debugpyPackage = pkgs.python3Packages.debugpy.overridePythonAttrs (old: {
+    postPatch = (old.postPatch or "") + ''
+      substituteInPlace tests/debugpy/server/test_add_code_to_python_process.py \
+        --replace-fail 'cmd.startswith("lldb ' 'cmd.startswith("${pkgs.lldb}/bin/lldb '
+    '';
+  });
 in
 {
   # MBP 固有の CLI パッケージ（棚卸し: PHASE-3-2-CLI-INVENTORY.md）。
@@ -45,7 +54,7 @@ in
 
       # --- 新規導入 ---
       delve # Neovim の Go デバッグ。Go ランタイムは引き続き mise で管理
-      python3Packages.debugpy # Neovim の Python デバッグ（debugpy-adapter）。実行する Python はプロジェクトの venv
+      debugpyPackage # Neovim の Python デバッグ（debugpy-adapter）。実行する Python はプロジェクトの venv
       vscode-js-debug # Neovim の TypeScript / JavaScript デバッグ（js-debug）。Node は内包版を使う
       imagemagick # Neovim の snacks.image で画像の変換・サイズ取得に使用
       resvg # SVG→PNG ラスタライザ。logo-design スキルの export.sh が最優先で検出する
