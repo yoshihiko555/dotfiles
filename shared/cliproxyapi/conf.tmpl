@@ -57,8 +57,11 @@ oauth:
   # 症状が出たら該当の login を再実行して brew services restart cliproxyapi する。
   auth-dir: "~/.cli-proxy-api"
 
-  # GPT 系に claude- 接頭辞のエイリアスを追加して /model ピッカーに並べる。
-  # (ピッカーの gateway model discovery は claude/anthropic 始まりしか拾わない)
+  # GPT 系に *-claude のエイリアスを追加して /model ピッカーに並べる。
+  # 名前の条件は 2 つ:
+  #   - claude か anthropic を含む (ピッカーの gateway model discovery が拾う条件)
+  #   - claude- で始まらない (ccx の CLAUDE_CODE_MAX_CONTEXT_TOKENS が効く条件。
+  #     claude- 始まりの未知 ID は窓が 200k 固定になる)
   #   fork: true          上流の素の ID も残したまま、別名として追加公開する
   #   force-mapping: true レスポンス中のモデル名をエイリアス側へ書き戻す
   # 5.6 系はピッカーから外した (2026-10-11)。素の ID (gpt-5.6-sol 等) は直打ちで使える。
@@ -67,19 +70,19 @@ oauth:
   model-alias:
     codex:
       - name: "gpt-6.1-sol"
-        alias: "claude-gpt-6.1-sol"
+        alias: "gpt-6.1-sol-claude"
         fork: true
         force-mapping: true
       - name: "gpt-6-sol"
-        alias: "claude-gpt-6-sol"
+        alias: "gpt-6-sol-claude"
         fork: true
         force-mapping: true
       - name: "gpt-6-luna"
-        alias: "claude-gpt-6-luna"
+        alias: "gpt-6-luna-claude"
         fork: true
         force-mapping: true
       - name: "gpt-6-astra"
-        alias: "claude-gpt-6-astra"
+        alias: "gpt-6-astra-claude"
         fork: true
         force-mapping: true
 
@@ -116,10 +119,16 @@ oauth:
 # 例えば gpt-5.6-sol は claude-fable-5-dd-los-6.5-tpg になる。
 # Claude Code の /model ピッカーがこれで埋まって判読不能になるため無効化する。
 # 無効化すると非 Claude 系は素の ID で出るので、ピッカーに出したいものは
-# 上の model-alias か外部プロバイダ側の alias で claude- 始まりの名前を付ける。
+# 上の model-alias か外部プロバイダ側の alias で claude を含む名前を付ける。
 upstream:
   claude:
     disable-cloaking-model-list: true
+
+# Codex 宛てのリクエストに image_generation ツールを自動で足さない。
+# 毎ターンの入力が増えるだけで、Claude Code からは使わない。
+# /v1/images/* のエンドポイントは "chat" でも使える。
+multimedia:
+  disable-image-generation: "chat"
 
 
 # -----------------------------------------------------------------------------

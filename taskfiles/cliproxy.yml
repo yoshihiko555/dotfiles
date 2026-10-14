@@ -151,12 +151,12 @@ tasks:
         fi
 
         # /v1/models はヘッダ次第で内容が変わる。ここでは素の全件を出す。
-        # Claude Code の /model ピッカーに並ぶのは claude/anthropic 始まりだけ。
+        # Claude Code の /model ピッカーに並ぶのは claude/anthropic を含む ID だけ。
         echo ""
         echo "── 公開モデル (★ = /model ピッカーに出る) ──"
         if MODELS=$(curl -sf -m 3 http://127.0.0.1:8317/v1/models -H "Authorization: Bearer $KEY" \
              | jq -r '.data[].id' | sort) && [ -n "$MODELS" ]; then
-          printf '%s\n' "$MODELS" | sed -E -e 's/^(claude|anthropic)/★ &/' -e 's/^([^★])/  \1/'
+          printf '%s\n' "$MODELS" | sed -E -e '/claude|anthropic/s/^/★ /' -e '/^★/!s/^/  /'
         else
           echo "  ⚠️  プロキシに接続できません"
         fi

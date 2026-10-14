@@ -31,7 +31,7 @@ ccf() {
 # ============================================
 
 # Claude Code のハーネスを CLIProxyAPI (localhost:8317) に向ける切替式 (ルートB-2)。
-# 起動直後は普段の Claude のまま。`/model claude-gpt-6.1-sol` で Codex 側 (ChatGPT 有料プランの
+# 起動直後は普段の Claude のまま。`/model gpt-6.1-sol-claude` で Codex 側 (ChatGPT 有料プランの
 # Codex 枠) に切り替え、`/model` で Claude に戻せる。
 # 前提:
 #   brew install cliproxyapi
@@ -50,12 +50,19 @@ CLIPROXY_DEFAULT_MODEL="${CLIPROXY_DEFAULT_MODEL:-claude-opus-5-5}"
 # ccx -f の subagent モデル。OpenCode Go のオープンモデルを subagent に振る試行
 # (2026-10-11〜)。プロキシに alias が無い環境では ccf と同じ
 # CLAUDE_DELEGATE_SUBAGENT_MODEL へ自動で戻す。
-CLIPROXY_DELEGATE_SUBAGENT_MODEL="${CLIPROXY_DELEGATE_SUBAGENT_MODEL:-claude-go-kimi-k3}"
+CLIPROXY_DELEGATE_SUBAGENT_MODEL="${CLIPROXY_DELEGATE_SUBAGENT_MODEL:-kimi-k3-claude}"
 
 # バックグラウンド処理 (会話要約など) が使う haiku。プロキシ側で haiku-4-5 を
 # ピッカーから除外した (ルーティングからも消える) ため、Claude 側の 5.5 に固定する。
 # Claude → Claude の差し替えなので Codex 枠は消費しない。
 CLIPROXY_HAIKU_MODEL="${CLIPROXY_HAIKU_MODEL:-claude-haiku-5-5}"
+
+# Claude Code が知らないモデル ID に想定する窓 (既定は 200k で compact が早い)。
+# 効くのは claude- で始まらない ID だけ (別名 *-claude、素の gpt-* / go-*)。
+# claude-cosmo-* は 200k のまま。Claude 系は 1M のまま変わらない。
+# 実際の上限より大きいと compact 前に上流で弾かれるので、Codex の上限 (872k) 以内に置く。
+# 素の gpt-5.5 (Codex 経由は 272k) は実窓が小さいので直打ちしない。
+CLIPROXY_MAX_CONTEXT_TOKENS="${CLIPROXY_MAX_CONTEXT_TOKENS:-500000}"
 
 #   ccx        通常起動 (~/.claude の設定・skills・plugins はそのまま共有)
 #   ccx -f     ccf と同じ subagent 委譲モードをプロキシ経由で使う
@@ -93,13 +100,13 @@ ccx() {
     extra_args+=(--model "$CLIPROXY_DEFAULT_MODEL")
   fi
 
-  # /model ピッカーは gateway model discovery で claude* 始まりの ID だけ自動追加される。
-  # GPT 系は cliproxyapi.conf の oauth.model-alias で claude-gpt-* に fork 公開、
-  # OpenCode Go の一部は provider 側 alias で claude-go-* にしてあるため、
+  # /model ピッカーは gateway model discovery で claude/anthropic を含む ID だけ自動追加される。
+  # GPT 系は cliproxyapi.conf の oauth.model-alias で gpt-*-claude に fork 公開、
+  # OpenCode Go の一部は provider 側 alias で *-claude にしてあるため、
   # Claude 系 (fable/opus/sonnet/haiku) と GPT 6.x、Go (kimi-k3 / glm-5.3) が並ぶ。
   #
   # 注意: ピッカーで選んだモデルは共有の ~/.claude/settings.json に永続化される。
-  # プロキシ専用の ID (claude-gpt-* / claude-go-* / claude-cosmo-*) のまま終了すると、
+  # プロキシ専用の ID (*-claude / claude-cosmo-*) のまま終了すると、
   # 次に素の cc / ccf を起動したときに api.anthropic.com が知らないモデル名になって
   # 壊れる。抜ける前に /model で戻すこと。
   #
@@ -112,6 +119,7 @@ ccx() {
     CLAUDE_CODE_AUTO_MODE_SERVER=0 \
     CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1 \
     CLAUDE_CODE_ALWAYS_ENABLE_EFFORT=1 \
+    CLAUDE_CODE_MAX_CONTEXT_TOKENS="$CLIPROXY_MAX_CONTEXT_TOKENS" \
     CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY=3 \
     ENABLE_TOOL_SEARCH=false \
     "${extra_env[@]}" \
