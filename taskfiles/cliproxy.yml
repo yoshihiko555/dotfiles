@@ -154,8 +154,31 @@ tasks:
         # Claude Code の /model ピッカーに並ぶのは claude/anthropic 始まりだけ。
         echo ""
         echo "── 公開モデル (★ = /model ピッカーに出る) ──"
-        if ! curl -sf -m 3 http://127.0.0.1:8317/v1/models -H "Authorization: Bearer $KEY" \
-             | jq -r '.data[].id' | sort \
-             | sed -E -e 's/^(claude|anthropic)/★ &/' -e 's/^([^★])/  \1/'; then
+        if MODELS=$(curl -sf -m 3 http://127.0.0.1:8317/v1/models -H "Authorization: Bearer $KEY" \
+             | jq -r '.data[].id' | sort) && [ -n "$MODELS" ]; then
+          printf '%s\n' "$MODELS" | sed -E -e 's/^(claude|anthropic)/★ &/' -e 's/^([^★])/  \1/'
+        else
           echo "  ⚠️  プロキシに接続できません"
+        fi
+
+        # ccx は auto mode の判定をクライアント側で行うため、判定器もプロキシ経由になる。
+        # 判定器のモデルは Anthropic 配信の設定 (~/.claude.json にキャッシュ) で決まり、
+        # 公開モデルに無いと auto mode が全操作を拒否する。
+        echo ""
+        echo "── auto mode 判定器 ──────────────────────"
+        CLASSIFIERS=$(jq -r '.cachedGrowthBookFeatures.tengu_auto_mode_config // {}
+             | [.model // empty, ((.modelByMainModel // {}) | .[])]
+             | map(sub("\\[1m\\]$"; "")) | unique | .[]' "$HOME/.claude.json" 2>/dev/null)
+        if [ -z "$CLASSIFIERS" ]; then
+          echo "  ?  ~/.claude.json から判定器のモデルを読めない"
+        elif [ -z "$MODELS" ]; then
+          echo "  ?  公開モデルを取得できないため確認できない"
+        else
+          for m in $CLASSIFIERS; do
+            if printf '%s\n' "$MODELS" | grep -qx "$m"; then
+              printf '  ✔  %s\n' "$m"
+            else
+              printf '  ✘  %s が公開モデルに無い (conf.tmpl の excluded-models を確認)\n' "$m"
+            fi
+          done
         fi

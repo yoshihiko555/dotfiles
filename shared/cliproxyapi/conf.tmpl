@@ -89,6 +89,8 @@ oauth:
   # 残すもの: claude-fable-5-1 / claude-opus-5-5 / claude-sonnet-5-5 / claude-haiku-5-5
   # haiku-4-5 も除外する。Claude Code のバックグラウンド処理 (会話要約など) が使う
   # haiku は、ccx が ANTHROPIC_DEFAULT_HAIKU_MODEL=claude-haiku-5-5 で固定している。
+  # auto mode の判定器が使うモデル (claude-sonnet-5) は除外しない。除外すると判定が
+  # 失敗し、auto mode が全操作を拒否する。判定器のモデルは task cliproxy-status で確認する。
   excluded-models:
     claude:
       - "claude-3-*"
@@ -102,7 +104,6 @@ oauth:
       - "claude-sonnet-4-20250514"
       - "claude-sonnet-4-5-20250929"
       - "claude-sonnet-4-6"
-      - "claude-sonnet-5"
       - "claude-fable-5"
       - "claude-haiku-4-5-20251001"
 
