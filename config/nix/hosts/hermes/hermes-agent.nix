@@ -74,6 +74,9 @@ in
             "--hidden"
             "--title"
             "Hermes News"
+            # index.html があるディレクトリは一覧の代わりにそれを返す（ルートは Hermes ホーム）。
+            "--index"
+            "index.html"
             "/Users/agent/.hermes/data/news-pipeline/reviews"
           ];
           RunAtLoad = true;
