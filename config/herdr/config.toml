@@ -252,10 +252,3 @@ command = "~/.config/herdr/bin/herdr-smart-move resize-right"
 key = "prefix+y"
 type = "plugin_action"
 command = "herdr-automatic-rename.reset"
-
-# terminal-browser に必要。herdr のソケット経由で direct-kitty 転送を使えるようにする
-# （無いと terminal-browser が無言の空白ペインになる。zenbu-labs/terminal-browser#89）。
-# 条件: 外側の端末が Ghostty / kitty、アタッチ中のクライアントが 1 つ、ssh / tmux / --remote 経由でない。
-# 変更の反映には reload-config に加えてデタッチ → 再アタッチが要る。
-[experimental]
-kitty_graphics = true

@@ -432,3 +432,58 @@ activation に持ち込むうえ herdr 自体が採否判断前であるため�
 - Cmd+クリックのリンクオープンは Ghostty でも効かない（2026-09-23 実測）。ただし WezTerm でも同じで、
   herdr がマウスを捕捉しているため端末に届かない（`mouse_capture = false` は上記「できないこと」のとおり
   副作用が大きく無効化済み）。端末の差ではなく herdr の制約
+
+## 追記（2026-10-14）: herdr 0.9.4 と terminal-browser 0.13.4 へ更新
+
+herdr を 0.9.1 から 0.9.4 へ、terminal-browser を 0.11.1 から 0.13.4 へ同時に上げた（brew で直接。
+`homebrew.nix` は版を持たないので switch は不要）。herdr 0.9.2 で独自の画像 API（`pane.graphics.*`）が
+削除され、terminal-browser 0.11.1 はその API に依存していたため、片方だけ上げることはしなかった。
+
+**上の記述のうち変わったもの**（herdr 0.9.4 のソースで確認）
+
+- terminal-browser の描き方: 「herdr のソケット経由で direct-kitty 転送を要求する」は過去の話になった。
+  terminal-browser は標準の Kitty graphics をペインに書き、herdr がクライアントごとに外側の端末へ渡す。
+  重さの正体だった「ストリームの寿命」は、ストリームごと無くなった
+- 「herdr のクライアントを 1 つに保つ」という条件は無くなった。画像の渡し方はクライアントごとに決まる。
+  外側の端末が Ghostty / WezTerm / kitty で、ssh / tmux / screen / `--remote` を経由しないクライアントには
+  一時ファイルで渡す。それ以外のクライアントと、16 MiB を超える画像は端末への出力に埋め込む
+  （`src/server/headless/native_graphics.rs`、`src/client/handshake.rs`）。
+  [ADR-20260923-0002](ADR-20260923-0002-terminal-browser-element-to-agent.md) の「C で失うもの」に書いた条件も同じく無くなった
+- `kitty_graphics` は専用 API 用のフラグではなく「ペインの画像を外側の端末に出すか」の設定になった。
+  正式な名前は `[terminal] kitty_graphics` で、既定は true（0.9.1 の時点ですでにそう）。`[experimental]` は旧名として
+  残っているだけなので、`config/herdr/config.toml` から削除した
+- WezTerm にも Ghostty と同じくファイルで渡すようになったため、「terminal-browser は Ghostty 限定」という結論は
+  変わりうる（未実測）
+
+**新しく分かった制約**
+
+- 埋め込みで 30 MiB を超える画像は描かれない。herdr が黙って捨てる（`src/kitty_graphics/surface.rs`。
+  [zenbu-labs/terminal-browser#165](https://github.com/zenbu-labs/terminal-browser/issues/165)、0.9.4 でも未修正）。
+  旧 API にはこの上限が無かった。Dell 5K（2 倍）の右半分のペインはおよそ 2490×2700 px で、画面全体を 1 枚で
+  送ると上限を超える計算になるが、実際には描けた（理由は未確認）
+- 新しいペインは `TERM_PROGRAM=herdr` になる（0.9.2）。terminal-browser は端末を Ghostty と判別できず、
+  変わった部分だけを送る方式を使わない可能性がある（未確認）。snacks.image は XTVERSION の応答
+  （`libghostty`）で判定するので影響を受けない
+- 0.9.4 は prefix 直後の素の文字を無視する（[herdrdev/herdr#5255](https://github.com/herdrdev/herdr/issues/5255)）。
+  Ghostty の `text:` で送っていた Cmd+D / Cmd+T / Cmd+W / Cmd+S が効かなくなったため、
+  `config/ghostty/herdr.conf` で prefix の後ろのキーを CSI u 形式（`\x1b[<コードポイント>u`）に書き換えた。
+  この形は古い版でも通じるので、上流が直っても戻さなくてよい
+
+**実測（2026-10-14、サーバー再起動後）**
+
+- learno（Next.js の開発サーバー）を右半分の分割で開き、表示・スクロールとも軽かった。初回だけ重かったが、
+  Chromium のログでは起動からページの接続まで約 70 秒（2 回目は約 6 秒）かかっており、開発サーバーの起動直後の
+  初回ビルドと重なっていた
+- 2 回目の 5 分間の CPU は、Ghostty が平均 8%（最大 40%）、herdr が平均 1% 未満（最大 32%）
+- Cmd 系のキーは上の書き換えで復旧した
+- Neovim の画像、`Ctrl+G` の要素ピッカー、通知は今回は確かめていない
+
+**その他の変更**
+
+- terminal-browser 0.13.1 から、利用状況の送信とクラッシュレポートが既定で有効になった。
+  `shell/zsh/terminal-browser.zsh` で `TERMINAL_BROWSER_NO_TELEMETRY=1` を export して止めた
+- terminal-browser は版が変わるたびに、付属のスキルを `~/.claude` `~/.codex` `~/.agents` `~/.gemini` の
+  `skills/` に張り直す。張り直しを止めるため `~/.local/state/terminal-browser/skills-choice` に `no` を書いた
+  （Nix 管理外。このファイルが消えると次の更新でまた張られる）
+- `herdr plugin update`（0.9.4）は `config/herdr/plugins.txt` の SHA 固定を迂回するので使わない。
+  プラグインの更新は SHA の書き換えで行う
