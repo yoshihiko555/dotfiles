@@ -75,3 +75,5 @@ pi のユーザー設定は `~/.pi/agent/` にあり、次のものが同居し�
 - `settings.json` を管理するか。設定が固まってきたら、Claude と同じ「実ファイル + adopt」方式に乗せるかを判断する
 - hermes など他のホストで pi を使うか。使う場合は pi-harness を git の URL で登録する
 - 既存の `shared/skills` を pi の skill としてそのまま読めるかは未確認
+  → 2026-10-15 に確認し配布した。`task sync-skills` が common と pi-only を `pi/skills` にリンクし、
+  macbook で `~/.pi/agent/skills` へ張る。pi は多段の symlink をたどってユーザー skill として読み込む

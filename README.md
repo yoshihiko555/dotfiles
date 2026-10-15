@@ -217,9 +217,9 @@ Claude Code / Codex / Antigravity（Gemini）で共有する資産は `shared/` 
 
 - スキル本体は `shared/skills/` に集約
   - `common/`: 共通スキル（個人用・会社用の両方で使う）
-  - `claude-only/` / `codex-only/` / `antigravity-only/`: CLI 専用スキル
+  - `claude-only/` / `codex-only/` / `antigravity-only/` / `pi-only/`: CLI 専用スキル（`pi-only/herdr` は `codex-only/herdr` へのリンク）
   - `work/`: 会社アカウントでも使うことを明示したスキル
-- `claude/skills`、`codex/skills`、`gemini/config/skills` は相対シンボリックリンクで参照
+- `claude/skills`、`codex/skills`、`gemini/config/skills`、`pi/skills` は相対シンボリックリンクで参照（`pi/skills` は macbook のみ `~/.pi/agent/skills` へリンク）
 - Antigravity のグローバルスキルは `~/.gemini/config/skills/<skill-folder>/SKILL.md` として解決される
 - リンク更新は `task sync-skills` で実行
 

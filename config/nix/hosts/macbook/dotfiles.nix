@@ -93,8 +93,9 @@ in
         ".gemini/settings.json".source = mkLink "gemini/settings.json";
 
         # ~/.pi/agent には pi が書く認証情報・セッション・settings.json が同居するため、
-        # ディレクトリごとは張らずファイル単位で配る。拡張は別リポジトリ pi-harness
+        # ディレクトリごとは張らず AGENTS.md と skills を個別に配る。拡張は別リポジトリ pi-harness
         ".pi/agent/AGENTS.md".source = mkLink "pi/AGENTS.md";
+        ".pi/agent/skills".source = mkLink "pi/skills";
 
         ".takt/config.yaml".source = mkLink "takt/config.yaml";
 
