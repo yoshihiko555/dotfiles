@@ -1,0 +1,85 @@
+{
+  "skill_name": "context-prune",
+  "evals": [
+    {
+      "id": 1,
+      "name": "fixture-all-report",
+      "setup": "evals/setup-fixture.sh <dest> base",
+      "prompt": "/context-prune all",
+      "baseline_prompt": "このリポジトリ全体で、AI にコンテキストとして渡すときノイズになるコメントやドキュメントを洗い出して、分類したレポートを出して。修正は承認してからにするので、今はレポートだけ。",
+      "expected_output": "合成リポジトリ全体を棚卸しし、仕込んだノイズを T1/T2/T3 に分類したレポートを出す。残すべき Why・ディレクティブを T1 に入れず、生成物・CHANGELOG・@import を対象外にする。ファイルは変更しない。",
+      "files": [],
+      "expectations": [
+        "[script] ファイルを変更せず、コミットもしていない",
+        "src/app.py の言い換えコメント「ユーザーを取得する」と src/export.ts の「increment index」をノイズとして検出している",
+        "経緯コメント（requests から httpx への移行）を T2 相当（個別承認）として検出している",
+        "実測値コメント（820ms → 95ms）を T2 相当として検出し、値を明記している",
+        "Why not（リトライしない）・非自明な Why（タイムアウト 30 秒）・ディレクティブ（noqa / type: ignore / eslint-disable / SPDX）を一括承認の階層（T1 相当）に入れていない",
+        "generated/api_client.py と CHANGELOG.md をノイズ候補に挙げていない（対象外として扱っている）",
+        "CLAUDE.md の @AGENTS.md インポートは重複扱いせず、Conventional Commits の複製ルールは重複として検出している",
+        "ADR-0001 を置き換え済みとして検出し status 更新を提案しているが、ADR 本文（背景の「当時は複数台構成を予定していた」等）は変更候補にしていない",
+        "DECISIONS.md の ADR-0002 の status（提案）と本文（採用）の食い違いを検出している",
+        "docs/architecture.md が置き換え済みの ADR-0001 を参照している点を検出している",
+        "README と docs/setup.md のセットアップ手順の重複を検出している",
+        "README の「v2 で CSV エクスポートに対応予定」と CLAUDE.md の「JWT への移行中」を陳腐化した記述として検出している",
+        "コメントアウトされたコード（old_value）と TODO を削除候補（T1/T2 相当）に入れていない",
+        "候補に path:line と階層（T1/T2/T3 等）が付き、末尾に未確認の領域が列挙されている"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "fixture-diff-report",
+      "setup": "evals/setup-fixture.sh <dest> diff",
+      "prompt": "/context-prune",
+      "baseline_prompt": "今の未コミットの変更で、AI のノイズになるコメントや文章が増えていないか見て、分類したレポートを出して。直すのは承認してから。",
+      "expected_output": "未コミットの追加行だけを候補にする。同じファイルに元からあるノイズは拾わない。追加された Why not は残す。ファイルは変更しない。",
+      "files": [],
+      "expectations": [
+        "[script] ファイルを変更せず、コミットもしていない",
+        "追加された言い換えコメント「注文をキャンセルする」を検出している",
+        "追加された経緯コメント（DELETE /orders から 2026-09 に変更）を T2 相当として検出している",
+        "README に追加された冗長な一文（〜することによって行うことができます）を T2 相当として検出している",
+        "追加された Why not（返金はしない）を削除候補にしていない",
+        "変更前からある既存のノイズ（ユーザーを取得する、820ms、httpx 移行、ADR、README の経緯など）を候補に挙げていない"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "fixture-apply-commit",
+      "setup": "evals/setup-fixture.sh <dest> apply",
+      "prompt": "/context-prune all （評価用の指示: T1・T2 の全項目とコミットメッセージ案は承認済みとして扱い、確認を待たずに適用からコミットまで進めてください。T3 は適用しないでください）",
+      "baseline_prompt": "このリポジトリ全体で、AI にコンテキストとして渡すときノイズになるコメントやドキュメントを整理して、コミットまで済ませて。確認は不要。",
+      "expected_output": "承認済みの項目を適用し、Pruned: セクション付きのメッセージでコミットする。実測値は値ごと残す。無関係な未コミット変更（notes.txt）はコミットに混ぜない。ADR 本文・CHANGELOG・生成物は変更しない。",
+      "files": [],
+      "expectations": [
+        "[script] コミットが 1 つ以上作成されている",
+        "[script] コミットメッセージに Pruned: セクションがある",
+        "[script] コミットメッセージに実測値 820ms と 95ms がそのまま残っている",
+        "[script] notes.txt の変更はコミットに含まれず未コミットのまま残っている",
+        "[script] ADR の本文（## 背景 以降）が変更されていない",
+        "[script] CHANGELOG.md と generated/ が変更されていない",
+        "[script] Why not・非自明な Why（の理由部分）・ディレクティブ・SPDX がすべて残っている",
+        "[script] 言い換えコメント（ユーザーを取得する / increment index）が消えている",
+        "[script] 経緯コメント（以前は requests を使っていたが）が消えている",
+        "[script] コメントアウトされたコードと TODO は残っている（対象外）",
+        "[script] notes.txt 以外に未コミットの変更が残っていない"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "dotfiles-diff-report",
+      "setup": "git clone <dotfiles> <dest> （HEAD 時点）",
+      "prompt": "/context-prune HEAD~6",
+      "baseline_prompt": "直近 6 コミット（HEAD~6...HEAD）の変更で、AI のノイズになるコメントやドキュメントが増えていないか見て、分類したレポートを出して。直すのは承認してから。",
+      "expected_output": "実リポジトリの直近 6 コミットの追加行を対象に、ADR 本文の追記を対象外にしつつ、コメントのノイズを分類する。生成物（codex/AGENTS.md 等）を重複扱いしない。ファイルは変更しない。",
+      "files": [],
+      "expectations": [
+        "[script] ファイルを変更せず、コミットもしていない",
+        "ADR（ADR-20260922-0001）への本文追記をノイズ候補にせず、対象外として扱っている",
+        "候補が HEAD~6...HEAD の追加行に限られ、変更前からある記述を拾っていない",
+        "各候補に path:line・階層・提案（削除 / 置換）があり、T2 には消える情報が書かれている",
+        "末尾に未確認の領域が列挙されている"
+      ]
+    }
+  ]
+}
