@@ -4,10 +4,10 @@
 
 # ---- 基本設定 ----
 # デフォルトで使うモデル
-model = "gpt-6-astra"
+model = "gpt-6.1-sol"
 
 # 推論の深さ（medium: バランス型 / high: より時間をかける）
-model_reasoning_effort = "medium"
+model_reasoning_effort = "xhigh"
 
 # 出力トーン
 personality = "pragmatic"
@@ -185,7 +185,7 @@ screen_reader_detection_done = true
 "gpt-5.5" = 4
 "gpt-5.6-sol" = 4
 gpt-6-astra = 4
-"gpt-6.1-sol" = 1
+"gpt-6.1-sol" = 4
 
 [marketplaces.openai-bundled]
 last_updated = "2026-08-01T03:18:01Z"
@@ -251,6 +251,15 @@ trusted_hash = "sha256:31875dd9f8b427fdb8095fd3a0f4f550e4331cf2511be57c5c4e84f97
 
 [hooks.state."/Users/yoshihiko/.codex/hooks.json:session_start:0:0"]
 trusted_hash = "sha256:8bc5e2ed66a97a95246f10256419d5afbe266d728f511fff9e29ba5f42cd9996"
+
+[hooks.state."/Users/yoshihiko/.codex/hooks.json:user_prompt_submit:0:0"]
+trusted_hash = "sha256:fa6575a25fa1f9955b6eae31ee4c89a9b856a5f7c52301006727ad7aacf4435d"
+
+[hooks.state."/Users/yoshihiko/.codex/hooks.json:stop:0:0"]
+trusted_hash = "sha256:8c7c577fa293d6fadbf70acb9bc5102e13fb22e6fd09e14223bf5921a2e40c19"
+
+[hooks.state."/Users/yoshihiko/.codex/hooks.json:interrupt:0:0"]
+trusted_hash = "sha256:2b327316cc97bb6aea18d88e22d681d53ff85f5bec1b2f1f2956f7859c8781b9"
 
 # ---- ChatGPTデスクトップアプリ設定 ----
 [desktop]
