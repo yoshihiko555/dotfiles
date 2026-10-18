@@ -1,8 +1,11 @@
 {
   "colorScheme": "tokyo night",
-  "enableTelemetry": false,
-  "model": "Gemini 3.8 Flash (High)",
+  "model": "Gemini 4 Argon (Medium)",
   "permissions": {
+    "allow": [
+      "read_url(antigravity.google)",
+      "command(agy)"
+    ],
     "deny": [
       "command(sudo)",
       "command(su)",
