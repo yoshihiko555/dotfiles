@@ -42,7 +42,6 @@ cheat() {
   cc-r      claude resume    cx     codex
   ccf       claude subagent委譲モード
   ccx       claude 切替式 (/model gpt-6.1-sol-claude)  ccx -f 委譲モード
-  gm        gemini
   wails     Wails v2         wails3 Wails v3
   orche     ai-orchestra manager
 
@@ -183,7 +182,7 @@ hermes-ui() {
 }
 
 # brew 管理ツールを一括更新（最新でないものだけ upgrade）
-#   claude-code / codex / gemini-cli などの CLI agent を含む全 formula/cask が対象。
+#   claude-code / codex などの CLI agent を含む全 formula/cask が対象。
 #   :latest cask（wezterm@nightly 等、brew がバージョン比較できず毎回再取得になるもの）は
 #   既定で除外し、`brewup -a` を付けたときだけ再取得する。
 brewup() {
@@ -229,5 +228,4 @@ brewup() {
   echo "—— CLI agent ——"
   command -v claude >/dev/null 2>&1 && printf "  claude  %s\n" "$(claude --version 2>/dev/null)"
   command -v codex  >/dev/null 2>&1 && printf "  codex   %s\n" "$(codex --version 2>/dev/null)"
-  command -v gemini >/dev/null 2>&1 && printf "  gemini  %s\n" "$(gemini --version 2>/dev/null)"
 }

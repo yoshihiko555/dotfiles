@@ -1,12 +1,11 @@
-# Gemini / Antigravity CLI
+# Antigravity CLI
 
-Gemini CLI と Antigravity CLI（`agy`）の設定。home-manager で `~/.gemini` に配線する。
+Antigravity CLI（`agy`）の設定。agy は `~/.gemini` 配下を使うため、home-manager でそこへ配線する。
 
 ## ファイル構成
 
 | パス | 用途 |
 |---|---|
-| `.gemini/settings.json` | Gemini CLI 本体の設定 |
 | `.gemini/AGENTS.md` | エージェント向けコンテキスト（`shared/agents/` から同期） |
 | `.gemini/antigravity-cli/settings.json` | Antigravity CLI の設定（**下記の権限設計あり**） |
 | `.gemini/antigravity-cli/keybindings.json` | Antigravity CLI のキーバインド |

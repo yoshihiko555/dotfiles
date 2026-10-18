@@ -90,7 +90,6 @@ in
         ".gemini/AGENTS.md".source = mkLink "gemini/AGENTS.md";
         ".gemini/antigravity/mcp_config.json".source = mkLink "gemini/antigravity/mcp_config.json";
         ".gemini/config/skills".source = mkLink "gemini/config/skills";
-        ".gemini/settings.json".source = mkLink "gemini/settings.json";
 
         # ~/.pi/agent には pi が書く認証情報・セッション・settings.json が同居するため、
         # ディレクトリごとは張らず AGENTS.md と skills を個別に配る。拡張は別リポジトリ pi-harness

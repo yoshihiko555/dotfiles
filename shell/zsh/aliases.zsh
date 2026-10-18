@@ -90,9 +90,6 @@ codex() {
 }
 alias cx='codex'
 
-# Gemini CLI
-alias gm='gemini'
-
 # tmux（AUTO_CD でディレクトリに移動するのを防ぐ）
 alias tmux='command tmux'
 alias t='command tmux'
