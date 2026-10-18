@@ -6,29 +6,6 @@
   treefmtWrapper,
   ...
 }:
-let
-  # takt の Phase 2（レポート生成）でモデルがツール呼び出しを出すと、
-  # ReportPhaseToolCallError が stdout の data ハンドラから同期 throw され、
-  # Promise の外で uncaught になってワークフロープロセスごと落ちる。
-  # 上流（0.65.0）には retryable_failure として扱う分岐があるが到達不能。
-  # stdout / close ハンドラの flushLines を try/catch で包み reject へ回す。
-  # 詳細・撤回手順は patches/README.md。
-  taktPackage = (takt.packages.${pkgs.stdenv.hostPlatform.system}.default).overrideAttrs (old: {
-    postInstall = (old.postInstall or "") + ''
-      patch -p1 -d "$out/lib/node_modules/takt" \
-        < ${../../patches/takt-report-phase-stream-guard.patch}
-    '';
-  });
-
-  # 1.8.22 の test_lldb_command が darwin で落ちる問題の上流修正（NixOS/nixpkgs#572564）を先取りする。
-  # 修正が nixpkgs-unstable に届くと --replace-fail でビルドが落ちるので、そのとき素の debugpy に戻す
-  debugpyPackage = pkgs.python3Packages.debugpy.overridePythonAttrs (old: {
-    postPatch = (old.postPatch or "") + ''
-      substituteInPlace tests/debugpy/server/test_add_code_to_python_process.py \
-        --replace-fail 'cmd.startswith("lldb ' 'cmd.startswith("${pkgs.lldb}/bin/lldb '
-    '';
-  });
-in
 {
   # MBP 固有の CLI パッケージ（棚卸し: PHASE-3-2-CLI-INVENTORY.md）。
   # ADR-0004 ルール 3 に従い、まず使うホストの hosts/macbook/ に置く。
@@ -54,7 +31,7 @@ in
 
       # --- 新規導入 ---
       delve # Neovim の Go デバッグ。Go ランタイムは引き続き mise で管理
-      debugpyPackage # Neovim の Python デバッグ（debugpy-adapter）。実行する Python はプロジェクトの venv
+      python3Packages.debugpy # Neovim の Python デバッグ（debugpy-adapter）。実行する Python はプロジェクトの venv
       vscode-js-debug # Neovim の TypeScript / JavaScript デバッグ（js-debug）。Node は内包版を使う
       imagemagick # Neovim の snacks.image で画像の変換・サイズ取得に使用
       resvg # SVG→PNG ラスタライザ。logo-design スキルの export.sh が最優先で検出する
@@ -117,7 +94,6 @@ in
       (pkgs.callPackage ../../packages/omp { })
 
       # nixpkgs 未収録だが公式 flake あり（npm -g から移行）
-      # Phase 2 のツール呼び出しでプロセスが落ちる問題にパッチを当てている（上記 let）
-      taktPackage
+      takt.packages.${pkgs.stdenv.hostPlatform.system}.default
     ];
 }
