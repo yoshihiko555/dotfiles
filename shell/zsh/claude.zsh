@@ -12,6 +12,59 @@ ccw() {
   CLAUDE_CONFIG_DIR="$CLAUDE_WORK_CONFIG_DIR" command claude "$@"
 }
 
+# claude-swap で失効したアカウントを、ログイン中の Claude Code から登録し直す。
+# ccw がトークンを更新すると claude-swap 側の work の控えは無効になる
+# (config/nix/docs/CLAUDE-SWAP.md)。
+cswap-relogin() {
+  local json
+  if ! json="$(env -u CLAUDE_CONFIG_DIR -u CLAUDE_SECURESTORAGE_CONFIG_DIR cswap list --json 2>/dev/null)"; then
+    echo "cswap-relogin: cswap list に失敗した" >&2
+    return 1
+  fi
+
+  local -a rows
+  rows=("${(@f)$(jq -r '.accounts[] | select(.usageStatus == "relogin_required") | "\(.alias // "")\t\(.email)"' <<<"$json")}")
+  rows=(${rows:#})
+  if (( ${#rows} == 0 )); then
+    echo "再登録が必要なアカウントはありません"
+    return 0
+  fi
+
+  local row alias email login login_cmd rc=0
+  local -a env_args
+  for row in "${rows[@]}"; do
+    alias="${row%%$'\t'*}"
+    email="${row#*$'\t'}"
+    case "$alias" in
+      personal)
+        env_args=(-u CLAUDE_CONFIG_DIR -u CLAUDE_SECURESTORAGE_CONFIG_DIR)
+        login_cmd=claude
+        ;;
+      work)
+        env_args=(-u CLAUDE_SECURESTORAGE_CONFIG_DIR CLAUDE_CONFIG_DIR="$CLAUDE_WORK_CONFIG_DIR")
+        login_cmd=ccw
+        ;;
+      *)
+        echo "cswap-relogin: $email (alias: ${alias:-なし}) は対応先が不明。手動で cswap add する" >&2
+        rc=1
+        continue
+        ;;
+    esac
+
+    # 別アカウントのログインを登録しないよう、Claude Code 側のログインと突き合わせる。
+    login="$(env "${env_args[@]}" claude auth status 2>/dev/null | jq -r 'select(.loggedIn) | .email')"
+    if [[ "$login" != "$email" ]]; then
+      echo "cswap-relogin: $alias ($email) は Claude Code 側も未ログイン。$login_cmd で /login してから再実行する" >&2
+      rc=1
+      continue
+    fi
+
+    echo "$alias: $email を再登録する"
+    env "${env_args[@]}" cswap add --alias "$alias" || rc=1
+  done
+  return $rc
+}
+
 # ============================================
 # subagent 委譲モード (ccf / ccx -f 共通)
 # ============================================

@@ -1,18 +1,19 @@
 {
   lib,
   fetchFromGitHub,
+  ps,
   python3Packages,
 }:
 python3Packages.buildPythonApplication rec {
   pname = "claude-swap";
-  version = "0.26.0";
+  version = "0.28.0";
   pyproject = true;
 
   src = fetchFromGitHub {
     owner = "realiti4";
     repo = "claude-swap";
     tag = "v${version}";
-    hash = "sha256-ypE/fxgMr+SSF/8blI2YVqcr9coW3YcGzC/NiogyadQ=";
+    hash = "sha256-hg8Dlhsea/crMxVJCdTKOPNMAH/JJxnXG6MEgKGg6n4=";
   };
 
   build-system = [ python3Packages.hatchling ];
@@ -24,11 +25,14 @@ python3Packages.buildPythonApplication rec {
     truststore
   ];
 
-  nativeCheckInputs = with python3Packages; [
-    pytestCheckHook
-    pytest-asyncio
-    pytest-xdist
-  ];
+  # 実プロセスの起動時刻を ps で読むテストがあるため、ビルド環境にも ps を置く。
+  nativeCheckInputs =
+    (with python3Packages; [
+      pytestCheckHook
+      pytest-asyncio
+      pytest-xdist
+    ])
+    ++ [ ps ];
 
   # 上流の -n auto を解除し、並列数は Nix の割り当てに従う。
   pytestFlags = [

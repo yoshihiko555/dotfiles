@@ -39,7 +39,7 @@ CodexBar に指定する場合もこのパスを使う。`/nix/store/<hash>-.../
 
 ## CodexBar の初期設定
 
-CodexBar 0.60.3 / claude-swap 0.26.0 を前提とする。
+CodexBar 0.60.3 / claude-swap 0.28.0 を前提とする。
 
 この dotfiles では通常用の `~/.claude` と仕事用の `~/.claude-work` を使う。
 それぞれログイン済みなら、ログインを切り替えずに登録できる。
@@ -74,8 +74,18 @@ claude-swap は利用状況の取得時に、保存済みの refresh token を�
 期限切れの access token の更新を試みる。Nix が認証を更新するわけではない。
 バックグラウンドで表示を更新するには、CodexBar が起動している必要がある。
 
-refresh token 自体が失効・取り消された場合は、該当アカウントで Claude Code に
-ログインし直し、上記の該当する `cswap add` コマンドで認証を保存し直す。
+登録した Claude Code（`claude` / `ccw`）自身がトークンを更新すると、
+claude-swap 側に保存した refresh token は使用済みになり、`re-login needed` になる。
+`ccw` を使うたびに起こり得る。CodexBar や `cswap list` に `re-login needed` が
+出たら登録し直す（表示が出る前に実行しても対象なしで終わる）。
+
+```sh
+cswap-relogin
+```
+
+`re-login needed` のアカウントを探し、`personal` / `work` に合った環境で
+上記の `cswap add` を実行する（`shell/zsh/claude.zsh`）。Claude Code 側も
+ログインが切れている場合は、`claude` / `ccw` でログインしてから再実行する。
 `cswap list` と CodexBar の Refresh で復旧を確認する。
 複数アカウントの実際の自動更新は、各アカウントを登録した環境で別途確認する。
 
@@ -84,15 +94,17 @@ refresh token 自体が失効・取り消された場合は、該当アカウン
 `cswap upgrade` や `uv tool upgrade claude-swap` は使わない。
 本体の更新は `packages/claude-swap.nix` の `version` と `src.hash` を変更して行う。
 `nix flake update` だけでは claude-swap 本体の固定バージョンは変わらない。
+上流の更新通知は `cswap config set updates.check false` で止める
+（0.28.0 以降の実行時設定。Nix に入れず、マシンごとに 1 回実行する）。
 
 1. [公式リリース](https://github.com/realiti4/claude-swap/releases)を確認する。
 2. 対象タグのソースのハッシュを取得して、バージョンと一緒に更新する。
-   例: `nix store prefetch-file --json --unpack https://github.com/realiti4/claude-swap/archive/refs/tags/v0.26.0.tar.gz`
-3. 上流の `pyproject.toml` の依存条件を確認する。特に 0.26.0 は
+   例: `nix store prefetch-file --json --unpack https://github.com/realiti4/claude-swap/archive/refs/tags/v0.28.0.tar.gz`
+3. 上流の `pyproject.toml` の依存条件を確認する。特に 0.28.0 は
    `textual >= 8.2.8, < 9` のため、nixpkgs 更新時にも互換性を確認する。
 4. `task nix-fmt`、単体ビルド、`nxbd` で検査してから `nxs` で反映する。
 
 ## 参照
 
-- [claude-swap 0.26.0](https://github.com/realiti4/claude-swap/tree/v0.26.0)
+- [claude-swap 0.28.0](https://github.com/realiti4/claude-swap/tree/v0.28.0)
 - [CodexBar の Claude / claude-swap 連携](https://github.com/steipete/CodexBar/blob/v0.60.3/docs/claude.md)
