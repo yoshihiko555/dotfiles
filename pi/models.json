@@ -1,0 +1,21 @@
+{
+  "$schema": "https://pi.dev/schemas/models.schema.json",
+  "providers": {
+    "openai": {
+      "modelOverrides": {
+        "gpt-6-astra": {
+          "contextWindow": 872000
+        },
+        "gpt-6-luna": {
+          "contextWindow": 872000
+        },
+        "gpt-6-sol": {
+          "contextWindow": 872000
+        },
+        "gpt-6.1-sol": {
+          "contextWindow": 872000
+        }
+      }
+    }
+  }
+}
