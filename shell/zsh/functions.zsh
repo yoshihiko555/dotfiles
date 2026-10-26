@@ -88,6 +88,7 @@ cheat() {
   dex       docker コンテナに入る
   dcf       compose ファイルを選んで docker compose 実行
   mdopen    Markdown を選んで Dia で開く
+  mde       Markdown を mdecho で開き AI へ返信 (試用中, mde FILE も可)
 
 ── Functions (util) ────────────────────────
   mkcd DIR  ディレクトリ作成して cd
@@ -129,6 +130,23 @@ mdopen() {
     echo "open/xdg-open が見つかりません: $target"
     return 1
   fi
+}
+
+# Markdown を mdecho で開き、行番号付きのコメントを AI へ返す（試用中。npx で版を固定）
+#   mde               → fzf で Markdown を選んで開く
+#   mde FILE [OPT...] → FILE を開く。OPT は mdecho へそのまま渡す（--no-open など）
+mde() {
+  local file
+  if [[ -n "$1" && "$1" != -* ]]; then
+    [[ -f "$1" ]] || { echo "ファイルが見つかりません: $1"; return 1; }
+    file="$1"
+    shift
+  else
+    file=$(find . -name "*.md" -type f -not -path '*/node_modules/*' -not -path '*/.git/*' \
+      | sed 's|^\./||' | sort -r | fzf --preview 'head -40 -- {}') || return
+    [[ -z "$file" ]] && return 0
+  fi
+  npx -y mdecho@1.0.5 -f "$file" "$@"
 }
 
 # ディレクトリ作成してcd

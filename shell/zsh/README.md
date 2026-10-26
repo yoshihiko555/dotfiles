@@ -5,7 +5,7 @@
 | ファイル | 内容 |
 |---|---|
 | `aliases.zsh` | エイリアス定義 |
-| `functions.zsh` | 汎用関数 (lazygit, cheat, mdopen, mkcd, port, fh, fb, fkill, fe) |
+| `functions.zsh` | 汎用関数 (lazygit, cheat, mdopen, mde, mkcd, port, fh, fb, fkill, fe) |
 | `tmux.zsh` | tmux 操作 (tss, tk, tp) |
 | `docker.zsh` | Docker 操作 (dex, dcf) |
 | `wt.zsh` | git worktree 操作 (wt) |
