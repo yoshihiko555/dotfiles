@@ -73,7 +73,11 @@
       antigravity-cli # agy。公式 curl インストーラ → nixpkgs へ（要 allowUnfree、上記）
       golangci-lint # mise から移送（境界違反の解消）
       google-clasp # npm -g から移行
-      mcp-proxy # uv tool から移行
+      # uv tool から移行。nixpkgs の mcp が 2.x になり mcp<2 の制約で落ちるため mcp_1 で組む。
+      # 同じ修正が nixpkgs master に入っている（2026-10-25）。unstable に届いたら override を外す
+      (mcp-proxy.override {
+        python3Packages = python3Packages.overrideScope (final: prev: { mcp = final.mcp_1; });
+      })
       sandbox-runtime # npm -g（@anthropic-ai/sandbox-runtime）から移行
     ])
     ++ [
