@@ -1,0 +1,8 @@
+{
+  "defaultProvider": "openai",
+  "defaultModel": "gpt-6.1-sol",
+  "packages": [
+    "../../ghq/github.com/yoshihiko555/pi-harness"
+  ],
+  "collapseChangelog": true
+}

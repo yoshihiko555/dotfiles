@@ -122,19 +122,29 @@ adopt_antigravity_keybindings() {
     "$HOME/.gemini/antigravity-cli/.keybindings.json.nix-managed"
 }
 
+adopt_pi() {
+  adopt pi \
+    "$HOME/.pi/agent/settings.json" \
+    "$repo_root/pi/settings.json" \
+    "$HOME/.pi/agent/.settings.json.nix-managed" \
+    "deviceId lastChangelogVersion"
+}
+
 case "$target" in
   all)
     adopt_claude
     adopt_claude_work
     adopt_antigravity_settings
     adopt_antigravity_keybindings
+    adopt_pi
     ;;
   claude) adopt_claude ;;
   claude-work) adopt_claude_work ;;
   antigravity-settings) adopt_antigravity_settings ;;
   antigravity-keybindings) adopt_antigravity_keybindings ;;
+  pi) adopt_pi ;;
   *)
-    echo "usage: task adopt-settings TARGET=all|claude|claude-work|antigravity-settings|antigravity-keybindings" >&2
+    echo "usage: task adopt-settings TARGET=all|claude|claude-work|antigravity-settings|antigravity-keybindings|pi" >&2
     exit 2
     ;;
 esac

@@ -92,7 +92,8 @@ in
         ".gemini/config/skills".source = mkLink "gemini/config/skills";
 
         # ~/.pi/agent には pi が書く認証情報・セッション・settings.json が同居するため、
-        # ディレクトリごとは張らず AGENTS.md と skills を個別に配る。拡張は別リポジトリ pi-harness
+        # ディレクトリごとは張らず AGENTS.md と skills を個別に配る。settings.json は
+        # 下の mutableDotfiles で配る。拡張は別リポジトリ pi-harness
         ".pi/agent/AGENTS.md".source = mkLink "pi/AGENTS.md";
         ".pi/agent/skills".source = mkLink "pi/skills";
 
@@ -128,7 +129,8 @@ in
       };
 
       # Claude Code / Antigravity CLI は JSON を rename で置換するため、symlink では
-      # 管理できない。repo を正として実ファイルを生成し、前回反映時の参照コピーと
+      # 管理できない。pi は端末固有の値を repo へ載せないため同じ方式に乗せる。
+      # repo を正として実ファイルを生成し、前回反映時の参照コピーと
       # 差がある間は上書きを拒否する。判定ロジックは task apply-settings と共有したいので
       # ここではスクリプトを呼ぶだけに留める。
       home.activation.mutableDotfiles = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

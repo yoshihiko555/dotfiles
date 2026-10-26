@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# mutable 設定（Claude Code / Antigravity CLI の JSON）を repo から実ファイルへ反映する。
+# mutable 設定（Claude Code / Antigravity CLI / pi の JSON）を repo から実ファイルへ反映する。
 #
 #   これらのアプリは JSON を rename で置換するため symlink では管理できない。
+#   pi は端末固有の値を repo へ載せないためにこの方式に乗せている。
 #   repo を正として実ファイルを生成し、前回反映時の参照コピー（.nix-managed）と
 #   差がある間（= アプリが書き換えた drift 中）は上書きを拒否する。
 #   repo へ回収後は target == source になるため再開できる。
@@ -159,19 +160,30 @@ apply_antigravity_keybindings() {
     "$HOME/.gemini/antigravity-cli/.keybindings.json.nix-managed"
 }
 
+apply_pi() {
+  manage_mutable_json \
+    pi \
+    "$repo_root/pi/settings.json" \
+    "$HOME/.pi/agent/settings.json" \
+    "$HOME/.pi/agent/.settings.json.nix-managed" \
+    "deviceId lastChangelogVersion"
+}
+
 case "$target" in
   all)
     apply_claude
     apply_claude_work
     apply_antigravity_settings
     apply_antigravity_keybindings
+    apply_pi
     ;;
   claude) apply_claude ;;
   claude-work) apply_claude_work ;;
   antigravity-settings) apply_antigravity_settings ;;
   antigravity-keybindings) apply_antigravity_keybindings ;;
+  pi) apply_pi ;;
   *)
-    echo "usage: task apply-settings TARGET=all|claude|claude-work|antigravity-settings|antigravity-keybindings" >&2
+    echo "usage: task apply-settings TARGET=all|claude|claude-work|antigravity-settings|antigravity-keybindings|pi" >&2
     exit 2
     ;;
 esac
