@@ -73,6 +73,8 @@ pi のユーザー設定は `~/.pi/agent/` にあり、次のものが同居し�
 ## 未確定事項
 
 - `settings.json` を管理するか。設定が固まってきたら、Claude と同じ「実ファイル + adopt」方式に乗せるかを判断する
+  → 2026-10-26 に [ADR-20261026-0008](ADR-20261026-0008-pi-settings-mutable-copy.md) で、
+  `deviceId` と `lastChangelogVersion` を除外して「実ファイル + adopt」方式に乗せると決めた
 - hermes など他のホストで pi を使うか。使う場合は pi-harness を git の URL で登録する
 - 既存の `shared/skills` を pi の skill としてそのまま読めるかは未確認
   → 2026-10-15 に確認し配布した。`task sync-skills` が common と pi-only を `pi/skills` にリンクし、

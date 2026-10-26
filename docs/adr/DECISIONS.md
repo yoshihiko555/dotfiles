@@ -17,3 +17,4 @@ dotfiles リポジトリ全体の意思決定のうち、**設定領域をまた
 | [ADR-20260925-0005](ADR-20260925-0005-lsp-via-nix.md) | LSP サーバーを mason から Nix に移す | 採用 | 2026-09-25 | 版の固定と再現/Claude Code の LSP プラグインと共有 | Editor/Nix |
 | [ADR-20260928-0006](ADR-20260928-0006-zsh-startup-tuning.md) | 対話 zsh を /bin/zsh に揃え、起動処理をキャッシュと遅延ロードで短縮する | 採用 | 2026-09-28 | 補完キャッシュの取り合い解消/外部コマンドの起動削減/安全な範囲だけ遅延 | Shell/Performance |
 | [ADR-20261013-0007](ADR-20261013-0007-pi-harness-separate-repo.md) | pi の設定は dotfiles、拡張は専用リポジトリ pi-harness で管理する | 採用 | 2026-10-13 | 共通ルールの生成に乗る/拡張は Node プロジェクトとして完結/認証情報を配らない | Agent/Structure |
+| [ADR-20261026-0008](ADR-20261026-0008-pi-settings-mutable-copy.md) | pi の settings.json を実ファイル + adopt 方式で管理し、端末固有の値は載せない | 採用 | 2026-10-26 | 端末 ID を公開しない/既存の apply・adopt に乗る/更新ごとに反映が止まらない | Agent/Nix |
