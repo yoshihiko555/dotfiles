@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "notion": {
+      "url": "https://mcp.notion.com/mcp",
+      "exposure": "codemode",
+      "description": "Search, read, and edit pages and databases in the user's Notion workspace"
+    }
+  }
+}

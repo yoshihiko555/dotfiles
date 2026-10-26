@@ -92,9 +92,11 @@ in
         ".gemini/config/skills".source = mkLink "gemini/config/skills";
 
         # ~/.pi/agent には pi が書く認証情報・セッション・settings.json が同居するため、
-        # ディレクトリごとは張らず AGENTS.md と skills を個別に配る。settings.json は
+        # ディレクトリごとは張らず AGENTS.md・skills・mcp.json を個別に配る。settings.json は
         # 下の mutableDotfiles で配る。拡張は別リポジトリ pi-harness
+        # mcp.json は端末固有の値を持たず、/mcp の書き戻しを repo の差分にするため symlink にする
         ".pi/agent/AGENTS.md".source = mkLink "pi/AGENTS.md";
+        ".pi/agent/mcp.json".source = mkLink "pi/mcp.json";
         ".pi/agent/skills".source = mkLink "pi/skills";
 
         ".takt/config.yaml".source = mkLink "takt/config.yaml";
