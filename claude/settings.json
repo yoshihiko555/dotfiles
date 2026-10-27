@@ -1,4 +1,5 @@
 {
+  "cleanupPeriodDays": 60,
   "env": {
     "CLAUDE_CODE_SHELL": "bash",
     "CLAUDE_CODE_SHELL_PREFIX": "/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles/scripts/claude-shell-prefix.sh",
@@ -40,10 +41,7 @@
       "Read(.env)"
     ],
     "defaultMode": "auto",
-    "additionalDirectories": [
-      "/tmp/claude-501",
-      "/private/tmp/claude-501"
-    ]
+    "additionalDirectories": ["/tmp/claude-501", "/private/tmp/claude-501"]
   },
   "hooks": {
     "SessionStart": [
@@ -144,10 +142,7 @@
       "allowLocalBinding": true
     },
     "filesystem": {
-      "allowWrite": [
-        "~/.gemini",
-        "~/ghq"
-      ]
+      "allowWrite": ["~/.gemini", "~/ghq"]
     },
     "enableWeakerNetworkIsolation": true,
     "excludedCommands": [
