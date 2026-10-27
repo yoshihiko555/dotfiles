@@ -100,6 +100,11 @@ in
         ".pi/agent/mcp.json".source = mkLink "pi/mcp.json";
         ".pi/agent/models.json".source = mkLink "pi/models.json";
         ".pi/agent/skills".source = mkLink "pi/skills";
+        # gate.json は pi-harness の gate 拡張のユーザー用ルール（Claude Code 記法の permissions と
+        # 分類器による自動許可の設定）。正本は pi-harness の config/gate.json
+        # 同じディレクトリに gate が記録 gate.jsonl を書くため、ディレクトリごとは張らずファイルだけ配る
+        ".pi/agent/pi-harness/gate.json".source =
+          config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/ghq/github.com/yoshihiko555/pi-harness/config/gate.json";
 
         ".takt/config.yaml".source = mkLink "takt/config.yaml";
 
