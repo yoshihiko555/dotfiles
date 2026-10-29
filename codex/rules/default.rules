@@ -90,6 +90,31 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern = ["op"],
+    decision = "forbidden",
+    justification = "1Password CLI はエージェントが実行しない（秘密の値を取り出しうる。homebase の AGENTS.md・NFR-012）。",
+    match = [
+        "op item get example",
+        "op read op://vault/item/password",
+    ],
+    not_match = [
+        "opam --version",
+    ],
+)
+
+prefix_rule(
+    pattern = ["pnpm", "dev:1password"],
+    decision = "forbidden",
+    justification = "本物の 1Password を読む開発の起動はユーザーだけが行う（homebase の ADR-20261029-010 決定 16）。",
+    match = [
+        "pnpm dev:1password",
+    ],
+    not_match = [
+        "pnpm dev",
+    ],
+)
+
+prefix_rule(
     pattern = [["npm", "pnpm", "yarn"], ["install", "add", "remove", "upgrade"]],
     decision = "prompt",
     justification = "Dependency changes require explicit approval outside the sandbox.",
