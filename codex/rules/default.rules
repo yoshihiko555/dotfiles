@@ -183,3 +183,15 @@ prefix_rule(pattern=["gh", "issue", "view"], decision="allow")
 prefix_rule(pattern=["go", "test"], decision="allow")
 prefix_rule(pattern=["go", "vet"], decision="allow")
 prefix_rule(pattern=["printf", "deny-check\\n"], decision="allow")
+
+prefix_rule(
+    pattern = ["pnpm", "pair:1password"],
+    decision = "forbidden",
+    justification = "本物の 1Password を取り込む場所へのペアリングはユーザーだけが行う（homebase の ADR-20261101-012 決定 2）。",
+    match = [
+        "pnpm pair:1password",
+    ],
+    not_match = [
+        "pnpm pair",
+    ],
+)

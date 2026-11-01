@@ -4,7 +4,7 @@
 
 # ---- 基本設定 ----
 # デフォルトで使うモデル
-model = "gpt-6-astra"
+model = "gpt-6.1-sol"
 
 # 推論の深さ（medium: バランス型 / high: より時間をかける）
 model_reasoning_effort = "xhigh"
