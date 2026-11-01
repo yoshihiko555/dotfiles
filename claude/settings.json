@@ -1,5 +1,6 @@
 {
   "cleanupPeriodDays": 60,
+  "feedbackDrafts": "off",
   "env": {
     "CLAUDE_CODE_SHELL": "bash",
     "CLAUDE_CODE_SHELL_PREFIX": "/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles/scripts/claude-shell-prefix.sh",
@@ -38,7 +39,8 @@
       "Bash(*credentials*)",
       "Bash(*secret*)",
       "Bash(*password*)",
-      "Read(.env)"
+      "Read(.env)",
+      "SendFeedback"
     ],
     "defaultMode": "auto",
     "additionalDirectories": ["/tmp/claude-501", "/private/tmp/claude-501"]
