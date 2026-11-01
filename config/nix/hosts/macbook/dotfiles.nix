@@ -84,6 +84,8 @@ in
         ".codex/AGENTS.md".source = mkLink "codex/AGENTS.md";
         ".codex/codex_message.sh".source = mkLink "codex/codex_message.sh";
         ".codex/config.toml".source = mkLink "codex/config.toml";
+        ".codex/herdr-agent-state.sh".source = mkLink "codex/herdr-agent-state.sh";
+        ".codex/hooks.json".source = mkLink "codex/hooks.json";
         ".codex/rules".source = mkLink "codex/rules";
         ".codex/skills".source = mkLink "codex/skills";
 
