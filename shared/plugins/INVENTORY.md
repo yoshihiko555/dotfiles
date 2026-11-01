@@ -58,7 +58,6 @@ MCP だけでなくフック・ワーカーを含むため、対応確認と有�
 | frontend-design | 有効 | Codex は `shared/skills/codex-only/frontend-design` から配布済み。二重導入を避ける |
 | skill-creator | 有効 | Codex に `.system/skill-creator` がある。別実装なので同一プラグイン扱いしない |
 | mattpocock-skills | 有効 | 導入済み README では Codex はスキル配布、ネイティブプラグインは計画段階。自動移植しない |
-| codex（openai-codex） | 有効 | Claude から Codex を呼ぶプラグイン。Codex 自身への導入は目的が異なる |
 | turn-receipt | 有効 | Claude の mod を含む自作プラグイン。両 CLI 向け移植は別作業 |
 | swift-lsp | 有効 | Claude 用 LSP 統合。Codex 対応の同等パッケージは今回確認できず |
 | gopls-lsp | 有効 | 同上。言語サーバー本体は Nix 共通層（ADR-20260925-0005） |
