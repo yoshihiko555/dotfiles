@@ -141,10 +141,12 @@ SKILLTOOL_RAW="$WORKDIR/skilltool_raw.txt"
 SLASHCMD_RAW="$WORKDIR/slashcmd_raw.txt"
 SUBAGENT_RAW="$WORKDIR/subagent_raw.txt"
 MCP_RAW="$WORKDIR/mcp_raw.txt"
+DIAG_EXT_RAW="$WORKDIR/diag_ext_raw.txt"
 : >"$SKILLTOOL_RAW"
 : >"$SLASHCMD_RAW"
 : >"$SUBAGENT_RAW"
 : >"$MCP_RAW"
+: >"$DIAG_EXT_RAW"
 
 if [ "$FILE_COUNT" -gt 0 ]; then
   # Skillツール呼び出し: "id":"toolu_...","name":"Skill","input":{"skill":"<name>"
@@ -168,6 +170,15 @@ if [ "$FILE_COUNT" -gt 0 ]; then
   tr '\n' '\0' <"$FILELIST" | xargs -0 "$GREP" -oh \
     '"id":"toolu_[^"]*","name":"mcp__[a-zA-Z0-9_.-]*"' 2>/dev/null \
     | sort -u | sed -E 's/.*"name":"(.*)"$/\1/' >"$MCP_RAW"
+
+  # 言語サーバーの診断通知（LSP プラグインの利用実績）。attachment の uuid と
+  # 対象ファイルの組で重複を除き、ファイルの拡張子だけを残す。
+  tr '\n' '\0' <"$FILELIST" | xargs -0 "$GREP" -Fh '"attachment":{"type":"diagnostics"' 2>/dev/null \
+    | jq -Rr 'fromjson? | select(.attachment.type? == "diagnostics")
+        | .uuid as $u | .attachment.files[]?.uri | [$u, .] | @tsv' 2>/dev/null \
+    | sort -u \
+    | awk -F'\t' '{n = split($2, a, "/"); if (match(a[n], /\.[^.]+$/)) print substr(a[n], RSTART)}' \
+      >"$DIAG_EXT_RAW"
 else
   log "警告: 直近30日の transcript が見つかりません。利用実績はすべて0として扱います。"
 fi
@@ -175,11 +186,13 @@ fi
 SKILLTOOL_TSV="$WORKDIR/skilltool_usage.tsv"
 SLASHCMD_TSV="$WORKDIR/slashcmd_usage.tsv"
 SUBAGENT_TSV="$WORKDIR/subagent_usage.tsv"
+DIAG_EXT_TSV="$WORKDIR/diag_ext_usage.tsv"
 # 名前に空白を含む agent（"Trend Researcher" 等）があるため、件数以外を名前として扱う。
 to_usage_tsv() { sort "$1" | uniq -c | sed -E 's/^ *([0-9]+) (.*)$/\2\t\1/' >"$2"; }
 to_usage_tsv "$SKILLTOOL_RAW" "$SKILLTOOL_TSV"
 to_usage_tsv "$SLASHCMD_RAW" "$SLASHCMD_TSV"
 to_usage_tsv "$SUBAGENT_RAW" "$SUBAGENT_TSV"
+to_usage_tsv "$DIAG_EXT_RAW" "$DIAG_EXT_TSV"
 
 get_tsv_count() {
   local file="$1" name="$2"
@@ -219,6 +232,35 @@ get_plugin_namespace_usage() {
     c="${c:-0}"
   fi
   echo $((a + b + c))
+}
+get_plugin_lsp_exts() {
+  # <pluginkey> <installpath> -> プラグインが定義する言語サーバーの対象拡張子（1行1件）。
+  # 定義は .lsp.json / plugin.json の lspServers / marketplace.json のエントリのいずれかにある。
+  local pluginkey="$1" installpath="$2"
+  local pname="${pluginkey%%@*}" mk="${pluginkey#*@}" ref
+  local mkjson="$HOME/.claude/plugins/marketplaces/$mk/.claude-plugin/marketplace.json"
+  local q='[.[]? | objects | .extensionToLanguage? // {} | keys[]] | .[]'
+  {
+    if [ -n "$installpath" ]; then
+      [ -f "$installpath/.lsp.json" ] && jq -r "$q" "$installpath/.lsp.json" 2>/dev/null
+      if [ -f "$installpath/.claude-plugin/plugin.json" ]; then
+        jq -r ".lspServers | objects | $q" "$installpath/.claude-plugin/plugin.json" 2>/dev/null
+        ref="$(jq -r '.lspServers | strings' "$installpath/.claude-plugin/plugin.json" 2>/dev/null)"
+        [ -n "$ref" ] && [ -f "$installpath/$ref" ] && jq -r "$q" "$installpath/$ref" 2>/dev/null
+      fi
+    fi
+    [ -f "$mkjson" ] && jq -r --arg n "$pname" \
+      ".plugins[]? | select(.name == \$n) | .lspServers | objects | $q" "$mkjson" 2>/dev/null
+  } | sort -u
+}
+get_lsp_diag_usage() {
+  # <拡張子一覧（改行区切り）> -> その拡張子のファイルに届いた診断通知の合計。
+  local exts="$1"
+  if [ -z "$exts" ] || [ ! -s "$DIAG_EXT_TSV" ]; then
+    echo 0
+    return
+  fi
+  printf '%s\n' "$exts" | awk -F'\t' 'NR==FNR{want[$1]=1; next} ($1 in want){s+=$2} END{print s+0}' - "$DIAG_EXT_TSV"
 }
 
 log "=== フェーズB: dotfiles スコープ ==="
@@ -440,7 +482,13 @@ if [ -f "$INSTALLED_PLUGINS_JSON" ]; then
     lm=""
     [ -n "$installpath" ] && [ -e "$installpath" ] && lm="$(stat -f "%Sm" -t "%Y-%m-%d" "$installpath" 2>/dev/null)"
     usage="$(get_plugin_namespace_usage "$ns")"
-    notes="${status} / v${version} / skill${skill_count}件・agent${agent_count}件 / 利用実績は内包skill・agentの呼び出し合算（間接指標）"
+    lsp_exts="$(get_plugin_lsp_exts "$pluginkey" "$installpath")"
+    if [ -n "$lsp_exts" ]; then
+      usage=$((usage + $(get_lsp_diag_usage "$lsp_exts")))
+      notes="${status} / v${version} / LSP（$(printf '%s\n' "$lsp_exts" | paste -sd, -)） / 利用実績は Claude の編集後に届いた診断通知の件数（ファイル単位、間接指標）"
+    else
+      notes="${status} / v${version} / skill${skill_count}件・agent${agent_count}件 / 利用実績は内包skill・agentの呼び出し合算（間接指標）"
+    fi
     emit_asset "global:plugin:$pname" "$pname" "plugin" "プラグイン" "global" "Claude" \
       "$installpath" "$usage" "true" "$lm" "$notes"
   done < <(jq -r '.plugins // {} | keys[]?' "$INSTALLED_PLUGINS_JSON" 2>/dev/null)
