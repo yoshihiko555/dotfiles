@@ -150,7 +150,7 @@ if [ "$FILE_COUNT" -gt 0 ]; then
   # Skillツール呼び出し: "id":"toolu_...","name":"Skill","input":{"skill":"<name>"
   tr '\n' '\0' <"$FILELIST" | xargs -0 "$GREP" -oh \
     '"id":"toolu_[^"]*","name":"Skill","input":{"skill":"[^"]*"' 2>/dev/null \
-    | sed -E 's/.*"skill":"([^"]*)"$/\1/' >"$SKILLTOOL_RAW"
+    | sort -u | sed -E 's/.*"skill":"([^"]*)"$/\1/' >"$SKILLTOOL_RAW"
 
   # スラッシュコマンド: 本物の招待タグのみ（"content":"<command-name>... または
   # </command-message>\n に続く <command-name>...）を対象にする。
@@ -158,13 +158,16 @@ if [ "$FILE_COUNT" -gt 0 ]; then
     '("content":"|</command-message>\\n)<command-name>/[^<]*</command-name>' 2>/dev/null \
     | sed -E 's#.*<command-name>/([^<]*)</command-name>#\1#' >"$SLASHCMD_RAW"
 
-  # subagent_type の出現（Task ツールの input）
-  tr '\n' '\0' <"$FILELIST" | xargs -0 "$GREP" -oh '"subagent_type":"[^"]*"' 2>/dev/null \
-    | sed -E 's/"subagent_type":"([^"]*)"/\1/' >"$SUBAGENT_RAW"
+  # subagent_type の出現（Task ツールの input）。同じ行の wireToolInputs にも
+  # 同じ input が載るため、ファイル:行番号 単位で重複を除く。
+  tr '\n' '\0' <"$FILELIST" | xargs -0 "$GREP" -Hno '"subagent_type":"[^"]*"' 2>/dev/null \
+    | sort -u | sed -E 's/.*"subagent_type":"([^"]*)"$/\1/' >"$SUBAGENT_RAW"
 
-  # MCP ツール呼び出し名 (mcp__<server>__<tool>)
-  tr '\n' '\0' <"$FILELIST" | xargs -0 "$GREP" -oh '"name":"mcp__[a-zA-Z0-9_.-]*"' 2>/dev/null \
-    | sed -E 's/"name":"(.*)"/\1/' >"$MCP_RAW"
+  # MCP ツール呼び出し名 (mcp__<server>__<tool>)。prompt_snapshot のツール定義を
+  # 拾わないよう tool_use の id にアンカーし、同一 id の重複は1回に数える。
+  tr '\n' '\0' <"$FILELIST" | xargs -0 "$GREP" -oh \
+    '"id":"toolu_[^"]*","name":"mcp__[a-zA-Z0-9_.-]*"' 2>/dev/null \
+    | sort -u | sed -E 's/.*"name":"(.*)"$/\1/' >"$MCP_RAW"
 else
   log "警告: 直近30日の transcript が見つかりません。利用実績はすべて0として扱います。"
 fi
@@ -172,9 +175,11 @@ fi
 SKILLTOOL_TSV="$WORKDIR/skilltool_usage.tsv"
 SLASHCMD_TSV="$WORKDIR/slashcmd_usage.tsv"
 SUBAGENT_TSV="$WORKDIR/subagent_usage.tsv"
-sort "$SKILLTOOL_RAW" | uniq -c | awk '{print $2"\t"$1}' >"$SKILLTOOL_TSV"
-sort "$SLASHCMD_RAW" | uniq -c | awk '{print $2"\t"$1}' >"$SLASHCMD_TSV"
-sort "$SUBAGENT_RAW" | uniq -c | awk '{print $2"\t"$1}' >"$SUBAGENT_TSV"
+# 名前に空白を含む agent（"Trend Researcher" 等）があるため、件数以外を名前として扱う。
+to_usage_tsv() { sort "$1" | uniq -c | sed -E 's/^ *([0-9]+) (.*)$/\2\t\1/' >"$2"; }
+to_usage_tsv "$SKILLTOOL_RAW" "$SKILLTOOL_TSV"
+to_usage_tsv "$SLASHCMD_RAW" "$SLASHCMD_TSV"
+to_usage_tsv "$SUBAGENT_RAW" "$SUBAGENT_TSV"
 
 get_tsv_count() {
   local file="$1" name="$2"
