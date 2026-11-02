@@ -131,7 +131,13 @@
         "localhost",
         "::1",
         "mcp.notion.com",
-        "api.github.com"
+        "api.github.com",
+        "github.com",
+        "raw.githubusercontent.com",
+        "daily-cloudcode-pa.googleapis.com",
+        "www.googleapis.com",
+        "antigravity-unleash.goog",
+        "lh3.googleusercontent.com"
       ],
       "allowLocalBinding": true
     },
