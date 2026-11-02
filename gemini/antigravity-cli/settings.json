@@ -4,7 +4,18 @@
   "permissions": {
     "allow": [
       "read_url(antigravity.google)",
-      "command(agy)"
+      "command(agy)",
+      "command(gh repo view)",
+      "command(gh repo list)",
+      "command(gh release view)",
+      "command(gh release list)",
+      "command(gh issue view)",
+      "command(gh issue list)",
+      "command(gh pr view)",
+      "command(gh pr list)",
+      "command(gh pr diff)",
+      "command(gh search)",
+      "command(gh org list)"
     ],
     "deny": [
       "command(sudo)",
