@@ -1,15 +1,15 @@
-# ADR-001: カラースキームの選定
+# ADR-20260302-0001: カラースキームの選定
 
-- **Phase**: 1
-- **Status**: accepted
-- **Date**: 2026-03-02
+- ステータス: 採用
+- 決定日: 2026-03-02
+- フェーズ: 1
 
-## Context
+## 背景
 
 Neovim移行の基盤として、カラースキームを選定する必要がある。
 WezTermで既にtokyonight moonを使用しており、ターミナルとエディタの見た目を統一したい。
 
-## Decision
+## 決定
 
 **tokyonight.nvim** の `moon` バリアントを採用する。
 
@@ -19,12 +19,12 @@ WezTermで既にtokyonight moonを使用しており、ターミナルとエデ�
 - folke製（lazy.nvim, which-key, trouble等の作者）でエコシステムとの相性が保証される
 - Lualine組み込みテーマあり
 
-## Alternatives
+## 選択肢
 
 - **catppuccin/nvim**: エコシステム最大・メンテナンス最活発だが、WezTermのテーマと合わせる利点がtokyonightにある
 - **kanagawa.nvim**: デザインは美しいが、メンテナンスがやや停滞（issue 90件）で長期運用に不安
 
-## Consequences
+## 影響
 
 - WezTermとNeovimで統一された見た目になる
 - folke製プラグイン（which-key, trouble等）を今後導入する際にテーマの不整合が起きにくい

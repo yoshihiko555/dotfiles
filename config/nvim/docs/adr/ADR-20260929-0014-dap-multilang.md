@@ -1,11 +1,11 @@
-# ADR-20260929-014: 言語ごとの DAP アダプター登録を共通化し、Python と TypeScript / Next.js のデバッグを追加する
+# ADR-20260929-0014: 言語ごとの DAP アダプター登録を共通化し、Python と TypeScript / Next.js のデバッグを追加する
 
-- **Status**: accepted
-- **Date**: 2026-09-29
+- ステータス: 採用
+- 決定日: 2026-09-29
 
-## Context
+## 背景
 
-[ADR-20260920-012](ADR-20260920-012.md) で共通 DAP 基盤と Go の構成を入れた。同日の追記で、Go 以外のバッファから
+[ADR-20260920-0012](ADR-20260920-0012-dap-base-and-go.md) で共通 DAP 基盤と Go の構成を入れた。同日の追記で、Go 以外のバッファから
 launch.json の Go 構成を実行できるように、`dap.lua` に Go 専用の仮アダプターを置いた。
 
 続けて Python と TypeScript（Next.js など）のデバッグを用意する。Java は当面開発しないため見送る。
@@ -13,7 +13,7 @@ launch.json の Go 構成を実行できるように、`dap.lua` に Go 専用�
 言語プラグインは FileType で遅延読み込みする一方、launch.json の構成はバッファを問わず一覧に出る。
 言語を足すたびに Go と同じ仮アダプターを `dap.lua` に書くと、共通ファイルに言語固有の記述が増える。
 
-## Decision
+## 決定
 
 **`dap.lua` は言語に依存しない登録の仕組みだけを持ち、各言語は `dap-<言語>.lua` から nvim-dap-ui の `opts` に登録を追加する。**
 
@@ -38,7 +38,7 @@ launch.json の Go 構成を実行できるように、`dap.lua` に Go 専用�
   子セッションを作り、止まっていた子だけを終了すると dev サーバーが残るため。子を持たない Go / Python は従来と同じ。
 - キーは追加しない。lockfile は nvim-dap-python の 1 行だけを追加し、既存エントリーは維持する。
 
-## Alternatives
+## 選択肢
 
 - **type → プラグインの対応表を `dap.lua` に直書きする**: 実装は単純だが、言語の追加で 2 ファイルを触ることになる。
   LazyVim と同じ `opts` 合成で、言語の記述を言語ファイルに閉じる案を選んだ。
@@ -47,10 +47,10 @@ launch.json の Go 構成を実行できるように、`dap.lua` に Go 専用�
 - **nvim-dap-vscode-js を使う**: 更新が止まっており、js-debug の DAP サーバーへの直接接続で足りるため採らない。
 - **`python3.withPackages` で debugpy 入りの Python を入れる**: `python3` が PATH に載り、mise の Python と競合する。
   debugpy パッケージの `bin` は `debugpy` / `debugpy-adapter` だけなので、こちらを使う。
-- **Mason で debugpy / js-debug を管理する**: ADR-20260920-012 と同じく、Nix との二重管理になるため採らない。
+- **Mason で debugpy / js-debug を管理する**: ADR-20260920-0012 と同じく、Nix との二重管理になるため採らない。
 - **Java も同時に用意する**: 当面開発しないため見送る。jdtls（LSP）の整備が先に必要。
 
-## Consequences
+## 影響
 
 - MacBook の Nix に debugpy 20.7 MiB と js-debug 35.3 MiB、debugpy の依存の lldb 28.0 MiB と lua 0.4 MiB が増える。
   PATH に増えるのは `debugpy` / `debugpy-adapter` / `js-debug` だけで、Python / Node 本体は増えない。

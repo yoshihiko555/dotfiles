@@ -1,14 +1,14 @@
-# ADR-003: lualine.nvimの最小構成での導入
+# ADR-20260302-0003: lualine.nvimの最小構成での導入
 
-- **Phase**: 1
-- **Status**: accepted
-- **Date**: 2026-03-02
+- ステータス: 採用
+- 決定日: 2026-03-02
+- フェーズ: 1
 
-## Context
+## 背景
 
 ステータスラインを導入し、現在のモード・gitブランチ・LSP診断情報などを常時表示したい。
 
-## Decision
+## 決定
 
 **lualine.nvim** をデフォルト構成 + 最小限のカスタマイズで導入する。
 
@@ -20,12 +20,12 @@
 
 セクション構成はデフォルトのまま（mode / branch / diff / diagnostics / filename / encoding / filetype / progress / location）。
 
-## Alternatives
+## 選択肢
 
 - **mini.statusline**: より軽量だがカスタマイズ性が低い
 - **セクション構成のカスタマイズ**: デフォルトが十分な情報量を持つため、現時点では不要と判断
 
-## Consequences
+## 影響
 
 - デフォルト構成のため設定コードが最小限（11行）
 - gitsigns導入後にdiff sourceを差し替えることでパフォーマンス向上が可能

@@ -62,7 +62,7 @@
 
 Delve・debugpy・js-debug の実行ファイルは MacBook の Nix `hosts/macbook/packages.nix`、
 Go / Python / Node は mise で管理する。TypeScript / JavaScript は専用プラグインを使わず、`plugins/dap-js.lua` で
-js-debug へ直接つなぐ。言語ごとの登録は各 `dap-<言語>.lua` から `dap.lua` の `opts` に追加する（ADR-20260929-014）。
+js-debug へ直接つなぐ。言語ごとの登録は各 `dap-<言語>.lua` から `dap.lua` の `opts` に追加する（ADR-20260929-0014）。
 共通キーで dap-ui と依存を読み込み、Go / Python バッファでは言語プラグインが UI 初期化後に構成を登録する。
 別の言語のバッファで launch.json の構成を実行したときも、その時点で言語プラグインを読み込む。
 導入・操作・実機検証の状況は [デバッグガイド](cheatsheet/debugging.md) を参照。

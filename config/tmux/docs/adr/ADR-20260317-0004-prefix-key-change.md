@@ -1,10 +1,10 @@
-# ADR-004: Prefix キーの変更 (Ctrl+B → Ctrl+T → Ctrl+Q)
+# ADR-20260317-0004: Prefix キーの変更 (Ctrl+B → Ctrl+T → Ctrl+Q)
 
-- **状態**: 承認・実施済み
-- **日付**: 2026-03-17
-- **更新**: 2026-03-17 Phase 6 完了に伴い Ctrl+T → Ctrl+Q に再変更
+- ステータス: 採用
+- 決定日: 2026-03-17
+- 更新: 2026-03-17 Phase 6 完了に伴い Ctrl+T → Ctrl+Q に再変更
 
-## コンテキスト
+## 背景
 
 tmux の Prefix を `Ctrl+Q` に設定していたが、WezTerm の Leader キーも `Ctrl+Q` であり衝突していた。WezTerm が先にキーを捕捉するため、tmux の Prefix が機能しない状態だった。
 

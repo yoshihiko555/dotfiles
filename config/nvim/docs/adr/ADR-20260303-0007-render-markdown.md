@@ -1,15 +1,15 @@
-# ADR-20260303-007: バッファ内Markdownレンダリングにrender-markdown.nvimを採用
+# ADR-20260303-0007: バッファ内Markdownレンダリングにrender-markdown.nvimを採用
 
-- **Phase**: 2
-- **Status**: accepted
-- **Date**: 2026-03-03
+- ステータス: 採用
+- 決定日: 2026-03-03
+- フェーズ: 2
 
-## Context
+## 背景
 
 Markdown ファイルをNeovim内で視覚的に読みやすく表示するため、バッファ内レンダリングプラグインを選定する。
 見出し・コードブロック・チェックボックス・テーブル等をextmarksで装飾し、編集体験を向上させる。
 
-## Decision
+## 決定
 
 **render-markdown.nvim**（MeanderingProgrammer）を採用する。
 
@@ -26,13 +26,13 @@ Markdown ファイルをNeovim内で視覚的に読みやすく表示するた�
 - `<leader>mr` でレンダリングのトグル
 - heading/codeのsign column表示を無効化（見た目をすっきり）
 
-## Alternatives
+## 選択肢
 
 - **markview.nvim**: Typst/LaTeX/AsciiDocにも対応するが、tokyonightネイティブ対応なし（Issue #622で要望中）。マルチフォーマットが不要な現段階では過剰
 - **glow.nvim**: 2025年3月にアーカイブ済。作者がrender-markdown.nvimを推奨
 - **headlines.nvim**: render-markdown.nvimに機能的に置き換えられた
 
-## Consequences
+## 影響
 
 - which-keyに`<leader>m`（Markdown）グループを追加
 - バッファ内の表示は自動で装飾され、トグルで無効化可能

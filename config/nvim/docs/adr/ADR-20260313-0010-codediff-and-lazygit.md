@@ -1,16 +1,16 @@
-# ADR-20260313-010: Diff Viewer に codediff.nvim を採用、lazygit との役割分担
+# ADR-20260313-0010: Diff Viewer に codediff.nvim を採用、lazygit との役割分担
 
-- **Phase**: 3
-- **Status**: accepted
-- **Date**: 2026-03-13
+- ステータス: 採用
+- 決定日: 2026-03-13
+- フェーズ: 3
 
-## Context
+## 背景
 
 PR前のdiff確認やファイル履歴をNeovim内で視覚的に確認したい。
 同時に、Phase 3 全体の方針として「Git操作はlazygitに委ねる」ことを決定し、
 neogit / fugitive は導入しない方針とした。
 
-## Decision
+## 決定
 
 **codediff.nvim** を採用する。また、diffview.nvim / neogit / fugitive は導入しない。
 
@@ -25,12 +25,12 @@ lazygit との役割分担:
 - **codediff.nvim**: diff の視覚的確認（PR前レビュー・ファイル履歴）
 - **lazygit**: コミット・ステージ・ブランチ操作・マージコンフリクト解消
 
-## Alternatives
+## 選択肢
 
 - **diffview.nvim**: 最も機能豊富（3-way/4-way merge）だが、最終コミットが2024年6月で停滞。open issue 107件、メンテナ応答なし
 - **neogit / fugitive.vim**: Git操作UIだがlazygitで十分カバーできるため不要
 
-## Consequences
+## 影響
 
 - `:CodeDiff` コマンドのみ（cmd遅延読込）で起動時のオーバーヘッドなし
 - マージコンフリクト解消はlazygitに委ねるため、codediffの3-way対応の弱さは問題にならない

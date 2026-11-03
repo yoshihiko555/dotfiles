@@ -3,9 +3,9 @@
 - ステータス: 採用（2026-09-23 確定。当初の判断予定日 2026-09-27 から前倒し）
 - 決定日: 2026-09-22（試用開始） / 2026-09-23（採用確定）
 - 関連: なし（`docs/adr/` として最初の ADR）。tmux + baton の選定経緯は
-  [config/tmux/docs/decisions/003-baton-vs-claude-squad.md](../../config/tmux/docs/decisions/003-baton-vs-claude-squad.md) /
-  [007-ai-session-monitoring.md](../../config/tmux/docs/decisions/007-ai-session-monitoring.md) を参照
-  （形式はこの ADR 群と異なる、tmux 領域内の決定ログ）
+  [config/tmux/docs/adr/ADR-20260316-0003](../../config/tmux/docs/adr/ADR-20260316-0003-baton-vs-claude-squad.md) /
+  [ADR-20260317-0007](../../config/tmux/docs/adr/ADR-20260317-0007-ai-session-monitoring.md) を参照
+  （tmux 領域内の決定ログ）
 
 ## 背景
 

@@ -1,9 +1,9 @@
-# ADR-20260920-012: 共通 DAP 基盤と Go のデバッグ構成を分離して導入する
+# ADR-20260920-0012: 共通 DAP 基盤と Go のデバッグ構成を分離して導入する
 
-- **Status**: accepted
-- **Date**: 2026-09-20
+- ステータス: 採用
+- 決定日: 2026-09-20
 
-## Context
+## 背景
 
 Neovim でブレークポイント・ステップ実行・変数と呼び出し履歴の確認を行いたい。
 まず dotfiles に共通基盤を用意し、Go のローカル実行と単体テストから始める。
@@ -12,7 +12,7 @@ Learno の Docker 接続はその後に検証するため、接続先やコン�
 CLI は Nix、言語ランタイムは mise が担当する。
 今回の利用端末は MacBook Pro で、Delve は未導入だった。
 
-## Decision
+## 決定
 
 **共通操作は nvim-dap / dap-ui、Go のアダプターとテスト構成は nvim-dap-go に任せる。**
 
@@ -29,13 +29,13 @@ CLI は Nix、言語ランタイムは mise が担当する。
   独自ローダーは作らず、接続先・ポート・ソースパス対応はプロジェクト側に置く。
 - 追加プラグイン 4 件だけをインストールし、lockfile の既存エントリーは維持する。
 
-## Alternatives
+## 選択肢
 
 - **Delve を Mason で管理する**: 既存の CLI 管理方針と異なり、Nix と二重管理になるため採らない。
 - **独自の Go アダプターと launch.json ローダーを書く**: 上流の既存機能と重複するため採らない。
 - **Docker・他言語・テストランナーも同時に導入する**: 接続やランタイムの問題を切り分けにくいため後続に分ける。
 
-## Consequences
+## 影響
 
 - Neovim 共通設定には Learno 固有のパスや接続先を含めない。
 - Lua は repo の実体を参照するため Neovim 再起動で反映するが、Delve の恒久利用には Nix switch が必要。
@@ -73,4 +73,4 @@ Go 以外のバッファで launch.json の Go 構成を選ぶと、nvim-dap-go 
 - `plugins/dap-go.lua` は nvim-dap-go のアダプターを包み、`request: attach`・`mode: remote` で
   `port` を持つ構成だけ host / port へ直接つなぐ。それ以外は nvim-dap-go のアダプターに任せるので、
   Delve 用のアダプターを別に定義する方針は変えない。remote attach は Delve の存在確認からも外す。
-- 同日、Go の仮関数と Delve の存在確認は [ADR-20260929-014](ADR-20260929-014.md) で言語共通の仕組みへ移した。
+- 同日、Go の仮関数と Delve の存在確認は [ADR-20260929-0014](ADR-20260929-0014-dap-multilang.md) で言語共通の仕組みへ移した。

@@ -1,9 +1,9 @@
-# ADR-009: smart-splits.nvim 導入 (Neovim ↔ tmux シームレス移動)
+# ADR-20260317-0009: smart-splits.nvim 導入 (Neovim ↔ tmux シームレス移動)
 
-- **状態**: 承認・実施済み
-- **日付**: 2026-03-17
+- ステータス: 採用
+- 決定日: 2026-03-17
 
-## コンテキスト
+## 背景
 
 WezTerm 時代は `actions.lua` の `split_nav()` で Neovim ↔ WezTerm のペイン移動を実装していた。
 Phase 6 で WezTerm の `actions.lua` を削除したため、Alt+h/j/k/l で Neovim 内に移動すると

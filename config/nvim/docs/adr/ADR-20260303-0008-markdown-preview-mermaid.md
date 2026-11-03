@@ -1,15 +1,15 @@
-# ADR-20260303-008: Mermaid対応ブラウザプレビューにselimacerbas/markdown-preview.nvimを採用
+# ADR-20260303-0008: Mermaid対応ブラウザプレビューにselimacerbas/markdown-preview.nvimを採用
 
-- **Phase**: 2
-- **Status**: accepted
-- **Date**: 2026-03-03
+- ステータス: 採用
+- 決定日: 2026-03-03
+- フェーズ: 2
 
-## Context
+## 背景
 
 Mermaid図やLaTeX数式を含むMarkdownの完全なプレビューを行うため、ブラウザベースのプレビュープラグインを選定する。
 render-markdown.nvimはバッファ内テキスト装飾に特化しており、Mermaid等の図表レンダリングには対応していない。
 
-## Decision
+## 決定
 
 **selimacerbas/markdown-preview.nvim** を採用する。
 
@@ -26,14 +26,14 @@ render-markdown.nvimはバッファ内テキスト装飾に特化しており、
 - `<leader>mp` でプレビュー開始、`<leader>mP` で停止
 - スクロール同期有効、debounce 300ms
 
-## Alternatives
+## 選択肢
 
 - **iamcco/markdown-preview.nvim**: 最多実績（7.7k stars）だがnpm必須・メンテ不安定（2023年10月以降作者応答なし）
 - **3rd/diagram.nvim**: エディタ内にMermaid図を描画できるが、image.nvimのWezTerm Sixel対応が非公式で描画不安定のリスク
 - **kevalin/mermaid.nvim**: Mermaid専用ブラウザプレビュー。2026年1月新規で採用実績が少ない
 - **peek.nvim**: 2024年3月以降メンテナンス停止
 
-## Consequences
+## 影響
 
 - ブラウザを開く外部動作が発生する（エディタ完結ではない）
 - live-server.nvimが依存として追加される（Pure Lua、追加インストール不要）

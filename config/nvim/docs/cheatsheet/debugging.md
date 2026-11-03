@@ -351,7 +351,7 @@ dap-ui / nio の README に独立した最小 Neovim 版の指定はなく、上
 | Node / Next.js | mise の Node 25.2.1、Next.js 16.2.11（Turbopack） |
 
 headless の Neovim で、`.env` バッファから次の実停止を確認した。Nix switch 前のため、検証プロセスだけ
-Nix store の debugpy と js-debug を PATH に追加した。詳細は [ADR-20260929-014](../adr/ADR-20260929-014.md)。
+Nix store の debugpy と js-debug を PATH に追加した。詳細は [ADR-20260929-0014](../adr/ADR-20260929-0014-dap-multilang.md)。
 
 - Python: `debugpy` の launch（`.venv` の Python と `.env` の値を確認）、venv 無しでの Nix の Python。
 - TypeScript / JavaScript: `pwa-node` の `.js`、`node` の `.ts`、`node --inspect` への attach、`node-terminal`。

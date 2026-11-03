@@ -1,10 +1,10 @@
-# ADR-001: tmux-first アーキテクチャの採用
+# ADR-20260316-0001: tmux-first アーキテクチャの採用
 
-- **状態**: 承認
-- **日付**: 2026-03-16
-- **関連**: 移行計画原本 (`digital-garden/content/notes/tech/2026-03-16_tmux-migration-plan.md`)
+- ステータス: 採用
+- 決定日: 2026-03-16
+- 関連: 移行計画原本 (`digital-garden/content/notes/tech/2026-03-16_tmux-migration-plan.md`)
 
-## コンテキスト
+## 背景
 
 WezTerm の Lua カスタマイズで以下を実現していた:
 

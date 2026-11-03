@@ -207,5 +207,5 @@ IDE級の最終ピース。ブレークポイント・ステップ実行をNeovi
   検証時は Nix store の Delve を PATH に追加。恒久適用の Nix switch は sudo 認証待ち。
   Learno の Docker 接続、他言語、neotest 等は後続に分ける。
 - （2026-09-29）Python（nvim-dap-python + debugpy）と TypeScript / Next.js（js-debug 直結）を追加。
-  言語ごとのアダプター登録を `dap.lua` の `opts` に集約（ADR-20260929-014）。Java は必要になるまで見送り。
+  言語ごとのアダプター登録を `dap.lua` の `opts` に集約（ADR-20260929-0014）。Java は必要になるまで見送り。
 - （2026-07-30）AI質問フロート（`lua/ai/claude.lua`、自作）を導入。`<leader>aa` で claude -p (sonnet) に一問一答

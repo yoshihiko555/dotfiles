@@ -32,4 +32,4 @@ hunk単位の操作（ステージ/リセット）やinline blameを行いたい
 **gitsigns.nvim を採用**。inline blame + word diff + hunk 操作を単一プラグインで全カバー。
 依存ゼロ・Pure Lua・活発なメンテナンスで文句なし。
 
-→ ADR-20260313-009
+→ ADR-20260313-0009

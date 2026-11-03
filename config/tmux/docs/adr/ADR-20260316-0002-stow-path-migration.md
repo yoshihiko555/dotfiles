@@ -1,10 +1,10 @@
-# ADR-002: Stow パスを XDG 準拠に変更
+# ADR-20260316-0002: Stow パスを XDG 準拠に変更
 
-- **状態**: 承認・実施済み
-- **日付**: 2026-03-16
-- **追記**: その後 stow 由来の `config/.config` 中間層を除去し、現在の配置は `config/tmux/`（home-manager の `mkOutOfStoreSymlink` で `~/.config/tmux/` に配線）
+- ステータス: 採用
+- 決定日: 2026-03-16
+- 追記: その後 stow 由来の `config/.config` 中間層を除去し、現在の配置は `config/tmux/`（home-manager の `mkOutOfStoreSymlink` で `~/.config/tmux/` に配線）
 
-## コンテキスト
+## 背景
 
 現在の tmux 設定は以下のパスに配置:
 

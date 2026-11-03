@@ -18,7 +18,7 @@ WezTerm のワークスペース管理を tmux セッションに移行し、tmu
 | 1 | 設定ファイル分割 + Stow 対応 | **完了** | `config/.config/tmux/` に分割・移動済み（その後 stow 層を除去し、現在は `config/tmux/`） |
 | 2 | プロジェクト管理の移行 | **完了** | sessionizer (Prefix+f), kill-session (Prefix+W), セッション切替 (Prefix+w) |
 | 3 | プラグイン導入 (TPM) | **部分完了** | fingers (Prefix+F), open 導入済み。resurrect/continuum は後回し |
-| 4 | AI セッション管理 | **完了** | `baton` TUI を `Prefix+B` で popup 起動（`Prefix+b` は常駐の default セッションへ切替）。暫定ダッシュボードスクリプトは撤去済み。ADR-007 参照 |
+| 4 | AI セッション管理 | **完了** | `baton` TUI を `Prefix+B` で popup 起動（`Prefix+b` は常駐の default セッションへ切替）。暫定ダッシュボードスクリプトは撤去済み。ADR-20260317-0007 参照 |
 | 5 | コマンドパレット + URL ハンドラ | **保留** | チートシート (Prefix+.) で代替。URL は tmux-open で対応済み。必要になれば追加 |
 | 6 | WezTerm 設定の縮小 | **完了** | GUI レンダラーに限定。7 ファイル削除、keybinds.lua 大幅削減 |
 | 7 | 試用 + 微調整 | **進行中** | 1 週間の試用 (目標: 2026-03-23 レビュー) |
@@ -159,7 +159,7 @@ git show fbf993a:config/.config/wezterm.bak/config/statusbar.lua
 WezTerm は `enable_tab_bar = false` でも内部で `TabBarState` を毎サイクル再計算する。
 `format-tab-title` / `update-status` ハンドラが未登録だとデフォルト処理の結果が毎回異なり、
 `window.invalidate()` が毎サイクル発火して画面がちらつく。
-以下の対策で回避している（詳細は ADR-008 参照）:
+以下の対策で回避している（詳細は ADR-20260317-0008 参照）:
 
 - `update-status`: left/right status を空文字に固定
 - `format-tab-title`: tab index ベースの固定値を返す
@@ -178,7 +178,7 @@ WezTerm は `enable_tab_bar = false` でも内部で `TabBarState` を毎サイ�
 
 ### 完了済み
 
-- smart-splits.nvim 導入済み（ADR-009 参照）
+- smart-splits.nvim 導入済み（ADR-20260317-0009 参照）
 
 ## リスク管理
 
