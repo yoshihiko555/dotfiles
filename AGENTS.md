@@ -5,8 +5,9 @@
 
 ## ドキュメント
 
-- ADR は領域をまたぐ決定を `docs/adr/`、領域内で閉じる決定を `config/<領域>/docs/adr/` に置く
-  （索引は各ディレクトリの `DECISIONS.md`）。
+- ADR は領域をまたぐ決定を `docs/adr/`、領域内で閉じる決定を各領域の `docs/adr/` に置く
+  （`config/<領域>/docs/adr/`、Claude Code は `claude/docs/adr/`。索引は各ディレクトリの `DECISIONS.md`）。
+- ADR の書き方は `shared/skills/common/decision-log/references/GUIDELINE.md` に従う。
 
 ## Git
 
