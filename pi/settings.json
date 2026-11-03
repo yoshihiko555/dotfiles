@@ -4,5 +4,6 @@
   "packages": [
     "../../ghq/github.com/yoshihiko555/pi-harness"
   ],
-  "collapseChangelog": true
+  "collapseChangelog": true,
+  "hideThinkingBlock": true
 }
