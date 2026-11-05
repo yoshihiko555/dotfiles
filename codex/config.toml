@@ -27,6 +27,11 @@ approvals_reviewer = "auto_review"
 # - "workspace-write": 作業ディレクトリ内は書き込みOK、外は制限
 sandbox_mode = "workspace-write"
 
+# 権限のプロファイル。sandbox_mode より優先される。中身はファイル末尾の [permissions.guarded-workspace]
+# （:workspace に、読ませないファイルを足したもの）。codex exec などに --sandbox を付けて起動したときは
+# プロファイルが使われず、--sandbox の値になる（codex-cli 0.166.0 で確かめた）
+default_permissions = "guarded-workspace"
+
 # ---- 通知 ----
 # turn-ended は Computer Use 用。完了・承認待ちの通知は herdr に任せる
 notify = [
@@ -282,3 +287,12 @@ realtimeVoiceScreenContextEnabled = true
 [mcp_servers.figma]
 "url" = "https://mcp.figma.com/mcp"
 "enabled" = true
+
+# ---- 権限のプロファイル ----
+# 組み込みの :workspace（sandbox_mode = "workspace-write" と同じ）に、読ませないファイルを足す
+[permissions.guarded-workspace]
+extends = ":workspace"
+
+[permissions.guarded-workspace.filesystem]
+# homebase のエージェント用のトークン。エージェントは読まない（homebase の NFR-012）
+"~/.config/homebase/agent-token" = "none"
