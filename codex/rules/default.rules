@@ -195,3 +195,29 @@ prefix_rule(
         "pnpm pair",
     ],
 )
+
+prefix_rule(
+    pattern = ["homebase", ["agent-token", "suggest"]],
+    decision = "forbidden",
+    justification = "エージェント用のトークンの発行・取り消しと suggest はユーザーが実行する（homebase の NFR-012）。",
+    match = [
+        "homebase agent-token issue",
+        "homebase suggest",
+    ],
+    not_match = [
+        "homebase status",
+    ],
+)
+
+prefix_rule(
+    pattern = ["node", "cli/src/main.ts", ["agent-token", "suggest"]],
+    decision = "forbidden",
+    justification = "エージェント用のトークンの発行・取り消しと suggest はユーザーが実行する（homebase の NFR-012）。",
+    match = [
+        "node cli/src/main.ts agent-token issue --data-dir x",
+        "node cli/src/main.ts suggest",
+    ],
+    not_match = [
+        "node cli/src/main.ts status",
+    ],
+)
