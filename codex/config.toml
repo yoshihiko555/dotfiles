@@ -4,10 +4,10 @@
 
 # ---- 基本設定 ----
 # デフォルトで使うモデル
-model = "gpt-6.1-sol"
+model = "gpt-6-astra"
 
 # 推論の深さ（medium: バランス型 / high: より時間をかける）
-model_reasoning_effort = "xhigh"
+model_reasoning_effort = "high"
 
 # 出力トーン
 personality = "pragmatic"
@@ -23,21 +23,14 @@ web_search = "live"
 approval_policy = "on-request"
 approvals_reviewer = "auto_review"
 
-# サンドボックスレベル
-# - "workspace-write": 作業ディレクトリ内は書き込みOK、外は制限
-sandbox_mode = "workspace-write"
-
-# 権限のプロファイル。sandbox_mode より優先される。中身はファイル末尾の [permissions.guarded-workspace]
-# （:workspace に、読ませないファイルを足したもの）。codex exec などに --sandbox を付けて起動したときは
-# プロファイルが使われず、--sandbox の値になる（codex-cli 0.166.0 で確かめた）
+# 権限はファイル末尾の [permissions.guarded-workspace] に集約する。
+# 作業領域への書き込みと通信を許可し、指定したトークンファイルの読み取りを禁止する。
+# 旧 sandbox_mode や起動時の --sandbox は併用しない。
 default_permissions = "guarded-workspace"
 
 # ---- 通知 ----
 # turn-ended は Computer Use 用。完了・承認待ちの通知は herdr に任せる
-notify = [
-  "/Users/yoshihiko/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient",
-  "turn-ended",
-]
+notify = ["/Users/yoshihiko/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
 
 # ---- 信頼済みプロジェクト ----
 # 現行形式: [projects."/absolute/path"] + trust_level = "trusted" | "untrusted"
@@ -101,18 +94,7 @@ js_repl = false
 [shell_environment_policy]
 inherit = "core"
 ignore_default_excludes = false
-exclude = [
-  "AWS_*",
-  "AZURE_*",
-  "GCP_*",
-  "GOOGLE_*",
-  "OPENAI_*",
-  "ANTHROPIC_*",
-  "GITHUB_*",
-  "GH_*",
-  "NPM_TOKEN",
-  "HOMEBREW_GITHUB_API_TOKEN",
-]
+exclude = ["AWS_*", "AZURE_*", "GCP_*", "GOOGLE_*", "OPENAI_*", "ANTHROPIC_*", "GITHUB_*", "GH_*", "NPM_TOKEN", "HOMEBREW_GITHUB_API_TOKEN"]
 
 [shell_environment_policy.set]
 BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
@@ -182,14 +164,7 @@ animations = false
 notifications = ["approval-requested"]
 notification_method = "bel"
 notification_condition = "always"
-status_line = [
-  "model-name",
-  "project-root",
-  "git-branch",
-  "context-remaining",
-  "context-used",
-  "five-hour-limit",
-]
+status_line = ["model-name", "project-root", "git-branch", "context-remaining", "context-used", "five-hour-limit"]
 screen_reader_detection_done = true
 
 [tui.model_availability_nux]
@@ -289,10 +264,14 @@ realtimeVoiceScreenContextEnabled = true
 "enabled" = true
 
 # ---- 権限のプロファイル ----
-# 組み込みの :workspace（sandbox_mode = "workspace-write" と同じ）に、読ませないファイルを足す
+# 組み込みの :workspace に、特定ファイルの読み取り禁止と通信許可を追加する
 [permissions.guarded-workspace]
 extends = ":workspace"
 
 [permissions.guarded-workspace.filesystem]
 # homebase のエージェント用のトークン。エージェントは読まない（homebase の NFR-012）
 "~/.config/homebase/agent-token" = "none"
+
+# ネットワーク通信を許可する（接続先の制限なし）。ファイルの読み取り禁止は維持する。
+[permissions.guarded-workspace.network]
+enabled = true
