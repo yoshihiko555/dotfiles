@@ -9,6 +9,7 @@
   #   security.nix — Touch ID sudo と loginwindow / screensaver（Phase 4-8）
   #   nix-builders.nix — hermes を distributed build のビルドマシンに登録（Phase 4-1）
   #   nix-gc.nix — Nix store の自動 GC（hermes と同一設定）
+  #   hermes-dashboard.nix — Mac mini の dashboard への SSH トンネル
   #   remote-access.nix — モバイルからの接続に使う Tailscale
   #   zsh.nix — /etc/zshrc の compinit / promptinit を止める（sheldon に一本化）
   imports = [
@@ -20,6 +21,7 @@
     ./nix-builders.nix
     ./nix-gc.nix
     ./remote-access.nix
+    ./hermes-dashboard.nix
     ./zsh.nix
   ];
 

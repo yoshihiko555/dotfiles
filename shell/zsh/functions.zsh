@@ -192,12 +192,13 @@ fe() {
   [[ -n "$file" ]] && nvim "$file"
 }
 
-# hermes dashboard を SSH トンネル経由でブラウザから開く
-#   ExitOnForwardFailure=yes: 13000 が他の ssh に占有されていたら黙って続行せず失敗させる
-#   （警告を見逃したまま既存トンネルに相乗りし、そちらの終了で切断される事故を防ぐ）
+# launchd が維持する SSH トンネル経由で dashboard を開く。
 hermes-ui() {
-  (sleep 2 && open "http://localhost:13000") &
-  ssh -t -o ExitOnForwardFailure=yes macmini-hermes "/Users/agent/.local/bin/hermes dashboard"
+  if ! /usr/bin/curl --fail --silent --max-time 3 "http://127.0.0.1:13000/api/status" >/dev/null; then
+    echo "Hermes dashboard に接続できません。mini の dashboard と MBP のトンネルを確認してください。" >&2
+    return 1
+  fi
+  open "http://127.0.0.1:13000"
 }
 
 # brew 管理ツールを一括更新（最新でないものだけ upgrade）

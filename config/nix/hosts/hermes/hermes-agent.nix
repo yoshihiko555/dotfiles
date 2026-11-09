@@ -5,7 +5,7 @@ in
 {
   # Hermes Agent の基盤一式（Phase 3-1b で brew から移行、2026-08-01）。
   # gateway 本体（ai.hermes.gateway）は hermes-agent 側の管理に残しており、
-  # ここでは LLM / News 配信のデーモンと gateway が必要とする CLI の橋渡しを宣言する。
+  # ここでは dashboard / LLM / News 配信と gateway が必要とする CLI の橋渡しを宣言する。
 
   home-manager.users.agent =
     { config, pkgs, ... }:
@@ -34,6 +34,36 @@ in
       # symlink を ~/.local/bin に置く。plist が再生成されても壊れない。
       home.file.".local/bin/gh".source =
         config.lib.file.mkOutOfStoreSymlink "/etc/profiles/per-user/agent/bin/gh";
+
+      # MBP から SSH トンネル経由で使う管理画面。Discord gateway は別サービス。
+      launchd.agents."com.hermes.dashboard" = {
+        enable = true;
+        config = {
+          Label = "com.hermes.dashboard";
+          ProgramArguments = [
+            "/Users/agent/.hermes/hermes-agent/.hermes/bin/hermes"
+            "dashboard"
+            "--host"
+            "127.0.0.1"
+            "--port"
+            "9119"
+            "--no-open"
+            "--skip-build"
+          ];
+          WorkingDirectory = "/Users/agent/.hermes";
+          EnvironmentVariables = {
+            HERMES_HOME = "/Users/agent/.hermes";
+            HERMES_DISABLE_LAZY_INSTALLS = "1";
+            PATH = "/Users/agent/.local/bin:/etc/profiles/per-user/agent/bin:/usr/bin:/bin:/usr/sbin:/sbin";
+          };
+          RunAtLoad = true;
+          KeepAlive = true;
+          ThrottleInterval = 30;
+          # Hermes 自身の gui.log（10 MiB × 本体 + 5 世代）へ記録する。
+          StandardOutPath = "/dev/null";
+          StandardErrorPath = "/dev/null";
+        };
+      };
 
       # 旧 ~/Library/LaunchAgents/com.user.llama-swap.plist（手書き）を置き換える宣言。
       # Label / ログパス / KeepAlive は旧 plist と同一に保つ。
