@@ -1,7 +1,7 @@
 # Hermes dashboard の常駐運用
 
 Mac mini の dashboard と MBP の SSH トンネルを、各ユーザーの GUI ログイン後に launchd で起動する。
-ブラウザの入口は `http://127.0.0.1:13000`。`hermes-ui` も同じ画面を開く。
+MBP のブラウザで `http://127.0.0.1:13000` を直接開く。
 
 ```text
 MBP ブラウザ → 127.0.0.1:13000 → SSH → mini 127.0.0.1:9119
@@ -39,7 +39,6 @@ MBP:
 ```sh
 curl --fail --silent http://127.0.0.1:13000/api/status
 launchctl print gui/$(id -u)/com.hermes.dashboard-tunnel
-hermes-ui
 ```
 
 mini（`ssh macmini-agent` で接続して実行）:

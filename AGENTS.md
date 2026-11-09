@@ -23,6 +23,6 @@
 ## Mac mini（hermes）への接続
 
 - エージェントが Mac mini へ SSH する場合は必ず `macmini-agent` を使ってください。
-- `macmini-hermes` は使わないでください。`LocalForward 13000` を持つ `hermes-ui` 専用の
-  プロファイルで、ユーザーがダッシュボードを開いている間はポートが衝突します。
+- `macmini-hermes` は使わないでください。`LocalForward 13000` を持つ手動接続用の
+  プロファイルで、常駐 SSH トンネルの稼働中はブラウザの開閉に関係なくポートが衝突します。
 - admin 権限が必要な操作のみ `macmini-admin` を使い、その理由を明示してください。

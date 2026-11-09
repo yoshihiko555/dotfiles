@@ -192,15 +192,6 @@ fe() {
   [[ -n "$file" ]] && nvim "$file"
 }
 
-# launchd が維持する SSH トンネル経由で dashboard を開く。
-hermes-ui() {
-  if ! /usr/bin/curl --fail --silent --max-time 3 "http://127.0.0.1:13000/api/status" >/dev/null; then
-    echo "Hermes dashboard に接続できません。mini の dashboard と MBP のトンネルを確認してください。" >&2
-    return 1
-  fi
-  open "http://127.0.0.1:13000"
-}
-
 # brew 管理ツールを一括更新（最新でないものだけ upgrade）
 #   claude-code / codex などの CLI agent を含む全 formula/cask が対象。
 #   :latest cask（wezterm@nightly 等、brew がバージョン比較できず毎回再取得になるもの）は

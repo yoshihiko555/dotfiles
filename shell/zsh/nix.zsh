@@ -170,7 +170,7 @@ bxu() {
 # hermes リモート（MBP から実行する）
 # --------------------------------------------
 # SSH 先は AGENTS.md の規約に従う:
-#   macmini-agent … 通常作業（macmini-hermes は hermes-ui 専用なので使わない）
+#   macmini-agent … 通常作業（macmini-hermes は常駐トンネルとポートが競合するため使わない）
 #   macmini-admin … sudo が要る操作のみ
 
 # hermes 上で build → diff を実行する本体（pull はしない）
