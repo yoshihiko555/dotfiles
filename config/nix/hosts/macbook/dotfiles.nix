@@ -112,32 +112,32 @@ in
         # provider の振り分けと companion の設定。takt は初回生成時にしか書かない（既存なら上書きしない）ため symlink で配る
         ".takt/runtime.yaml".source = mkLink "takt/runtime.yaml";
 
-        "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.C9692AD7-2800-42B7-8F97-8F8CCD1CC88E".source =
+        "Dropbox/01_Private/05_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.C9692AD7-2800-42B7-8F97-8F8CCD1CC88E".source =
           mkLink "alfred/Open-VS-or-IT";
-        "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.D644F268-263B-4B05-929D-7E80AEA91BC0".source =
+        "Dropbox/01_Private/05_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.D644F268-263B-4B05-929D-7E80AEA91BC0".source =
           mkLink "alfred/audio-output";
-        "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.455DAC0F-6957-4573-9A95-565C76C88D28".source =
+        "Dropbox/01_Private/05_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.455DAC0F-6957-4573-9A95-565C76C88D28".source =
           mkLink "alfred/post";
         # Notion トークンは info.plist ではなく Alfred の Workflow Configuration
         # （workflow ディレクトリ内の prefs.plist）に置く。public リポジトリなので
         # 当該ファイルは .gitignore で除外している
-        "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.CC5F7378-77EC-4037-B0BD-499DBF07983D".source =
+        "Dropbox/01_Private/05_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.CC5F7378-77EC-4037-B0BD-499DBF07983D".source =
           mkLink "alfred/fast-notion";
-        "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.5B4C6E9B-E7D8-4A26-BDE6-653EFD05231D".source =
+        "Dropbox/01_Private/05_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.5B4C6E9B-E7D8-4A26-BDE6-653EFD05231D".source =
           mkLink "alfred/github-repo";
-        "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.EBF00FBD-E862-4C9E-9D7E-4F258D7B5CEA".source =
+        "Dropbox/01_Private/05_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.EBF00FBD-E862-4C9E-9D7E-4F258D7B5CEA".source =
           mkLink "alfred/dia-chat";
-        "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.5C6780EE-821F-4580-B139-E48F8C3654AE".source =
+        "Dropbox/01_Private/05_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.5C6780EE-821F-4580-B139-E48F8C3654AE".source =
           mkLink "alfred/free-slots";
-        "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.F6E09DF1-E931-4654-96D1-84A9F4E800D7".source =
+        "Dropbox/01_Private/05_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.F6E09DF1-E931-4654-96D1-84A9F4E800D7".source =
           mkLink "alfred/format";
-        "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.B211A0F7-6ADC-434E-A36C-74840C438984".source =
+        "Dropbox/01_Private/05_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.B211A0F7-6ADC-434E-A36C-74840C438984".source =
           mkLink "alfred/cleaning";
-        "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.90962A27-5A67-4F0D-817E-BE333FF3DD49".source =
+        "Dropbox/01_Private/05_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.90962A27-5A67-4F0D-817E-BE333FF3DD49".source =
           mkLink "alfred/stock-add";
-        "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.7D1C4E82-3A9B-4F60-B5D2-8C4E1A9F6B30".source =
+        "Dropbox/01_Private/05_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.7D1C4E82-3A9B-4F60-B5D2-8C4E1A9F6B30".source =
           mkLink "alfred/container";
-        "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.26BC265D-A391-4767-9655-615C02091AB8".source =
+        "Dropbox/01_Private/05_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.26BC265D-A391-4767-9655-615C02091AB8".source =
           mkLink "alfred/taskfile";
       };
 
