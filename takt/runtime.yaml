@@ -38,21 +38,21 @@ provider:
       provider: claude-sdk
       model: opus
     # NOTE: model を省略すると provider 側の既定モデルになる。takt 側で固定するため明示する。
-    # NOTE: reasoning_effort は high。xhigh から下げたのはトークン消費を抑えるためで、
-    #       モデルティア (sol) は維持している。消費の主要因は effort 側なので、
-    #       まだ重いときは terra へ落とす前に effort を medium にする方を先に試す。
-    codex-sol-high:
+    # NOTE: reasoning_effort は medium (gpt-6.1-sol の既定は low)。消費の主要因は effort 側なので、
+    #       まだ重いときは terra へ落とす前に effort を下げる方を先に試す。
+    codex-sol-medium:
       provider: codex
-      model: gpt-6-sol
+      model: gpt-6.1-sol
       options:
-        reasoning_effort: high
-    # kimi-k3: context 1,048,576 / max output 131,072 / in $3 out $15 per M tokens。
-    # 一覧中で最も高価だが、消費するのは opencode-go の契約枠で claude / codex 側は使わない。
+        reasoning_effort: medium
+    # deepseek-v4.1-flash: context 1,000,000 / max output 384,000。消費するのは opencode-go の
+    # 契約枠で claude / codex 側は使わない。
+    # NOTE: OpenCode Go のワークスペースの Privacy で Regions を Global にしないと拒否される。
     # モデルは `opencode models | grep '^opencode-go/'` で選び、使用量は
     # `opencode stats --models` でモデル別に確認する。opencode の制約は末尾のコメントを参照。
-    opencode-kimi:
+    opencode-deepseek-flash:
       provider: opencode
-      model: opencode-go/kimi-k3
+      model: opencode-go/deepseek-v4.1-flash
 
   # targets に当たらない step、companion、対話アシスタントなどの内部 agent はすべてここで動く。
   # 計画・レビュー・最終判定 (tag plan / review / final-gate / supervise など) も
@@ -81,9 +81,9 @@ provider:
     #       coding-leader を持つ step は必ず coding も持つので、実装リーダーも Codex で動く。
     tags:
       coding:
-        profile: codex-sol-high
+        profile: codex-sol-medium
       test-planning:
-        profile: codex-sol-high
+        profile: codex-sol-medium
     # step 名単位の割り当て (tags より強い)。
     # AI アンチパターン検出の review だけ opencode-go に出し、claude / codex の枠を使わずに回す。
     # キーは step 名の完全一致 (ワイルドカード無し)。`<workflow>/<step>` 形式で限定もできる。
@@ -102,9 +102,9 @@ provider:
     #       tag review の割り当てがあれば効かない。steps を使うこと。
     steps:
       ai-antipattern-review-2nd:
-        profile: opencode-kimi
+        profile: opencode-deepseek-flash
 
-# opencode プロバイダ (上の opencode-kimi で使用中) の注意点。
+# opencode プロバイダ (上の opencode-deepseek-flash で使用中) の注意点。
 # takt のプロバイダ名は opencode。opencode-go はプロバイダ名ではなくモデル名の前半。
 # - model は必ず "provider/model" 形式。モデル名だけを渡すと
 #   "requires model in 'provider/model' format" で落ちる。

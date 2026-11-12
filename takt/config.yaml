@@ -81,11 +81,11 @@ claude_cli_path: ~/.takt/claude-sdk/sdk/node_modules/@anthropic-ai/claude-agent-
 # (dist/infra/config/runtime-provider/execution-preparation.js)。
 # switch_chain のエントリは provider / model のみ (provider_options は書けない) なので、
 # ここ経由の codex 実行の reasoning effort は ~/.codex/config.toml の model_reasoning_effort に従う
-# (runtime.yaml の profile 側の high は効かない)。
+# (runtime.yaml の profile 側の medium は効かない)。
 rate_limit_fallback:
   switch_chain:
     - provider: codex
-      model: gpt-6-sol
+      model: gpt-6.1-sol
 
 # --------------------------------------------------------------------------
 # 検討したうえで「既定のまま使う」と判断した項目 (意図的に未設定)

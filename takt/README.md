@@ -39,8 +39,8 @@
 | 対象 | profile | 中身 |
 |---|---|---|
 | 既定（下記以外すべて） | `claude-opus` | Claude（`claude-sdk`, `opus`） |
-| tag `coding` / `test-planning` | `codex-sol-high` | Codex（`gpt-6-sol`, reasoning_effort `high`） |
-| step `ai-antipattern-review-2nd` | `opencode-kimi` | OpenCode（`opencode-go/kimi-k3`） |
+| tag `coding` / `test-planning` | `codex-sol-medium` | Codex（`gpt-6.1-sol`, reasoning_effort `medium`） |
+| step `ai-antipattern-review-2nd` | `opencode-deepseek-flash` | OpenCode（`opencode-go/deepseek-v4.1-flash`） |
 
 - 計画・レビュー・最終判定（tag `plan` / `review` / `final-gate` / `supervise` など）、companion、
   対話アシスタントなどの内部 agent は既定の `claude-opus` で動きます。
@@ -61,7 +61,7 @@
   同じ優先度で別の profile に当たると fail-fast します。組み合わせで現れる tag は同じ profile に揃えます。
 - Claude の provider 名は `claude-sdk` で揃えています。0.68.0 で `claude` は `claude-sdk` の別名になりましたが、
   `config.yaml` の `provider_profiles` は provider に書いた名前のまま引かれるため、名前が混在すると権限設定が効きません。
-- レートリミット時は `config.yaml` の `rate_limit_fallback` で Codex（`gpt-6-sol`）へ退避して実行を継続します
+- レートリミット時は `config.yaml` の `rate_limit_fallback` で Codex（`gpt-6.1-sol`）へ退避して実行を継続します
   （runtime モードでも `config.yaml` から読まれます）。`switch_chain` は options を書けないため、
   この経路の reasoning_effort は `~/.codex/config.toml` の `model_reasoning_effort` に従います。
 
@@ -87,7 +87,7 @@
   | `ai-antipattern-fix-parallel` | `coding` | terraform | Codex |
 
   `default` 系の `ai-antipattern-review` は追加の検出パスではなく並列レビュアーの 1 本で、
-  振るとその担当が Claude から kimi-k3 に替わります。品質とのトレードオフから**意図的に振っていません**。
+  振るとその担当が Claude から OpenCode のモデルに替わります。品質とのトレードオフから**意図的に振っていません**。
 - takt を更新したら `builtins/ja` の `workflows` / `steps` 配下を `name: ai-antipattern` で再確認してください
   （`ai-antipattern-review.md` などのレポート名も当たるため、`persona` / `tags` を持つものだけを数えます）。
 
@@ -116,10 +116,15 @@ takt 側のプロバイダ名は `opencode` で、`opencode-go` はプロバイ�
 | 選べるモデル一覧 | `opencode models \| grep '^opencode-go/'` |
 | モデル別の使用量・コスト | `opencode stats --models`（`--days N` / `--project .`（現在のプロジェクト）で絞り込み） |
 
-モデルのメタデータ（context / max output / 単価 / reasoning・tool_call 対応）は
-`~/.cache/opencode/models.json` に入っています。現在の `kimi-k3` は context 1,048,576 /
-max output 131,072 / in $3・out $15 per M tokens で、一覧中では最も高価です。
+モデルのメタデータ（context / max output / 単価 / reasoning・tool_call・structured_output 対応）は
+[models.dev](https://models.dev/api.json) の `opencode-go`、モデル別の月間上限は
+[OpenCode Go のドキュメント](https://opencode.ai/docs/go/) の Usage limits で確認します。
 消費するのは opencode-go の契約枠なので、claude / codex 側の枠は使いません。
+
+- 現在の `deepseek-v4.1-flash` は context 1,000,000 / max output 384,000 /
+  in $0.15・out $0.6 per M tokens（平日 UTC 01–04 時・06–10 時のピークは倍額）です。
+- DeepSeek は OpenCode Go のワークスペースの **Settings › Privacy › Regions を Global** にしないと拒否されます。
+  ワークスペース全体の設定なので、同じキーを使う CLIProxyAPI 経由の Go モデルにも効きます。
 
 ## 補助レビュー（companion）
 
