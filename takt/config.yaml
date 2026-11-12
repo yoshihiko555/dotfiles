@@ -71,6 +71,11 @@ provider_profiles:
   opencode:
     default_permission_mode: edit
 
+# takt install claude-sdk で入れた SDK 同梱の claude を明示する（中身は SDK が既定で使うものと同じ）。
+# 0.75.0 の manager は起動前の確認でこれが無いと SDK を takt 本体から探し、Cannot find module で止まる
+# (dist/infra/claude/sdk-runtime.js の resolveBundledCli)。上流で直ったら外す。
+claude_cli_path: ~/.takt/claude-sdk/sdk/node_modules/@anthropic-ai/claude-agent-sdk-darwin-arm64/claude
+
 # claude がレートリミットに当たったとき codex へ退避して実行を継続する。
 # rate_limit_fallback は runtime モードでも移行対象外で、ここから読まれる
 # (dist/infra/config/runtime-provider/execution-preparation.js)。
