@@ -96,7 +96,6 @@
     "config/tmux/plugins/**"
     "codex/skills/.system/**"
     "shared/skills/codex-only/.system/**"
-    "takt/runtime.yaml"
 
     # Loupedeck Live のプロファイル snapshot（scripts/loupedeck-sync.sh）。
     # LogiPluginService が生成するツリーをバイト単位で実機と一致させる方式

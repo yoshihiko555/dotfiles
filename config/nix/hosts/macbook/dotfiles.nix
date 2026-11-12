@@ -109,6 +109,8 @@ in
           config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/ghq/github.com/yoshihiko555/pi-harness/config/gate.json";
 
         ".takt/config.yaml".source = mkLink "takt/config.yaml";
+        # provider の振り分けと companion の設定。takt は初回生成時にしか書かない（既存なら上書きしない）ため symlink で配る
+        ".takt/runtime.yaml".source = mkLink "takt/runtime.yaml";
 
         "Dropbox/02_Private/08_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.C9692AD7-2800-42B7-8F97-8F8CCD1CC88E".source =
           mkLink "alfred/Open-VS-or-IT";

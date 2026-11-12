@@ -1,0 +1,125 @@
+# takt の provider 設定 (runtime.yaml)
+# 全設定項目は https://github.com/nrslib/takt/blob/main/docs/configuration.md の
+# 「Runtime Provider 設定（runtime.yaml）」を参照。
+#
+# provider / model / ステップごとの振り分けはここに書く (runtime モード)。
+# config.yaml の provider / model / provider_routing と同時に書くと、
+# "Mixed provider configuration detected" で agent を起動する前に止まる。
+# 権限 (provider_profiles) とレートリミット時の退避 (rate_limit_fallback) は
+# 移行対象外なので config.yaml に残している。
+#
+# NOTE: takt がこのファイルを書くのは初回生成時だけで、既存なら上書きしない
+#       (dist/infra/config/runtime-provider/initialization.js)。だから symlink で配れる。
+# NOTE: 秘匿情報はここに書かないこと。このリポジトリは public。
+
+version: 1
+
+# 補助レビュー (companion)。実装・修正ステップに付き添う読み取り専用のレビュアー。
+# default 系では AI アンチパターン / テストの 2 名と、指摘の採否を決める moderator が付く。
+# 指摘は参考情報で、ワークフローの遷移には影響しない。
+# companion は runtime モードでしか使えない (config.yaml のままだと default が検証エラーになる)。
+# review_mode / fix_policy は既定のまま:
+#   review_mode: completion  実装エージェントの応答が終わるたびに累積差分をレビュー
+#                            (live は作業中の変更や commit も監視する)
+#   fix_policy: single       採用された指摘で 1 回だけ修正し、再レビューはしない
+#                            (loop は指摘がなくなるまで上限なしで繰り返す)
+# companion の provider は targets.companions を書いていないので defaults (claude-opus)。
+# companion は provider の設定にかかわらず readonly で動く。
+companion:
+  enabled: true
+
+provider:
+  profiles:
+    # NOTE: provider は claude-sdk と書く。config.yaml の provider_profiles は
+    #       ここに書いた名前のまま引かれる (claude と書くと provider_profiles.claude-sdk が使われない)。
+    #       Claude Code CLI 経由に戻すなら provider を claude-headless にし、
+    #       provider_profiles のキーも claude-headless に合わせる。
+    claude-opus:
+      provider: claude-sdk
+      model: opus
+    # NOTE: model を省略すると provider 側の既定モデルになる。takt 側で固定するため明示する。
+    # NOTE: reasoning_effort は high。xhigh から下げたのはトークン消費を抑えるためで、
+    #       モデルティア (sol) は維持している。消費の主要因は effort 側なので、
+    #       まだ重いときは terra へ落とす前に effort を medium にする方を先に試す。
+    codex-sol-high:
+      provider: codex
+      model: gpt-6-sol
+      options:
+        reasoning_effort: high
+    # kimi-k3: context 1,048,576 / max output 131,072 / in $3 out $15 per M tokens。
+    # 一覧中で最も高価だが、消費するのは opencode-go の契約枠で claude / codex 側は使わない。
+    # モデルは `opencode models | grep '^opencode-go/'` で選び、使用量は
+    # `opencode stats --models` でモデル別に確認する。opencode の制約は末尾のコメントを参照。
+    opencode-kimi:
+      provider: opencode
+      model: opencode-go/kimi-k3
+
+  # targets に当たらない step、companion、対話アシスタントなどの内部 agent はすべてここで動く。
+  # 計画・レビュー・最終判定 (tag plan / review / final-gate / supervise など) も
+  # ここに落ちるので、tags には書いていない。
+  # internal_agents (selector / assistant / loop-judge / review-completion-judge) も未設定 = defaults。
+  defaults:
+    profile: claude-opus
+
+  # 解決順は defaults < personas < tags < steps (後ろほど強い)。
+  # コマンドラインの --provider / --model はこれらより優先される。
+  # 実際の解決結果は `takt workflow inspect <workflow>` で確認できる。
+  targets:
+    # NOTE: ここに書けるのはビルトインワークフローが実際に付けている tag だけ。
+    #       0.75.0 の ja ビルトイン (workflow 79 本と共通 step) の tag 全集合は以下の 11 種で、
+    #       それ以外は空振りする:
+    #         plan / coding / test-planning / review / final-gate / supervise /
+    #         adjudication / verification / coding-leader / analysis / implementation
+    #       policy: や knowledge: の値 (architecture, testing, unit-testing ...) は tag ではない。
+    #       再確認: builtins/ja の workflows / steps / companions 配下で tags: の値だけを集計する
+    #       (grep -A では policy: のリストが混ざる)。
+    # NOTE: 1 つの step が複数の tag を持つことがある。同じ優先度で別の profile に当たると
+    #       暗黙に選ばず fail-fast するため、組み合わせで現れる tag は同じ profile に揃える。
+    #       0.75.0 の組み合わせ: coding+test-planning (write_tests) / coding+coding-leader
+    #       (takt-default-team の implement・fix など) / review+supervise /
+    #       final-gate+supervise / final-gate+review+supervise。
+    #       coding-leader を持つ step は必ず coding も持つので、実装リーダーも Codex で動く。
+    tags:
+      coding:
+        profile: codex-sol-high
+      test-planning:
+        profile: codex-sol-high
+    # step 名単位の割り当て (tags より強い)。
+    # AI アンチパターン検出の review だけ opencode-go に出し、claude / codex の枠を使わずに回す。
+    # キーは step 名の完全一致 (ワイルドカード無し)。`<workflow>/<step>` 形式で限定もできる。
+    # 0.75.0 の ja ビルトインに存在する ai-antipattern-* の step 名は以下の 6 つで、
+    # ここで指定するのは review-2nd の 1 つだけ。fix 系は tag coding のまま codex に残す。
+    #   ai-antipattern-review-2nd   tag review  (mini-core / review-takt-default / terraform)
+    #   ai-antipattern-review       tag review  (default / maintenance / review / review-fix /
+    #                                            takt-default 系。意図的に振らず claude-opus)
+    #   ai-antipattern-review-1st   tag review  (steps/ai-antipattern-first-pass)
+    #   ai-antipattern-no-fix       tag review  (steps/ai-antipattern-arbitration)
+    #   ai-antipattern-fix          tag coding  (mini-core / terraform)
+    #   ai-antipattern-fix-parallel tag coding  (terraform)
+    # 再確認: builtins/ja の workflows / steps 配下を name: ai-antipattern で grep する
+    # (ai-antipattern-*.md などレポート名も当たるので、persona / tags を持つものだけ数える)。
+    # NOTE: personas は tags より弱いので、personas.ai-antipattern-reviewer を書いても
+    #       tag review の割り当てがあれば効かない。steps を使うこと。
+    steps:
+      ai-antipattern-review-2nd:
+        profile: opencode-kimi
+
+# opencode プロバイダ (上の opencode-kimi で使用中) の注意点。
+# takt のプロバイダ名は opencode。opencode-go はプロバイダ名ではなくモデル名の前半。
+# - model は必ず "provider/model" 形式。モデル名だけを渡すと
+#   "requires model in 'provider/model' format" で落ちる。
+# - 認証は opencode 側 (~/.local/share/opencode/auth.json) に完全依存。
+#   takt の opencode_api_key / TAKT_OPENCODE_API_KEY は opencode zen (opencode/*) 用で、
+#   provider.opencode.options.apiKey に注入されるだけなので opencode-go には効かない。
+#   使えるモデルは `opencode models` で確認する。
+# - takt は @opencode-ai/sdk の createOpencode で 127.0.0.1 のランダムポートに
+#   サーバを立て、config (model / small_model / permission / takt 専用 agent) を自前で組む。
+#   ~/.config/opencode 側の agent 設定には依存しない。
+# - reasoning effort に相当するツマミが無い。profile の options で渡せるのは
+#   network_access / variant / allowed_tools / guards.* のみ。
+# - wall-clock 上限は既定 60 分。超える可能性のあるステップは
+#   options.guards.call_timeout_ms を明示する (最大 86,400,000)。
+# - 構造化出力は StructuredOutput 疑似ツールで回収する設計のため、指示追従が弱いモデルだと
+#   "returned no structured output" で失敗しうる。安価モデルを実装ステップに使わない理由。
+# - Gemini / Antigravity CLI (agy) は takt のプロバイダ enum に無いため直接は使えない。
+#   使うとすれば opencode に Google 認証を足して opencode 経由で回す形になる。

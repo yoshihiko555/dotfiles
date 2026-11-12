@@ -1,14 +1,17 @@
 # takt
 
-`takt/config.yaml` はグローバル設定（→ `~/.takt/config.yaml`）。
-全設定項目は [takt の configuration.md](https://github.com/nrslib/takt/blob/main/docs/configuration.md) を参照。
+設定は 2 ファイルに分かれています。全設定項目は
+[takt の configuration.md](https://github.com/nrslib/takt/blob/main/docs/configuration.md) を参照。
 
-`takt/logs/` `takt/analytics/` `takt/runtime.yaml` は takt が生成するランタイム成果物で、
-Git 管理外（`.gitignore` 済み）。
+| ファイル | 配置先 | 中身 |
+|---|---|---|
+| `takt/config.yaml` | `~/.takt/config.yaml` | 実行制御・作業ディレクトリ・権限（`provider_profiles`）・レートリミット時の退避 |
+| `takt/runtime.yaml` | `~/.takt/runtime.yaml` | provider / model / ステップごとの振り分け・補助レビュー（companion） |
 
-なお 0.61.0 以降の `runtime.yaml` は、プロバイダ設定を置く専用ファイルでもあります。
-現在はプロバイダ設定を `config.yaml` に書いており、`runtime.yaml` は使っていません
-（`~/.takt/runtime.yaml` の中身は `version: 1` だけ）。移行する場合は Git 管理の方針を見直してください。
+どちらも home-manager の `mkOutOfStoreSymlink` でリポジトリへリンクしているため、編集は即反映されます
+（リンクの追加・変更時だけ `nxs` が必要）。
+
+`takt/logs/` `takt/analytics/` は takt が生成するランタイム成果物で、Git 管理外（`.gitignore` 済み）。
 
 ## SDK の導入と更新
 
@@ -28,56 +31,49 @@ Git 管理外（`.gitignore` 済み）。
   （`TAKT_CLAUDE_CLI_PATH` / `TAKT_CODEX_CLI_PATH` で明示した場合を除く）。
   OpenCode は外部 CLI（Nix で入れている `opencode`）も必要です。
 
-## プロバイダ割り当て
+## プロバイダ割り当て（runtime.yaml）
 
-ステップの役割（tags）ごと、および一部は step 名単位でプロバイダを割り当てる。
+0.61.0 以降の runtime モードで、`runtime.yaml` に profile（provider + model + options の組）を定義し、
+既定とステップごとの振り分けを書きます。
 
-- 実装・テスト（`coding` / `test-planning`）: Codex（`gpt-6-sol`, reasoning_effort `high`）
-- 計画・レビュー・最終判定（`plan` / `review` / `final-gate` / `supervise`）: Claude（`claude-sdk`, `opus`）
-- 割り当てていない tag（`adjudication` / `verification` / `coding-leader` など）: トップレベルの Claude（`claude-sdk`, `opus`）
-- AI アンチパターン検出の review（step `ai-antipattern-review-2nd`）: OpenCode（`opencode-go/kimi-k3`）。
-  `default` 系ワークフローの `ai-antipattern-review` は対象外で、Claude のままです（後述）。
+| 対象 | profile | 中身 |
+|---|---|---|
+| 既定（下記以外すべて） | `claude-opus` | Claude（`claude-sdk`, `opus`） |
+| tag `coding` / `test-planning` | `codex-sol-high` | Codex（`gpt-6-sol`, reasoning_effort `high`） |
+| step `ai-antipattern-review-2nd` | `opencode-kimi` | OpenCode（`opencode-go/kimi-k3`） |
 
-Claude の provider 名は `claude-sdk` で揃えています。0.68.0 で `claude` は `claude-sdk` の別名になりましたが、
-`provider_profiles` は provider に書いた名前のまま引かれるため、名前が混在すると権限設定が効きません。
+- 計画・レビュー・最終判定（tag `plan` / `review` / `final-gate` / `supervise` など）、companion、
+  対話アシスタントなどの内部 agent は既定の `claude-opus` で動きます。
+- 実装リーダー（`takt-default-team` の `implement` / `fix` など）は tag `coding-leader` と `coding` を
+  両方持つため、Codex で動きます。
+- `default` 系ワークフローの `ai-antipattern-review` は意図的に OpenCode へ振らず、Claude のままです（後述）。
 
-ビルトインワークフローはステップに `provider:` を書いていないため、`provider_routing` の指定が
-全ワークフローに横断で効きます。優先度は数値が小さいほど強く、実行時の `takt --provider claude-sdk`
-（= 0）が最優先です。
+解決順は `defaults < personas < tags < steps`（後ろほど強い）で、実行時の `--provider` / `--model` が最優先です。
+実際にどの step がどの provider / model / 権限で動くかは `takt workflow inspect <workflow>` で確認できます
+（解決元も表示されます）。
 
-| 優先度 | 解決元 |
-|---|---|
-| 0 | `--provider` / `--model`、環境変数 |
-| 2 | ワークフローの step 直書き |
-| 3 | `provider_routing.steps` |
-| 4 | `provider_routing.tags` |
-| 5 | `provider_routing.personas` |
-| 7 | `--auto-strategy` による自動ルーティング（`auto.*`） |
-| 9 / 10 | プロジェクト設定 / グローバル設定 |
-| 11 | トップレベルの `provider` / `model` |
-
-（takt 0.75.0 の `dist/core/workflow/provider-resolution.js` の `PROVIDER_MODEL_SOURCE_PRIORITY` 実測値）
-
-- `provider_routing.tags` に書けるのはビルトインワークフローが実際に付けている tag だけです
-  （0.75.0 では 11 種。一覧は `config.yaml` のコメントにあります。`policy:` や `knowledge:` の値は
+- `config.yaml` に `provider` / `model` / `provider_routing` を書くと、`runtime.yaml` と衝突して
+  `Mixed provider configuration detected` で agent を起動する前に止まります。
+- `targets.tags` に書けるのはビルトインワークフローが実際に付けている tag だけです
+  （0.75.0 では 11 種。一覧は `runtime.yaml` のコメントにあります。`policy:` や `knowledge:` の値は
   tag ではないため空振りします）。
-- Codex / OpenCode へ振るエントリには `model` を必ず併記します。省略するとトップレベルの `opus` が
-  そのまま渡ります（model の解決は provider 一致で絞り込まれないため）。
-- レートリミット時は `rate_limit_fallback` で Codex（`gpt-6-sol`）へ退避して実行を継続します。
-  `switch_chain` は `provider_options` を書けないため、この経路の reasoning_effort は
-  `~/.codex/config.toml` の `model_reasoning_effort` に従います（`provider_routing` 側の `high` は効きません）。
-- 実際にどの step がどの provider / model / 権限で動くかは
-  `takt workflow inspect <workflow>` で確認できます（解決元も表示されます）。
+- 1 つの step が複数の tag を持つことがあり（例: `write_tests` は `coding` + `test-planning`）、
+  同じ優先度で別の profile に当たると fail-fast します。組み合わせで現れる tag は同じ profile に揃えます。
+- Claude の provider 名は `claude-sdk` で揃えています。0.68.0 で `claude` は `claude-sdk` の別名になりましたが、
+  `config.yaml` の `provider_profiles` は provider に書いた名前のまま引かれるため、名前が混在すると権限設定が効きません。
+- レートリミット時は `config.yaml` の `rate_limit_fallback` で Codex（`gpt-6-sol`）へ退避して実行を継続します
+  （runtime モードでも `config.yaml` から読まれます）。`switch_chain` は options を書けないため、
+  この経路の reasoning_effort は `~/.codex/config.toml` の `model_reasoning_effort` に従います。
 
 ### AI アンチパターン review を OpenCode へ振っている理由
 
 `ai-antipattern-*` は tag ではなく step 名です。`review` 系は tag `review`、`fix` 系は tag `coding`
 を持つため、`steps` で review だけを名指しすれば **fix 系は tag `coding` のまま Codex に残ります**。
-`steps`（3）は `tags`（4）より強いのでこの上書きが成立します。狙いは Claude / Codex の枠を
+`steps` は `tags` より強いのでこの上書きが成立します。狙いは Claude / Codex の枠を
 消費せずに検出パスを 1 本増やすことです。
 
 - キーは完全一致のみ（ワイルドカード無し）。`<workflow>/<step>` 形式での限定も可能です。
-- `personas`（5）は `tags`（4）より弱いため、`tags.review: claude-sdk` がある状態で
+- `personas` は `tags` より弱いため、tag `review` の割り当てがある状態で
   `personas.ai-antipattern-reviewer` を書いても効きません。
 - 0.75.0 の ja ビルトインに存在する step 名は次の 6 つです。指定しているのは `ai-antipattern-review-2nd` だけです。
 
@@ -90,9 +86,8 @@ Claude の provider 名は `claude-sdk` で揃えています。0.68.0 で `clau
   | `ai-antipattern-fix` | `coding` | mini-core / terraform | Codex |
   | `ai-antipattern-fix-parallel` | `coding` | terraform | Codex |
 
-  したがって **`default` 系ワークフローでは OpenCode に振られていません**。
-  `default` の `ai-antipattern-review` は追加の検出パスではなく並列レビュアーの 1 本なので、
-  振る場合はその担当が Claude から kimi-k3 に替わります。
+  `default` 系の `ai-antipattern-review` は追加の検出パスではなく並列レビュアーの 1 本で、
+  振るとその担当が Claude から kimi-k3 に替わります。品質とのトレードオフから**意図的に振っていません**。
 - takt を更新したら `builtins/ja` の `workflows` / `steps` 配下を `name: ai-antipattern` で再確認してください
   （`ai-antipattern-review.md` などのレポート名も当たるため、`persona` / `tags` を持つものだけを数えます）。
 
@@ -108,9 +103,9 @@ takt 側のプロバイダ名は `opencode` で、`opencode-go` はプロバイ�
 - takt は `@opencode-ai/sdk` の `createOpencode` で 127.0.0.1 のランダムポートにサーバを立て、
   `model` / `small_model` / `permission` / takt 専用 agent を自前で組み立てます。
   `~/.config/opencode` の agent 設定には依存しません。
-- **reasoning effort に相当する指定がありません**。`provider_options.opencode` で渡せるのは
+- **reasoning effort に相当する指定がありません**。profile の `options` で渡せるのは
   `network_access` / `variant` / `allowed_tools` / `guards.*` のみです。
-- wall-clock 上限は既定 60 分。超えうるステップは `guards.call_timeout_ms` を明示します（最大 86,400,000）。
+- wall-clock 上限は既定 60 分。超えうるステップは `options.guards.call_timeout_ms` を明示します（最大 86,400,000）。
 - 構造化出力は `StructuredOutput` 疑似ツールで回収するため、指示追従が弱いモデルでは
   `returned no structured output` で失敗しえます。安価モデルを実装ステップに使わない理由です。
 
@@ -125,6 +120,27 @@ takt 側のプロバイダ名は `opencode` で、`opencode-go` はプロバイ�
 `~/.cache/opencode/models.json` に入っています。現在の `kimi-k3` は context 1,048,576 /
 max output 131,072 / in $3・out $15 per M tokens で、一覧中では最も高価です。
 消費するのは opencode-go の契約枠なので、claude / codex 側の枠は使いません。
+
+## 補助レビュー（companion）
+
+実装・修正ステップに付き添う読み取り専用のレビュアーです。実装エージェント（Codex）の差分を
+作業の直後に見て、その場で指摘を返します。`runtime.yaml` の `companion.enabled: true` で有効にしています。
+
+| | 補助レビュー（companion） | 通常のレビュー |
+|---|---|---|
+| タイミング | 実装・修正ステップの最中・直後 | 実装が終わった後 |
+| 指摘の扱い | 参考情報。ワークフローの遷移は変えない | 結果で修正ループに戻すかが決まる |
+| `default` での担当 | AI アンチパターン、テスト、指摘の採否を決める moderator | 並列のピアレビュー → 裁定 → 修正 |
+
+- `review_mode` / `fix_policy` は既定（`completion` / `single`）のままです。
+  - `completion`: 実装エージェントの応答が終わるたびに累積差分をレビュー（`live` は作業中も監視）
+  - `single`: 採用された指摘で 1 回だけ修正し、再レビューはしない（`loop` は指摘がなくなるまで上限なしで反復）
+- provider は `targets.companions` を書いていないので既定の `claude-opus` です。
+  権限は `provider_profiles` にかかわらず `readonly` で動きます。
+- 実装・修正ステップのたびに companion 2 名と moderator が追加で呼ばれるため、Claude の使用量が増えます。
+- 採用された指摘は `.takt/runs/{run}/companion/{step}/{companion}.jsonl` に記録されます。
+- **companion は runtime モードでしか使えません**。`config.yaml` に provider 設定がある状態で有効にすると、
+  `default` が `Companion reviewers require runtime.yaml` で検証エラーになります。
 
 ## アカウント切替
 
@@ -141,7 +157,8 @@ taktw
 - 環境変数はプロセス単位で効くため、同一実行内で Claude アカウントを混在させることはできません。
 - takt は Claude SDK を `settingSources: ['project']` で起動します。そのため `~/.claude`
   （`taktw` では `~/.claude-work`）のユーザー設定と CLAUDE.md は、Claude のステップには読まれません。
-- API キー（`anthropic_api_key` など）は config.yaml に書かず、`TAKT_ANTHROPIC_API_KEY` 等の環境変数を使います。
+  組織の管理設定（managed settings）は、SDK の仕様上この指定にかかわらず読まれます。
+- API キー（`anthropic_api_key` など）は config.yaml / runtime.yaml に書かず、`TAKT_ANTHROPIC_API_KEY` 等の環境変数を使います。
 
 ## 作業ディレクトリの配置
 
@@ -158,8 +175,9 @@ taktw
 
 ## 権限モード
 
-`provider_profiles` は claude-sdk / codex / opencode すべて `edit` です。
-キーは provider に書いた名前と一致させます（`claude` と `claude-sdk` は別キー扱いで、
+`config.yaml` の `provider_profiles` は claude-sdk / codex / opencode すべて `edit` です。
+`provider_profiles` は runtime モードでも移行対象外で、`config.yaml` から読まれます。
+キーは `runtime.yaml` の profile に書いた provider 名と一致させます（`claude` と `claude-sdk` は別キー扱いで、
 一致しないと takt 組み込みの既定 `edit` に落ちます）。
 takt の抽象モードは各 CLI に次のように写されます。
 
