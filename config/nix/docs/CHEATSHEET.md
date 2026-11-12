@@ -91,6 +91,7 @@ nxu takt                               # input を指定して個別更新（複
 nxu pen                                # 自前パッケージ（packages/*/update.sh）を latest へ。pen@0.3.10 で版指定
 nxbd                                   # build → 現行世代との差分確認
 nxs                                    # 問題なければ適用
+takt update                            # takt を上げたときだけ。SDK は Nix 管理外なので本体の固定版に合わせる
 nix build ./config/nix#darwinConfigurations.hermes.system --no-link  # hermes 側のビルド確認
 # → hermes で pull + switch すると全パッケージが lock 通りに更新される
 ```

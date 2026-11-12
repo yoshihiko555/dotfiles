@@ -13,7 +13,14 @@ language: ja
 # provider だけを上書きするルーティング (例: coding -> codex) を書くと、
 # model はここまで落ちてきて codex に opus が渡ってしまう。
 # 別プロバイダへ振るエントリでは必ず model も併記すること。
-provider: claude
+#
+# NOTE: 0.68.0 で Claude の既定は Agent SDK (claude-sdk) になり、claude はその別名になった。
+#       provider_profiles は provider に書いた名前のまま引かれる (別名は展開されない) ため、
+#       claude と書くと provider_profiles.claude-sdk が使われない。名前は claude-sdk に揃える。
+#       Claude Code CLI 経由に戻すなら、全箇所の claude-sdk を claude-headless に置き換える
+#       (provider / provider_routing / provider_profiles)。
+# NOTE: SDK は takt に同梱されない (0.71.0 以降)。導入と更新の手順は takt/README.md を参照。
+provider: claude-sdk
 model: opus
 
 minimal_output: false
@@ -51,7 +58,7 @@ branch_name_strategy: ai
 worktree_dir: .worktrees
 
 # プロバイダごとの既定権限。takt の抽象モードは各 CLI に次のように写される:
-#            claude            codex              opencode (ツール単位の permission)
+#            claude-sdk        codex              opencode (ツール単位の permission)
 #   readonly default           read-only          read/glob/grep のみ allow
 #   edit     acceptEdits       workspace-write    read/glob/grep/edit/write/bash/todowrite/web* allow, question deny
 #   full     bypassPermissions danger-full-access 全 allow (使わない)
@@ -61,8 +68,10 @@ worktree_dir: .worktrees
 # NOTE: opencode を未設定にすると permission mode が未解決のまま 'ask' 相当に落ちる
 #       (dist/infra/opencode/types.js の buildPermissionMap の最終分岐)。
 #       headless では ask に応答できず停止しうるため、他 2 つと同じく明示する。
+# NOTE: キーは provider に書いた名前と一致させる (claude と claude-sdk は別キー扱い)。
+#       一致しないと takt 組み込みの既定 (edit) に落ち、ここの指定は使われない。
 provider_profiles:
-  claude:
+  claude-sdk:
     default_permission_mode: edit
   codex:
     default_permission_mode: edit
@@ -71,7 +80,7 @@ provider_profiles:
 
 # takt_providers.assistant は設定しない。
 # 未設定なら assistant 会話 (対話モードの計画会話・instruct・リトライ対話) は
-# トップレベルの provider/model (claude / opus) を解決する。
+# トップレベルの provider/model (claude-sdk / opus) を解決する。
 # ただし Report phase の fallback だけは別で、assistant 未設定時は
 # トップレベルへ暗黙フォールバックせず「無効」になる。
 # いずれもワークフローの plan ステップとは経路が別 (plan は provider_routing.tags で解決される)。
@@ -83,9 +92,15 @@ provider_profiles:
 # 実装・テスト作成は Codex、計画・レビュー・最終判定は Claude。実装とレビューが別モデルになる。
 #
 # NOTE: ここに書けるのはビルトインワークフローが実際に付けている tag だけ。
-#       ja ビルトイン 62 本の tag 全集合は以下の 8 種で、それ以外は空振りする:
-#         plan / coding / test-planning / review / merge-readiness / final-gate / supervise / leader
+#       0.75.0 の ja ビルトイン (workflow 79 本と共通 step) の tag 全集合は以下の 11 種で、
+#       それ以外は空振りする:
+#         plan / coding / test-planning / review / final-gate / supervise /
+#         adjudication / verification / coding-leader / analysis / implementation
+#       ここで割り当てていない tag はトップレベルの claude-sdk / opus で動く
+#       (takt-default-team の実装リーダー coding-leader も Claude になる)。
 #       policy: や knowledge: の値 (architecture, testing, unit-testing ...) は tag ではない。
+#       再確認: builtins/ja の workflows / steps / companions 配下で tags: の値だけを集計する
+#       (grep -A では policy: のリストが混ざる)。
 # NOTE: ai-antipattern-* は step 名であって tag ではない。tags: に書いても空振りする。
 #       review 系は tag review、fix 系 (-fix / -fix-parallel) は tag coding を持つため、
 #       指定しなければ tags 側で claude / codex に解決される。
@@ -94,8 +109,9 @@ provider_profiles:
 # NOTE: provider/model の優先度 (数値が小さいほど強い / dist/core/workflow/provider-resolution.js):
 #         0 cli, env        2 step             4 provider_routing.tags   6 persona_providers
 #         1 promotion       3 provider_routing.steps  5 provider_routing.personas
+#         7 auto.* (--auto-strategy)
 #         8 capabilities    9 project         10 global / runtime-v1     11 default (トップレベル)
-#       personas は tags より弱いので、tags.review: claude がある状態で
+#       personas は tags より弱いので、tags.review: claude-sdk がある状態で
 #       personas.ai-antipattern-reviewer を書いても効かない。steps を使うこと。
 # NOTE: codex へ振るエントリは model を必ず書く。省略するとトップレベルの opus が渡る。
 #       ~/.codex/config.toml の model は takt が model を明示指定するため効かない。
@@ -104,12 +120,10 @@ provider_profiles:
 #       まだ重いときは terra へ落とす前に effort を medium にする方を先に試す。
 provider_routing:
   tags:
-    plan: claude
-    review: claude
-    merge-readiness: claude
-    final-gate: claude
-    supervise: claude
-    leader: claude
+    plan: claude-sdk
+    review: claude-sdk
+    final-gate: claude-sdk
+    supervise: claude-sdk
     coding:
       provider: codex
       model: gpt-6-sol
@@ -125,13 +139,19 @@ provider_routing:
   # step 名単位の割り当て (優先度 3 = tags より強い)。
   # AI アンチパターン検出の review だけ opencode-go に出し、claude / codex の枠を使わずに回す。
   # キーは完全一致のみ (ワイルドカード無し)。`<workflow>/<step>` 形式で限定もできる。
-  # 0.60.0 の ja ビルトインに存在する ai-antipattern-* の step 名は以下の 3 つで、
-  # ここで指定するのは review の 1 つだけ。fix 系は tag coding のまま codex に残す。
-  #   ai-antipattern-review-2nd  tag review  (mini-core / review-takt-default / terraform)
-  #   ai-antipattern-fix         tag coding  (mini-core / terraform)
-  #   ai-antipattern-fix-parallel tag coding (terraform)
-  # 再確認: builtins/ja/workflows/*.yaml を name: ai-antipattern で grep する。
-  # モデルは opencode-go の一覧から選ぶ (`opencode models opencode-go`)。
+  # 0.75.0 の ja ビルトインに存在する ai-antipattern-* の step 名は以下の 6 つで、
+  # ここで指定するのは review-2nd の 1 つだけ。fix 系は tag coding のまま codex に残す。
+  #   ai-antipattern-review-2nd   tag review  (mini-core / review-takt-default / terraform)
+  #   ai-antipattern-review       tag review  (default / maintenance / review / review-fix /
+  #                                            takt-default 系。指定していないので claude-sdk)
+  #   ai-antipattern-review-1st   tag review  (steps/ai-antipattern-first-pass)
+  #   ai-antipattern-no-fix       tag review  (steps/ai-antipattern-arbitration)
+  #   ai-antipattern-fix          tag coding  (mini-core / terraform)
+  #   ai-antipattern-fix-parallel tag coding  (terraform)
+  # つまり default 系ワークフローでは opencode に振られていない。
+  # 再確認: builtins/ja の workflows / steps 配下を name: ai-antipattern で grep する
+  # (ai-antipattern-*.md などレポート名も当たるので、persona / tags を持つものだけ数える)。
+  # モデルは opencode-go の一覧から選ぶ (`opencode models | grep '^opencode-go/'`)。
   # kimi-k3: context 1,048,576 / max output 131,072 / in $3 out $15 per M tokens。
   # 一覧中で最も高価だが、消費するのは opencode-go の契約枠で claude / codex 側は使わない。
   # 使用量は `opencode stats --models` でモデル別に確認できる。
@@ -142,7 +162,8 @@ provider_routing:
 
 # claude がレートリミットに当たったとき codex へ退避して実行を継続する。
 # switch_chain のエントリは provider / model のみ (provider_options は書けない) なので、
-# ここ経由の codex 実行の reasoning effort は ~/.codex/config.toml の xhigh に従う。
+# ここ経由の codex 実行の reasoning effort は ~/.codex/config.toml の model_reasoning_effort に従う
+# (provider_routing 側の high は効かない)。
 rate_limit_fallback:
   switch_chain:
     - provider: codex
