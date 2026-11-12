@@ -155,6 +155,15 @@ taktw
 - `taktw` は `CLAUDE_CONFIG_DIR` を渡すだけなので、Codex / OpenCode のステップは影響を受けません。
   `claude-sdk` も環境変数をそのまま子プロセスへ引き継ぐため、0.75.0 でも切り替わります。
 - 環境変数はプロセス単位で効くため、同一実行内で Claude アカウントを混在させることはできません。
+- **`takt manager` では、アカウントは daemon を起動した側の環境で決まります。**
+  manager の Claude ステップは daemon が起動する子プロセスで動き、daemon の環境変数を引き継ぎます。
+  daemon は `~/.takt` につき 1 つで、`taktw` も同じ daemon を使います。
+  そのため、daemon が動いている間に `taktw manager` を実行しても、既存の daemon につながるだけで
+  先に起動した側のアカウントのままになります（逆も同じ）。
+  - 切り替えるときは `takt daemon stop` で止めてから `takt manager` / `taktw manager` を実行します。
+  - daemon は manager を閉じて仕事がなくなると自動で止まり、次の起動時の環境で立ち上がり直します。
+  - 動いている daemon のアカウントは、`ps eww -p <daemon の pid>` の出力に `CLAUDE_CONFIG_DIR` があるかで確認できます
+    （pid は `pgrep -f takt/dist/app/daemon/index.js`）。
 - takt は Claude SDK を `settingSources: ['project']` で起動します。そのため `~/.claude`
   （`taktw` では `~/.claude-work`）のユーザー設定と CLAUDE.md は、Claude のステップには読まれません。
   組織の管理設定（managed settings）は、SDK の仕様上この指定にかかわらず読まれます。
