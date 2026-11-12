@@ -5,6 +5,42 @@
 
 ---
 
+## takt の daemon が symlink の config.yaml で起動しない問題
+
+`takt-daemon-config-symlink.patch` は takt 0.75.0 向けの暫定修正。
+`hosts/macbook/packages.nix` の `taktPackage` で `postInstall` から適用する。
+ビルド済みの `dist/*.js` を対象にするため `patches =` ではなく `postInstall` で当てる。
+
+### 症状
+
+`takt manager` が `Daemon startup was not confirmed; see the global logs directory` で止まる。
+`~/.takt/logs/daemon-start-*.log` には次のエラーが出る。
+
+```
+Error: ELOOP: too many symbolic links encountered, open '/Users/<user>/.takt/config.yaml'
+    at async readPrivateFile (dist/infra/daemon/privateFile.js:26:18)
+    at async readDaemonConfiguration (dist/features/daemon/configuration.js:13:19)
+```
+
+daemon は設定を `readPrivateFile`（`O_NOFOLLOW` で開く）で読む。
+home-manager は `~/.takt/config.yaml` を symlink で配るため、開いた時点で `ELOOP` になる。
+daemon 以外の経路（`takt run` 等）は symlink を辿って読むので影響しない。
+
+### 修正内容
+
+`readDaemonConfiguration` だけ、`realpath` で行き先を解決してから `readPrivateFile` に渡す。
+`readPrivateFile` 自体は変えないので、IPC・lock 等の他のファイルは今までどおり symlink を開かない。
+
+### 更新・撤回
+
+`nxu takt` で takt を上げたら、`dist/features/daemon/configuration.js` が変わっていないかを確認する。
+変わっていればパッチが当たらず、ビルドが落ちる。
+上流で symlink を読めるようになったら、`packages.nix` の `taktPackage` とパッチを取り除く。
+撤回後は `takt manager` を起動し、`~/.takt/logs/` に増えた `daemon-start-*.log` が空であることを確認する
+（起動のたびに作られ、失敗時だけエラーが書かれる）。
+
+---
+
 ## tmux の同期描画修正（2026-10-26 撤去）
 
 `tmux-sync-clear.patch` は tmux 3.7c 向けの暫定修正だった。

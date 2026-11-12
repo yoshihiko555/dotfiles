@@ -6,6 +6,17 @@
   treefmtWrapper,
   ...
 }:
+let
+  # daemon（manager の常駐プロセス）が config.yaml を O_NOFOLLOW で開くため、
+  # home-manager の symlink だと ELOOP で起動できない。行き先を解決してから開く。
+  # 詳細・撤回手順は patches/README.md。
+  taktPackage = (takt.packages.${pkgs.stdenv.hostPlatform.system}.default).overrideAttrs (old: {
+    postInstall = (old.postInstall or "") + ''
+      patch -p1 -d "$out/lib/node_modules/takt" \
+        < ${../../patches/takt-daemon-config-symlink.patch}
+    '';
+  });
+in
 {
   # MBP 固有の CLI パッケージ（棚卸し: PHASE-3-2-CLI-INVENTORY.md）。
   # ADR-0004 ルール 3 に従い、まず使うホストの hosts/macbook/ に置く。
@@ -98,6 +109,6 @@
       (pkgs.callPackage ../../packages/omp { })
 
       # nixpkgs 未収録だが公式 flake あり（npm -g から移行）
-      takt.packages.${pkgs.stdenv.hostPlatform.system}.default
+      taktPackage
     ];
 }

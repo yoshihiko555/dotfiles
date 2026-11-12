@@ -1,0 +1,16 @@
+--- a/dist/features/daemon/configuration.js
++++ b/dist/features/daemon/configuration.js
+@@ -1,3 +1,4 @@
++import { realpath } from 'node:fs/promises';
+ import { join } from 'node:path';
+ import { parseDocument } from 'yaml';
+ import { z } from 'zod/v4';
+@@ -10,7 +11,7 @@
+ });
+ /** 通信・観測に使う列だけを読む。実行用の設定解決はターン子が所有する。 */
+ export async function readDaemonConfiguration(path) {
+-    const bytes = await readPrivateFile(path, 256 * 1024);
++    const bytes = await readPrivateFile(await realpath(path).catch(() => path), 256 * 1024);
+     if (bytes === undefined)
+         return config.parse({});
+     const document = parseDocument(bytes.toString('utf8'));
