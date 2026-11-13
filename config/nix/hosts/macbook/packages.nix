@@ -9,11 +9,14 @@
 let
   # daemon（manager の常駐プロセス）が config.yaml を O_NOFOLLOW で開くため、
   # home-manager の symlink だと ELOOP で起動できない。行き先を解決してから開く。
+  # takt list の削除は worktree タスクのブランチを -d で消すため、squash merge 済みだと残る。-D で消す。
   # 詳細・撤回手順は patches/README.md。
   taktPackage = (takt.packages.${pkgs.stdenv.hostPlatform.system}.default).overrideAttrs (old: {
     postInstall = (old.postInstall or "") + ''
       patch -p1 -d "$out/lib/node_modules/takt" \
         < ${../../patches/takt-daemon-config-symlink.patch}
+      patch -p1 -d "$out/lib/node_modules/takt" \
+        < ${../../patches/takt-list-delete-squashed-branch.patch}
     '';
   });
 in

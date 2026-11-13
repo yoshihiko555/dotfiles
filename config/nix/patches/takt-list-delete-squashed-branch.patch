@@ -1,0 +1,11 @@
+--- a/dist/features/tasks/list/taskBranchLifecycleActions.js
++++ b/dist/features/tasks/list/taskBranchLifecycleActions.js
+@@ -136,7 +136,7 @@
+             ], { cwd: projectDir, encoding: 'utf-8', stdio: 'pipe' }).split('\n').includes(`refs/heads/${branch}`);
+             if (branchExists) {
+                 try {
+-                    execFileSync('git', ['branch', '-d', branch], {
++                    execFileSync('git', ['branch', options?.requireCleanupSuccess === true ? '-d' : '-D', branch], {
+                         cwd: projectDir,
+                         encoding: 'utf-8',
+                         stdio: 'pipe',

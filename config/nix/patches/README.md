@@ -41,6 +41,40 @@ daemon 以外の経路（`takt run` 等）は symlink を辿って読むので�
 
 ---
 
+## takt list の削除で squash merge 済みのブランチが残る問題
+
+`takt-list-delete-squashed-branch.patch` は takt 0.75.0 向けの暫定修正。
+適用方法は上と同じ（`taktPackage` の `postInstall`）。
+
+### 症状
+
+`takt list` でタスクを削除すると `Could not delete branch takt/... You may delete it manually.` が出て、
+タスクは消えるがローカルの `takt/*` ブランチが残る。
+
+worktree 型タスクのブランチは `git branch -d` で消している。
+GitHub で squash merge すると元のコミットは main に含まれないため、`-d` が拒否する。
+Web UI（`takt ui`）の削除は同じ場面で `-D` を使っており、CLI だけが残る。
+
+### 修正内容
+
+`deleteBranch` の worktree 分岐で、`requireCleanupSuccess` が付いていない呼び出しだけ `-D` にする。
+付いていないのは人が実行する `takt list`（対話・`--action delete`）で、削除前に確認がある。
+付いているのは manager が MCP でゴールのタスクを外す経路で、今までどおり `-d` のまま。
+`mergeBranch` の `-d`（マージ後の片付け）は変えない。
+
+### 対象外
+
+- goal ブランチ（`takt/<日時>-goal-<id>`）は takt のどの削除経路でも消えない。
+  PR のマージ後に `git branch -D` で消す。GitHub 側はリポジトリ設定の `deleteBranchOnMerge` で消える。
+
+### 更新・撤回
+
+`nxu takt` で takt を上げたら、`dist/features/tasks/list/taskBranchLifecycleActions.js` が変わっていないかを確認する。
+変わっていればパッチが当たらず、ビルドが落ちる。
+上流で squash merge 済みのブランチも消せるようになったら、パッチと `packages.nix` の該当行を取り除く。
+
+---
+
 ## tmux の同期描画修正（2026-10-26 撤去）
 
 `tmux-sync-clear.patch` は tmux 3.7c 向けの暫定修正だった。
