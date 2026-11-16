@@ -9,8 +9,12 @@
 | `takt/runtime.yaml` | `~/.takt/runtime.yaml` | provider / model / ステップごとの振り分け・補助レビュー（companion）・MCP サーバー |
 | `takt/provider-options/` | `~/.takt/provider-options/` | ビルトインの `edit` / `readonly` プリセットの上書き（MCP ツールの許可） |
 
-いずれも home-manager の `mkOutOfStoreSymlink` でリポジトリへリンクしているため、編集は即反映されます
-（リンクの追加・変更時だけ `nxs` が必要）。
+`config.yaml` と `runtime.yaml` は home-manager の `mkOutOfStoreSymlink` でリポジトリへリンクしているため、
+編集は即反映されます（リンクの追加・変更時だけ `nxs` が必要）。
+
+`provider-options/` だけは `nxs` のたびに実ファイルとしてコピーしています（`home.activation.taktProviderOptions`）。
+takt はプリセットの探索先が symlink だと拒否し、そのプリセットを使う全ワークフローが
+`failed to resolve capabilities "readonly"` で読み込めなくなるためです。編集の反映には `nxs` が必要です。
 
 `takt/logs/` `takt/analytics/` は takt が生成するランタイム成果物で、Git 管理外（`.gitignore` 済み）。
 

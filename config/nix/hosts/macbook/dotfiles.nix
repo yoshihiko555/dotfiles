@@ -115,8 +115,7 @@ in
         ".takt/config.yaml".source = mkLink "takt/config.yaml";
         # provider の振り分けと companion の設定。takt は初回生成時にしか書かない（既存なら上書きしない）ため symlink で配る
         ".takt/runtime.yaml".source = mkLink "takt/runtime.yaml";
-        # ビルトインの edit / readonly プリセットを上書きし、runtime.yaml で注入する MCP の許可を足す
-        ".takt/provider-options".source = mkLink "takt/provider-options";
+        # ~/.takt/provider-options は symlink で配れないため、下の home.activation.taktProviderOptions でコピーする
 
         "Dropbox/01_Private/05_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.C9692AD7-2800-42B7-8F97-8F8CCD1CC88E".source =
           mkLink "alfred/Open-VS-or-IT";
@@ -188,6 +187,19 @@ in
       home.activation.herdrPlugins = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         run env PATH="${lib.makeBinPath [ pkgs.git ]}:$PATH" HERDR="${herdrBin}" \
           ${pkgs.bash}/bin/bash "${dotfilesDir}/scripts/herdr-plugins-sync.sh" apply || true
+      '';
+
+      # ビルトインの edit / readonly プリセットを上書きし、runtime.yaml で注入する MCP の許可を足す。
+      # takt は候補ディレクトリが symlink のものも、中のファイルの実体がディレクトリ外にあるものも拒否するため、
+      # 実ファイルとしてコピーする。repo を正とし、repo から消したプリセットもここで消す。
+      home.activation.taktProviderOptions = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+        dest="$HOME/.takt/provider-options"
+        if [ -L "$dest" ]; then
+          run rm "$dest"
+        fi
+        run mkdir -p "$dest"
+        run rm -f "$dest"/*.yaml
+        run install -m 644 "${dotfilesDir}/takt/provider-options/"*.yaml "$dest/"
       '';
     };
 }
