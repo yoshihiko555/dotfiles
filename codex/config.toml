@@ -72,14 +72,30 @@ trust_level = "trusted"
 [projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/hermes-managements"]
 trust_level = "trusted"
 
-[projects."/Users/yoshihiko/ghq/scratch/ai-orchestra-verify"]
-trust_level = "trusted"
 
 [projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/homebase"]
 trust_level = "trusted"
 
 [projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/pi-harness"]
 trust_level = "trusted"
+
+
+
+
+[projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/maneki"]
+trust_level = "trusted"
+
+[projects."/Users/yoshihiko/ghq/github-anvil/shuto-takizawa/mnd-works"]
+trust_level = "trusted"
+
+[projects."/private/tmp/claude-501/-Users-yoshihiko-ghq-github-com-yoshihiko555-dotfiles/7e9af8a9-6507-465b-ab63-3af3be6d60d7/scratchpad/mcp-smoke"]
+trust_level = "trusted"
+
+
+
+
+
+
 
 # END managed-trust-projects
 
