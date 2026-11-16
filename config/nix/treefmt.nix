@@ -112,6 +112,8 @@
     #   - 以下2件は toml/yaml のため個別に除外が必要
     "codex/config.toml"
     "config/mise/config.toml"
+    # 会社用 Codex も CLI が設定を書き戻すため、個人用と同じ扱いにする。
+    "codex-work/config.toml"
     # gh 自身が書き込む設定ファイル（上記5件と同じ理由で追加）
     "config/gh/config.yml"
 

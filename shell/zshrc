@@ -105,6 +105,7 @@ source ~/.zsh/repo.zsh
 source ~/.zsh/trust.zsh
 source ~/.zsh/cc-interrupt.zsh
 source ~/.zsh/claude.zsh
+source ~/.zsh/codex.zsh
 source ~/.zsh/takt.zsh
 source ~/.zsh/nix.zsh
 source ~/.zsh/screenpipe.zsh

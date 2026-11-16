@@ -1,6 +1,11 @@
 version: "3"
 
 tasks:
+  codex-work-init:
+    desc: 会社用 Codex の設定と common + codex-only + work のスキルをリンク
+    cmds:
+      - python3 "{{.ROOT_DIR}}/scripts/codex-work-init.py"
+
   # ====================
   # Skills 同期
   # ====================

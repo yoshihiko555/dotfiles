@@ -89,6 +89,10 @@ in
         ".codex/rules".source = mkLink "codex/rules";
         ".codex/skills".source = mkLink "codex/skills";
 
+        # 会社用も設定の正本を dotfiles に置く。skills は task codex-work-init で配線する。
+        ".codex-work/config.toml".source = mkLink "codex-work/config.toml";
+        ".codex-work/AGENTS.md".source = mkLink "codex/AGENTS.md";
+
         ".gemini/AGENTS.md".source = mkLink "gemini/AGENTS.md";
         ".gemini/antigravity/mcp_config.json".source = mkLink "gemini/antigravity/mcp_config.json";
         ".gemini/config/skills".source = mkLink "gemini/config/skills";

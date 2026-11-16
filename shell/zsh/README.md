@@ -13,12 +13,25 @@
 | `trust.zsh` | Codex trust 管理 (trust) |
 | `cc-interrupt.zsh` | Claude Code 中断証跡ロガー (cc_interrupt) |
 | `claude.zsh` | Claude Code 会社アカウント切替 (ccw) / CLIProxyAPI 切替 (ccx) |
+| `codex.zsh` | Codex CLI 会社アカウント切替 (cxw) |
 | `takt.zsh` | takt 会社アカウント切替 (taktw) |
 | `nix.zsh` | nix-darwin 反映コマンド (nxb, nxs, nxg 等) / Homebrew 更新 (bxu) / hermes リモート反映 (hxb, hxs, hxg 等) |
 | `screenpipe.zsh` | screenpipe の一時停止 / 再開 / 状態確認 / 実体の復旧 (spoff, spon, sps, spfix) |
 | `herdr.zsh` | herdr-automatic-rename のシェルフック（コマンド実行でタブ名を追従） |
 | `terminal-browser.zsh` | terminal-browser の起動ショートカット (tb) |
 | `prompt-marks.zsh` | OSC 133 の semantic prompt マーク（Ctrl+L でスクロールバックを失わない） |
+
+## Codex の会社アカウント (`cxw`)
+
+dotfiles で `task codex-work-init` を実行し、新しいターミナルで `cxw login` から会社アカウントにログインする。
+既存のターミナルでは `source ~/.zsh/codex.zsh` で読み込める。
+
+- 個人用は `codex` / `cx`、会社用は `cxw`。会社用の保存先は `~/.codex-work`（`CODEX_WORK_HOME` で変更可能）。
+- 会社用の `config.toml` は dotfiles の `codex-work/config.toml` へリンクする。設定変更はそのまま Git の差分になる。
+- `cxw login status` で認証方式を確認し、起動後の `/status` でアカウントを確認する。
+- `cxw` も `aliases.zsh` の `codex` 関数を使い、Herdr 用の環境変数調整と nice を引き継ぐ。
+- 親シェルの API キー・アクセストークン・workload identity・SQLite 保存先の指定は、会社用の起動時だけ解除する。
+- 共通スキルを追加・削除したら `task codex-work-init` を再実行する。既存の会社用設定・認証・履歴は保持する。
 
 ## Codex の trust 設定 (`trust`)
 
