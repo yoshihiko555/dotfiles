@@ -6,9 +6,10 @@
 | ファイル | 配置先 | 中身 |
 |---|---|---|
 | `takt/config.yaml` | `~/.takt/config.yaml` | 実行制御・作業ディレクトリ・権限（`provider_profiles`）・レートリミット時の退避 |
-| `takt/runtime.yaml` | `~/.takt/runtime.yaml` | provider / model / ステップごとの振り分け・補助レビュー（companion） |
+| `takt/runtime.yaml` | `~/.takt/runtime.yaml` | provider / model / ステップごとの振り分け・補助レビュー（companion）・MCP サーバー |
+| `takt/provider-options/` | `~/.takt/provider-options/` | ビルトインの `edit` / `readonly` プリセットの上書き（MCP ツールの許可） |
 
-どちらも home-manager の `mkOutOfStoreSymlink` でリポジトリへリンクしているため、編集は即反映されます
+いずれも home-manager の `mkOutOfStoreSymlink` でリポジトリへリンクしているため、編集は即反映されます
 （リンクの追加・変更時だけ `nxs` が必要）。
 
 `takt/logs/` `takt/analytics/` は takt が生成するランタイム成果物で、Git 管理外（`.gitignore` 済み）。
@@ -146,6 +147,77 @@ takt 側のプロバイダ名は `opencode` で、`opencode-go` はプロバイ�
 - 採用された指摘は `.takt/runs/{run}/companion/{step}/{companion}.jsonl` に記録されます。
 - **companion は runtime モードでしか使えません**。`config.yaml` に provider 設定がある状態で有効にすると、
   `default` が `Companion reviewers require runtime.yaml` で検証エラーになります。
+
+## MCP サーバー（runtime.yaml）
+
+`runtime.yaml` の `mcp:` で pencil / drawio / Notion を定義し、内部 agent（selector / assistant / manager）以外の
+すべての実行に割り当てています。
+
+| サーバー | 起動方法 | 注意 |
+|---|---|---|
+| pencil | Pen.app 同梱の MCP サーバー | Pen.app の起動が必要。GUI で開いているファイルを操作する（後述） |
+| drawio | `npx -y @drawio/mcp` | 定義の正典は `shared/mcp/servers/`。`task mcp-sync` の対象外なので手で揃える |
+| notion | `npx -y mcp-remote@0.15.2 https://mcp.notion.com/mcp` | takt は OAuth を扱えないため、mcp-remote で stdio に変換する |
+
+- **`mcp:` があると、Claude 系のステップは `--strict-mcp-config` で起動します。**
+  ここで割り当てた MCP しか使えず、対象リポジトリの `.mcp.json` やプラグインの MCP は読まれません。
+  割り当てが空のステップでも同じです。
+- codex のステップは strict にならず、`~/.codex/config.toml` の MCP に同名で上書きマージされます。
+- プロジェクトの `.takt/runtime.yaml` に `mcp:` があると、グローバルの `mcp:` は丸ごと置き換わります
+  （learno は作業クローンの `.pen` に接続する中継をプロジェクト側で定義しています）。
+- ワークフローの `mcp_servers` や `config.yaml` の `workflow_mcp_servers`（旧方式）と併用すると、起動前にエラーで止まります。
+- `${VAR}` は未定義だと全実行が起動前に落ちるため使っていません。
+
+### Claude ステップでの MCP ツールの許可
+
+takt は Claude を `settingSources: ['project']` で起動するため、`~/.claude/settings.json` の
+`permissions.allow` はステップに届きません。許可の無い MCP ツールは
+`Claude requested permissions to use mcp__..., but you haven't granted it yet.` で拒否されます。
+
+そこで、ビルトインのステップが参照する権限プリセット `edit` / `readonly` を `takt/provider-options/` で上書きし、
+`allowed_tools` に MCP を足しています（探索順は `.takt/provider-options` → `~/.takt/provider-options` → ビルトイン）。
+
+| プリセット | 追加した許可 |
+|---|---|
+| `edit` | pencil / drawio はサーバー単位で全ツール。Notion は検索・取得・ページ作成と更新・コメントなどの読み書きだけ（削除・移動・予定の操作・エージェントの起動は外す） |
+| `readonly` | 書き込みの無いツールだけ（Notion の検索・取得、drawio の参照、pencil の状態取得など） |
+
+- `readonly` で pencil の `execute` を外しているのは、読み取りにも使うが書き込みもできるためです。
+  計画・レビューのステップから `.pen` を読ませたくなったら、ここを見直します。
+- profile の `options.allowed_tools` は使いません。ステップのプリセットとは合成されずに丸ごと置き換わるため、
+  読み取り専用のステップにも Edit / Write の許可が付いてしまいます。
+- MCP 以外の中身はビルトインの写しです。takt を更新したら `builtins/ja/provider-options/` との差分を確認してください。
+
+### Notion のログイン
+
+トークンは `~/.mcp-auth/mcp-remote-v1/` に保存されます。失効すると、takt の実行中に Notion だけが使えなくなります。
+そのときは次のコマンドでブラウザからログインし直します。
+
+```bash
+npx -y -p mcp-remote@0.15.2 mcp-remote-client https://mcp.notion.com/mcp
+```
+
+mcp-remote は原作者（geelen）から punkpeye（glama.ai）へリポジトリごと移管されたパッケージです。
+更新が頻繁なため版を固定しています。上げるときは公開から 2 週間以上たった版を選んでください。
+
+### pencil の注意点
+
+- ヘッドレスモードが無く、Pen.app が起動していないと `failed to connect to running Pencil app` で失敗します。
+- GUI で開いているファイルを操作するため、作業クローンの `.pen` を編集させるときは、
+  `filePath` に作業クローン内の絶対パスを渡させてください。渡さないと本体側の `.pen` を編集しえます。
+
+### 既知の問題
+
+- **codex のステップの MCP は、takt の定義だけでは動きません。**
+  - npx で起動するサーバーは、codex の既定の起動待ち（10 秒）を超えるとツールが登録されません。
+  - 承認が要るツールは `MCP tool call requires approval, but approval policy is never` で止まります。
+    takt が codex に `approval_policy: never` を強制するためです。
+  - takt の stdio 定義には起動待ちも承認も書けません。そのため drawio は `codex/config.toml` 側で
+    `startup_timeout_sec = 60` と `default_tools_approval_mode = "approve"` を指定しています（普段の codex にも効きます）。
+  - notion は codex に振っている tag（`coding` / `test-planning`）から外しています。codex の Notion はプラグイン
+    （`codex_apps`）経由で使えます。
+- **`capabilities` を指定していないステップには、Claude の MCP 許可が付きません。**
+  ビルトインでは `audit-*` 系の plan / audit / review / supervise などが該当します。
 
 ## アカウント切替
 

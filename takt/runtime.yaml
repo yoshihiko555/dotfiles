@@ -2,7 +2,7 @@
 # 全設定項目は https://github.com/nrslib/takt/blob/main/docs/configuration.md の
 # 「Runtime Provider 設定（runtime.yaml）」を参照。
 #
-# provider / model / ステップごとの振り分けはここに書く (runtime モード)。
+# provider / model / ステップごとの振り分けと MCP サーバーはここに書く (runtime モード)。
 # config.yaml の provider / model / provider_routing と同時に書くと、
 # "Mixed provider configuration detected" で agent を起動する前に止まる。
 # 権限 (provider_profiles) とレートリミット時の退避 (rate_limit_fallback) は
@@ -103,6 +103,47 @@ provider:
     steps:
       ai-antipattern-review-2nd:
         profile: opencode-deepseek-flash
+
+# MCP サーバー。内部 agent (selector / assistant / manager) 以外のすべての実行に付ける。
+# NOTE: このセクションがあると Claude 系のステップは --strict-mcp-config で起動し、ここで割り当てた
+#       MCP しか使えない (対象リポジトリの .mcp.json やプラグインの MCP は読まない)。
+#       codex は strict にならず、~/.codex/config.toml の MCP に同名で上書きマージされる。
+# NOTE: プロジェクトの .takt/runtime.yaml に mcp があると、このセクションは丸ごと置き換わる。
+# NOTE: ワークフローの mcp_servers や config.yaml の workflow_mcp_servers と併用すると起動前に止まる。
+# NOTE: ${VAR} は未定義だと全実行が起動前に落ちるので使わない。
+# pencil / drawio の正典は shared/mcp/servers/。task mcp-sync の対象外なので、変えたら手で揃える。
+mcp:
+  servers:
+    # Pen.app の起動が必要 (ヘッドレス不可)。GUI で開いているファイルを操作するため、
+    # 作業クローンの .pen を編集させるときは filePath に作業クローン内の絶対パスを渡す。
+    pencil:
+      type: stdio
+      command: /Applications/Pen.app/Contents/Resources/app.asar.unpacked/out/mcp-server-darwin-arm64
+      args: [--app, desktop]
+    drawio:
+      type: stdio
+      command: npx
+      args: [-y, "@drawio/mcp"]
+    # takt は OAuth を扱えないため、Notion 公式のリモート MCP を mcp-remote で stdio にする。
+    # トークンは ~/.mcp-auth/mcp-remote-v1/ に保存される。失効したら次のコマンドでログインし直す。
+    # ログイン: npx -y -p mcp-remote@0.15.2 mcp-remote-client https://mcp.notion.com/mcp
+    notion:
+      type: stdio
+      command: npx
+      args: [-y, mcp-remote@0.15.2, 'https://mcp.notion.com/mcp']
+  defaults:
+    servers: [pencil, drawio, notion]
+  targets:
+    internal_agents:
+      selector:
+        exclude: [pencil, drawio, notion]
+    # codex に振っている tag。codex は npx の notion を起動待ち 10 秒以内に立ち上げられず、承認も通らない。
+    # codex の Notion はプラグイン (codex_apps) 経由で使えるので外す。Claude に振り直すならここも外す。
+    tags:
+      coding:
+        exclude: [notion]
+      test-planning:
+        exclude: [notion]
 
 # opencode プロバイダ (上の opencode-deepseek-flash で使用中) の注意点。
 # takt のプロバイダ名は opencode。opencode-go はプロバイダ名ではなくモデル名の前半。

@@ -115,6 +115,8 @@ in
         ".takt/config.yaml".source = mkLink "takt/config.yaml";
         # provider の振り分けと companion の設定。takt は初回生成時にしか書かない（既存なら上書きしない）ため symlink で配る
         ".takt/runtime.yaml".source = mkLink "takt/runtime.yaml";
+        # ビルトインの edit / readonly プリセットを上書きし、runtime.yaml で注入する MCP の許可を足す
+        ".takt/provider-options".source = mkLink "takt/provider-options";
 
         "Dropbox/01_Private/05_Settings/02_Alfred/Alfred.alfredpreferences/workflows/user.workflow.C9692AD7-2800-42B7-8F97-8F8CCD1CC88E".source =
           mkLink "alfred/Open-VS-or-IT";

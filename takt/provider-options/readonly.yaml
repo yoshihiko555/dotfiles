@@ -1,0 +1,36 @@
+# ビルトインの readonly プリセット (builtins/ja/provider-options/readonly.yaml) を上書きする。
+# 中身はビルトインの写しに、runtime.yaml の mcp で注入する MCP のうち書き込みの無いツールの許可を足したもの。
+# 計画・レビューなど読み取り専用のステップが Notion や .pen を書き換えないよう、サーバー単位では許可しない。
+# (pencil の execute は読み取りにも使うが書き込みもできるため外している)
+# NOTE: takt を更新したらビルトイン側との差分を確認する (MCP 以外はビルトインと同じに保つ)。
+claude:
+  allowed_tools:
+    - Read
+    - Glob
+    - Grep
+    - Bash
+    - WebSearch
+    - WebFetch
+    - mcp__pencil__get_app_state
+    - mcp__pencil__get_style
+    - mcp__pencil__read_skill
+    - mcp__drawio__get_drawio_reference
+    - mcp__drawio__list_pages
+    - mcp__drawio__get_page
+    - mcp__drawio__search_shapes
+    - mcp__notion__notion-search
+    - mcp__notion__notion-fetch
+    - mcp__notion__notion-query-data-sources
+    - mcp__notion__notion-get-comments
+    - mcp__notion__notion-get-users
+opencode:
+  allowed_tools:
+    - read
+    - glob
+    - grep
+    - bash
+    - websearch
+    - webfetch
+  network_access: true
+codex:
+  network_access: true

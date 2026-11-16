@@ -1,0 +1,42 @@
+# ビルトインの edit プリセット (builtins/ja/provider-options/edit.yaml) を上書きする。
+# 中身はビルトインの写しに、runtime.yaml の mcp で注入する MCP の許可を足したもの。
+# takt は Claude を settingSources: ['project'] で起動するため ~/.claude/settings.json の許可は届かず、
+# ここに無い MCP ツールは "haven't granted it yet" で拒否される。
+# NOTE: takt を更新したらビルトイン側との差分を確認する (MCP 以外はビルトインと同じに保つ)。
+claude:
+  allowed_tools:
+    - Read
+    - Glob
+    - Grep
+    - Edit
+    - Write
+    - Bash
+    - WebSearch
+    - WebFetch
+    - mcp__pencil
+    - mcp__drawio
+    # Notion は削除・移動・予定の操作・エージェントの起動などを無人で通さないよう、読み書きのツールだけを許可する
+    - mcp__notion__notion-search
+    - mcp__notion__notion-fetch
+    - mcp__notion__notion-query-data-sources
+    - mcp__notion__notion-query-multiple-data-sources
+    - mcp__notion__notion-get-comments
+    - mcp__notion__notion-get-users
+    - mcp__notion__notion-get-self
+    - mcp__notion__notion-create-pages
+    - mcp__notion__notion-update-page
+    - mcp__notion__notion-create-comment
+opencode:
+  allowed_tools:
+    - read
+    - glob
+    - grep
+    - edit
+    - write
+    - bash
+    - todowrite
+    - websearch
+    - webfetch
+  network_access: true
+codex:
+  network_access: true

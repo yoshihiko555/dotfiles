@@ -258,6 +258,10 @@ realtimeVoiceScreenContextEnabled = true
 "args" = ["-y", "@drawio/mcp"]
 "env" = {}
 "enabled" = true
+# npx の起動が既定の 10 秒を超えるとツールが登録されない。takt は approval_policy=never を強制するため、
+# 承認待ちのツールも呼べない。どちらも takt の runtime.yaml には書けないのでここで指定する。
+"startup_timeout_sec" = 60
+"default_tools_approval_mode" = "approve"
 
 [mcp_servers.figma]
 "url" = "https://mcp.figma.com/mcp"
