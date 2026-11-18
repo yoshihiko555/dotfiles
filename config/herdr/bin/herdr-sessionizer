@@ -16,7 +16,6 @@ fi
 PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 export PATH
 
-
 REPO_LIST="$HOME/ghq/github.com/yoshihiko555/dotfiles/scripts/repo-list.sh"
 
 for cmd in herdr fzf jq; do
@@ -42,10 +41,10 @@ selected=$(bash "$REPO_LIST" | while IFS=$'\t' read -r type label path; do
   if [ "$type" = "worktree" ]; then
     # "owner/repo:branch" → "repo/branch"
     session_name=$(echo "$label" | sed 's|.*/\([^/]*\):\([^/]*\)$|\1/\2|')
-    icon=$'\xe2\x97\x8f \xee\x9c\xa8'   # ● + git-merge
+    icon=$'\xe2\x97\x8f \xee\x9c\xa8' # ● + git-merge
   else
     session_name=$(basename "$path")
-    icon=$'\xe2\x97\x8b \xee\xa9\xa2'   # ○ + repo
+    icon=$'\xe2\x97\x8b \xee\xa9\xa2' # ○ + repo
   fi
 
   if [ "$path" = "$current_cwd" ]; then
@@ -57,11 +56,11 @@ selected=$(bash "$REPO_LIST" | while IFS=$'\t' read -r type label path; do
   # 表示\tセッション名\tパス\tタイプ
   printf '%s  %s%s\t%s\t%s\t%s\n' "$icon" "$label" "$marker" "$session_name" "$path" "$type"
 done | fzf --ansi \
-           --delimiter=$'\t' \
-           --with-nth=1 \
-           --header="Select project (herdr)" \
-           --preview='ls -la {3}' \
-           --preview-window=down:3:wrap)
+  --delimiter=$'\t' \
+  --with-nth=1 \
+  --header="Select project (herdr)" \
+  --preview='ls -la {3}' \
+  --preview-window=down:3:wrap)
 
 [ -z "$selected" ] && exit 0
 
@@ -69,10 +68,12 @@ session_name=$(echo "$selected" | cut -f2)
 path=$(echo "$selected" | cut -f3)
 type=$(echo "$selected" | cut -f4)
 
-if [ "$type" = "worktree" ]; then
-  # path は ".../<repo>/.worktrees/<name>" 形式
+if [ "$type" = "worktree" ] && [ -f "$path/.git" ]; then
+  # linked worktree（.git がファイル）: path は ".../<repo>/.worktrees/<name>" 形式
   repo_root="${path%/.worktrees/*}"
 else
+  # 通常のリポジトリ、または .worktrees 配下の独立 clone（TAKT 等。.git がディレクトリ）。
+  # 本体の worktree 一覧に載らないため、clone 自身を主チェックアウトとして開く
   repo_root="$path"
 fi
 
