@@ -10,7 +10,15 @@ Alfred用のカスタムワークフロー集。
 sudo darwin-rebuild switch --flake ./config/nix#macbook
 ```
 
-home-manager が Dropbox 配下のワークフローディレクトリへリンクする。
+switch のたびに `scripts/alfred-workflow-links.sh` が Dropbox 配下のワークフローディレクトリへリンクする。
+対応表（UUID → ワークフロー名）は `config/nix/hosts/macbook/dotfiles.nix` の `home.activation.alfredWorkflowLinks` にある。
+
+- リンク先が一致していれば何もしない。Dropbox に書き込むのは、対応表を変えたときだけ。
+- Dropbox（File Provider）への書き込みには、ターミナル（Ghostty）の許可が要る。拒否されていると switch が止まるので、
+  `ls ~/Library/CloudStorage/Dropbox` で許可を出し直してから switch し直す。ダイアログが出ないときは、
+  先に `tccutil reset FileProviderDomain com.mitchellh.ghostty` を実行する。
+- 対応表から消したワークフローのリンクは、次の switch で消える。
+- リンクを張り替えた後にワークフローが見えなければ、Alfred を再起動する。
 
 ## ワークフロー一覧
 
