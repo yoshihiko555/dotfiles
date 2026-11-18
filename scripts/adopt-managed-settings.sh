@@ -130,14 +130,6 @@ adopt_pi() {
     "deviceId lastChangelogVersion"
 }
 
-adopt_pi_work() {
-  adopt pi-work \
-    "$HOME/.pi/agent-work/settings.json" \
-    "$repo_root/pi-work/settings.json" \
-    "$HOME/.pi/agent-work/.settings.json.nix-managed" \
-    "deviceId lastChangelogVersion"
-}
-
 case "$target" in
   all)
     adopt_claude
@@ -145,16 +137,14 @@ case "$target" in
     adopt_antigravity_settings
     adopt_antigravity_keybindings
     adopt_pi
-    adopt_pi_work
     ;;
   claude) adopt_claude ;;
   claude-work) adopt_claude_work ;;
   antigravity-settings) adopt_antigravity_settings ;;
   antigravity-keybindings) adopt_antigravity_keybindings ;;
   pi) adopt_pi ;;
-  pi-work) adopt_pi_work ;;
   *)
-    echo "usage: task adopt-settings TARGET=all|claude|claude-work|antigravity-settings|antigravity-keybindings|pi|pi-work" >&2
+    echo "usage: task adopt-settings TARGET=all|claude|claude-work|antigravity-settings|antigravity-keybindings|pi" >&2
     exit 2
     ;;
 esac

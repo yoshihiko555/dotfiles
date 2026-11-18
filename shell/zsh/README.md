@@ -14,7 +14,6 @@
 | `cc-interrupt.zsh` | Claude Code 中断証跡ロガー (cc_interrupt) |
 | `claude.zsh` | Claude Code 会社アカウント切替 (ccw) / CLIProxyAPI 切替 (ccx) |
 | `codex.zsh` | Codex CLI 会社アカウント切替 (cxw) |
-| `pi.zsh` | pi 会社アカウント切替 (piw) |
 | `takt.zsh` | takt 会社アカウント切替 (taktw) |
 | `nix.zsh` | nix-darwin 反映コマンド (nxb, nxs, nxg 等) / Homebrew 更新 (bxu) / hermes リモート反映 (hxb, hxs, hxg 等) |
 | `screenpipe.zsh` | screenpipe の一時停止 / 再開 / 状態確認 / 実体の復旧 (spoff, spon, sps, spfix) |
@@ -33,15 +32,6 @@ dotfiles で `task codex-work-init` を実行し、新しいターミナルで `
 - `cxw` も `aliases.zsh` の `codex` 関数を使い、Herdr 用の環境変数調整と nice を引き継ぐ。
 - 親シェルの API キー・アクセストークン・workload identity・SQLite 保存先の指定は、会社用の起動時だけ解除する。
 - 共通スキルを追加・削除したら `task codex-work-init` を再実行する。既存の会社用設定・認証・履歴は保持する。
-
-## pi の会社アカウント (`piw`)
-
-nix-darwin を switch（`nxs`）してから、新しいターミナルで `piw` を起動し、`/login` で会社アカウントにログインする。
-既存のターミナルでは `source ~/.zsh/pi.zsh` で読み込める。
-
-- 個人用は `pi`、会社用は `piw`。会社用の保存先は `~/.pi/agent-work`（固定）。
-- 会社用の `settings.json` と pi-harness の `gate.json` が無いと起動しない（gate なしで動くのを防ぐ）。
-- 親シェルの API キーとセッション保存先の指定は、会社用の起動時だけ解除する。
 
 ## Codex の trust 設定 (`trust`)
 

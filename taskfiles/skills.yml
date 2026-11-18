@@ -10,7 +10,7 @@ tasks:
   # Skills 同期
   # ====================
   sync-skills:
-    desc: skills を追加・変更した後に Claude/Codex/Antigravity/pi（会社用を含む）のスキルリンクを同期
+    desc: skills を追加・変更した後に Claude/Codex/Antigravity/pi のスキルリンクを同期
     cmds:
       - |
         set -eu
@@ -20,15 +20,12 @@ tasks:
         claude_only="$root/shared/skills/claude-only"
         antigravity_only="$root/shared/skills/antigravity-only"
         pi_only="$root/shared/skills/pi-only"
-        work="$root/shared/skills/work"
         codex_target="$root/codex/skills"
         claude_target="$root/claude/skills"
         antigravity_target="$root/gemini/config/skills"
         pi_target="$root/pi/skills"
-        # 会社用 pi（piw）は pi と同じスキルに work を足す
-        pi_work_target="$root/pi-work/skills"
 
-        mkdir -p "$codex_target" "$claude_target" "$antigravity_target" "$pi_target" "$pi_work_target"
+        mkdir -p "$codex_target" "$claude_target" "$antigravity_target" "$pi_target"
 
         cleanup_links() {
           target_dir="$1"
@@ -63,9 +60,6 @@ tasks:
         cleanup_links "$antigravity_target" "../../../shared/skills/antigravity-only"
         cleanup_links "$pi_target" "../../shared/skills/common"
         cleanup_links "$pi_target" "../../shared/skills/pi-only"
-        cleanup_links "$pi_work_target" "../../shared/skills/common"
-        cleanup_links "$pi_work_target" "../../shared/skills/pi-only"
-        cleanup_links "$pi_work_target" "../../shared/skills/work"
 
         link_dir "$common" "$codex_target" "../../shared/skills/common"
         link_dir "$common" "$claude_target" "../../shared/skills/common"
@@ -75,9 +69,6 @@ tasks:
         link_dir "$claude_only" "$claude_target" "../../shared/skills/claude-only"
         link_dir "$antigravity_only" "$antigravity_target" "../../../shared/skills/antigravity-only"
         link_dir "$pi_only" "$pi_target" "../../shared/skills/pi-only"
-        link_dir "$common" "$pi_work_target" "../../shared/skills/common"
-        link_dir "$pi_only" "$pi_work_target" "../../shared/skills/pi-only"
-        link_dir "$work" "$pi_work_target" "../../shared/skills/work"
 
   sync-claude-work-skills:
     desc: 会社用 Claude Code に common + work のスキルを同期
