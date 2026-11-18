@@ -14,3 +14,5 @@ uv = "latest"
 [settings]
 # pipx backend の実体を uv に寄せる（pipx 本体を別途入れずに済む）
 pipx.uvx = true
+# mise 本体は Nix で入れていて self-update できないため、新しい版の通知を出さない
+disable_update_warning = true
