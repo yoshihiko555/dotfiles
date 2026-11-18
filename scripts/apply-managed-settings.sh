@@ -169,6 +169,15 @@ apply_pi() {
     "deviceId lastChangelogVersion"
 }
 
+apply_pi_work() {
+  manage_mutable_json \
+    pi-work \
+    "$repo_root/pi-work/settings.json" \
+    "$HOME/.pi/agent-work/settings.json" \
+    "$HOME/.pi/agent-work/.settings.json.nix-managed" \
+    "deviceId lastChangelogVersion"
+}
+
 case "$target" in
   all)
     apply_claude
@@ -176,14 +185,16 @@ case "$target" in
     apply_antigravity_settings
     apply_antigravity_keybindings
     apply_pi
+    apply_pi_work
     ;;
   claude) apply_claude ;;
   claude-work) apply_claude_work ;;
   antigravity-settings) apply_antigravity_settings ;;
   antigravity-keybindings) apply_antigravity_keybindings ;;
   pi) apply_pi ;;
+  pi-work) apply_pi_work ;;
   *)
-    echo "usage: task apply-settings TARGET=all|claude|claude-work|antigravity-settings|antigravity-keybindings|pi" >&2
+    echo "usage: task apply-settings TARGET=all|claude|claude-work|antigravity-settings|antigravity-keybindings|pi|pi-work" >&2
     exit 2
     ;;
 esac

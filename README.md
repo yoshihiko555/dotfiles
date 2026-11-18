@@ -118,6 +118,7 @@ dotfiles/
 ├── claude-work/    # Claude Code 会社用（→ ~/.claude-work）
 ├── codex-work/     # Codex CLI 会社用設定（→ ~/.codex-work/config.toml）
 ├── codex/          # Codex CLI（→ ~/.codex）
+├── pi-work/        # pi 会社用の settings.json・skills（→ ~/.pi/agent-work）
 ├── gemini/         # Gemini / Antigravity CLI（→ ~/.gemini）→ gemini/README.md
 ├── takt/           # takt CLI（→ ~/.takt）→ takt/README.md
 ├── shared/         # 共通データの実体（agents / skills / mcp / plugins / cliproxyapi）
@@ -378,6 +379,27 @@ cxw                    # 起動後の /status でもアカウントを確認
   （[認証の公式仕様](https://learn.chatgpt.com/docs/auth#enforce-a-login-method-or-workspace)）。
 - ブラウザが使えない場合は `cxw login --device-auth` を使う。組織側で許可されている必要がある。
 - この切り替えは CLI 用。デスクトップアプリや `taktw` の Codex 認証は切り替えない。
+
+### pi 会社アカウント運用
+
+`cxw` と同じく、`piw` は会社用の `PI_CODING_AGENT_DIR=~/.pi/agent-work` で pi を起動する。
+個人用の `pi` は従来どおり `~/.pi/agent` を使う。
+
+```bash
+nxs   # 会社用ディレクトリの配線と settings.json の生成
+PI_CODING_AGENT_DIR=~/.pi/agent-work herdr integration install pi  # herdr にペインの状態を出す（初回のみ）
+piw   # /login で OpenAI を選び、ブラウザで会社アカウント・会社ワークスペースを選ぶ
+piw auth check --provider openai --no-refresh  # status が ready なら完了
+```
+
+- 認証（`auth.json`）・MCP の認証・セッション・gate の記録は会社用ディレクトリに保存する。
+  個人用の API キー（Anthropic / OpenCode Go / Typesafe）は持ち込まない。
+- `AGENTS.md`・`models.json`・pi-harness の `gate.json` は個人用と同じものを home-manager が張る。
+  スキルは `pi-work/skills`（`common` + `pi-only` + `work`）で、`task sync-skills` で更新する。
+- `settings.json` は `pi-work/settings.json` を正とする mutable 実ファイル。drift は `task status` で確認し、
+  `task adopt-settings TARGET=pi-work` で repo へ回収する。
+- 個人用の MCP 連携（`pi/mcp.json`）は持ち込まない。必要な連携は会社用で設定する。
+- 保存先は変更できない。`settings.json` の `packages` が設定ディレクトリ基準の相対パスのため。
 
 ## 📚 関連ドキュメント
 

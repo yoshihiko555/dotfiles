@@ -112,6 +112,16 @@ in
         ".pi/agent/pi-harness/gate.json".source =
           config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/ghq/github.com/yoshihiko555/pi-harness/config/gate.json";
 
+        # 会社用 pi（piw）の設定ディレクトリ。認証・セッションは個人用と分ける。
+        # 個人用の MCP 連携は持ち込まないため mcp.json は張らない。settings.json は mutableDotfiles で配る。
+        # settings.json の packages は設定ディレクトリ基準の相対パスなので、個人用と同じ深さに置く
+        ".pi/agent-work/AGENTS.md".source = mkLink "pi/AGENTS.md";
+        ".pi/agent-work/models.json".source = mkLink "pi/models.json";
+        # skills は pi と同じものに shared/skills/work を足したリンク集（task sync-skills で更新）
+        ".pi/agent-work/skills".source = mkLink "pi-work/skills";
+        ".pi/agent-work/pi-harness/gate.json".source =
+          config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/ghq/github.com/yoshihiko555/pi-harness/config/gate.json";
+
         ".takt/config.yaml".source = mkLink "takt/config.yaml";
         # provider の振り分けと companion の設定。takt は初回生成時にしか書かない（既存なら上書きしない）ため symlink で配る
         ".takt/runtime.yaml".source = mkLink "takt/runtime.yaml";
