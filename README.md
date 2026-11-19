@@ -151,6 +151,8 @@ dotfiles/
 | | `task nix-fmt` | nix + shell + yaml/toml を treefmt で整形（`nix fmt`）。lua/md/json は対象外 |
 | **エージェント資産** | `task sync-agents` | `shared/agents` から Codex / Gemini / pi の AGENTS.md を生成 |
 | | `task sync-skills` | `shared/skills` のリンクを更新 |
+| | `task skill-outdated` | gh skill で入れた外部スキルの新しいリリースを確認（読み取り専用） |
+| | `task skill-update` | gh skill で入れた外部スキルを最新リリースへ差し替え（コミットしない） |
 | | `task claude-work-init` | 会社用 Claude Code 設定ディレクトリを初期化 |
 | | `task codex-work-init` | 会社用 Codex CLI の設定・共通ルール・スキルをリンク |
 | | `task sync-claude-work-skills` | 会社用 Claude Code の common + work スキルを同期 |
@@ -224,6 +226,10 @@ Claude Code / Codex / Antigravity（Gemini）で共有する資産は `shared/` 
 - `claude/skills`、`codex/skills`、`gemini/config/skills`、`pi/skills` は相対シンボリックリンクで参照（`pi/skills` は macbook のみ `~/.pi/agent/skills` へリンク）
 - Antigravity のグローバルスキルは `~/.gemini/config/skills/<skill-folder>/SKILL.md` として解決される
 - リンク更新は `task sync-skills` で実行
+- GitHub で配布されている外部スキル（yomiyasu など）は `gh skill install <owner/repo> <skill> --dir shared/skills/common` で取り込み、`task sync-skills` でリンクする
+  - 出典は gh skill が SKILL.md の frontmatter（`metadata.github-*`）に記録する。中身は手で直さない
+  - 更新は `task skill-outdated` で確認し、`task skill-update` で差し替えてから差分を読んでコミットする
+  - 差し替えた時点で全 CLI に効く（リンク先を直接書き換えるため）
 
 ### プラグインの共通管理
 

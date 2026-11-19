@@ -70,6 +70,19 @@ tasks:
         link_dir "$antigravity_only" "$antigravity_target" "../../../shared/skills/antigravity-only"
         link_dir "$pi_only" "$pi_target" "../../shared/skills/pi-only"
 
+  # ====================
+  # 外部スキルの更新（gh skill で入れたもの）
+  # ====================
+  skill-outdated:
+    desc: gh skill で入れた共通スキルに新しいリリースがあるか確認（ファイルは変えない）
+    cmds:
+      - bash {{.ROOT_DIR}}/scripts/skill-update.sh --dry-run {{.CLI_ARGS}}
+
+  skill-update:
+    desc: gh skill で入れた共通スキルを最新リリースへ差し替える（コミットしない。-- 名前 で個別指定）
+    cmds:
+      - bash {{.ROOT_DIR}}/scripts/skill-update.sh {{.CLI_ARGS}}
+
   sync-claude-work-skills:
     desc: 会社用 Claude Code に common + work のスキルを同期
     cmds:

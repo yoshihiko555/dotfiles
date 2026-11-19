@@ -19,3 +19,4 @@ dotfiles リポジトリ全体の意思決定のうち、**設定領域をまた
 | [ADR-20261013-0007](ADR-20261013-0007-pi-harness-separate-repo.md) | pi の設定は dotfiles、拡張は専用リポジトリ pi-harness で管理する | 採用 | 2026-10-13 | 共通ルールの生成に乗る/拡張は Node プロジェクトとして完結/認証情報を配らない | Agent/Structure |
 | [ADR-20261026-0008](ADR-20261026-0008-pi-settings-mutable-copy.md) | pi の settings.json を実ファイル + adopt 方式で管理し、端末固有の値は載せない | 採用 | 2026-10-26 | 端末 ID を公開しない/既存の apply・adopt に乗る/更新ごとに反映が止まらない | Agent/Nix |
 | [ADR-20261119-0009](ADR-20261119-0009-agent-relay-skill.md) | 別エージェントへの引き継ぎ・並列依頼は agent-relay スキルが担い、herdr の操作は全 CLI に配る付属スキルに任せる | 採用 | 2026-11-19 | 再生成する付属スキルに手を入れない/コマンドの正典を 1 か所に/口頭の引き継ぎをなくす | Agent/Terminal |
+| [ADR-20261119-0010](ADR-20261119-0010-external-skills-via-gh-skill.md) | GitHub で配布されている外部スキルは gh skill で共通スキルに取り込み、gh skill の更新機能で版を上げる | 採用 | 2026-11-19 | 全 CLI に既存のリンクで届く/出典と更新を gh skill に任せる/差分を読んでから取り込める | Agent/Skills |
