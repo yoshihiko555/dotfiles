@@ -7,7 +7,8 @@ description: |
   相談・設計議論のあとに「やることを取りこぼしたくない」「今はやらないが後日やりたい」
   という意図が見えた場合は、ユーザーが Notion と明言していなくても本スキルの利用を提案すること。
   会話内容に応じてタスクの粒度（1件にまとめる／複数に分割して親子化）を判断し、
-  必ず既存の「タスクテンプレート」を適用して登録する。
+  タスクテンプレートを適用して登録する。T A S K DB への登録には、Notion プラグインの
+  汎用タスク作成（Notion:create-task 等）ではなく本スキルを使う。
 metadata:
   short-description: 会話内容から Notion タスクDBへタスク登録
 ---
@@ -30,15 +31,15 @@ metadata:
 - 登録先は Notion の **タスクDB（`T A S K`）**。ID・プロパティ定義は `references/notion-schema.md` を参照する
 - 操作には **Notion MCP** を使う。ツール名のプレフィックスは環境で異なる
   （Claude Code: `mcp__claude_ai_Notion__notion-*` など）。以下では論理名（`search` / `fetch` /
-  `create-pages` / `query-data-sources`）で書く
+  `create-pages` / `update-page` / `query-data-sources`）で書く
 - Notion MCP が利用できない環境では、勝手に別手段（REST API を curl 等）を試さず、
   MCP を有効化するようユーザーに案内して中断する。認証情報を新たに要求しないため
 
 ## 最重要: タスクテンプレートを必ず使う（作成は2段階）
 
 タスクDBのページは、アイコンがチェックボックス（`checkmark-square_lightgray`）で統一されている。
-これは絵文字ではなく Notion 組み込みアイコンなので、`icon` 引数では再現できない。
-**`create-pages` に `template_id` を渡す**ことでのみ引き継がれる。
+これは絵文字ではなく Notion 組み込みアイコンで、**`create-pages` に `template_id` を渡す**と
+テンプレートから引き継がれる。
 
 そして `create-pages` は **`template_id` と `content` を同時に受け付けない**
 （`Cannot specify both 'content' and 'template_id'` で 400 になる）。
@@ -50,7 +51,7 @@ create-pages(
   parent = { data_source_id: <タスクDBのデータソースID> },
   pages  = [{ template_id: <タスクテンプレートのページID>, properties: { "タスク名": "..." } }]
 )
-# → 返却された page id / url を控える
+# → 返却された page id / url を控え、テンプレートの適用を確かめてから 2) に進む（下記）
 
 # 2) 本文を追記する
 update-page(
@@ -64,13 +65,15 @@ update-page(
 守るべき点は次の2つ。
 
 - **`icon` を指定しない。** `create-pages` でも `update-page` でも渡さない。
-  指定するとテンプレートのアイコンを上書きしてしまう。絵文字を選びたくなっても選ばない。
-  既存タスクと見た目が揃わなくなるのが唯一かつ致命的な問題
+  指定するとテンプレートのアイコンを上書きし、既存タスクと見た目が揃わなくなる
 - **テンプレートの既定値を尊重する。** ステータス=`待ち` / GTD種別=`INBOX` / 優先度=`低` は
   テンプレート側で設定済み。プロパティに含めず、テンプレートに任せる
 
-登録後、作成したタスクを1件 `fetch` してアイコンが `checkmark-square_lightgray` になっているか確認する。
-万一テンプレートが適用されていなければユーザーに報告する（黙って別のアイコンで代用しない）。
+テンプレートの適用は作成後に非同期で進む。本文を追記する前に `fetch` でアイコンが
+`icons/checkmark-square_lightgray` になっているか確かめ、まだなら間をおいて取り直す。
+取り直しても付かなければユーザーに報告する（黙って別のアイコンで代用しない）。
+`fetch` の結果に icon の項目自体が無いときは、未適用ではなく取得できなかったという意味なので、
+「確認できなかった」と報告する。
 
 ## 実行フロー
 
@@ -151,8 +154,8 @@ PROJECT DB（`references/notion-schema.md` 参照）を `query-data-sources` ま
 | `ステータス` | 常にテンプレート既定（`待ち`）。設定しない |
 | 上記以外 | 設定しない（開始日 / ポモロード / K E Y - R E S U L T など） |
 
-プロパティを設定したら、続けて `update-page` の `insert_content` で本文を追記する
-（→ [ページ本文](#ページ本文)）。
+作成したら、テンプレートの適用を `fetch` で確かめてから（→ 上の「最重要」節）、
+`update-page` の `insert_content` で本文を追記する（→ [ページ本文](#ページ本文)）。
 
 ### ステップ7: 報告する
 
@@ -201,7 +204,7 @@ PROJECT DB（`references/notion-schema.md` 参照）を `query-data-sources` ま
 
 - [ ] `create-pages` に `template_id` を渡し、`content` と `icon` は渡していない
 - [ ] 本文は `update-page` の `insert_content` で別途追記している
-- [ ] 作成したタスクのアイコンが `checkmark-square_lightgray` になっている（`fetch` で確認）
+- [ ] 作成したタスクのアイコンが `icons/checkmark-square_lightgray` になっている（`fetch` で確認。まだなら取り直す）
 - [ ] ステータス / GTD種別 / 優先度 が テンプレート既定（待ち / INBOX / 低）になっている
 - [ ] 期限日をユーザーの明示なしに設定していない
 - [ ] 登録前にユーザーの確認を取っている

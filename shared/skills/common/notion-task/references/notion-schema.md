@@ -28,9 +28,8 @@ MCP の `create-pages` は既定テンプレートを自動適用しないため
 | GTD種別 | `INBOX` |
 | 優先度 | `低` |
 
-アイコンは絵文字ではないため、`create-pages` の `icon` 引数（絵文字 / カスタム絵文字名 /
-外部画像URL のみ対応）では正しく再現できない。`template_id` 経由で継承させるのが唯一の手段。
-だから `icon` を指定してはいけない。
+`create-pages` の `icon` 引数は Notion アイコン識別子（`icons/...`）も受け付ける（ツールの説明による。
+実ページでは確かめていない）。このスキルではアイコンをテンプレートから継承させ、`icon` は渡さない。
 
 ### 本文は同時に渡せない（実測済み・2026-07-28）
 
@@ -43,7 +42,7 @@ The template will provide the page content.
 
 タスクテンプレートの本文は空なので、本文は作成後に `update-page`
 （`command: "insert_content"`, `position: {"type":"end"}`）で追記する。
-この2段階でアイコン・既定プロパティ・本文がすべて意図どおりになることを実ページで確認済み。
+テンプレートの適用は作成後に非同期で進むため、追記の前に `fetch` で適用を確かめる。
 
 ## タスクDB（`T A S K`）プロパティ
 
@@ -56,7 +55,7 @@ The template will provide the page content.
 | `期限日` | date | SQL では `date:期限日:start` |
 | `開始日` | date | SQL では `date:開始日:start` |
 | `プロジェクト名` | relation → PROJECT DB | ページURLの JSON 配列 |
-| `親アイテム` | relation → 自DB（上限1） | ページURLの JSON 文字列 |
+| `親アイテム` | relation → 自DB（上限1） | ページURLの配列（要素は1件） |
 | `サブアイテム` | relation → 自DB | 親側から見た子。子の `親アイテム` を設定すれば自動で埋まる |
 | `K E Y - R E S U L T` | relation | スキルからは設定しない |
 | `ポモロード_見込` / `ポモロード_実績` | number | スキルからは設定しない |
