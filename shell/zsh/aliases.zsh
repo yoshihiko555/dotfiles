@@ -44,6 +44,11 @@ alias dpsa='docker ps -a'
 alias conin='docker container exec -it'
 
 # --------------------------------------------
+# Kubernetes
+# --------------------------------------------
+alias k='kubectl'
+
+# --------------------------------------------
 # Development
 # --------------------------------------------
 # Wails
@@ -75,10 +80,13 @@ codex() {
     local embedded=1 arg
     for arg in "$@"; do
       case "$arg" in
-        agents|--remote|--remote=*) embedded=0; break ;;
+      agents | --remote | --remote=*)
+        embedded=0
+        break
+        ;;
       esac
     done
-    (( embedded )) && codex_args+=(--no-daemon)
+    ((embedded)) && codex_args+=(--no-daemon)
     codex_args+=(-c shell_environment_policy.inherit=all)
     codex_args+=(-c 'shell_environment_policy.include_only=["PATH","SHELL","TMPDIR","TEMP","TMP","HOME","LANG","LC_ALL","LC_CTYPE","LOGNAME","USER","HERDR_*","BROWSER_USE_*","NODE_REPL_*"]')
   fi
