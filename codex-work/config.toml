@@ -1,6 +1,6 @@
 # ~/.codex-work/config.toml からリンクする、会社用 Codex CLI 設定の正本。
 # 個人用とは独立して管理する。CLI が書き戻す設定もこのファイルに反映される。
-model_reasoning_effort = "high"
+model_reasoning_effort = "xhigh"
 personality = "pragmatic"
 web_search = "live"
 approval_policy = "on-request"
@@ -9,7 +9,7 @@ default_permissions = "guarded-workspace"
 # ChatGPT の会社アカウントで認証する。個人用の認証ファイルは共有しない。
 forced_login_method = "chatgpt"
 cli_auth_credentials_store = "file"
-model = "gpt-6-astra"
+model = "gpt-6.2-sol"
 
 [permissions.guarded-workspace]
 extends = ":workspace"
@@ -24,10 +24,13 @@ enabled = true
 screen_reader_detection_done = true
 
 [tui.model_availability_nux]
-"gpt-6.1-sol" = 3
+"gpt-6.1-sol" = 4
 
 [projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles"]
 trust_level = "trusted"
 
 [projects."/Users/yoshihiko/ghq/github-anvil/shuto-takizawa/work-knowledge"]
+trust_level = "trusted"
+
+[projects."/Users/yoshihiko/ghq/github.com/yoshihiko555/hermes-managements"]
 trust_level = "trusted"
