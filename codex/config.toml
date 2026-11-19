@@ -291,6 +291,7 @@ extends = ":workspace"
 [permissions.guarded-workspace.filesystem]
 # homebase のエージェント用のトークン。エージェントは読まない（homebase の NFR-012）
 "~/.config/homebase/agent-token" = "none"
+"~/.local/state/homebase-dev/planner" = "none"
 
 # ネットワーク通信を許可する（接続先の制限なし）。ファイルの読み取り禁止は維持する。
 [permissions.guarded-workspace.network]

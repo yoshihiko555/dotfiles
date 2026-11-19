@@ -115,6 +115,30 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern = ["pnpm", "dev:planner"],
+    decision = "forbidden",
+    justification = "本物の Notion とカレンダーを読む開発の起動はユーザーだけが行う（homebase の NFR-026）。",
+    match = [
+        "pnpm dev:planner",
+    ],
+    not_match = [
+        "pnpm dev",
+    ],
+)
+
+prefix_rule(
+    pattern = ["pnpm", "pair:planner"],
+    decision = "forbidden",
+    justification = "本物の Notion とカレンダーを読む場所へのペアリングはユーザーだけが行う（homebase の NFR-026）。",
+    match = [
+        "pnpm pair:planner",
+    ],
+    not_match = [
+        "pnpm pair",
+    ],
+)
+
+prefix_rule(
     pattern = [["npm", "pnpm", "yarn"], ["install", "add", "remove", "upgrade"]],
     decision = "prompt",
     justification = "Dependency changes require explicit approval outside the sandbox.",
