@@ -6,7 +6,7 @@ description: |
   改善提案・トリガーテスト案を生成する。スキルの精度向上・レビュー・
   「このスキルを分析して」「設定を評価して」という依頼で使用する。読み取り専用。
 argument-hint: "<path/to/config-file>"
-allowed-tools: Read, Write, Glob, Grep
+allowed-tools: Read, Write, Glob, Grep, Skill, Bash(git log:*), Bash(git blame:*)
 ---
 
 # config-analyze
@@ -62,6 +62,15 @@ proceeding.
 4. For Context targets, Glob the repo for sibling context files
    (`**/CLAUDE.md`, `**/AGENTS.md`) and read them in full — CF5 sync
    scoring needs an actual drift diff, not just filenames.
+5. Resolve the target model (rubric "Target Model"): the model the target
+   pins in frontmatter (`model:`) if any, otherwise the model running this
+   session.
+6. List the tools the target tells the agent to call (MCP tools, CLIs) and
+   read each one's current description: an MCP tool's schema as this
+   session sees it (in Claude Code, load deferred tools with ToolSearch),
+   or a CLI's `--help` output (run nothing beyond `--help`). Note what the
+   target claims about each tool — parameters, limits, errors, return
+   values — for the MF check.
 
 ## Step 4: Measure
 
@@ -86,6 +95,15 @@ scoring criteria, citing the Step 4 measurements as evidence.
 - Skill / Agent / Rule → the 7 axes (Axis 1 is N/A for Rule files)
 - Context → the CF1-CF6 axes ("Context-File Axes" section of the rubric)
   instead of the 7 axes
+- Every type → also Model Fit (MF). Invoke the `claude-api` skill with
+  `prompt-audit <target path> and its references/ — target model: <model id>. Do not apply edits.`
+  and score MF from its findings. Also compare the claims noted in Step 3.6
+  with the tools' current descriptions. A contradiction is a
+  high-confidence MF finding; a claim the description neither confirms
+  nor contradicts is low confidence.
+  If the Skill tool or `claude-api` is not available (e.g. running in
+  Codex, Gemini, or pi), skip prompt-audit, say why, and score MF from the
+  tool comparison alone — or N/A if the target calls no tools.
 
 ## Step 6: Generate ANALYSIS.md
 
@@ -102,6 +120,7 @@ Cite line numbers for every finding so `/config-tune` can act on them.
 | 種別 | {Skill / Agent / Context (CLAUDE.md / AGENTS.md) / Rule} |
 | 消費者 | {Context のみ: Claude Code / Codex / Gemini / 全エージェント} |
 | 名前 | {name} |
+| 対象モデル | {model id}（frontmatter の指定 / 実行中のモデル） |
 | ファイルパス | {absolute path} |
 | 本文行数 | {N} 行（目安: Skill は 500 行未満） |
 | description | {N} 文字 / 約 {N} 語（上限 1024 文字、目安 100-200 語） |
@@ -144,10 +163,21 @@ Cite line numbers for every finding so `/config-tune` can act on them.
 | 5. アンチパターン | 中 | ... | ... |
 | 6. 使用例の質 | 中 | ... | ... |
 | 7. 一貫性・互換性 | 低 | ... | ... |
+| MF. モデル適合 | 高 | ... | ... |
 
-Context ファイルの場合は上の 7 行を CF 軸の 6 行に差し替える:
+Context ファイルの場合は 1〜7 の行を CF 軸の 6 行に差し替える（MF の行は残す）:
 CF1 内容分類（高）/ CF2 剪定テスト（高）/ CF3 実施チャネル（高）/
 CF4 具体性（中）/ CF5 消費者適合・同期（中）/ CF6 トークンコスト（低）
+
+## モデル適合（prompt-audit）
+
+prompt-audit の指摘と、Step 3.6 で見つけたツールの現行仕様との食い違いを、
+確度の高い順に並べる（食い違いのパターン欄は「ツール仕様との食い違い」）。
+prompt-audit が N/A の場合はその理由も書く。
+
+| 位置 | 引用 | パターン | 確度 | 提案 |
+|------|------|------|------|------|
+| {file:line} | {quote} | {group / row} | 高 / 中 / 低 | {remove / rewrite「…」 / flag} |
 
 ## チューニング推奨事項
 
@@ -156,6 +186,9 @@ CF4 具体性（中）/ CF5 消費者適合・同期（中）/ CF6 トークン�
 - 対象: {section / axis} （行番号）
 - 現状: ...
 - 提案: 具体的な変更内容（可能なら Before/After の文面まで）
+
+MF の高・中確度の指摘も項目にし、提案には prompt-audit の置き換え案を使う。
+低確度と flag は項目にしない。
 
 ## トリガーテスト案（Skill のみ）
 
@@ -201,7 +234,8 @@ CF4 具体性（中）/ CF5 消費者適合・同期（中）/ CF6 トークン�
 
 種別: {type}
 本文: {N} 行 / description: {N} 文字
-ルーブリック: 高優先度軸 {Good数}/{対象軸数} Good
+対象モデル: {model id}
+ルーブリック: 高優先度軸 {Good数}/{対象軸数} Good（MF: {評価}）
 高優先度の課題: {count} 件 / 中: {count} 件 / 低: {count} 件
 
 ANALYSIS.md を {path} に生成しました。

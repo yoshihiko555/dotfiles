@@ -7,7 +7,7 @@ description: |
   「description を直して」という依頼、または ANALYSIS.md 生成後の
   改善実行フェーズで使用する。
 argument-hint: "<path/to/config-file> [--dry-run]"
-allowed-tools: Read, Write, Edit, Glob, Grep, AskUserQuestion, Task
+allowed-tools: Read, Write, Edit, Glob, Grep, AskUserQuestion, Agent, Skill
 ---
 
 # config-tune
@@ -66,6 +66,7 @@ For each selected item:
 Ground each proposal in the rubric axis that flagged the issue. When editing,
 follow the rubric's own guidance (motivate constraints instead of adding
 ALL-CAPS MUSTs, prefer deleting over adding, one default + escape hatch).
+For MF items, start from prompt-audit's replacement text in ANALYSIS.md.
 
 **Language rules:**
 - User-facing explanations: Japanese
@@ -75,10 +76,9 @@ ALL-CAPS MUSTs, prefer deleting over adding, one default + escape hatch).
 **Context files (CLAUDE.md / AGENTS.md) — curation rules:**
 Proposals are limited to four moves: delete, make concrete, relocate
 (to hook / permission / skill), or sync drifted sibling copies. Net-new
-lines are allowed ONLY when the proposal cites an observed failure the line
-would have prevented — benchmark evidence shows speculative LLM-generated
-context lines tend to reduce agent success rates, so "sounds prudent" is
-not a reason to add.
+lines are allowed only when the proposal cites an observed failure the line
+would have prevented, or an MF finding that the target model needs it —
+"sounds prudent" is not a reason to add.
 
 ### 4b. Present preview
 
@@ -114,7 +114,7 @@ isolation:
 
 1. Take the test queries from ANALYSIS.md「トリガーテスト案」(should-trigger
    5 / should-not-trigger 5). If absent, generate them per the same rules.
-2. Spawn a fresh subagent (Task tool) with ONLY this context — no access to
+2. Spawn a fresh subagent (Agent tool) with ONLY this context — no access to
    this conversation: the tuned skill's name + new description, the names +
    descriptions of 3-5 sibling skills as distractors, and the 10 queries.
    Instruct it: "For each query, answer which skill (if any) you would
@@ -135,7 +135,7 @@ instead:
 1. Take the test pairs from ANALYSIS.md「遵守テスト案」(5 instruction →
    task + expected-behavior pairs). If absent, generate them per the same
    rules.
-2. For each pair, spawn a fresh subagent (Task tool) whose ONLY instructions
+2. For each pair, spawn a fresh subagent (Agent tool) whose ONLY instructions
    are the tuned file's content plus the task — no access to this
    conversation, no other context files.
 3. Score each pair: expected behavior observed / not observed.
