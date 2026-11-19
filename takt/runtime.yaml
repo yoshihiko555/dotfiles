@@ -38,11 +38,11 @@ provider:
       provider: claude-sdk
       model: opus
     # NOTE: model を省略すると provider 側の既定モデルになる。takt 側で固定するため明示する。
-    # NOTE: reasoning_effort は medium (gpt-6.1-sol の既定は low)。消費の主要因は effort 側なので、
+    # NOTE: reasoning_effort は medium (gpt-6.2-sol の既定は low)。消費の主要因は effort 側なので、
     #       まだ重いときは terra へ落とす前に effort を下げる方を先に試す。
     codex-sol-medium:
       provider: codex
-      model: gpt-6.1-sol
+      model: gpt-6.2-sol
       options:
         reasoning_effort: medium
     # deepseek-v4.1-flash: context 1,000,000 / max output 384,000。消費するのは opencode-go の

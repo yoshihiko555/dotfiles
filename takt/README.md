@@ -44,7 +44,7 @@ takt はプリセットの探索先が symlink だと拒否し、そのプリセ
 | 対象 | profile | 中身 |
 |---|---|---|
 | 既定（下記以外すべて） | `claude-opus` | Claude（`claude-sdk`, `opus`） |
-| tag `coding` / `test-planning` | `codex-sol-medium` | Codex（`gpt-6.1-sol`, reasoning_effort `medium`） |
+| tag `coding` / `test-planning` | `codex-sol-medium` | Codex（`gpt-6.2-sol`, reasoning_effort `medium`） |
 | step `ai-antipattern-review-2nd` | `opencode-deepseek-flash` | OpenCode（`opencode-go/deepseek-v4.1-flash`） |
 
 - 計画・レビュー・最終判定（tag `plan` / `review` / `final-gate` / `supervise` など）、companion、
@@ -66,7 +66,7 @@ takt はプリセットの探索先が symlink だと拒否し、そのプリセ
   同じ優先度で別の profile に当たると fail-fast します。組み合わせで現れる tag は同じ profile に揃えます。
 - Claude の provider 名は `claude-sdk` で揃えています。0.68.0 で `claude` は `claude-sdk` の別名になりましたが、
   `config.yaml` の `provider_profiles` は provider に書いた名前のまま引かれるため、名前が混在すると権限設定が効きません。
-- レートリミット時は `config.yaml` の `rate_limit_fallback` で Codex（`gpt-6.1-sol`）へ退避して実行を継続します
+- レートリミット時は `config.yaml` の `rate_limit_fallback` で Codex（`gpt-6.2-sol`）へ退避して実行を継続します
   （runtime モードでも `config.yaml` から読まれます）。`switch_chain` は options を書けないため、
   この経路の reasoning_effort は `~/.codex/config.toml` の `model_reasoning_effort` に従います。
 
