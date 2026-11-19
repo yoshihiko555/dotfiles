@@ -22,4 +22,4 @@ Based on the conversation context and the above changes, create a single git com
 3. If you're unsure which files are relevant, ask the user before proceeding.
 4. Use `git add <specific-file>` for each relevant file individually, rather than `git add .` or `git add -A`.
 
-You have the capability to call multiple tools in a single response. Stage only the relevant files and create the commit using a single message. Do not use any other tools or do anything else. Do not send any other text or messages besides these tool calls.
+Stage only the relevant files and create the commit. Do nothing else in this skill.

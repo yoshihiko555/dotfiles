@@ -70,7 +70,6 @@ ALL-CAPS MUSTs, prefer deleting over adding, one default + escape hatch).
 **Language rules:**
 - User-facing explanations: Japanese
 - Configuration file content (edits): keep the file's existing language
-  (this repo's skills use English bodies for token efficiency)
 - ANALYSIS.md content: Japanese
 
 **Context files (CLAUDE.md / AGENTS.md) — curation rules:**
@@ -123,8 +122,9 @@ isolation:
    A fresh subagent matters because this conversation already knows the
    skill's full body and would over-trigger.
 3. Score: should-trigger hit rate and should-not-trigger false-fire rate.
-4. If any should-trigger query misses: revise the description (add the
-   missing trigger vocabulary), re-run once. If it still misses after 2
+4. If any should-trigger query misses: revise the description so it names
+   the kind of request that query represents (generalize; don't paste the
+   query's wording in), re-run once. If it still misses after 2
    attempts, report the failing queries and leave the decision to the user.
 
 ### 5a-2. Adherence test (Context only, when instructions changed)

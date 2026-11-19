@@ -279,7 +279,7 @@ without them (that trades Axis 2 for cosmetics).
 
 | Type | Elements that usually pay for themselves |
 |------|------------------------------------------|
-| Skill | Step-by-step procedure; input spec (`$ARGUMENTS`); output format template; constraints/scope; verification criteria |
+| Skill | Goal and constraints/scope; numbered steps only where order matters; input spec (`$ARGUMENTS`); output format template; verification criteria |
 | Agent | Role & routing criteria; tool assignments; output format; decision principles |
 | CLAUDE.md | Project facts (structure, commands); conventions; pointers to skills/docs. Procedures found here → recommend extracting to a skill |
 | Rule | Trigger condition; directives; an example if the directive is ambiguous |

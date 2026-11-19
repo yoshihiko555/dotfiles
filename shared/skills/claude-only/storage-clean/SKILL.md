@@ -97,4 +97,4 @@ bash <skill-dir>/scripts/measure.sh
 
 ## Nix 自動GCの確認について
 
-`measure.sh` の出力に `org.nixos.nix-gc.plist` の有無が出る。無い場合は「macbook host に `nix.gc.automatic` がまだ宣言されていないかもしれません」と伝えるだけでよい。GC の設定変更や `nix switch` の実行はこのスキルの仕事ではない（宣言的な nix 設定として別途管理されている）。
+`measure.sh` の出力に `org.nixos.nix-gc.plist` の有無が出る。無い場合は「macbook host の `nix.gc.automatic` の宣言が、まだ switch で適用されていないかもしれません」と伝えるだけでよい。GC の設定変更や `nix switch` の実行はこのスキルの仕事ではない（宣言的な nix 設定として別途管理されている）。
