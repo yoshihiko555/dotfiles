@@ -2,6 +2,10 @@
 	defaultBranch = main
 [pull]
 	rebase = false
+[push]
+	autoSetupRemote = true
+[diff]
+	algorithm = histogram
 [core]
 	autocrlf = input
 	editor = nvim
