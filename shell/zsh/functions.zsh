@@ -113,7 +113,7 @@ mdopen() {
   fi
 
   file=$(cd "$dir" && find . -name "*.md" -type f | sed 's|^\./||' | sort -r \
-    | fzf --preview 'head -40 -- {}')
+    | fzf --preview 'sh ~/.zsh/fzf-preview.sh 40 {}')
   rc=$?
   [[ $rc -ne 0 ]] && return "$rc"
   [[ -z "$file" ]] && return 0
@@ -144,7 +144,7 @@ mde() {
     shift
   else
     file=$(find . -name "*.md" -type f -not -path '*/node_modules/*' -not -path '*/.git/*' \
-      | sed 's|^\./||' | sort -r | fzf --preview 'head -40 -- {}') || return
+      | sed 's|^\./||' | sort -r | fzf --preview 'sh ~/.zsh/fzf-preview.sh 40 {}') || return
     [[ -z "$file" ]] && return 0
   fi
   npx -y mdecho@1.0.5 -f "$file" "$@"
@@ -189,7 +189,7 @@ fkill() {
 # fzf + ファイル検索して nvim で開く
 fe() {
   local file
-  file=$(find . -type f 2>/dev/null | fzf --preview 'head -100 -- {}')
+  file=$(find . -type f 2>/dev/null | fzf --preview 'sh ~/.zsh/fzf-preview.sh 100 {}')
   [[ -n "$file" ]] && nvim "$file"
 }
 

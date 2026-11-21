@@ -29,6 +29,7 @@ apply = ["defer"]
 [plugins.fzf-tab-config]
 inline = '''
 zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
+zstyle ':fzf-tab:complete:*' fzf-preview '[[ -n $realpath ]] && sh ~/.zsh/fzf-preview.sh 100 "$realpath"'
 zstyle ':fzf-tab:*' fzf-flags \
     --layout=reverse \
     --border=rounded \

@@ -44,6 +44,7 @@ in
       switchaudio-osx
 
       # --- 新規導入 ---
+      bat # fzf のファイルプレビュー
       delve # Neovim の Go デバッグ。Go ランタイムは引き続き mise で管理
       python3Packages.debugpy # Neovim の Python デバッグ（debugpy-adapter）。実行する Python はプロジェクトの venv
       vscode-js-debug # Neovim の TypeScript / JavaScript デバッグ（js-debug）。Node は内包版を使う

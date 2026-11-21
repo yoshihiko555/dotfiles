@@ -10,6 +10,7 @@
   home.packages = with pkgs; [
     ccusage # shell/zsh/ccusage.zsh の ccu が使う
     d2
+    delta # 共有の Git 設定で差分のページャに使う
     fd
     fzf
     gh

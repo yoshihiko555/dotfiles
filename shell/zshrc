@@ -91,8 +91,9 @@ if command -v starship >/dev/null 2>&1; then
 fi
 
 # fzf tmux フローティング連携（display-popup で表示）
+export BAT_THEME=TwoDark
 export FZF_TMUX_OPTS="--tmux center,80%,60%"
-export FZF_CTRL_T_OPTS="--tmux center,80%,60%"
+export FZF_CTRL_T_OPTS='--tmux center,80%,60% --preview "sh ~/.zsh/fzf-preview.sh 100 {}"'
 export FZF_ALT_C_OPTS="--tmux center,60%,40%"
 
 # fzf のキーバインド（Ctrl-R 履歴 / Ctrl-T ファイル / Alt-C ディレクトリ）と ** の補完

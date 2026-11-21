@@ -5,6 +5,13 @@
 [core]
 	autocrlf = input
 	editor = nvim
+	pager = delta
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	line-numbers = true
+	navigate = true
+	syntax-theme = TwoDark
 [gtr "worktrees"]
 	dir = .worktrees
 [gtr "editor"]
