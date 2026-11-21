@@ -12,6 +12,10 @@
 	line-numbers = true
 	navigate = true
 	syntax-theme = TwoDark
+	# 漢字・かな（長音符を含む）は1文字ずつ比較し、他の単語は従来どおりまとめる。
+	word-diff-regex = "[\\w--[\\p{scx:Han}\\p{scx:Hiragana}\\p{scx:Katakana}]]+"
+	# 「January plan → February plan」程度の変更も同じ行として比較する。
+	max-line-distance = 0.66
 [gtr "worktrees"]
 	dir = .worktrees
 [gtr "editor"]
