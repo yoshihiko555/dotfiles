@@ -91,11 +91,12 @@ gui:
   filterMode: fuzzy
   showNumstatInFilesView: true
   # TokyoNight Moon（tokyonight.nvim の extras/lazygit と同じ値）。
-  # 使っていないパネルの枠だけは、背景画像の水色に溶けないよう文字と同じ色にする
+  # 枠だけは変える。使っていないパネルは背景画像の水色に溶けないよう文字と同じ色、
+  # 選択中のパネルはシェルの有効なコマンドと同じ cyan
   theme:
-    activeBorderColor: ["#ff966c", bold]
+    activeBorderColor: ["#86e1fc", bold]
     inactiveBorderColor: ["#c8d3f5"]
-    searchingActiveBorderColor: ["#ff966c", bold]
+    searchingActiveBorderColor: ["#86e1fc", bold]
     optionsTextColor: ["#82aaff"]
     selectedLineBgColor: ["#2d3f76"]
     cherryPickedCommitFgColor: ["#82aaff"]
