@@ -53,8 +53,8 @@
 - 作業ブランチは常に `main` から切ってください。
 - `main` へ直接 push しないでください。変更は PR を作成して取り込みます。
 - `main` への統合は GitHub 上の squash merge を前提にしてください。
-- ユーザー向け変更がある PR では `CHANGELOG.md` の `Unreleased` を更新してください。
-- changelog 更新不要の変更（テストのみ、内部整理など）は、その判断を PR 内で明示してください。
+- `CHANGELOG.md` があるリポジトリでは、ユーザー向け変更がある PR で `Unreleased` を更新してください。更新不要の変更（テストのみ、内部整理など）は、その判断を PR 内で明示してください。
+- `CHANGELOG.md` が無いリポジトリでは作らず、PR やコミットでも changelog に触れないでください。
 - 競合時は PR branch 側で `origin/main` を取り込んで解消してください。
 - release は root worktree の `main` で行います。作業用 worktree から release を実行しないでください。
 - ブランチ名は `<種別>/<内容>` にしてください。種別は feat / fix / chore / docs / refactor / test / ci / perf / build / release で、どれにも当たらなければ task にします。内容は小文字の英数字をハイフンでつなぎます（例: `fix/hook-tweak`）。
