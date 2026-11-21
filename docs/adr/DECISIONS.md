@@ -20,3 +20,4 @@ dotfiles リポジトリ全体の意思決定のうち、**設定領域をまた
 | [ADR-20261026-0008](ADR-20261026-0008-pi-settings-mutable-copy.md) | pi の settings.json を実ファイル + adopt 方式で管理し、端末固有の値は載せない | 採用 | 2026-10-26 | 端末 ID を公開しない/既存の apply・adopt に乗る/更新ごとに反映が止まらない | Agent/Nix |
 | [ADR-20261119-0009](ADR-20261119-0009-agent-relay-skill.md) | 別エージェントへの引き継ぎ・並列依頼は agent-relay スキルが担い、herdr の操作は全 CLI に配る付属スキルに任せる | 採用 | 2026-11-19 | 再生成する付属スキルに手を入れない/コマンドの正典を 1 か所に/口頭の引き継ぎをなくす | Agent/Terminal |
 | [ADR-20261119-0010](ADR-20261119-0010-external-skills-via-gh-skill.md) | GitHub で配布されている外部スキルは gh skill で共通スキルに取り込み、gh skill の更新機能で版を上げる | 採用 | 2026-11-19 | 全 CLI に既存のリンクで届く/出典と更新を gh skill に任せる/差分を読んでから取り込める | Agent/Skills |
+| [ADR-20261121-0011](ADR-20261121-0011-zsh-prompt-stay-sync.md) | プロンプトは starship の同期描画のまま使い、Enter ごとの待ちを減らす変更は入れない | 採用 | 2026-11-21 | 普段の待ちは 30ms 前後/縮める手段は表示を失うか未成熟か保守が細い | Shell/Performance |
