@@ -40,6 +40,7 @@ cheat() {
   cc        claude           ccp    claude (個人)
   ccw       会社Claude      cc-dg  権限スキップ
   cswap-relogin  claude-swap で失効したアカウントを再登録
+  ccu       Claude・Codex の使用量を個人/仕事別に (ccu help で詳細)
   cc-r      claude resume    cx     codex
   ccf       claude subagent委譲モード
   ccx       claude 切替式 (/model gpt-6.1-sol-claude)  ccx -f 委譲モード

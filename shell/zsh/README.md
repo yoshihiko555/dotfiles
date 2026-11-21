@@ -14,6 +14,7 @@
 | `cc-interrupt.zsh` | Claude Code 中断証跡ロガー (cc_interrupt) |
 | `claude.zsh` | Claude Code 会社アカウント切替 (ccw) / CLIProxyAPI 切替 (ccx) |
 | `codex.zsh` | Codex CLI 会社アカウント切替 (cxw) |
+| `ccusage.zsh` | Claude Code・Codex の使用量を個人と仕事のアカウント別に表示 (ccu) |
 | `takt.zsh` | takt 会社アカウント切替 (taktw) |
 | `nix.zsh` | nix-darwin 反映コマンド (nxb, nxs, nxg 等) / Homebrew 更新 (bxu) / hermes リモート反映 (hxb, hxs, hxg 等) |
 | `screenpipe.zsh` | screenpipe の一時停止 / 再開 / 状態確認 / 実体の復旧 (spoff, spon, sps, spfix) |
@@ -32,6 +33,32 @@ dotfiles で `task codex-work-init` を実行し、新しいターミナルで `
 - `cxw` も `aliases.zsh` の `codex` 関数を使い、Herdr 用の環境変数調整と nice を引き継ぐ。
 - 親シェルの API キー・アクセストークン・workload identity・SQLite 保存先の指定は、会社用の起動時だけ解除する。
 - 共通スキルを追加・削除したら `task codex-work-init` を再実行する。既存の会社用設定・認証・履歴は保持する。
+
+## アカウント別の使用量 (`ccu`)
+
+[ccusage](https://github.com/ccusage/ccusage) の表を、次の順に見出しつきで 4 つ出す。
+ccusage は複数のディレクトリを渡すと合算するため、1 つずつ渡して別々に集計する。
+
+1. Claude Code・個人（`~/.claude`）
+2. Claude Code・仕事（`CLAUDE_WORK_CONFIG_DIR`、既定 `~/.claude-work`）
+3. Codex・個人（`~/.codex`）
+4. Codex・仕事（`CODEX_WORK_HOME`、既定 `~/.codex-work`）
+
+```sh
+ccu                     # 今月だけ（monthly --last 1 --compact）
+ccu daily --last 7      # 引数は ccusage claude / codex の後ろにそのまま渡す
+ccu --breakdown         # 先頭がオプションなら monthly を補う（既定の --last 1 --compact は付かない）
+ccu monthly --since 20261101 -z Asia/Tokyo
+ccu help                # チートシート（-h / --help も同じ）
+```
+
+- ccusage 本体は Nix（`config/nix/home/packages.nix`）で入れる。
+- 個人側は `CLAUDE_CONFIG_DIR` / `CODEX_HOME` を外して呼ぶ。Claude Code のセッション内から呼んでも仕事側の値に引きずられない。
+- Codex に無いサブコマンド（`weekly` / `blocks` / `statusline`）では Codex の表を飛ばす。
+- ディレクトリが無いアカウント（hermes の仕事側など）は 1 行出して飛ばす。
+- 1 つが失敗しても残りは出し、最後に非 0 で終わる。
+- `--offline` は既定で付けない。付けると内蔵の価格表だけになり、新しいモデルのコストが抜ける。外しても取りに行くのは価格表だけで、使用量は送らない。
+- `--compact` で列が減るのは Claude の表だけ（キャッシュの列と合計トークンの列が隠れ、金額にはキャッシュ分が入ったまま）。Codex の表は全列のまま出る。
 
 ## Codex の trust 設定 (`trust`)
 
