@@ -197,6 +197,7 @@ in
             "90962A27-5A67-4F0D-817E-BE333FF3DD49" = "stock-add";
             "7D1C4E82-3A9B-4F60-B5D2-8C4E1A9F6B30" = "container";
             "26BC265D-A391-4767-9655-615C02091AB8" = "taskfile";
+            "A978FB4A-9CF0-4BA7-818C-62FF92D3878B" = "workflow-list";
           };
           pairs = lib.mapAttrsToList (uuid: name: lib.escapeShellArg "${uuid}=${name}") workflows;
         in

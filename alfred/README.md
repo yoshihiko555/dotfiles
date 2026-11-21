@@ -527,6 +527,23 @@ bundleid を持つため `alfred_workflow_data` は Alfred のサポートフォ
 
 **依存:** `go-task`（`task` コマンド。Nix 管理）。
 
+### workflow-list
+
+自作ワークフロー（この `alfred/` にあるもの）のキーワードを一覧するワークフロー。
+
+**キーワード:** `wf`
+
+**使い方:**
+1. Alfred で `wf` と入力すると、キーワード・名前・説明が並ぶ（続けて入力すると絞り込める）
+2. 選んで Enter を押すと、そのキーワードが入力欄に入った状態で Alfred が開き直す（例: `fna `）
+
+**動作:**
+
+- 呼ぶたびに `alfred/*/info.plist` を読む。ワークフローを足しても一覧の手入れは要らない。
+- 載せるのは Keyword / Script Filter / List Filter のうちキーワードが空でないもの。無効化したワークフローと自分自身は除く。
+- 説明は `info.plist` の `description`、空なら入力欄の subtext / title を使う。
+- 組み込み機能や外部ワークフローも含めた全キーワードは、Alfred 組み込みの `?keywords` で見られる（選ぶと設定画面が開く）。
+
 ## 外部ワークフローの設定メモ
 
 リポジトリ管理外（Alfred Gallery からインストール）のワークフローのうち、
@@ -605,6 +622,10 @@ alfred/
 ├── taskfile/
 │   ├── info.plist
 │   ├── icon.png
+│   └── .uuid
+├── workflow-list/
+│   ├── info.plist
+│   ├── list.py
 │   └── .uuid
 └── README.md
 ```

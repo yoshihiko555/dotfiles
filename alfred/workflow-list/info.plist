@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.yoshihiko555.workflow-list</string>
+	<key>category</key>
+	<string>Tools</string>
+	<key>connections</key>
+	<dict>
+		<key>6D37A52A-3E21-47D8-8893-3BB60FA46479</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>371DAD1C-D931-49C6-9953-F5571B3DF7DE</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>yoshihiko</string>
+	<key>description</key>
+	<string>自作ワークフローのキーワードを一覧し、選んだキーワードを入力欄に入れる</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Workflow List</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<true/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>68</integer>
+				<key>keyword</key>
+				<string>wf</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string></string>
+				<key>script</key>
+				<string>#!/bin/zsh
+# symlink 経由でも list.py を見つけられるよう、ワークフローディレクトリへ移動する。
+cd "${alfred_preferences}/workflows/${alfred_workflow_uid}" 2&gt;/dev/null || true
+
+/usr/bin/python3 ./list.py
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>キーワード・名前・説明で絞り込み、Enter でそのキーワードを入力</string>
+				<key>title</key>
+				<string>自作ワークフロー一覧</string>
+				<key>type</key>
+				<integer>11</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>6D37A52A-3E21-47D8-8893-3BB60FA46479</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>#!/bin/zsh
+# 選んだキーワードで Alfred を開き直す（Script Filter の autocomplete では wf の後ろにしか入らない）。
+osascript -e 'on run argv' \
+  -e 'tell application id "com.runningwithcrayons.Alfred" to search (item 1 of argv)' \
+  -e 'end run' "${1:-}"
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>11</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>371DAD1C-D931-49C6-9953-F5571B3DF7DE</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string></string>
+	<key>uidata</key>
+	<dict>
+		<key>371DAD1C-D931-49C6-9953-F5571B3DF7DE</key>
+		<dict>
+			<key>xpos</key>
+			<integer>475</integer>
+			<key>ypos</key>
+			<integer>300</integer>
+		</dict>
+		<key>6D37A52A-3E21-47D8-8893-3BB60FA46479</key>
+		<dict>
+			<key>xpos</key>
+			<integer>175</integer>
+			<key>ypos</key>
+			<integer>300</integer>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array/>
+	<key>version</key>
+	<string></string>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>
