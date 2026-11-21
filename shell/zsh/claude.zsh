@@ -66,6 +66,34 @@ cswap-relogin() {
 }
 
 # ============================================
+# Claude Code profile（用途別の設定を重ねる）
+# ============================================
+
+# claude/profiles/<name>/ の settings.json を --settings、prompt.md を
+# --append-system-prompt-file で重ねて起動する。ログイン・履歴・MCP 登録は共有する。
+CLAUDE_PROFILES_DIR="${CLAUDE_PROFILES_DIR:-$DOTFILES/claude/profiles}"
+
+ccprof() {
+  local name="$1"
+  local -a profiles args
+  profiles=("$CLAUDE_PROFILES_DIR"/*(N/:t))
+  if [[ -z "$name" || "$name" == -* ]]; then
+    echo "usage: ccprof <profile> [claude の引数...]  (profiles: ${profiles[*]})" >&2
+    return 1
+  fi
+  local dir="$CLAUDE_PROFILES_DIR/$name"
+  if [[ ! -d "$dir" ]]; then
+    echo "ccprof: profile '$name' が無い (profiles: ${profiles[*]})" >&2
+    return 1
+  fi
+  shift
+  [[ -f "$dir/settings.json" ]] && args+=(--settings "$dir/settings.json")
+  [[ -f "$dir/prompt.md" ]] && args+=(--append-system-prompt-file "$dir/prompt.md")
+  # statusline.py が profile 名を表示する
+  CLAUDE_PROFILE="$name" command claude "${args[@]}" "$@"
+}
+
+# ============================================
 # subagent 委譲モード (ccf / ccx -f 共通)
 # ============================================
 

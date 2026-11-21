@@ -354,6 +354,7 @@ declare_context() {
     "$relpath" "null" "false" "$lm" "整合性チェック: $refnote"
 }
 declare_context "$DOTFILES_ROOT/shared/agents/core.md" "core" "Claude,Codex,Gemini"
+declare_context "$DOTFILES_ROOT/shared/agents/dev.md" "dev" "Claude,Codex,Gemini"
 declare_context "$DOTFILES_ROOT/shared/agents/diff-claude.md" "diff-claude" "Claude"
 declare_context "$DOTFILES_ROOT/shared/agents/diff-codex.md" "diff-codex" "Codex"
 declare_context "$DOTFILES_ROOT/shared/agents/diff-gemini.md" "diff-gemini" "Gemini"

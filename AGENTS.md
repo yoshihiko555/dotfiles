@@ -1,6 +1,6 @@
 # dotfiles repository instructions
 
-共通ルールは `shared/agents/core.md` を参照（各 CLI のグローバル設定として配布済み）。
+共通ルールは `shared/agents/core.md`、開発向けは `shared/agents/dev.md` を参照（各 CLI のグローバル設定として配布済み）。
 このファイルには当リポジトリ固有のルールのみを書く。
 
 ## ドキュメント

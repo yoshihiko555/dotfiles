@@ -1,0 +1,3 @@
+{
+  "claudeMdExcludes": ["**/shared/agents/dev.md"]
+}

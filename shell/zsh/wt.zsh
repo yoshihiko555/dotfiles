@@ -64,7 +64,7 @@ _wt_slugify() {
   printf '%s\n' "$slug"
 }
 
-# 種別の一覧は shared/agents/core.md の Git 節と揃える
+# 種別の一覧は shared/agents/dev.md の Git 節と揃える
 _wt_normalize_type() {
   case "$1" in
     feat|feature)

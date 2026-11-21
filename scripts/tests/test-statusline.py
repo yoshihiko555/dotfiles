@@ -25,14 +25,16 @@ class StatuslineTests(unittest.TestCase):
         self.addCleanup(self.work.cleanup)
         self.config_dir = Path(self.work.name)
 
-    def render(self, data=None, org_type=None, proxy=False):
+    def render(self, data=None, org_type=None, proxy=False, profile=None):
         if org_type is not None:
             account = {"oauthAccount": {"organizationType": org_type}}
             (self.config_dir / ".claude.json").write_text(json.dumps(account))
-        env = {k: v for k, v in os.environ.items() if k not in ("ANTHROPIC_BASE_URL", "CLAUDE_CONFIG_DIR")}
+        env = {k: v for k, v in os.environ.items() if k not in ("ANTHROPIC_BASE_URL", "CLAUDE_CONFIG_DIR", "CLAUDE_PROFILE")}
         env["CLAUDE_CONFIG_DIR"] = str(self.config_dir)
         if proxy:
             env["ANTHROPIC_BASE_URL"] = "http://127.0.0.1:8317"
+        if profile:
+            env["CLAUDE_PROFILE"] = profile
         result = subprocess.run(
             ["python3", str(SCRIPT)],
             input=json.dumps(data or {"model": {"display_name": "Opus"}}),
@@ -62,6 +64,12 @@ class StatuslineTests(unittest.TestCase):
         line = self.render(org_type="claude_max", proxy=True)[0]
         self.assertEqual(self.badges(line), [PERSONAL, PROXY])
         self.assertLess(line.index(PERSONAL), line.index(PROXY))
+
+    def test_profile_name_follows_badges(self):
+        line = self.render(org_type="claude_max", profile="daily")[0]
+        self.assertIn("daily", line)
+        self.assertLess(line.index(PERSONAL), line.index("daily"))
+        self.assertNotIn("daily", self.render(org_type="claude_max")[0])
 
     def test_elapsed_time(self):
         cases = {30_000: None, 60_000: "1m", 1_380_000: "23m", 4_980_000: "1h23m", 90_000_000: "1d1h"}
