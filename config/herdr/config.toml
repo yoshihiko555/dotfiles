@@ -37,7 +37,7 @@ height = "80%"
 
 # Yazi（現在のペインのディレクトリを開く）
 [[keys.command]]
-key = "prefix+shift+y"
+key = "prefix+y"
 type = "popup"
 command = 'yazi "${HERDR_ACTIVE_PANE_CWD:-.}"'
 width = "90%"
@@ -257,6 +257,6 @@ command = "~/.config/herdr/bin/herdr-smart-move resize-right"
 
 # タブ名を自動命名に戻す（手動でリネームしたタブは herdr-automatic-rename の対象外になるため）
 [[keys.command]]
-key = "prefix+y"
+key = "prefix+shift+y"
 type = "plugin_action"
 command = "herdr-automatic-rename.reset"
