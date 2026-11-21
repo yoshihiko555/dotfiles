@@ -13,7 +13,7 @@
 | `repo.zsh` | ghq + fzf リポジトリ移動 (repo) |
 | `trust.zsh` | Codex trust 管理 (trust) |
 | `cc-interrupt.zsh` | Claude Code 中断証跡ロガー (cc_interrupt) |
-| `claude.zsh` | Claude Code 会社アカウント切替 (ccw) / profile 起動 (ccprof) / CLIProxyAPI 切替 (ccx) |
+| `claude.zsh` | Claude Code 会社アカウント切替 (ccw) / profile 起動 (ccp) / CLIProxyAPI 切替 (ccx) |
 | `codex.zsh` | Codex CLI 会社アカウント切替 (cxw) |
 | `ccusage.zsh` | Claude Code・Codex の使用量を個人と仕事のアカウント別に表示 (ccu) |
 | `takt.zsh` | takt 会社アカウント切替 (taktw) |

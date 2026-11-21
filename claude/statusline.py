@@ -140,7 +140,7 @@ cwd = workspace.get("current_dir") or data.get("cwd", "")
 line1_parts = []
 
 line1_head = account_badge()
-# ccprof で起動したときの profile 名
+# ccp で起動したときの profile 名
 profile = os.environ.get("CLAUDE_PROFILE")
 if profile:
     line1_head += f" {YELLOW}{profile}{R}"

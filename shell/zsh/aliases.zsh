@@ -57,10 +57,9 @@ alias wails3='go run github.com/wailsapp/wails/v3/cmd/wails3@latest'
 
 # Claude CLI
 alias cc='claude'
-alias ccp='claude'
 alias cc-dg='claude --dangerously-skip-permissions'
 alias cc-r='claude --resume'
-# ccf (subagent 委譲モード) は claude.zsh で関数として定義している。
+# ccf (subagent 委譲モード) と ccp (profile 起動) は claude.zsh で関数として定義している。
 # ccx -f から同じ設定を再利用するため、alias ではなく関数にしてある。
 
 # Codex CLI

@@ -71,22 +71,32 @@ cswap-relogin() {
 
 # claude/profiles/<name>/ の settings.json を --settings、prompt.md を
 # --append-system-prompt-file で重ねて起動する。ログイン・履歴・MCP 登録は共有する。
+#   ccp daily [claude の引数...]   profile を指定して起動
+#   ccp [claude の引数...]         fzf で profile を選んで起動
 CLAUDE_PROFILES_DIR="${CLAUDE_PROFILES_DIR:-$DOTFILES/claude/profiles}"
 
-ccprof() {
-  local name="$1"
+# 同名の alias が残っていると、下の関数定義の名前が alias として展開されるため外す
+(( ${+aliases[ccp]} )) && unalias ccp
+
+ccp() {
+  local name
   local -a profiles args
   profiles=("$CLAUDE_PROFILES_DIR"/*(N/:t))
-  if [[ -z "$name" || "$name" == -* ]]; then
-    echo "usage: ccprof <profile> [claude の引数...]  (profiles: ${profiles[*]})" >&2
-    return 1
+  if [[ -n "$1" && "$1" != -* ]]; then
+    name="$1"
+    shift
+  else
+    if ! command -v fzf >/dev/null 2>&1; then
+      echo "ccp: fzf が見つからない。ccp <profile> で指定する (profiles: ${profiles[*]})" >&2
+      return 1
+    fi
+    name="$(print -rl -- "${profiles[@]}" | fzf --height=~10 --prompt='profile> ')" || return
   fi
   local dir="$CLAUDE_PROFILES_DIR/$name"
-  if [[ ! -d "$dir" ]]; then
-    echo "ccprof: profile '$name' が無い (profiles: ${profiles[*]})" >&2
+  if [[ -z "$name" || ! -d "$dir" ]]; then
+    echo "ccp: profile '$name' が無い (profiles: ${profiles[*]})" >&2
     return 1
   fi
-  shift
   [[ -f "$dir/settings.json" ]] && args+=(--settings "$dir/settings.json")
   [[ -f "$dir/prompt.md" ]] && args+=(--append-system-prompt-file "$dir/prompt.md")
   # statusline.py が profile 名を表示する

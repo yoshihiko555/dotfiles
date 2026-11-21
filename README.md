@@ -325,7 +325,7 @@ ccw
 
 | 用途 | コマンド | 設定ディレクトリ |
 |---|---|---|
-| 個人用 | `claude` / `cc` / `ccp` | `~/.claude` |
+| 個人用 | `claude` / `cc` | `~/.claude` |
 | 会社用 | `ccw` | `~/.claude-work` |
 
 > [!WARNING]
@@ -356,21 +356,22 @@ ccw
 
 ### Claude Code の profile
 
-`ccprof <name>` は、`claude/profiles/<name>/` の設定を重ねて Claude Code を起動する。
+`ccp <name>` は、`claude/profiles/<name>/` の設定を重ねて Claude Code を起動する。
+`ccp` だけ（または 1 つ目がオプション）なら fzf で profile を選び、残りの引数は `claude` に渡す。
 設定ディレクトリは分けないので、ログイン・履歴・MCP 登録は profile をまたいで共有する。
 profile 名は statusline のアカウント表示の右に出る。
 
 | 起動 | 用途 | 読み込むもの |
 |---|---|---|
 | profile なし（`cc` など） | 開発（既定） | すべて |
-| `ccprof daily` | 普段使い | 開発向けの規則（`shared/agents/dev.md`）を外し、`prompt.md` を足す |
+| `ccp daily` | 普段使い | 開発向けの規則（`shared/agents/dev.md`）を外し、`prompt.md` を足す |
 
 profile を足すときは `claude/profiles/<name>/` を作り、次のどちらか、または両方を置く。
 
 - `prompt.md`: `--append-system-prompt-file` で足す指示。`@import` は展開されないので、本文を直接書く。
 - `settings.json`: `--settings` で重ねる設定。`claudeMdExcludes`（CLAUDE.md の除外）・`skillOverrides`（個人スキル）・`enabledPlugins` が使える。`skillOverrides` はプラグインのスキルには効かないので、プラグインごと外す。
 
-読み込まれたものは `ccprof <name> -p /context` で確認できる。会社用（`ccw`）との組み合わせは未対応。
+読み込まれたものは `ccp <name> -p /context` で確認できる。会社用（`ccw`）との組み合わせは未対応。
 
 ### Codex CLI 会社アカウント運用
 

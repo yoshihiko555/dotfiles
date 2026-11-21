@@ -37,13 +37,13 @@ cheat() {
   c         clear            h    history
   t         tmux             code code .
   zed       zed .
-  cc        claude           ccp    claude (個人)
+  cc        claude
   ccw       会社Claude      cc-dg  権限スキップ
   cswap-relogin  claude-swap で失効したアカウントを再登録
   ccu       Claude・Codex の使用量を個人/仕事別に (ccu help で詳細)
   cc-r      claude resume    cx     codex
   ccf       claude subagent委譲モード
-  ccprof    claude を profile で起動 (ccprof daily で普段使い)
+  ccp       claude を profile で起動 (ccp で選択 / ccp daily で普段使い)
   ccx       claude 切替式 (/model gpt-6.1-sol-claude)  ccx -f 委譲モード
   wails     Wails v2         wails3 Wails v3
   orche     ai-orchestra manager
