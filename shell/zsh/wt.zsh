@@ -17,6 +17,7 @@ Examples:
   wt new fix hook tweak -- --from-current -e
   wt rm
   wt rm task/nvim-lsp --yes
+  wt rm task/nvim-lsp --delete-branch   # push していなくてもブランチを消す
   wt list
   wt cd
 HELP
@@ -63,6 +64,7 @@ _wt_slugify() {
   printf '%s\n' "$slug"
 }
 
+# 種別の一覧は shared/agents/core.md の Git 節と揃える
 _wt_normalize_type() {
   case "$1" in
     feat|feature)
@@ -241,9 +243,45 @@ _wt_rm() {
     fi
   done
 
-  if (( ! has_delete_branch )); then
-    options+=("--delete-branch")
+  # 明示の --delete-branch はガードを通さずに消す
+  if (( has_delete_branch )); then
+    command git gtr rm "${branches[@]}" "${options[@]}"
+    return
   fi
 
-  command git gtr rm "${branches[@]}" "${options[@]}"
+  local -a keep_branches delete_branches
+  keep_branches=("${(@f)$(_wt_unpushed_branches "${branches[@]}")}")
+  keep_branches=(${keep_branches:#})
+  delete_branches=(${branches:|keep_branches})
+
+  local branch rc=0
+  for branch in "${keep_branches[@]}"; do
+    echo "wt rm: $branch には push していないコミットがあるので、ブランチは残します（消すなら wt rm $branch --delete-branch）"
+  done
+
+  if (( ${#keep_branches[@]} > 0 )); then
+    command git gtr rm "${keep_branches[@]}" "${options[@]}" || rc=$?
+  fi
+  if (( ${#delete_branches[@]} > 0 )); then
+    command git gtr rm "${delete_branches[@]}" "${options[@]}" --delete-branch || rc=$?
+  fi
+  return $rc
+}
+
+# 消すと他のどの ref からも辿れなくなるコミットを持つブランチを返す。
+# upstream が消えている（push 後に remote 側で消された）ブランチは除く。
+_wt_unpushed_branches() {
+  emulate -L zsh
+
+  local branch upstream
+  for branch in "$@"; do
+    command git show-ref --verify --quiet "refs/heads/$branch" || continue
+    upstream="$(command git for-each-ref --format='%(upstream)' "refs/heads/$branch")"
+    if [[ -n "$upstream" ]] && ! command git show-ref --verify --quiet "$upstream"; then
+      continue
+    fi
+    if [[ -n "$(command git rev-list -1 "refs/heads/$branch" --not --remotes --exclude="$branch" --branches)" ]]; then
+      printf '%s\n' "$branch"
+    fi
+  done
 }

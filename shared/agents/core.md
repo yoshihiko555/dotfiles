@@ -57,5 +57,6 @@
 - changelog 更新不要の変更（テストのみ、内部整理など）は、その判断を PR 内で明示してください。
 - 競合時は PR branch 側で `origin/main` を取り込んで解消してください。
 - release は root worktree の `main` で行います。作業用 worktree から release を実行しないでください。
+- ブランチ名は `<種別>/<内容>` にしてください。種別は feat / fix / chore / docs / refactor / test / ci / perf / build / release で、どれにも当たらなければ task にします。内容は小文字の英数字をハイフンでつなぎます（例: `fix/hook-tweak`）。
 - worktree は `git gtr new <ブランチ> --from origin/main` で作り、`git gtr rm <ブランチ>` で消してください。`git worktree add` で手作りしないでください（置き場所は gtr の設定 `gtr.worktrees.dir` に任せます）。
 - worktree で作った Git に入らないもの（`dist/` などの生成物、`.claude/plans/` の plan、生成した画像）は、worktree を消す前に root のチェックアウトへ移すか、root で作り直してください。

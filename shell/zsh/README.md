@@ -110,7 +110,10 @@ wt rm
 
 wt rm task/nvim-lsp --yes
 wt done task/nvim-lsp --yes
-# => どちらも git gtr rm ... --delete-branch
+# => どちらも git gtr rm ... --delete-branch（push していないコミットがあればブランチは残す）
+
+wt rm task/nvim-lsp --delete-branch
+# => push していなくてもブランチを消す
 ```
 
 基本形:
@@ -129,7 +132,8 @@ wt <git gtr command...>
 - `topic` を省略した場合だけ `task/worktree-YYYYMMDD-HHMMSS` を使います。
 - 同じブランチ名が既に存在する場合は `-2`, `-3` を末尾に付けて衝突を避けます。
 - `wt new` で `git gtr new` のオプションも渡したい場合は、`--` 以降をそのまま `gtr` に渡します。
-- `wt rm` / `wt done` は常に `--delete-branch` を付けます。
+- `wt rm` / `wt done` は常に `--delete-branch` を付けます。ただし、消すと他のどのブランチ・remote からも辿れなくなるコミットがあるブランチは残し、worktree だけ消します（upstream が remote 側で消えたブランチは、push 済みとみなして消します）。
+- それでも消したいときは `--delete-branch` を明示します。明示するとこの確認を飛ばします。
 - `wt rm` を引数なしで実行すると、現在の repo の worktree 一覧を `fzf` で選択して削除できます。
 - picker では現在いる worktree は候補から除外し、複数選択もできます。
 - それ以外のサブコマンドは `wt list`, `wt cd`, `wt ai` のように `git gtr` へ透過的に委譲します。
