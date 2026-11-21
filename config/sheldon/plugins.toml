@@ -21,16 +21,6 @@ zsh-defer -dmp -c 'compinit -i
   unset _deferred_compdefs'
 '''
 
-[plugins.zsh-autosuggestions]
-github = "zsh-users/zsh-autosuggestions"
-apply = ["defer-autosuggest"]
-
-# zsh-autosuggestions のスタイル設定（背景なし）
-[plugins.autosuggestions-config]
-inline = '''
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#7aa2f7'
-'''
-
 [plugins.fzf-tab]
 github = "Aloxaf/fzf-tab"
 apply = ["defer"]
@@ -71,6 +61,21 @@ apply = ["defer"]
 [plugins.abbreviations]
 inline = '''
 zsh-defer -dmp source ~/.zsh/abbreviations.zsh
+'''
+
+[plugins.zsh-autosuggestions]
+github = "zsh-users/zsh-autosuggestions"
+apply = ["defer-autosuggest"]
+
+[plugins.zsh-autosuggestions-abbreviations-strategy]
+github = "olets/zsh-autosuggestions-abbreviations-strategy"
+apply = ["defer"]
+
+[plugins.autosuggestions-config]
+inline = '''
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#7aa2f7'
+# プラグインが用意する履歴候補より先に、略語名を候補に出す。
+zsh-defer -dmp -c 'ZSH_AUTOSUGGEST_STRATEGY=(abbreviations ${ZSH_AUTOSUGGEST_STRATEGY:#abbreviations})'
 '''
 
 # シンタックスハイライト。読み込んだ時点の widget を包むため、最後に置く。

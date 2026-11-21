@@ -15,9 +15,11 @@ setopt NO_BEEP              # ビープ音を無効化
 # 2. History Settings
 # --------------------------------------------
 HISTFILE=~/.zsh_history
-HISTSIZE=10000
-SAVEHIST=10000
-setopt HIST_IGNORE_DUPS     # 重複コマンドを無視
+HISTSIZE=100000
+SAVEHIST=100000
+setopt EXTENDED_HISTORY     # 実行時刻と所要時間も保存する
+setopt HIST_IGNORE_ALL_DUPS # 重複したコマンドは新しい方を残す
+setopt HIST_REDUCE_BLANKS   # 履歴に保存する際に余分な空白を詰める
 setopt HIST_IGNORE_SPACE    # スペース始まりは記録しない
 setopt SHARE_HISTORY        # 複数ターミナルで履歴共有
 setopt APPEND_HISTORY       # 履歴を追記

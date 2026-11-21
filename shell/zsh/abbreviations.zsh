@@ -21,3 +21,8 @@ abbr --session --quiet gsw='git switch'
 abbr --session --quiet dc='docker compose'
 abbr --session --quiet dps='docker ps'
 abbr --session --quiet dpsa='docker ps -a'
+abbr --session --quiet conin='docker container exec -it'
+
+# Claude Code
+abbr --session --quiet cc-dg='claude --dangerously-skip-permissions'
+abbr --session --quiet cc-r='claude --resume'
