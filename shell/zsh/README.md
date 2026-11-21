@@ -5,6 +5,7 @@
 | ファイル | 内容 |
 |---|---|
 | `aliases.zsh` | エイリアス定義 |
+| `abbreviations.zsh` | 略語（zsh-abbr）の宣言。zshrc ではなく sheldon が zsh-abbr の後に遅延で読む（gs, gd, dc 等） |
 | `functions.zsh` | 汎用関数 (lazygit, cheat, mdopen, mde, mkcd, port, fh, fb, fkill, fe) |
 | `tmux.zsh` | tmux 操作 (tss, tk, tp) |
 | `docker.zsh` | Docker 操作 (dex, dcf) |

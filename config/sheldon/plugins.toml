@@ -59,6 +59,37 @@ zstyle ':fzf-tab:*' show-group brief
 zstyle ':fzf-tab:*' fzf-pad 4
 '''
 
+# 略語。打った語を space / Enter で元のコマンドに展開する（fish の abbr と同じ動き）。
+# zsh-syntax-highlighting より前に置く。ハイライトは読み込んだ時点の widget だけを包むので、
+# zsh-abbr が置き換える space と accept-line を先に定義しておく。
+# ライセンスは CC BY-NC-SA 4.0。依存する zsh-job-queue はサブモジュールで、sheldon が一緒に取得する
+[plugins.zsh-abbr]
+github = "olets/zsh-abbr"
+apply = ["defer"]
+
+# 略語の宣言は shell/zsh/abbreviations.zsh が正本。zsh-abbr を読み込んだ後に読む
+[plugins.abbreviations]
+inline = '''
+zsh-defer -dmp source ~/.zsh/abbreviations.zsh
+'''
+
+# シンタックスハイライト。読み込んだ時点の widget を包むため、最後に置く。
+# defer テンプレートは -z を付けないので、読み込み後に今の行のハイライトが作り直される
+[plugins.zsh-syntax-highlighting]
+github = "zsh-users/zsh-syntax-highlighting"
+apply = ["defer"]
+
+# 閉じていない引用符を赤の太字にする。既定では閉じた引用符と同じ色（黄）を引き継ぎ、見分けがつかない。
+# プラグインは未設定の色だけを既定値で埋めるので、遅延読み込みより先に（ここは同期で）入れておく
+[plugins.zsh-syntax-highlighting-config]
+inline = '''
+typeset -gA ZSH_HIGHLIGHT_STYLES
+ZSH_HIGHLIGHT_STYLES[single-quoted-argument-unclosed]='fg=red,bold'
+ZSH_HIGHLIGHT_STYLES[double-quoted-argument-unclosed]='fg=red,bold'
+ZSH_HIGHLIGHT_STYLES[dollar-quoted-argument-unclosed]='fg=red,bold'
+ZSH_HIGHLIGHT_STYLES[back-quoted-argument-unclosed]='fg=red,bold'
+'''
+
 # 遅延読み込み。precmd / chpwd フックの再実行と再描画は副作用が出るため止める（-dmp）
 [templates]
 defer = "{% for file in files %}zsh-defer -dmp source \"{{ file }}\"\n{% endfor %}"

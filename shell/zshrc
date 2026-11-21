@@ -93,6 +93,25 @@ export FZF_TMUX_OPTS="--tmux center,80%,60%"
 export FZF_CTRL_T_OPTS="--tmux center,80%,60%"
 export FZF_ALT_C_OPTS="--tmux center,60%,40%"
 
+# fzf のキーバインド（Ctrl-R 履歴 / Ctrl-T ファイル / Alt-C ディレクトリ）と ** の補完
+# init の出力は fzf の実体ごとにキャッシュする。--zsh の無い古い fzf では何も読まない。
+# fzf は ^I も bind するため、ここで同期に読み、遅延で読む fzf-tab に後から ^I を取らせる
+# （fzf-tab は ^I を最後に bind し、元の widget を呼んで候補を集める）
+if command -v fzf >/dev/null 2>&1; then
+  _fzf_cache=${XDG_CACHE_HOME:-$HOME/.cache}/zsh/fzf-init-${${commands[fzf]:A:h:h}:t}.zsh
+  if [[ ! -r $_fzf_cache ]]; then
+    mkdir -p ${_fzf_cache:h}
+    if fzf --zsh >| $_fzf_cache.tmp 2>/dev/null; then
+      rm -f ${_fzf_cache:h}/fzf-init-*.zsh(N)
+      mv -f $_fzf_cache.tmp $_fzf_cache
+    else
+      rm -f $_fzf_cache.tmp
+    fi
+  fi
+  [[ -r $_fzf_cache ]] && source $_fzf_cache
+  unset _fzf_cache
+fi
+
 # --------------------------------------------
 # 4. Aliases & Functions
 # --------------------------------------------
