@@ -13,3 +13,6 @@ Desktop.ini
 $RECYCLE.BIN/
 
 **/.claude/.cc-writes/
+
+# git gtr が作る worktree（config の gtr.worktrees.dir = .worktrees）
+.worktrees/
