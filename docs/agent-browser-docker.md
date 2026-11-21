@@ -1,8 +1,9 @@
-# agent-browser の Docker 実行
+# macOS の Codex で agent-browser を使う
 
-macOS の Codex サンドボックスから Chrome を起動すると、OS へのアプリ登録や
-Mach ポートの権限制限で異常終了する場合がある。ブラウザは Docker 内で起動し、
-ホストの agent-browser は CDP 接続だけを行う。
+macOS の Codex でブラウザを操作するときは、利用可能なブラウザツールを優先する。
+それが使えず `agent-browser` が必要なときに、この手順を使う。別のプロジェクトで作業しているときも同じ。
+サンドボックスから直接 Chrome を起動すると権限制限で異常終了することがあるため、
+ラッパーは Docker 内で Chromium を起動し、ホストから CDP で接続する。[Codex に配布する指示](../shared/agents/diff-codex.md)
 
 ## 初回セットアップ
 

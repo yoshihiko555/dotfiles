@@ -136,7 +136,7 @@ dotfiles/
 ├── takt/           # takt CLI（→ ~/.takt）→ takt/README.md
 ├── shared/         # 共通データの実体（agents / skills / mcp / plugins / cliproxyapi）
 ├── alfred/         # Alfred ワークフロー → alfred/README.md
-├── docs/           # リポジトリ共通の運用手順・調査記録・ADR
+├── docs/           # Codex のブラウザ自動操作手順・領域をまたぐ ADR
 ├── taskfiles/      # Taskfile.yml から読み込むタスク定義
 ├── scripts/        # タスクから呼ぶスクリプト（shell / Python）とテスト
 ├── .githooks/      # pre-commit（treefmt の整形崩れを検出）
@@ -193,6 +193,6 @@ Claude Code / Codex / Antigravity（Gemini）で共有する資産は `shared/` 
 | [takt/README.md](takt/README.md) | takt のプロバイダ割り当て・権限モード・作業ディレクトリ配置 |
 | [gemini/README.md](gemini/README.md) | Gemini / Antigravity CLI の設定と権限設計 |
 | [alfred/README.md](alfred/README.md) | Alfred ワークフロー詳細 |
-| [ブラウザ自動操作の Docker 環境](docs/agent-browser-docker.md) | リポジトリ全体で使うブラウザの準備・実行手順 |
+| [Codex のブラウザ自動操作](docs/agent-browser-docker.md) | macOS の制限付き環境で agent-browser を使うときの Docker の準備と操作 |
 | [docs/adr/DECISIONS.md](docs/adr/DECISIONS.md) | 領域をまたぐ決定の ADR 索引（領域内の ADR は `config/<領域>/docs/adr/`） |
 | [claude/docs/adr/DECISIONS.md](claude/docs/adr/DECISIONS.md) | Claude Code 設定の ADR 索引 |
