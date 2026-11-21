@@ -21,6 +21,19 @@ zsh-defer -dmp -c 'compinit -i
   unset _deferred_compdefs'
 '''
 
+# 補完の挙動
+[plugins.completion-style]
+inline = '''
+# 小文字で打つと大文字にも当たる（大文字で打ったときは大文字だけ）
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+# fzf-tab のグループ表示（show-group / switch-group）は descriptions の format が前提
+zstyle ':completion:*:descriptions' format '[%d]'
+# 共通部分まで補完したあと zsh 標準のメニューを出さず、fzf-tab に任せる
+zstyle ':completion:*' menu no
+# git checkout の候補は git が返す順のまま並べる
+zstyle ':completion:*:git-checkout:*' sort false
+'''
+
 [plugins.fzf-tab]
 github = "Aloxaf/fzf-tab"
 apply = ["defer"]

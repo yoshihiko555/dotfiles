@@ -24,6 +24,15 @@ setopt HIST_IGNORE_SPACE    # スペース始まりは記録しない
 setopt SHARE_HISTORY        # 複数ターミナルで履歴共有
 setopt APPEND_HISTORY       # 履歴を追記
 
+# ↑↓ は打った文字で始まる履歴だけをたどる（何も打っていなければ全履歴）
+autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+bindkey '^[[A' up-line-or-beginning-search
+bindkey '^[OA' up-line-or-beginning-search
+bindkey '^[[B' down-line-or-beginning-search
+bindkey '^[OB' down-line-or-beginning-search
+
 # --------------------------------------------
 # 3. Tool Initialization
 # --------------------------------------------
@@ -49,6 +58,28 @@ if command -v sheldon >/dev/null 2>&1; then
   [[ -r $_sheldon_cache ]] && source $_sheldon_cache
   unset _sheldon_cache
 fi
+
+# CLI が生成する補完関数。fpath に置き、遅延 compinit に読ませる。
+# pnpm の補完は Tab のたびに pnpm completion-server へ問い合わせ、ファイル自体は版に依存しないため、無いときだけ作る。
+# corepack の取得確認で起動が止まらないよう、ホームで確認なしに実行する
+_comp_dir=${XDG_CACHE_HOME:-$HOME/.cache}/zsh/completions
+fpath=($_comp_dir $fpath)
+# git は zsh 標準の _git を使う。Homebrew の git が入れる bash 由来の _git は候補をグループに分けない
+_zsh_git=/usr/share/zsh/$ZSH_VERSION/functions/_git
+if [[ -r $_zsh_git && ! $_comp_dir/_git -ef $_zsh_git ]]; then
+  mkdir -p $_comp_dir && ln -sf $_zsh_git $_comp_dir/_git
+fi
+unset _zsh_git
+if (( $+commands[pnpm] )) && [[ ! -s $_comp_dir/_pnpm ]]; then
+  mkdir -p $_comp_dir
+  if (cd ~ && COREPACK_ENABLE_DOWNLOAD_PROMPT=0 pnpm completion zsh </dev/null) >| $_comp_dir/_pnpm.tmp 2>/dev/null &&
+    [[ -s $_comp_dir/_pnpm.tmp ]]; then
+    mv -f $_comp_dir/_pnpm.tmp $_comp_dir/_pnpm
+  else
+    rm -f $_comp_dir/_pnpm.tmp
+  fi
+fi
+unset _comp_dir
 
 if command -v zoxide >/dev/null 2>&1; then
   eval "$(zoxide init zsh)"
