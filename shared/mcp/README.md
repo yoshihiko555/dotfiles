@@ -74,3 +74,12 @@ Python テストは標準ライブラリで動き、Task の入口検証だけ�
 プラグイン単位の共通管理は [`../plugins/README.md`](../plugins/README.md) を参照。
 定義から外したサーバーも自動削除しない。プラグインとの接続先重複の自動検出は未実装。
 グローバル登録先ではない `claude/.mcp.json` とホームへの Nix リンク定義は廃止した。
+
+## プロジェクト単位の登録と一時利用
+
+Claude Code でプロジェクトのメンバーと共有する MCP は `claude mcp add --scope project` で登録する。
+自分だけがそのプロジェクトで使うものは `--scope local`、全プロジェクトで使うものは
+`--scope user` を選ぶ。OAuth が必要な接続先は、登録後に Claude Code の `/mcp` で認証する。
+
+Codex 専用の追加 MCP は原則 `enabled = false` で登録する。そのセッションで使うときは
+`codex -c mcp_servers.computer-use.enabled=true` のように登録名を指定して起動する。

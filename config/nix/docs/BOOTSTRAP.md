@@ -1,7 +1,7 @@
 # 初回セットアップ（まっさらな Mac から）
 
-**これが「まっさらな Mac から環境を復元する手順」の正典。** 他のドキュメント（ルート
-[README.md](../../../README.md)、[../README.md](../README.md)）はここへ誘導する形にしている。
+[ルート README](../../../README.md) は新しい MacBook で実行する手順をまとめている。
+ここでは Mac mini（hermes）との違い、各工程の背景、手動設定を説明する。
 
 対象は macOS（`aarch64-darwin`）のみ。WSL2 は対象外
 （手順は [PHASE-3-3-WSL2.md](PHASE-3-3-WSL2.md) を参照。2026-08-18 に完了済み）。
@@ -27,7 +27,7 @@ xcode-select --install
 （`flake.nix` のコメント参照。「mozumasu/dotfiles の構造を踏襲しつつ、nix-homebrew /
 sops-nix / treefmt-nix / overlay 群など依存の多い部分は削ぎ落としている」とあり、
 [ADR-0003](adr/ADR-20260730-0003-purpose-and-order.md) の「依存を減らす」方針に基づく）。
-cask は macbook 13 件・hermes 7 件が宣言されており、初回 `switch` より前に brew 本体が必要。
+両ホストで cask が宣言されており、初回 `switch` より前に brew 本体が必要。
 
 この段階ではリポジトリをまだ clone していないため、公式インストーラを直接叩く。
 
@@ -43,14 +43,8 @@ clone 後であれば、同じ内容の `scripts/install-brew.sh`（このリポ
 
 ### 3. GitHub 認証
 
-このリポジトリを clone するために GitHub 認証が要る。この段階では `gh` コマンドはまだ
-無いので、以下のどちらかを使う。
-
-- SSH: `ssh-keygen` で鍵を作成し、GitHub の Settings → SSH and GPG keys に公開鍵を登録する
-- HTTPS: Personal Access Token（PAT）を発行し、`git clone` 時にユーザー名 + PAT で認証する
-
-`switch` 完了後、`gh` は Nix 管理下で使えるようになるため、以降は `gh auth login` に
-切り替えてよい。
+この公開リポジトリは HTTPS でそのまま clone できる。変更を push する場合は、
+初回 `switch` 後に `gh auth login` で認証するか、GitHub に SSH 公開鍵を登録する。
 
 ### 4. Nix 本体（flakes 有効）
 
@@ -60,41 +54,34 @@ Determinate 系のインストーラは使わない（[ADR-0005](adr/ADR-2026080
 シェル版インストーラが `/etc/fstab` 書き込みに失敗する事象は **Determinate 版インストーラ固有**
 で、`NixOS/nix-installer` では発生しない）。
 
-> **要確認**: **hermes / macbook 導入当時に実際に実行したコマンド行の記録は、今も残っていない。**
-> この点は未解決のまま。
->
-> 一方で、**現在の正しい入口コマンドは `NixOS/nix-installer` の README で確認済み**（2026-08-18）:
->
-> ```sh
-> curl -sSfL https://artifacts.nixos.org/nix-installer | sh -s -- install --enable-flakes
-> ```
->
-> （`--enable-flakes` が flakes 有効化フラグ）。ただしこれは「現在の正しいコマンドが判明した」
-> という事実にとどまり、「hermes / macbook で当時実際に実行した行が判明した」わけではない。
-> 両者を混同しないこと。
->
-> **WSL2（Phase 3-3、2026-08-18）ではこのコマンドが実機で実際に通った。** WSL2 は
-> `NixOS/nix-installer` の公式サポート対象で、README のプラットフォーム表に
-> `✓ (via systemd)` として記載されている。詳細は
-> [PHASE-3-3-WSL2.md](PHASE-3-3-WSL2.md) を参照。
->
-> 既知の事実: hermes では **Nix 2.35.1 を macOS Tahoe 26.4.1 で導入し、動作確認済み**
-> （[ADR-0005](adr/ADR-20260802-0005-upstream-nix-migration.md) 検証節）。
+公式の flakes 対応インストールコマンドを使う。導入後は新しいターミナルで `nix --version` を確認する。
+
+```sh
+curl -sSfL https://channels.nixos.org/nix-latest/nix-installer | sh -s -- install --enable-flakes
+```
+
+hermes の構築記録には当時のインストールコマンドが残っていない。
+WSL2 の実施記録は [PHASE-3-3-WSL2.md](PHASE-3-3-WSL2.md) を参照。
 
 ### 5. dotfiles を clone
 
+MacBook の場合。
+
 ```sh
 git clone https://github.com/yoshihiko555/dotfiles.git ~/ghq/github.com/yoshihiko555/dotfiles
+```
+
+Mac mini の場合。
+
+```sh
+git clone https://github.com/yoshihiko555/dotfiles.git ~/hermes-workspace/ghq/github.com/yoshihiko555/dotfiles
 ```
 
 **このパスは `hostSpec.dotfilesDir` にホストごとハードコードされているため厳守する**
 （[`modules/hostSpec.nix`](../modules/hostSpec.nix)、`hosts/<host>/default.nix`）。
 別パスに置くと `mkOutOfStoreSymlink` の配線がすべて壊れる。
 
-| ホスト | dotfilesDir |
-|---|---|
-| macbook | `/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles` |
-| hermes | `/Users/agent/hermes-workspace/ghq/github.com/yoshihiko555/dotfiles` |
+適用先のアカウント・ホーム・clone 先は、下の「host 一覧」から各ホストの定義を確認する。
 
 `ghq` はこの時点でまだ入っていないので、`git clone` で直接上記パスへ置く
 （`ghq get` は switch 後、Nix 管理下で使えるようになってから使えばよい）。
@@ -113,7 +100,7 @@ sudo mv /etc/zprofile /etc/zprofile.before-nix-darwin
 
 ### 7. safe.directory の登録（repo 所有者と sudo 実行者が異なる場合のみ）
 
-hermes のように、clone したユーザー（`agent`）と `switch` を叩くユーザー（root 経由）が
+hermes のように、clone したユーザーと `switch` を叩くユーザー（root 経由）が
 異なる場合のみ必要。
 
 ```sh
@@ -132,9 +119,9 @@ sudo -H /nix/var/nix/profiles/default/bin/nix run github:nix-darwin/nix-darwin/m
   switch --flake ~/ghq/github.com/yoshihiko555/dotfiles/config/nix#macbook
 ```
 
-macbook 向けの例。**hermes は `dotfilesDir` 自体が異なる**（手順 5 の表を参照）ため、
+macbook 向けの例。**hermes は `dotfilesDir` 自体が異なる**（手順 5 を参照）ため、
 `#macbook` を `#hermes` に読み替えるだけでなく、flake 参照パスの前半も
-`/Users/agent/hermes-workspace/ghq/github.com/yoshihiko555/dotfiles/config/nix#hermes`
+hermes のホスト定義の `dotfilesDir` に `/config/nix#hermes` を足した絶対パス
 に読み替える。
 
 ### 9. 2 回目以降
@@ -145,7 +132,7 @@ macbook 向けの例。**hermes は `dotfilesDir` 自体が異なる**（手順 
 sudo darwin-rebuild switch --flake ~/ghq/github.com/yoshihiko555/dotfiles/config/nix#macbook
 ```
 
-macbook 向けの例。hermes の場合はパスの読み替えが手順 8 と同様に必要（手順 5 の表を参照）。
+macbook 向けの例。hermes の場合はパスの読み替えが手順 8 と同様に必要（手順 5 を参照）。
 
 `switch` 前にビルドだけ試して安全確認したい場合は次を使う（マシンは無変化）。
 
@@ -159,7 +146,7 @@ nix build ./config/nix#darwinConfigurations.macbook.system
 
 ### 10. switch 完了後
 
-ここで初めて `task` / `mise` / `sheldon` / `gh` などが使えるようになる。
+以下は MacBook の確認手順。初回反映後、新しいターミナルでリポジトリのルートに移動する。
 `go-task` は `hosts/macbook/packages.nix` で Nix 管理されている CLI で、`task` コマンドの
 実体を提供する。
 
@@ -233,10 +220,10 @@ task btt-export    # 実機 → repo（GUI で変更したものの回収）
 
 `flake.nix` の `darwinConfigurations` より。
 
-| ホスト | user | system | dotfilesDir |
-|---|---|---|---|
-| macbook | `yoshihiko` | `aarch64-darwin` | `/Users/yoshihiko/ghq/github.com/yoshihiko555/dotfiles` |
-| hermes | `agent` | `aarch64-darwin` | `/Users/agent/hermes-workspace/ghq/github.com/yoshihiko555/dotfiles` |
+| ホスト | system | アカウントとパスの定義 |
+|---|---|---|
+| macbook | `aarch64-darwin` | [MacBook の hostSpec](../hosts/macbook/default.nix) |
+| hermes | `aarch64-darwin` | [Mac mini の hostSpec](../hosts/hermes/default.nix) |
 
 ## SSH 越しに hermes を構築する場合の注意
 
@@ -250,7 +237,7 @@ ON にしておく必要がある。OFF だと root でも `/etc/fstab` 等の r
 
 - **この手順が実機で通っているのは hermes のみ。** macbook をまっさらな状態から
   再構築した記録は存在しない。
-- **Nix 本体のインストールコマンド行が未記録。** 手順 4 の「要確認」参照。
+- **Nix 本体のインストールコマンド行が未記録。** 手順 4 参照。
 - **ロールバック手順は未検証。** [ADR-0005](adr/ADR-20260802-0005-upstream-nix-migration.md)
   の「撤退条件とロールバック」節に「以下のロールバック手順は未検証」と明記されている。
   素の Nix → Determinate Nix の逆方向移行は行っていない。
