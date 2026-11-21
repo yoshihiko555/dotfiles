@@ -5,5 +5,8 @@
     "../../ghq/github.com/yoshihiko555/pi-harness"
   ],
   "collapseChangelog": true,
-  "hideThinkingBlock": true
+  "hideThinkingBlock": true,
+  "extensionChangelogVersions": {
+    "{\"source\":\"../../ghq/github.com/yoshihiko555/pi-harness\",\"scope\":\"user\"}": "0.0.0"
+  }
 }
