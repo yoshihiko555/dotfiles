@@ -12,7 +12,6 @@ BRAILLE = " ⣀⣄⣤⣦⣶⣷⣿"
 R = "\033[0m"
 DIM = "\033[38;2;140;150;160m"
 BOLD = "\033[1m"
-CYAN = "\033[38;2;97;175;239m"
 YELLOW = "\033[38;2;229;192;123m"
 GREEN = "\033[38;2;151;201;195m"
 RED = "\033[38;2;224;108;117m"
@@ -94,30 +93,64 @@ def git_cmd(*args, cwd=None):
         return ""
 
 
-def gh_pr_number(cwd):
+PERSONAL_ORG_TYPES = {"claude_pro", "claude_max"}
+WORK_ORG_TYPES = {"claude_team", "claude_enterprise"}
+BADGE_PERSONAL = "\033[48;2;152;195;121m"
+BADGE_WORK = "\033[48;2;229;140;60m"
+BADGE_PROXY = "\033[48;2;92;99;112m"
+BADGE_UNKNOWN = "\033[48;2;224;108;117m"
+
+
+def account_badge():
+    """ログイン中のアカウントを色だけのラベルで返す。判定できなければ赤。"""
+    config_dir = os.environ.get("CLAUDE_CONFIG_DIR")
+    path = os.path.join(config_dir, ".claude.json") if config_dir else os.path.expanduser("~/.claude.json")
     try:
-        remote = git_cmd("remote", "get-url", "origin", cwd=cwd)
-        if not remote:
-            return ""
-        result = subprocess.run(
-            ["gh", "pr", "view", "--json", "number", "--jq", ".number", "-R", remote],
-            cwd=cwd,
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
-        return result.stdout.strip() if result.returncode == 0 else ""
+        with open(path) as f:
+            org_type = (json.load(f).get("oauthAccount") or {}).get("organizationType", "")
     except Exception:
-        return ""
+        org_type = ""
+    if org_type in WORK_ORG_TYPES:
+        badge = f"{BADGE_WORK}  {R}"
+    elif org_type in PERSONAL_ORG_TYPES:
+        badge = f"{BADGE_PERSONAL}  {R}"
+    else:
+        badge = f"{BADGE_UNKNOWN}  {R}"
+    # ccx はログイン情報が個人のままプロキシ経由で通信する
+    if os.environ.get("ANTHROPIC_BASE_URL"):
+        badge += f"{BADGE_PROXY}  {R}"
+    return badge
 
 
-cwd = data.get("workspace", {}).get("current_dir") or data.get("cwd", "")
+def format_duration(ms):
+    minutes = int(ms // 60000)
+    if minutes < 60:
+        return f"{minutes}m"
+    hours, minutes = divmod(minutes, 60)
+    if hours < 24:
+        return f"{hours}h{minutes:02d}m"
+    days, hours = divmod(hours, 24)
+    return f"{days}d{hours}h"
 
-# ── Line 1 (top): Project │ Branch │ PR ──
+
+workspace = data.get("workspace", {})
+cwd = workspace.get("current_dir") or data.get("cwd", "")
+
+# ── Line 1 (top): Account │ Project │ Branch │ Lines │ PR ──
 line1_parts = []
 
-if cwd:
-    line1_parts.append(f"📁 {WHITE}{os.path.basename(cwd)}{R}")
+line1_head = account_badge()
+worktree = workspace.get("git_worktree")
+if worktree and cwd:
+    repo = (workspace.get("repo") or {}).get("name")
+    if not repo:
+        common = git_cmd("rev-parse", "--path-format=absolute", "--git-common-dir", cwd=cwd)
+        repo = os.path.basename(os.path.dirname(common)) if common else os.path.basename(cwd)
+    wt = worktree if len(worktree) <= 24 else worktree[:23] + "…"
+    line1_head += f" 📁 {WHITE}{repo}{R} 🌳 {DIM}{wt}{R}"
+elif cwd:
+    line1_head += f" 📁 {WHITE}{os.path.basename(cwd)}{R}"
+line1_parts.append(line1_head)
 
 branch = git_cmd("symbolic-ref", "--short", "HEAD", cwd=cwd) if cwd else ""
 if not branch and cwd:
@@ -125,27 +158,35 @@ if not branch and cwd:
 if branch:
     line1_parts.append(f"🌿 {GREEN}{branch}{R}")
 
-line1_parts.append(f"🔧 {CYAN}PID:{os.getppid()}{R}")
+added = data.get("cost", {}).get("total_lines_added", 0)
+removed = data.get("cost", {}).get("total_lines_removed", 0)
+if added or removed:
+    line1_parts.append(f"✏️ {GREEN}+{added}{R} {RED}-{removed}{R}")
 
-pr = gh_pr_number(cwd) if cwd else ""
-if pr:
-    line1_parts.append(f"{YELLOW}{BOLD}PR{R} {YELLOW}#{pr}{R}")
+pr = data.get("pr") or {}
+if pr.get("number"):
+    kind = "MR" if pr.get("kind") == "mr" else "PR"
+    pr_str = f"{YELLOW}{BOLD}{kind}{R} {YELLOW}#{pr['number']}{R}"
+    state = pr.get("review_state")
+    if state == "approved":
+        pr_str += f" {GREEN}approved{R}"
+    elif state == "changes_requested":
+        pr_str += f" {RED}changes{R}"
+    elif state == "draft":
+        pr_str += f" {DIM}draft{R}"
+    line1_parts.append(pr_str)
 
-# ── Line 2 (mid): Model │ ctx │ Lines ──
+# ── Line 2 (mid): Model │ ctx │ cache ──
 line2_parts = []
 
 model_raw = data.get("model", {}).get("display_name", "Claude")
 model = model_raw.replace("Claude ", "")
-line2_parts.append(f"{BOLD}{model}{R}")
+effort = (data.get("effort") or {}).get("level")
+line2_parts.append(f"{BOLD}{model}{R}" + (f" {DIM}{effort}{R}" if effort else ""))
 
 ctx = data.get("context_window", {}).get("used_percentage")
 if ctx is not None:
     line2_parts.append(fmt("ctx", ctx))
-
-added = data.get("cost", {}).get("total_lines_added", 0)
-removed = data.get("cost", {}).get("total_lines_removed", 0)
-if added or removed:
-    line2_parts.append(f"✏️ {GREEN}+{added}{R} {RED}-{removed}{R}")
 
 # cache: セッションの入力のうちキャッシュから読めた割合。miss は作り直しの回数、cold は期限切れ
 cache = data.get("prompt_cache") or {}
@@ -161,12 +202,12 @@ if cache.get("caching_observed") and hit is not None:
         cache_str += f" {RED}cold{R}"
     line2_parts.append(cache_str)
 
-cost_usd = data.get("cost", {}).get("total_cost_usd")
-if cost_usd:
-    line2_parts.append(f"{DIM}≈${cost_usd:.2f}{R}")
-
-# ── Line 3 (bottom): 5h │ 7d ──
+# ── Line 3 (bottom): Elapsed │ 5h │ 7d ──
 line3_parts = []
+
+duration_ms = data.get("cost", {}).get("total_duration_ms")
+if duration_ms and duration_ms >= 60000:
+    line3_parts.append(f"⏱ {DIM}{format_duration(duration_ms)}{R}")
 
 five_data = data.get("rate_limits", {}).get("five_hour", {})
 five = five_data.get("used_percentage")

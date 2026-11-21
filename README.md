@@ -328,7 +328,7 @@ ccw
 | 会社用 | `ccw` | `~/.claude-work` |
 
 > [!WARNING]
-> 会社用では **`statusLine` と hooks は現状動かない。** 詳細は下の「運用メモ」を参照。
+> 会社用で **hooks が動くかは未確認。** 詳細は下の「運用メモ」を参照。
 
 <details>
 <summary><b>運用メモ</b></summary>
@@ -340,14 +340,13 @@ ccw
 - `autoMode` は Claude Code が起動環境から自動生成し社内情報を含みうるため、repo には載せない。
   drift 比較から除外し、switch 時は実ファイル側の値をそのまま引き継ぐ。
 - 会社用の認証情報、履歴、plugin 状態は Git に含めない。
-- **`statusLine` と hooks は現状動かない。** 会社アカウントには管理設定
-  `allowManagedHooksOnly: true` が配信されており、Claude Code は `statusLine` /
-  `fileSuggestion` / `subagentStatusLine` と hooks を managed 設定のものだけに絞る
-  （[公式ドキュメント](https://code.claude.com/docs/en/hooks)）。管理設定側にこれらの定義は
-  無いため、ユーザー設定の指定は無視される。ポリシーが変われば記述はそのまま有効になるので
-  `claude-work/settings.json` には残している。
-- 上記のため、会社用の drift 検出は `task status` と switch 時の警告の 2 経路
-  （個人用は Stop hook を含めた 3 経路）。
+- **hooks が動くかは未確認。** 以前は会社アカウントに管理設定
+  `allowManagedHooksOnly: true` が配信され、`statusLine` /
+  `fileSuggestion` / `subagentStatusLine` と hooks が managed 設定のものだけに絞られていた
+  （[公式ドキュメント](https://code.claude.com/docs/en/hooks)）。2026-11-21 時点で
+  `statusLine` は `ccw` でも動くことを確認した。hooks は確認していない。
+- 会社用の drift 検出は `task status` と switch 時の警告の 2 経路として扱う
+  （個人用は Stop hook を含めた 3 経路）。hooks が動くと確認できれば 3 経路になる。
 - `shared/skills/common/` は個人用・会社用の両方で使ってよい共通スキル置き場。
 - `shared/skills/work/` は会社用に追加したいスキル置き場。
 - `task sync-claude-work-skills` は `shared/skills/common/*` と `shared/skills/work/*` を `~/.claude-work/skills/` にリンクする。
