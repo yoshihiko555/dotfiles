@@ -49,10 +49,9 @@ zstyle ':fzf-tab:*' fzf-flags \
     --border-label=" 補完 " \
     --no-info \
     --pointer="▶" \
-    --marker="●" \
-    --color=fg:#c0caf5,bg:#1a1b26,hl:#ff9e64 \
-    --color=fg+:#c0caf5,bg+:#33467c,hl+:#ff9e64 \
-    --color=pointer:#9ece6a,marker:#9ece6a,border:#565f89,label:#7aa2f7
+    --marker="●"
+# 配色は zshrc の FZF_DEFAULT_OPTS（既定の no だと読まない）
+zstyle ':fzf-tab:*' use-fzf-default-opts yes
 # tmux popup のサイズ
 zstyle ':fzf-tab:*' popup-min-size 80 12
 # グループのスイッチキー
@@ -87,7 +86,8 @@ apply = ["defer"]
 
 [plugins.autosuggestions-config]
 inline = '''
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#7aa2f7'
+# 打った文字（#c8d3f5）と見分けられる、一段暗い灰色
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#828bb8'
 # プラグインが用意する履歴候補より先に、略語名を候補に出す。
 zsh-defer -dmp -c 'ZSH_AUTOSUGGEST_STRATEGY=(abbreviations ${ZSH_AUTOSUGGEST_STRATEGY:#abbreviations})'
 '''
@@ -98,15 +98,21 @@ zsh-defer -dmp -c 'ZSH_AUTOSUGGEST_STRATEGY=(abbreviations ${ZSH_AUTOSUGGEST_STR
 github = "zsh-users/zsh-syntax-highlighting"
 apply = ["defer"]
 
-# 閉じていない引用符を赤の太字にする。既定では閉じた引用符と同じ色（黄）を引き継ぎ、見分けがつかない。
-# プラグインは未設定の色だけを既定値で埋めるので、遅延読み込みより先に（ここは同期で）入れておく
+# ハイライトの色。プラグインは未設定の色だけを既定値で埋めるので、遅延読み込みより先に（ここは同期で）入れておく
 [plugins.zsh-syntax-highlighting-config]
 inline = '''
 typeset -gA ZSH_HIGHLIGHT_STYLES
+# 閉じていない引用符を赤の太字にする。既定では閉じた引用符と同じ色（黄）を引き継ぎ、見分けがつかない
 ZSH_HIGHLIGHT_STYLES[single-quoted-argument-unclosed]='fg=red,bold'
 ZSH_HIGHLIGHT_STYLES[double-quoted-argument-unclosed]='fg=red,bold'
 ZSH_HIGHLIGHT_STYLES[dollar-quoted-argument-unclosed]='fg=red,bold'
 ZSH_HIGHLIGHT_STYLES[back-quoted-argument-unclosed]='fg=red,bold'
+# 有効なコマンドは TokyoNight Moon の cyan。既定の緑はプロンプトの ❯ と同じ色になる。
+# alias・関数・builtin は arg0 を引き継ぐが、下線付きの 3 つは個別に既定値を持つので揃えて指定する
+ZSH_HIGHLIGHT_STYLES[arg0]='fg=#86e1fc'
+ZSH_HIGHLIGHT_STYLES[precommand]='fg=#86e1fc,underline'
+ZSH_HIGHLIGHT_STYLES[suffix-alias]='fg=#86e1fc,underline'
+ZSH_HIGHLIGHT_STYLES[autodirectory]='fg=#86e1fc,underline'
 '''
 
 # 遅延読み込み。precmd / chpwd フックの再実行と再描画は副作用が出るため止める（-dmp）

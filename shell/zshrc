@@ -123,6 +123,10 @@ fi
 
 # fzf tmux フローティング連携（display-popup で表示）
 export BAT_THEME=TwoDark
+# fzf の配色は TokyoNight Moon。補完（fzf-tab）もこれを読む
+export FZF_DEFAULT_OPTS="--color=fg:#c8d3f5,bg:#1e2030,gutter:#1e2030,bg+:#2d3f76,query:#c8d3f5:regular \
+--color=hl:#65bcff,hl+:#65bcff,prompt:#65bcff,info:#545c7e,header:#ff966c,separator:#ff966c \
+--color=pointer:#ff007c,marker:#ff007c,spinner:#ff007c,border:#589ed7,scrollbar:#589ed7,label:#82aaff"
 export FZF_TMUX_OPTS="--tmux center,80%,60%"
 export FZF_CTRL_T_OPTS='--tmux center,80%,60% --preview "sh ~/.zsh/fzf-preview.sh 100 {}"'
 export FZF_ALT_C_OPTS="--tmux center,60%,40%"

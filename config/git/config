@@ -9,17 +9,37 @@
 [core]
 	autocrlf = input
 	editor = nvim
-	pager = delta
+	# n / N で移動する目印（Δ •）はページャで見るときだけ付ける。lazygit では働かず記号だけが残る
+	pager = delta --navigate
 [interactive]
 	diffFilter = delta --color-only
 [delta]
 	line-numbers = true
-	navigate = true
 	syntax-theme = TwoDark
+	# 差分の背景は TokyoNight Moon に合わせる
+	minus-style                   = syntax "#4b2a3d"
+	minus-non-emph-style          = syntax "#4b2a3d"
+	minus-emph-style              = syntax "#6b2e43"
+	minus-empty-line-marker-style = syntax "#4b2a3d"
+	line-numbers-minus-style      = "#e26a75"
+	plus-style                    = syntax "#2a4556"
+	plus-non-emph-style           = syntax "#2a4556"
+	plus-emph-style               = syntax "#305f6f"
+	plus-empty-line-marker-style  = syntax "#2a4556"
+	line-numbers-plus-style       = "#b8db87"
+	# 背景画像の上でも読めるよう、変更の無い行の番号と区切りは配布値より明るくする
+	line-numbers-zero-style       = "#737aa2"
+	line-numbers-left-style       = "#545c7e"
+	line-numbers-right-style      = "#545c7e"
 	# 漢字・かな（長音符を含む）は1文字ずつ比較し、他の単語は従来どおりまとめる。
 	word-diff-regex = "[\\w--[\\p{scx:Han}\\p{scx:Hiragana}\\p{scx:Katakana}]]+"
 	# 「January plan → February plan」程度の変更も同じ行として比較する。
 	max-line-distance = 0.66
+# lazygit 用。まとまりの見出しを箱から線にし、関数名が無いときは見出しごと省く。
+# ページャでは見出しが n / N の止まる場所になるので、ここだけで使う
+[delta "lazygit"]
+	hunk-header-style            = syntax
+	hunk-header-decoration-style = "#545c7e" ul
 [gtr "worktrees"]
 	dir = .worktrees
 [gtr "editor"]

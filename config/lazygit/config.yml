@@ -78,11 +78,28 @@ customCommands:
       git commit -e -m "$MSG"
 
 git:
+  # | で切り替える。delta の lazygit 向け設定は config/git/config の [delta "lazygit"]
   diffRenderers:
-    - command: delta --{{colorScheme}} --paging=never
+    - name: delta
+      command: delta --{{colorScheme}} --paging=never --features=lazygit
+    - name: delta 横並び
+      command: delta --{{colorScheme}} --paging=never --features=lazygit --side-by-side
 
 gui:
   # UI を日本語化する。auto は LANG(en_US.UTF-8) を見て英語になるため明示指定。
   language: ja
   filterMode: fuzzy
   showNumstatInFilesView: true
+  # TokyoNight Moon（tokyonight.nvim の extras/lazygit と同じ値）
+  theme:
+    activeBorderColor: ["#ff966c", bold]
+    inactiveBorderColor: ["#589ed7"]
+    searchingActiveBorderColor: ["#ff966c", bold]
+    optionsTextColor: ["#82aaff"]
+    selectedLineBgColor: ["#2d3f76"]
+    cherryPickedCommitFgColor: ["#82aaff"]
+    cherryPickedCommitBgColor: ["#c099ff"]
+    markedBaseCommitFgColor: ["#82aaff"]
+    markedBaseCommitBgColor: ["#ffc777"]
+    unstagedChangesColor: ["#c53b53"]
+    defaultFgColor: ["#c8d3f5"]
