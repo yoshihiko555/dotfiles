@@ -45,6 +45,7 @@ in
         "opencode/opencode.json".source = mkLink "config/opencode/opencode.json";
         "sheldon".source = mkLink "config/sheldon";
         "wezterm".source = mkLink "config/wezterm";
+        "yazi".source = mkLink "config/yazi";
         "zed/keymap.json".source = mkLink "config/zed/keymap.json";
         "zed/settings.json".source = mkLink "config/zed/settings.json";
       };

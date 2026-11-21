@@ -35,6 +35,14 @@ command = "/bin/zsh -ic 'lazygit'"
 width = "80%"
 height = "80%"
 
+# Yazi（現在のペインのディレクトリを開く）
+[[keys.command]]
+key = "prefix+shift+y"
+type = "popup"
+command = 'yazi "${HERDR_ACTIVE_PANE_CWD:-.}"'
+width = "90%"
+height = "90%"
+
 # 一時シェル
 [[keys.command]]
 key = "prefix+t"

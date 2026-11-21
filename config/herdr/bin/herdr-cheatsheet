@@ -273,6 +273,9 @@ add_topic_file() {
 # 最初に herdr を並べ、起動直後から現在の主要キーを確認できるようにする
 # (tmux-cheatsheet-preview が tmux を最初に並べていたのと同じ発想)。
 add_sectioned_file "$HERDR_MD" "herdr"
+if [ -f "$CONFIG_HOME/yazi/README.md" ]; then
+  add_topic_file "$CONFIG_HOME/yazi/README.md" "yazi"
+fi
 
 for path in "$CONFIG_HOME"/*/docs/CHEATSHEET.md; do
   [ -f "$path" ] || continue

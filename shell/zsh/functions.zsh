@@ -7,6 +7,21 @@ lazygit() {
   XDG_CONFIG_HOME="$HOME/.config" command lazygit "$@"
 }
 
+# yazi を閉じたディレクトリへ移る。
+y() {
+  local tmp cwd
+  tmp=$(mktemp -t yazi-cwd.XXXXXX) || return
+  {
+    command yazi "$@" --cwd-file="$tmp" || return
+    IFS= read -r -d '' cwd < "$tmp"
+    if [[ -d "$cwd" && "$cwd" != "$PWD" ]]; then
+      builtin cd -- "$cwd"
+    fi
+  } always {
+    command rm -f -- "$tmp"
+  }
+}
+
 # カスタムコマンド一覧を表示
 cheat() {
   cat <<'HELP'
