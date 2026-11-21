@@ -12,11 +12,12 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "claude/statusline.py"
 
-PERSONAL = "\033[48;2;152;195;121m"
+PERSONAL = "\033[48;2;97;175;239m"
 WORK = "\033[48;2;229;140;60m"
 PROXY = "\033[48;2;92;99;112m"
 UNKNOWN = "\033[48;2;224;108;117m"
 BADGES = [PERSONAL, WORK, PROXY, UNKNOWN]
+TEXT = "\033[38;2;40;44;52m"
 
 
 class StatuslineTests(unittest.TestCase):
@@ -65,11 +66,16 @@ class StatuslineTests(unittest.TestCase):
         self.assertEqual(self.badges(line), [PERSONAL, PROXY])
         self.assertLess(line.index(PERSONAL), line.index(PROXY))
 
-    def test_profile_name_follows_badges(self):
-        line = self.render(org_type="claude_max", profile="daily")[0]
-        self.assertIn("daily", line)
-        self.assertLess(line.index(PERSONAL), line.index("daily"))
-        self.assertNotIn("daily", self.render(org_type="claude_max")[0])
+    def test_profile_name_inside_account_badge(self):
+        cases = {("claude_max", "daily"): PERSONAL, ("claude_team", "daily"): WORK, ("claude_max", None): PERSONAL}
+        for (org_type, profile), badge in cases.items():
+            with self.subTest(org_type=org_type, profile=profile):
+                line = self.render(org_type=org_type, profile=profile)[0]
+                self.assertIn(f"{badge}{TEXT} {profile or 'dev'} ", line)
+
+    def test_proxy_badge_follows_profile_name(self):
+        line = self.render(org_type="claude_max", proxy=True, profile="daily")[0]
+        self.assertLess(line.index(" daily "), line.index(PROXY))
 
     def test_elapsed_time(self):
         cases = {30_000: None, 60_000: "1m", 1_380_000: "23m", 4_980_000: "1h23m", 90_000_000: "1d1h"}

@@ -95,14 +95,16 @@ def git_cmd(*args, cwd=None):
 
 PERSONAL_ORG_TYPES = {"claude_pro", "claude_max"}
 WORK_ORG_TYPES = {"claude_team", "claude_enterprise"}
-BADGE_PERSONAL = "\033[48;2;152;195;121m"
+BADGE_PERSONAL = "\033[48;2;97;175;239m"
 BADGE_WORK = "\033[48;2;229;140;60m"
 BADGE_PROXY = "\033[48;2;92;99;112m"
 BADGE_UNKNOWN = "\033[48;2;224;108;117m"
+BADGE_TEXT = "\033[38;2;40;44;52m"
 
 
 def account_badge():
-    """ログイン中のアカウントを色だけのラベルで返す。判定できなければ赤。"""
+    """ログイン中のアカウントを箱の色で、profile 名（ccp が渡す。無ければ dev）を箱の文字で返す。判定できなければ赤。"""
+    label = f"{BADGE_TEXT} {os.environ.get('CLAUDE_PROFILE') or 'dev'} {R}"
     config_dir = os.environ.get("CLAUDE_CONFIG_DIR")
     path = os.path.join(config_dir, ".claude.json") if config_dir else os.path.expanduser("~/.claude.json")
     try:
@@ -111,11 +113,11 @@ def account_badge():
     except Exception:
         org_type = ""
     if org_type in WORK_ORG_TYPES:
-        badge = f"{BADGE_WORK}  {R}"
+        badge = f"{BADGE_WORK}{label}"
     elif org_type in PERSONAL_ORG_TYPES:
-        badge = f"{BADGE_PERSONAL}  {R}"
+        badge = f"{BADGE_PERSONAL}{label}"
     else:
-        badge = f"{BADGE_UNKNOWN}  {R}"
+        badge = f"{BADGE_UNKNOWN}{label}"
     # ccx はログイン情報が個人のままプロキシ経由で通信する
     if os.environ.get("ANTHROPIC_BASE_URL"):
         badge += f"{BADGE_PROXY}  {R}"
@@ -140,10 +142,6 @@ cwd = workspace.get("current_dir") or data.get("cwd", "")
 line1_parts = []
 
 line1_head = account_badge()
-# ccp で起動したときの profile 名
-profile = os.environ.get("CLAUDE_PROFILE")
-if profile:
-    line1_head += f" {YELLOW}{profile}{R}"
 worktree = workspace.get("git_worktree")
 if worktree and cwd:
     repo = (workspace.get("repo") or {}).get("name")

@@ -359,7 +359,7 @@ ccw
 `ccp <name>` は、`claude/profiles/<name>/` の設定を重ねて Claude Code を起動する。
 `ccp` だけ（または 1 つ目がオプション）なら fzf で profile を選び、残りの引数は `claude` に渡す。
 設定ディレクトリは分けないので、ログイン・履歴・MCP 登録は profile をまたいで共有する。
-profile 名は statusline のアカウント表示の右に出る。
+statusline の先頭の箱は、色でアカウント（個人は青・仕事は橙）を、文字で profile（profile なしは `dev`）を表す。
 
 | 起動 | 用途 | 読み込むもの |
 |---|---|---|
