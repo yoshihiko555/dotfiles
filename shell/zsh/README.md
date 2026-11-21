@@ -133,7 +133,7 @@ wt <git gtr command...>
 - 同じブランチ名が既に存在する場合は `-2`, `-3` を末尾に付けて衝突を避けます。
 - `wt new` で `git gtr new` のオプションも渡したい場合は、`--` 以降をそのまま `gtr` に渡します。
 - `wt rm` / `wt done` は常に `--delete-branch` を付けます。ただし、消すと他のどのブランチ・remote からも辿れなくなるコミットがあるブランチは残し、worktree だけ消します（upstream が remote 側で消えたブランチは、push 済みとみなして消します）。
-- それでも消したいときは `--delete-branch` を明示します。明示するとこの確認を飛ばします。
+- push していなくても消したいときは、最初から `--delete-branch` を明示します（明示するとこの確認を飛ばします）。worktree だけ消えた後のブランチは `git branch -D` で消します。
 - `wt rm` を引数なしで実行すると、現在の repo の worktree 一覧を `fzf` で選択して削除できます。
 - picker では現在いる worktree は候補から除外し、複数選択もできます。
 - それ以外のサブコマンドは `wt list`, `wt cd`, `wt ai` のように `git gtr` へ透過的に委譲します。

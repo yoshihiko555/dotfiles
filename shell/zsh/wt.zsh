@@ -256,7 +256,7 @@ _wt_rm() {
 
   local branch rc=0
   for branch in "${keep_branches[@]}"; do
-    echo "wt rm: $branch には push していないコミットがあるので、ブランチは残します（消すなら wt rm $branch --delete-branch）"
+    echo "wt rm: $branch には push していないコミットがあるので、ブランチは残します（消すなら git branch -D $branch）"
   done
 
   if (( ${#keep_branches[@]} > 0 )); then
@@ -269,18 +269,20 @@ _wt_rm() {
 }
 
 # 消すと他のどの ref からも辿れなくなるコミットを持つブランチを返す。
+# 一緒に消すブランチは辿れる先に数えない。
 # upstream が消えている（push 後に remote 側で消された）ブランチは除く。
 _wt_unpushed_branches() {
   emulate -L zsh
 
   local branch upstream
+  local -a excludes=("${@/#/--exclude=}")
   for branch in "$@"; do
     command git show-ref --verify --quiet "refs/heads/$branch" || continue
     upstream="$(command git for-each-ref --format='%(upstream)' "refs/heads/$branch")"
     if [[ -n "$upstream" ]] && ! command git show-ref --verify --quiet "$upstream"; then
       continue
     fi
-    if [[ -n "$(command git rev-list -1 "refs/heads/$branch" --not --remotes --exclude="$branch" --branches)" ]]; then
+    if [[ -n "$(command git rev-list -1 "refs/heads/$branch" --not --remotes "${excludes[@]}" --branches)" ]]; then
       printf '%s\n' "$branch"
     fi
   done

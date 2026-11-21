@@ -82,3 +82,10 @@ refute has_wt task/mix-empty
 has_branch task/mix-local
 refute has_branch task/mix-empty
 echo '成功: 複数指定でも、残すブランチと消すブランチを分ける'
+
+new_wt task/pair-a commit
+git gtr new task/pair-b --from task/pair-a --yes --no-fetch --no-hooks >/dev/null 2>&1
+run_wt rm task/pair-a task/pair-b --yes
+has_branch task/pair-a
+has_branch task/pair-b
+echo '成功: 同じ push していないコミットを持つブランチを一緒に消すときは、どちらも残す'
