@@ -6,10 +6,6 @@
 
 cwd = { fg = "#828bb8", italic = true }
 
-# Hovered
-hovered = { bg = "#2f334d" }
-preview_hovered = { bg = "#2f334d" }
-
 # Find
 find_keyword = { fg = "#1e2030", bg = "#ff966c", bold = true }
 find_position = { fg = "#0db9d7", bg = "#203346", bold = true }
@@ -28,6 +24,12 @@ count_selected = { fg = "#1e2030", bg = "#82aaff" }
 # Border
 border_symbol = "│"
 border_style = { fg = "#589ed7" }
+
+# カーソル行。今の列と親の列は lazygit・fzf の選択行と同じ色にする
+[indicator]
+parent = { bg = "#2d3f76" }
+current = { bg = "#2d3f76" }
+preview = { bg = "#2f334d" }
 
 # Tab
 [tabs]
@@ -103,7 +105,7 @@ separator_style = { fg = "#636da6" }
 [confirm]
 border = { fg = "#0db9d7" }
 title = { fg = "#589ed7" }
-content = {}
+body = {}
 list = {}
 btn_yes = { bg = "#2d3f76" }
 btn_no = {}
@@ -126,11 +128,9 @@ icon_info = ""
 
 # Help
 [help]
-on = { fg = "#c3e88d" }
-run = { fg = "#c099ff" }
-desc = { fg = "#86e1fc" }
+chord = { fg = "#c3e88d" }
+action = { fg = "#c099ff" }
 hovered = { bg = "#2f334d" }
-footer = { fg = "#c8d3f5", bg = "#222436" }
 
 [filetype]
 

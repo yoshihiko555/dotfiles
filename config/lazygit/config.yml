@@ -90,10 +90,11 @@ gui:
   language: ja
   filterMode: fuzzy
   showNumstatInFilesView: true
-  # TokyoNight Moon（tokyonight.nvim の extras/lazygit と同じ値）
+  # TokyoNight Moon（tokyonight.nvim の extras/lazygit と同じ値）。
+  # 使っていないパネルの枠だけは、背景画像の水色に溶けないよう文字と同じ色にする
   theme:
     activeBorderColor: ["#ff966c", bold]
-    inactiveBorderColor: ["#589ed7"]
+    inactiveBorderColor: ["#c8d3f5"]
     searchingActiveBorderColor: ["#ff966c", bold]
     optionsTextColor: ["#82aaff"]
     selectedLineBgColor: ["#2d3f76"]
