@@ -107,7 +107,7 @@ Mac mini は [hermes の構築手順](config/nix/docs/BOOTSTRAP.md)、
 | Git | git · lazygit · gh | [`config/git/`](config/git/) · [`config/lazygit/`](config/lazygit/README.md) · [`config/gh/`](config/gh/) |
 | ウィンドウ・入力 | AeroSpace · Karabiner-Elements · BetterTouchTool | [`config/aerospace/`](config/aerospace/README.md) · [`config/karabiner/`](config/karabiner/) · [`config/btt/`](config/btt/) |
 | ランタイム | mise | [`config/mise/`](config/mise/) |
-| AI エージェント | Claude Code · Codex CLI · Antigravity CLI · pi · takt · opencode | [`claude/`](claude/) · [`codex/`](codex/README.md) · [`gemini/`](gemini/README.md) · [`pi/`](pi/README.md) · [`takt/`](takt/README.md) · [`config/opencode/`](config/opencode/) |
+| AI エージェント | Claude Code · Codex CLI · Antigravity CLI · pi · takt · opencode | [`claude/`](claude/) · [`codex/`](codex/README.md) · [`gemini/`](gemini/README.md) · [`pi/`](pi/README.md) · [`takt/`](takt/README.md) · [`config/opencode/`](config/opencode/README.md) |
 | ランチャー | Alfred | [`alfred/`](alfred/README.md) |
 | デバイス | Loupedeck Live | `config/loupedeck/`（git 管理外） |
 
