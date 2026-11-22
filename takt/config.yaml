@@ -90,16 +90,51 @@ rate_limit_fallback:
     - provider: codex
       model: gpt-6.1-sol
 
-# TAKT 本体の開発用ワークフローを一覧と実行対象から外す。
-# auto-improvement-loop は takt-default でタスクを積み、takt-development-review は
-# takt-default 系だけが呼ぶ内部ワークフローなので、まとめて外す。
+# 使わないビルトインを一覧と実行対象から外す (-w で名前を指定しても動かない)。
+# NOTE: takt を更新したら builtins/ja/workflow-categories.yaml と突き合わせる。
 disabled_builtins:
+  # TAKT 本体の開発用。auto-improvement-loop は takt-default でタスクを積み、
+  # takt-development-review は takt-default 系だけが呼ぶ内部ワークフロー。
   - takt-default
   - takt-default-team
   - review-takt-default
   - review-fix-takt-default
   - auto-improvement-loop
   - takt-development-review
+  # カテゴリ「レガシー」のスタック別ワークフロー。default / maintenance / simple / pure と
+  # review / review-fix / audit-* を使う。
+  - cli
+  - simple-mini
+  - simple-frontend
+  - simple-backend
+  - simple-dual
+  - simple-cqrs
+  - simple-dual-cqrs
+  - frontend-mini
+  - backend-mini
+  - backend-cqrs-mini
+  - dual-mini
+  - dual-cqrs-mini
+  - frontend
+  - frontend-maintenance
+  - backend
+  - backend-maintenance
+  - backend-cqrs
+  - dual
+  - dual-cqrs
+  - review-frontend
+  - review-fix-frontend
+  - review-backend
+  - review-fix-backend
+  - review-dual
+  - review-fix-dual
+  - review-dual-cqrs
+  - review-fix-dual-cqrs
+  - review-backend-cqrs
+  - review-fix-backend-cqrs
+  - audit-architecture-frontend
+  - audit-architecture-backend
+  - audit-architecture-dual
 
 # --------------------------------------------------------------------------
 # 検討したうえで「既定のまま使う」と判断した項目 (意図的に未設定)
