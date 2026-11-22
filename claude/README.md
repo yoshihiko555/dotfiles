@@ -3,6 +3,7 @@
 | 使いたい環境 | 起動コマンド | 設定ディレクトリ |
 |---|---|---|
 | 個人用・開発 | `cc` / `claude` | `~/.claude` |
+| 個人用・プロキシ経由でモデルを切り替える | `ccx` / `ccx -f` | `~/.claude`。[CLIProxyAPI の初回設定と使い方](../shared/cliproxyapi/README.md) |
 | 個人用・調べものや文章作成 | `ccp daily` | `~/.claude`。開発向けの規則を外し、[daily の指示](profiles/daily/prompt.md)を加える |
 | 会社アカウント | `ccw` | `~/.claude-work`。[初期設定・設定差分の回収・hooks の確認状況](../claude-work/README.md) |
 

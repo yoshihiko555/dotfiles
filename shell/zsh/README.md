@@ -17,7 +17,7 @@
 | `repo.zsh` | `repo` で ghq のリポジトリと `.worktrees/` 直下のディレクトリから移動先を fzf で選ぶ |
 | `trust.zsh` | Codex trust 管理 (trust) |
 | `cc-interrupt.zsh` | Claude Code 中断証跡ロガー (cc_interrupt) |
-| `claude.zsh` | Claude Code の会社アカウント（`ccw`）、プロファイル起動（`ccp`）、CLIProxyAPI 切替（`ccx`）、サブエージェントへの委譲（`ccf`）、[claude-swap の認証更新](../../config/nix/docs/CLAUDE-SWAP.md#認証の更新)（`cswap-relogin`） |
+| `claude.zsh` | Claude Code の会社アカウント（`ccw`）、プロファイル起動（`ccp`）、[CLIProxyAPI 経由の起動](../../shared/cliproxyapi/README.md)（`ccx` / `ccx -f`）、サブエージェントへの委譲（`ccf`）、[claude-swap の認証更新](../../config/nix/docs/CLAUDE-SWAP.md#認証の更新)（`cswap-relogin`） |
 | `codex.zsh` | Codex CLI 会社アカウント切替 (cxw) |
 | `ccusage.zsh` | Claude Code・Codex の使用量を個人と仕事のアカウント別に表示 (ccu) |
 | `takt.zsh` | takt 会社アカウント切替 (taktw) |
