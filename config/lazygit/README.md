@@ -1,6 +1,6 @@
 # lazygit の設定
 
-lazygit でステージ、コミット、ブランチ操作を行う。パネルごとのキーとコミットグラフの読み方は [操作チートシート](CHEATSHEET.md) を参照。
+lazygit でステージ、コミット、ブランチ操作を行う。よく使うキーは [操作チートシート](CHEATSHEET.md) を参照。
 
 ## 起動
 
@@ -8,6 +8,8 @@ lazygit でステージ、コミット、ブランチ操作を行う。パネル
 |---|---|
 | 対話 zsh | `lg` または `lazygit` |
 | herdr / tmux | `Ctrl+Q` に続けて `g` を押し、ポップアップを開く |
+
+herdr で操作表を見るには、`Ctrl+Q` → `i` で一覧を開き、「lazygit チートシート」を選ぶ。
 
 MacBook では Home Manager がこのディレクトリを `~/.config/lazygit` にリンクする。どちらのポップアップも対話 zsh を起動し、シェルからの起動と同じ `lazygit` 関数を通る。この関数は lazygit に `XDG_CONFIG_HOME=$HOME/.config` を渡す。[MacBook の設定](../nix/hosts/macbook/dotfiles.nix)・[zsh 関数](../../shell/zsh/functions.zsh)・[herdr の設定](../herdr/config.toml)・[tmux の設定](../tmux/conf/popup.conf)
 

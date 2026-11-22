@@ -2,7 +2,7 @@
 # herdr-cheatsheet — チートシートの一覧とプレビューを同時表示する（prefix+i、fzf + glow）
 #
 # 先頭の herdr の項目は ~/.config/herdr/config.toml の [keys] / [[keys.command]] から毎回生成する
-# （キー設定の直前のコメントが説明になる）。続けて ~/.config/*/docs の CHEATSHEET を並べる。
+# （キー設定の直前のコメントが説明になる）。続けて各ツールの操作表を並べる。
 
 set -euo pipefail
 
@@ -275,6 +275,9 @@ add_topic_file() {
 add_sectioned_file "$HERDR_MD" "herdr"
 if [ -f "$CONFIG_HOME/yazi/README.md" ]; then
   add_topic_file "$CONFIG_HOME/yazi/README.md" "yazi"
+fi
+if [ -f "$CONFIG_HOME/lazygit/CHEATSHEET.md" ]; then
+  add_topic_file "$CONFIG_HOME/lazygit/CHEATSHEET.md" "lazygit"
 fi
 
 for path in "$CONFIG_HOME"/*/docs/CHEATSHEET.md; do
