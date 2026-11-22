@@ -1,7 +1,7 @@
 # Codex CLI の会社アカウント
 
 Claude の `ccw` と同じく、`cxw` は会社用の `CODEX_HOME=~/.codex-work` で起動する。
-個人用の `codex` / `cx` は従来どおり `~/.codex` を使う。
+個人用の `codex` / `cx` は `~/.codex` を使う。個人用の設定変更先は [Codex CLI の README](../codex/README.md) を参照。
 
 ```bash
 task codex-work-init
