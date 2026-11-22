@@ -166,4 +166,4 @@ wt ai task/codex-trust
 ```
 
 > takt が作る作業ディレクトリ（`.worktrees/`）は git worktree ではなく独立クローンのため、
-> `wt` / `gtr` の管理対象外です。詳細は [takt/README.md](../../takt/README.md) を参照。
+> `wt` / `gtr` の管理対象外です。詳細は [takt の作業ディレクトリの配置](../../takt/README.md#作業ディレクトリの配置) を参照。

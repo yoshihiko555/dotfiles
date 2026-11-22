@@ -189,7 +189,7 @@ Claude Code / Codex / Antigravity（Gemini）で共有する資産は `shared/` 
 | [shared/mcp/README.md](shared/mcp/README.md) | 個人用グローバル MCP の共通定義と同期 |
 | [shared/plugins/README.md](shared/plugins/README.md) | Claude Code / Codex の共通プラグイン管理 |
 | [claude/plugins/turn-receipt/README.md](claude/plugins/turn-receipt/README.md) | ターンごとの編集・実行件数を表示する自作 mod |
-| [takt/README.md](takt/README.md) | takt のプロバイダ割り当て・権限モード・作業ディレクトリ配置 |
+| [takt/README.md](takt/README.md) | takt の起動・SDK 更新・作業クローンの配置。プロバイダ設定と権限・MCP の手順へのリンク |
 | [gemini/README.md](gemini/README.md) | Antigravity CLI の起動、設定の反映・回収、権限設計の ADR |
 | [alfred/README.md](alfred/README.md) | Alfred ワークフロー詳細 |
 | [Codex のブラウザ自動操作](docs/agent-browser-docker.md) | macOS の制限付き環境で agent-browser を使うときの Docker の準備と操作 |
