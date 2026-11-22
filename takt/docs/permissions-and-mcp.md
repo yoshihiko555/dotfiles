@@ -4,7 +4,7 @@
 
 ## 権限モード
 
-`config.yaml` の `provider_profiles` は claude-sdk / codex / opencode すべて `edit` です。
+`config.yaml` の `provider_profiles` は claude-sdk / codex が `edit`、opencode が `readonly` です。
 `provider_profiles` は runtime モードでも移行対象外で、`config.yaml` から読まれます。
 キーは `runtime.yaml` の profile に書いた provider 名と一致させます（`claude` と `claude-sdk` は別キー扱いで、
 一致しないと takt 組み込みの既定 `edit` に落ちます）。
@@ -18,11 +18,18 @@ takt の抽象モードは各 CLI に次のように写されます。
 
 `readonly` の Claude Code は書き込み禁止ではなく都度確認で、headless では応答できず停止しえます。
 
-編集の可否はワークフロー側の `edit` フラグ（`plan` は `edit: false`）が制御するので、
+Claude と Codex は、編集の可否をワークフロー側の `edit` フラグ（`plan` は `edit: false`）が制御するので、
 プロバイダ側で `readonly` に二重に絞っていません。
 Codex は takt が `approvalPolicy: never` を強制するため、サンドボックスモードが唯一の砦になります。
-OpenCode を未設定にすると permission mode が未解決のまま `ask` 相当に落ち、headless で停止しうるため、
-他 2 つと同じく明示しています。
+
+OpenCode は `readonly` です。
+
+- OpenCode に振っているのは `capabilities: readonly` のレビューステップ（`ai-antipattern-review-2nd`）だけです。
+- そのステップで使えるツールはプリセットの `allowed_tools`（`bash` を含む）で決まり、権限モードは編集ツールの可否にしか効きません。
+  そのため `edit` から `readonly` に変えても動きは変わりません。
+- `capabilities` の無いステップを OpenCode に振ると、`readonly` では `bash` と web 系も使えなくなります。
+  編集を要求するステップは、ステップ側の要求で `edit` に引き上げられます。
+- 未設定にすると permission mode が未解決のまま `ask` 相当に落ち、headless で停止しうるため、明示しています。
 
 ## MCP サーバー（runtime.yaml）
 

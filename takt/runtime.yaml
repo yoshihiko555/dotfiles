@@ -38,13 +38,12 @@ provider:
       provider: claude-sdk
       model: opus
     # NOTE: model を省略すると provider 側の既定モデルになる。takt 側で固定するため明示する。
-    # NOTE: reasoning_effort は medium (gpt-6.2-sol の既定は low)。消費の主要因は effort 側なので、
-    #       まだ重いときは terra へ落とす前に effort を下げる方を先に試す。
-    codex-sol-medium:
+    # NOTE: 消費の主要因は effort 側なので、重いときは terra へ落とす前に effort を下げる方を先に試す。
+    codex-sol-high:
       provider: codex
       model: gpt-6.1-sol
       options:
-        reasoning_effort: medium
+        reasoning_effort: high
     # deepseek-v4.1-flash: context 1,000,000 / max output 384,000。消費するのは opencode-go の
     # 契約枠で claude / codex 側は使わない。
     # NOTE: OpenCode Go のワークスペースの Privacy で Regions を Global にしないと拒否される。
@@ -81,9 +80,9 @@ provider:
     #       coding-leader を持つ step は必ず coding も持つので、実装リーダーも Codex で動く。
     tags:
       coding:
-        profile: codex-sol-medium
+        profile: codex-sol-high
       test-planning:
-        profile: codex-sol-medium
+        profile: codex-sol-high
     # step 名単位の割り当て (tags より強い)。
     # AI アンチパターン検出の review だけ opencode-go に出し、claude / codex の枠を使わずに回す。
     # キーは step 名の完全一致 (ワイルドカード無し)。`<workflow>/<step>` 形式で限定もできる。

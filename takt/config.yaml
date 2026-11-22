@@ -53,11 +53,14 @@ worktree_dir: .worktrees
 #   edit     acceptEdits       workspace-write    read/glob/grep/edit/write/bash/todowrite/web* allow, question deny
 #   full     bypassPermissions danger-full-access 全 allow (使わない)
 # codex は takt が approvalPolicy: never を強制するため、サンドボックスモードが唯一の砦になる。
-# 編集の可否はワークフロー側の edit フラグ (plan は edit: false) が既に制御しているため、
+# claude-sdk / codex は、編集の可否をワークフロー側の edit フラグ (plan は edit: false) が既に制御しているため、
 # ここで readonly に二重に絞らず edit で揃える。
+# opencode は readonly。振っているのは capabilities: readonly のレビューステップだけで、
+# 使えるツールはそのプリセット (bash を含む) で決まるため、readonly でも動きは変わらない。
+# 編集を要求するステップを振った場合は、ステップ側の要求で edit に引き上げられる。
 # NOTE: opencode を未設定にすると permission mode が未解決のまま 'ask' 相当に落ちる
 #       (dist/infra/opencode/types.js の buildPermissionMap の最終分岐)。
-#       headless では ask に応答できず停止しうるため、他 2 つと同じく明示する。
+#       headless では ask に応答できず停止しうるため、明示する。
 # NOTE: provider_profiles は runtime モードでも移行対象外で、ここから読まれる。
 #       キーは runtime.yaml の profile に書いた provider 名と一致させる
 #       (claude と claude-sdk は別キー扱い)。一致しないと takt 組み込みの既定 (edit) に落ち、
@@ -69,7 +72,7 @@ provider_profiles:
   codex:
     default_permission_mode: edit
   opencode:
-    default_permission_mode: edit
+    default_permission_mode: readonly
 
 # takt install claude-sdk で入れた SDK 同梱の claude を明示する（中身は SDK が既定で使うものと同じ）。
 # 0.75.0 の manager は起動前の確認でこれが無いと SDK を takt 本体から探し、Cannot find module で止まる
@@ -81,11 +84,22 @@ claude_cli_path: ~/.takt/claude-sdk/sdk/node_modules/@anthropic-ai/claude-agent-
 # (dist/infra/config/runtime-provider/execution-preparation.js)。
 # switch_chain のエントリは provider / model のみ (provider_options は書けない) なので、
 # ここ経由の codex 実行の reasoning effort は ~/.codex/config.toml の model_reasoning_effort に従う
-# (runtime.yaml の profile 側の medium は効かない)。
+# (runtime.yaml の profile 側の reasoning_effort は効かない)。
 rate_limit_fallback:
   switch_chain:
     - provider: codex
       model: gpt-6.1-sol
+
+# TAKT 本体の開発用ワークフローを一覧と実行対象から外す。
+# auto-improvement-loop は takt-default でタスクを積み、takt-development-review は
+# takt-default 系だけが呼ぶ内部ワークフローなので、まとめて外す。
+disabled_builtins:
+  - takt-default
+  - takt-default-team
+  - review-takt-default
+  - review-fix-takt-default
+  - auto-improvement-loop
+  - takt-development-review
 
 # --------------------------------------------------------------------------
 # 検討したうえで「既定のまま使う」と判断した項目 (意図的に未設定)
@@ -101,5 +115,3 @@ rate_limit_fallback:
 #               既定で無効。コストや失敗傾向を分析したくなってから有効化する。
 # ignore_exceed / task_poll_interval_ms
 #               安全側の既定 (上限を無視しない / 500ms) で問題ない。
-# disabled_builtins
-#               実際に使うワークフローが固まってから絞る。
