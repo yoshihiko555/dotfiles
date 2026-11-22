@@ -190,7 +190,7 @@ Claude Code / Codex / Antigravity（Gemini）で共有する資産は `shared/` 
 | [shared/plugins/README.md](shared/plugins/README.md) | Claude Code / Codex の共通プラグイン管理 |
 | [claude/plugins/turn-receipt/README.md](claude/plugins/turn-receipt/README.md) | ターンごとの編集・実行件数を表示する自作 mod |
 | [takt/README.md](takt/README.md) | takt のプロバイダ割り当て・権限モード・作業ディレクトリ配置 |
-| [gemini/README.md](gemini/README.md) | Gemini / Antigravity CLI の設定と権限設計 |
+| [gemini/README.md](gemini/README.md) | Antigravity CLI の起動、設定の反映・回収、権限設計の ADR |
 | [alfred/README.md](alfred/README.md) | Alfred ワークフロー詳細 |
 | [Codex のブラウザ自動操作](docs/agent-browser-docker.md) | macOS の制限付き環境で agent-browser を使うときの Docker の準備と操作 |
 | [docs/adr/DECISIONS.md](docs/adr/DECISIONS.md) | 領域をまたぐ決定の ADR 索引（領域内の ADR は `config/<領域>/docs/adr/`） |

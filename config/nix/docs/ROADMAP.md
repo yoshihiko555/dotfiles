@@ -339,7 +339,7 @@ MBP は単一ユーザー機のため hermes でハマった admin/agent 分離�
       「`trustedWorkspaces` 追記時に壊れる」のではなく、**`agy` を起動するたびに実体化する**
       ことが判明した（追記なしでも再現）。repo 側の編集が home 側に届かないまま
       古い設定で動き続けるため、**除外リスト内でも最優先で mozumasu 方式に移すべき対象**。
-      経緯と権限設計は [gemini/README.md](../../../gemini/README.md) に記録
+      配布方式の経緯は [gemini/README.md](../../../gemini/README.md)、当時の権限設計は [ADR-20260806-0001](../../../gemini/docs/adr/ADR-20260806-0001-headless-sandbox.md) を参照
 - [x] 復旧手段を用意 → 上記のとおり「安全な移行順序」で代替（文書化は不採用）
 - [x] `hosts/macbook/` を定義。GUI cask 13 個はここに置く — 2026-08-05 完了、
       初回 switch も成功（下記実施記録）
