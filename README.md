@@ -143,8 +143,7 @@ dotfiles/
 └── .sops.yaml      # sops-nix の暗号化ルール（仕組みのみ。管理対象の秘匿値は無い）
 ```
 
-各 CLI ディレクトリの中身（`agents/` `hooks/` `rules/` `skills/` 等）と、`shared/` の
-`agents/` `skills/` の役割は [共通ルール・スキルの管理](shared/README.md) を参照。
+各 CLI に配るルールとスキルの編集先・反映手順は [共通ルール・スキルの管理](shared/README.md) を参照。
 
 ## 📋 Taskfile コマンド
 
@@ -164,8 +163,8 @@ dotfiles/
 
 ## 🤖 AI エージェント資産
 
-Claude Code / Codex / Antigravity（Gemini）で共有する資産は `shared/` に実体を置き、
-各 CLI のディレクトリからリンク・生成・同期で配る。
+Claude Code / Codex / Antigravity（Gemini）/ pi に配るルールとスキルは `shared/` で管理する。
+個人用の Claude Code / Codex では MCP とプラグインも共通定義から同期する。
 
 - [共通ルール・スキルの管理](shared/README.md)
 - [個人用 MCP の登録・同期](shared/mcp/README.md) と [プラグイン管理](shared/plugins/README.md)
