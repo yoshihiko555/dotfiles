@@ -12,6 +12,7 @@
 | [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim) | `plugins/lualine.lua` | ステータスライン・上部のバッファ / タブ一覧 | モード・ブランチ・ファイル情報と、開いているバッファ・タブを常時表示 |
 | [which-key.nvim](https://github.com/folke/which-key.nvim) | `plugins/which-key.lua` | キーマップのリアルタイム表示 | Vim キーバインドの学習補助 |
 | [neo-tree.nvim](https://github.com/nvim-neo-tree/neo-tree.nvim) | `plugins/neo-tree.lua` | ファイルエクスプローラー | VSCode のサイドバーに相当するファイルツリー |
+| [yazi.nvim](https://github.com/mikavilpas/yazi.nvim) | `plugins/yazi.lua` | Yazi でファイルを操作 | `<leader>-` で編集中のファイルの場所を開ける |
 | [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons) | — （依存として自動導入） | ファイルアイコン表示 | lualine / neo-tree / alpha 等のアイコン表示に必要 |
 | [alpha-nvim](https://github.com/goolord/alpha-nvim) | `plugins/alpha.lua` | 起動画面（ダッシュボード） | よく使う操作への素早いアクセスと見た目の演出 |
 
@@ -79,12 +80,14 @@ js-debug へ直接つなぐ。言語ごとの登録は各 `dap-<言語>.lua` か
 |-----------|-------------|------|---------|
 | [copilot.lua](https://github.com/zbirenbaum/copilot.lua) | `plugins/copilot.lua` | GitHub Copilot によるインライン補完 | AI による入力補完でコーディング速度を向上。Ctrl+y で accept、Ctrl+e で dismiss |
 
-## その他
+## Markdown・画像表示
 
 | プラグイン | 設定ファイル | 用途 | 導入理由 |
 |-----------|-------------|------|---------|
 | [render-markdown.nvim](https://github.com/MeanderingProgrammer/render-markdown.nvim) | `plugins/render-markdown.lua` | Markdown のエディタ内プレビュー | 見出し・リスト等をエディタ内で装飾表示 |
-| [markdown-preview.nvim](https://github.com/iamcco/markdown-preview.nvim) | `plugins/markdown-preview.lua` | Markdown のブラウザプレビュー | Mermaid 等を含む Markdown をブラウザでリアルタイムプレビュー |
+| [markdown-preview.nvim](https://github.com/selimacerbas/markdown-preview.nvim) | `plugins/markdown-preview.lua` | Markdown のブラウザプレビュー | Mermaid 等を含む Markdown をブラウザでリアルタイムプレビュー |
+| [mermaid-nvim](https://github.com/searleser97/mermaid-nvim) | `plugins/mermaid.lua` | Mermaid 図を文字で描画 | Markdown バッファ内で図を読み、`<leader>mf` で拡大できる |
+| [snacks.nvim](https://github.com/folke/snacks.nvim) | `plugins/snacks.lua` | herdr 内で画像を表示 | 編集中に画像ファイルや Markdown の画像リンクを確認できる |
 
 ## コア設定（プラグイン外）
 

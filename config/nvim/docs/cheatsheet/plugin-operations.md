@@ -87,29 +87,4 @@
 
 ## インストール済みプラグイン一覧
 
-| プラグイン | 用途 |
-|-----------|------|
-| tokyonight.nvim | カラースキーム (moon) |
-| nvim-treesitter | シンタックスハイライト・インデント |
-| lualine.nvim | ステータスライン |
-| alpha-nvim | ダッシュボード (サイバーパンク風) |
-| fzf-lua | ファジーファインダー |
-| neo-tree.nvim | ファイルエクスプローラ |
-| which-key.nvim | キーバインドヘルプ |
-| render-markdown.nvim | エディタ内 Markdown レンダリング |
-| markdown-preview.nvim | ブラウザ Markdown プレビュー (Mermaid対応) |
-| gitsigns.nvim | Git 変更表示・hunk操作・inline blame |
-| codediff.nvim | VSCode風 diff viewer（文字レベルハイライト） |
-| smart-splits.nvim | Neovim ↔ tmux シームレスペイン移動・リサイズ |
-| copilot.lua | GitHub Copilot AI 補完 |
-| nvim-cmp | 補完エンジン |
-| nvim-autopairs | 括弧・引用符の自動ペア |
-| Comment.nvim | コメント切り替え |
-| nvim-surround | 囲み文字の追加・変更・削除 |
-| indent-blankline.nvim | インデントガイド |
-| nvim-lspconfig | LSP設定テンプレート |
-| conform.nvim | フォーマッタ統合（保存時自動） |
-| nvim-lint | リンター統合 |
-| trouble.nvim | 診断・シンボル一覧 |
-| todo-comments.nvim | TODO/FIXME ハイライト・検索 |
-| lazydev.nvim | Neovim Lua API 型定義補完 |
+各プラグインの用途・設定ファイル・導入理由は[プラグイン一覧](../PLUGINS.md)を参照。

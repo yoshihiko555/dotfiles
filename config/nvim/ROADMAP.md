@@ -1,7 +1,7 @@
-# Neovim Plugin Roadmap
+# VSCode から Neovim への移行記録
 
-VSCode → Neovim 移行を段階的に進めるためのロードマップ。
-Vim操作の習熟と並行して、フェーズごとにプラグインを追加していく。
+移行は完了した。以下には、当時の導入順、操作の練習目標、試した機能と候補を残す。
+チェック欄は各段階で記録した検証状況を示す。現在の設定と操作は [Neovim の README](README.md) を参照。
 
 ## 対象言語
 
@@ -123,8 +123,9 @@ VSCodeの補完・スニペット体験に近づける。
 - [x] todo-comments.nvimでTODOがハイライト・検索できるか
 - [ ] nvim-lintの動作確認（Go/TS/Pythonプロジェクトで別途検証）
 
-### 既知の課題
-- diagnostic の `underline` は tmux の Setulc 設定修正後に有効化する（現在 false）
+### 診断の下線
+
+移行時は tmux の Setulc 対応を待って無効にしていた。その後、[LSP 設定](lua/plugins/lsp.lua)で有効にした。
 
 ---
 
@@ -143,6 +144,8 @@ IDE級の最終ピース。ブレークポイント・ステップ実行をNeovi
 | neotest | テストランナー統合 | 推奨 | 後続 |
 | toggleterm.nvim | ターミナル統合（テスト実行用） | 推奨 | 後続 |
 
+このほか、変数のインライン表示、ブレークポイントの永続化、Java 対応（jdtls が前提）を拡張候補としていた。
+
 共通操作は `<leader>d`。Delve・debugpy・js-debug は MacBook の Nix、ランタイムは mise で管理する。
 導入と再現手順、確認状況は [デバッグガイド](docs/cheatsheet/debugging.md) を参照。
 
@@ -150,19 +153,19 @@ IDE級の最終ピース。ブレークポイント・ステップ実行をNeovi
 - [x] 共通キー・Go バッファ限定キー・DAP/UI の初回ロードと Delve 未導入時の案内
 - [x] 実端末の which-key 日本語案内・UI 手動開閉・起動失敗後の終了と通常編集への復帰
 - [x] Delve 1.27.1 と Go 1.26.1 の対応範囲、Nix の整形・チェック・MacBook build
-- [ ] 手元への Nix switch（sudo 認証が必要）
+- [x] MacBook の Nix switch（[2026-09-29 の適用記録](docs/adr/ADR-20260929-0014-dap-multilang.md#宿題)）
 - [x] Go のブレークポイントで実停止し、変数・スタック・ステップ実行を確認
 - [x] パッケージ / 付近 / 前回の Go テストをデバッグし、結果・ログを REPL で確認
 - [x] 実セッションでの UI 自動開閉・手動終了・再デバッグ
 - [x] 実端末の Normal / Visual 式評価・REPL、新規 Neovim の実行 / テストの初回停止
 - [ ] Learno の Docker 接続（プロジェクト側設定・API リクエストでの停止）
-- [x] TypeScript / Python のデバッグ（headless で実停止。実端末の確認と Nix switch は未完了）
+- [x] TypeScript / Python のデバッグ（headless で実停止。実端末の UI・REPL は当時未確認）
 
 ---
 
 ## Phase 6: 仕上げ
 
-細かいUI改善と利便性向上。
+移行時に検討した UI・セッション管理の候補。起動画面には [alpha-nvim](lua/plugins/alpha.lua) を採用した。
 
 | プラグイン | 用途 | 優先度 |
 |-----------|------|--------|
@@ -173,7 +176,7 @@ IDE級の最終ピース。ブレークポイント・ステップ実行をNeovi
 
 ---
 
-## 進め方
+## 当時の進め方
 
 1. 当リポジトリの `AGENTS.md` に従い、main で直接作業する（PR 運用対象外）
 2. 検証ポイントをクリアしてから次のフェーズへ
@@ -187,15 +190,15 @@ IDE級の最終ピース。ブレークポイント・ステップ実行をNeovi
    ```
 4. 問題があれば`enabled = false`で一時無効化して切り分け
 
-## 現在の進捗
+## 移行時の進捗
 
 - [x] Phase 0: 基盤構築（lazy.nvim導入・モジュール分割・組み込みLSP設定）
 - [x] Phase 1: 見た目 & ナビゲーション（tokyonight / treesitter / fzf-lua / lualine / which-key / neo-tree）
-- [ ] Phase 1.5: 操作定着（PH2前） ← 並行して定着中
+- [ ] Phase 1.5: 操作定着（PH2前）（当時の練習目標）
 - [x] Phase 2: 編集効率
 - [x] Phase 3: Git連携
 - [x] Phase 4: LSP強化 & コード品質
-- [ ] Phase 5: デバッグ & テスト（共通基盤・Go 実デバッグ・Python / TS の headless 実停止は検証済み、Nix switch と後続対象は未完了）
+- [ ] Phase 5: デバッグ & テスト（共通基盤・Go 実デバッグ・Python / TS の headless 実停止は検証済み。環境別の検証はデバッグガイドを参照）
 - [ ] Phase 6: 仕上げ
 
 ## 運用メモ

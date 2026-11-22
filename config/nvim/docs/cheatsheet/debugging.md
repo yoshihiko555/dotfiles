@@ -338,8 +338,7 @@ dap-ui / nio の README に独立した最小 Neovim 版の指定はなく、上
   ユーザーが Developer Tools Access を認証した後、同じ Go / Delve / Lua 設定で上記の実停止が成功した。
   一時サンプルの `/tmp` と `/private/tmp` のパス差によるビルドエラーは `cd -P` で解消した。
   検証用の Neovim・tmux・Delve・debugserver は終了済み。
-- **残件**: Nix switch 後、通常の PATH から `dlv` が見つかることを新しいシェル・Neovim で確認する。
-  Learno の Docker 接続、他言語、後続プラグインは今回の実セッション検証に含めない。
+- 9月20日の検証では、Learno の Docker 接続と他言語のデバッグは対象外とした。
 
 ## 検証記録（2026-09-29、Python / TypeScript）
 
@@ -357,12 +356,16 @@ Nix store の debugpy と js-debug を PATH に追加した。詳細は [ADR-202
 - TypeScript / JavaScript: `pwa-node` の `.js`、`node` の `.ts`、`node --inspect` への attach、`node-terminal`。
 - Next.js: 公式の server-side 構成で `app/api/hello/route.ts` に実停止し、続行後にレスポンスを確認。
 - `dq`: ブレークポイントで止まった後でも、1 回で全セッションと Next.js のプロセスが終了することを確認した。
-- **未確認**: 実端末での UI・REPL、`chrome` / `pwa-chrome`、Next.js の full stack 構成、Python の attach、
-  3.14 以外の Python の venv。
 
-## 後続タスク
+同日の検証後に MacBook の Nix switch を適用した。[適用記録](../adr/ADR-20260929-0014-dap-multilang.md#宿題)
 
-- Learno: Docker 内の Delve 起動確認、接続先・ソースパスの対応設定、API リクエストでの実停止確認。
-- Nix switch 後、`debugpy-adapter` / `js-debug` が通常の PATH から見つかることを確認する。
-- Java（jdtls の整備が先）。必要になったら追加する。
-- neotest、toggleterm.nvim、変数のインライン表示、ブレークポイントの永続化。
+## 環境別の確認項目
+
+以下は dotfiles に実機での確認結果が記録されていない組み合わせ。対象の環境を使うときに確認する。
+
+| 対象 | 確認する操作と結果 |
+|---|---|
+| Learno の Go API | Learno の README に従って Docker 内の Delve に接続する。API リクエストを送り、対応するローカルソースのブレークポイントで止まることを確かめる。 |
+| Python・TypeScript の実端末 | ブレークポイントで停止し、dap-ui に変数とスタックが表示され、REPL で式を評価できることを確かめる。 |
+| Python の attach・仮想環境 | 起動済みプロセスへの attach で停止できるかを確認する。3.14 以外の venv を使う場合は、その Python で起動してプロジェクトの依存を読み込めるかも確認する。 |
+| Next.js のブラウザ側・フルスタック | クライアント側ではブラウザの処理、フルスタック構成ではサーバーとブラウザそれぞれにブレークポイントを置き、対応する処理で停止するか確認する。 |

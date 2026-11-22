@@ -15,7 +15,7 @@ Neovim のプラグイン導入・運用に関する意思決定の一覧。詳�
 | [ADR-20260303-0008](ADR-20260303-0008-markdown-preview-mermaid.md) | Mermaid対応ブラウザプレビューにselimacerbas/markdown-preview.nvimを採用 | 採用 | 2026-03-03 | npm不要 / Mermaid自動SVG / WezTerm互換 | Markdown |
 | [ADR-20260313-0009](ADR-20260313-0009-gitsigns.md) | Git ガターサインに gitsigns.nvim を採用 | 採用 | 2026-03-13 | 全部入り / 依存ゼロ / デファクト標準 | Git |
 | [ADR-20260313-0010](ADR-20260313-0010-codediff-and-lazygit.md) | Diff Viewer に codediff.nvim を採用、lazygit との役割分担 | 採用 | 2026-03-13 | 文字レベルdiff / 活発メンテ / lazygit併用 | Git |
-| [ADR-20260915-0011](ADR-20260915-0011-image-preview-via-alfred.md) | 画像確認にパスコピーと Alfred を使い、Snacks の画像表示を休止 | 採用 | 2026-09-15 | 残像・位置ずれ / 操作の快適さ / 端末構成維持 | UX |
+| [ADR-20260915-0011](ADR-20260915-0011-image-preview-via-alfred.md) | 画像確認にパスコピーと Alfred を使い、Snacks の画像表示を休止 | 採用 | 2026-09-15 | tmux での残像・位置ずれ / 9月23日に herdr で画像表示を再開 | UX |
 | [ADR-20260920-0012](ADR-20260920-0012-dap-base-and-go.md) | 共通 DAP 基盤と Go のデバッグ構成を分離して導入する | 採用 | 2026-09-20 | 共通とプロジェクトの分離 / Nix 管理 / Go から段階導入 | Debug |
 | [ADR-20260924-0013](ADR-20260924-0013-lualine-tabline.md) | バッファとタブの一覧を lualine の tabline で表示し、タブを作業画面として扱う | 採用 | 2026-09-24 | プラグイン追加なし / 役割の区別 / 打鍵数 | Navigation |
 | [ADR-20260929-0014](ADR-20260929-0014-dap-multilang.md) | 言語ごとの DAP アダプター登録を共通化し、Python と TypeScript / Next.js のデバッグを追加する | 採用 | 2026-09-29 | 言語ファイルへの閉じ込め / 遅延読み込みの維持 / Nix 管理 | Debug |

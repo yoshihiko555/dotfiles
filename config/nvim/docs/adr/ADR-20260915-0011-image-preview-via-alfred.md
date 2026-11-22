@@ -58,3 +58,11 @@ WezTerm → tmux → Neovim の構成で、画像ファイルの直接表示と 
 
 - Snacks を再試用する場合は `cond` を `true` に戻し、残像・位置ずれ・分割表示・tmux 切り替えを実画面で確認する。
 - 再試用の見込みがなくなった時点で、休止中の設定と ImageMagick の必要性を見直す。
+
+## 追記（2026-09-23）herdr での画像表示を再開
+
+herdr では Kitty graphics protocol の画像が崩れずに表示できたため、コミット `6710b5d` で
+`HERDR_ENV` が空でない場合に Snacks を読み込むようにした。画像ファイルを直接開けるほか、
+Markdown の画像リンクにもプレビューが出る。WezTerm + tmux では引き続き neo-tree の `Y` でパスをコピーし、Alfred で確認する。
+
+[読み込み条件と画像表示の設定](../../lua/plugins/snacks.lua)・[画像プレビューの操作](../cheatsheet/custom-keybinds.md#markdown-leaderm)

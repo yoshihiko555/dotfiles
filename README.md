@@ -8,7 +8,7 @@
 [![Nix flakes](https://img.shields.io/badge/Nix-flakes-5277C3?logo=nixos&logoColor=white)](config/nix/README.md)
 [![nix-darwin](https://img.shields.io/badge/nix--darwin-home--manager-7EBAE4?logo=nixos&logoColor=white)](config/nix/README.md)
 [![macOS](https://img.shields.io/badge/macOS-Apple_Silicon-000000?logo=apple&logoColor=white)](#-管理対象ホスト)
-[![Neovim](https://img.shields.io/badge/Neovim-57A143?logo=neovim&logoColor=white)](config/nvim/docs/README.md)
+[![Neovim](https://img.shields.io/badge/Neovim-57A143?logo=neovim&logoColor=white)](config/nvim/README.md)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-Codex_%C2%B7_Antigravity-D97757?logo=anthropic&logoColor=white)](#-ai-エージェント資産)
 
 [特徴](#-特徴) ·
@@ -104,7 +104,7 @@ Mac mini は [hermes の構築手順](config/nix/docs/BOOTSTRAP.md)、
 |---|---|---|
 | シェル | zsh · sheldon · starship | [`shell/`](shell/zsh/README.md) · [`config/sheldon/`](config/sheldon/) · [`config/starship/`](config/starship/) |
 | ターミナル | **Ghostty + herdr**（常用）/ WezTerm + tmux（サブ） | [`config/ghostty/`](config/ghostty/) · [`config/herdr/`](config/herdr/) · [`config/wezterm/`](config/wezterm/README.md) · [`config/tmux/`](config/tmux/README.md) |
-| エディタ | Neovim · Zed | [`config/nvim/`](config/nvim/docs/README.md) · [`config/zed/`](config/zed/) |
+| エディタ | Neovim · Zed | [`config/nvim/`](config/nvim/README.md) · [`config/zed/`](config/zed/) |
 | Git | git · lazygit · gh | [`config/git/`](config/git/) · [`config/lazygit/`](config/lazygit/CHEATSHEET.md) · [`config/gh/`](config/gh/) |
 | ウィンドウ・入力 | AeroSpace · Karabiner-Elements · BetterTouchTool | [`config/aerospace/`](config/aerospace/docs/CHEATSHEET.md) · [`config/karabiner/`](config/karabiner/) · [`config/btt/`](config/btt/) |
 | ランタイム | mise | [`config/mise/`](config/mise/) |
@@ -119,7 +119,7 @@ dotfiles/
 ├── shell/          # zsh 設定（zshenv / zprofile / zshrc + zsh/ 分割）→ shell/zsh/README.md
 ├── config/         # XDG_CONFIG_HOME 系（→ ~/.config）
 │   ├── nix/        # nix-darwin + home-manager の実体 → config/nix/README.md
-│   ├── nvim/       # エディタ（Neovim）→ config/nvim/docs/README.md
+│   ├── nvim/       # エディタ（Neovim）→ config/nvim/README.md
 │   ├── herdr/      # ターミナルマルチプレクサ（常用）。プラグイン一覧・通知・自作スクリプト
 │   ├── btt/        # BetterTouchTool のトリガー（switch 時に実機へ適用）
 │   ├── loupedeck/  # Loupedeck Live のプロファイル（git 管理外）
@@ -180,7 +180,7 @@ Claude Code / Codex / Antigravity（Gemini）で共有する資産は `shared/` 
 | [config/nix/README.md](config/nix/README.md) | nix-darwin + home-manager の構成・管理対象ホスト |
 | [config/nix/docs/](config/nix/docs/) | BOOTSTRAP / CHEATSHEET / GUIDE / ROADMAP / ADR |
 | [config/nix/patches/README.md](config/nix/patches/README.md) | 上流未修正の問題に対する暫定パッチ |
-| [config/nvim/docs/README.md](config/nvim/docs/README.md) | Neovim のプラグイン一覧・キーバインドチートシート・練習問題・ADR |
+| [config/nvim/README.md](config/nvim/README.md) | Neovim のプラグイン一覧・キーバインドチートシート・練習問題・ADR |
 | [config/tmux/README.md](config/tmux/README.md) | tmux の操作・設定の保守・移行記録 |
 | [config/wezterm/README.md](config/wezterm/README.md) | WezTerm（tmux-first）の設定 |
 | [config/aerospace/docs/CHEATSHEET.md](config/aerospace/docs/CHEATSHEET.md) | AeroSpace のチートシート |
