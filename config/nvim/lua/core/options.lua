@@ -23,6 +23,27 @@ vim.opt.scrolloff = 8
 vim.opt.sidescrolloff = 8
 vim.opt.cursorline = true
 
+-- 編集ペインを離れたらカーソル行の目印を隠し、戻ったときに復元する
+local cursorline_group = vim.api.nvim_create_augroup("ActiveWindowCursorline", { clear = true })
+vim.api.nvim_create_autocmd("WinLeave", {
+  group = cursorline_group,
+  callback = function()
+    if vim.bo.buftype == "" and vim.wo.cursorline then
+      vim.w.restore_cursorline = true
+      vim.wo.cursorline = false
+    end
+  end,
+})
+vim.api.nvim_create_autocmd("WinEnter", {
+  group = cursorline_group,
+  callback = function()
+    if vim.w.restore_cursorline then
+      vim.wo.cursorline = true
+      vim.w.restore_cursorline = nil
+    end
+  end,
+})
+
 -- 画面分割
 vim.opt.splitbelow = true
 vim.opt.splitright = true
