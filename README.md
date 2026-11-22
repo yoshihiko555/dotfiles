@@ -101,7 +101,7 @@ Mac mini は [hermes の構築手順](config/nix/docs/BOOTSTRAP.md)、
 
 | 分類 | ツール | 設定 |
 |---|---|---|
-| シェル | zsh · sheldon · starship | [`shell/`](shell/zsh/README.md) · [`config/sheldon/`](config/sheldon/) · [`config/starship/`](config/starship/) |
+| シェル | zsh · sheldon · starship | [`shell/`](shell/README.md) · [`config/sheldon/`](config/sheldon/) · [`config/starship/`](config/starship/) |
 | ターミナル | **Ghostty + herdr**（常用）/ WezTerm + tmux（サブ） | [`config/ghostty/`](config/ghostty/) · [`config/herdr/`](config/herdr/) · [`config/wezterm/`](config/wezterm/README.md) · [`config/tmux/`](config/tmux/README.md) |
 | エディタ | Neovim · Zed | [`config/nvim/`](config/nvim/README.md) · [`config/zed/`](config/zed/) |
 | Git | git · lazygit · gh | [`config/git/`](config/git/) · [`config/lazygit/`](config/lazygit/CHEATSHEET.md) · [`config/gh/`](config/gh/) |
@@ -115,7 +115,7 @@ Mac mini は [hermes の構築手順](config/nix/docs/BOOTSTRAP.md)、
 
 ```
 dotfiles/
-├── shell/          # zsh 設定（zshenv / zprofile / zshrc + zsh/ 分割）→ shell/zsh/README.md
+├── shell/          # zsh の起動設定と自作コマンド → shell/README.md
 ├── config/         # XDG_CONFIG_HOME 系（→ ~/.config）
 │   ├── nix/        # nix-darwin + home-manager の実体 → config/nix/README.md
 │   ├── nvim/       # エディタ（Neovim）→ config/nvim/README.md

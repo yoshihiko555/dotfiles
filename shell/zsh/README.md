@@ -1,39 +1,40 @@
-# ~/.zsh/
+# zsh の自作コマンドと補助スクリプト
 
-`.zshrc` から切り出した設定ファイル群。すべて `source` で読み込まれる。
+端末でよく使うコマンドの早見表を開くには、`cheat` を実行する。
+
+`~/.zsh/` に配置するファイルの一覧。通常の関数とエイリアスは対話時に `.zshrc` が読み込む。
+略語は sheldon が遅延読み込みし、プレビュー用スクリプトは fzf が必要なときに実行する。
+起動ファイルの役割と読み込み順は [zsh の起動設定](../README.md)（手元では `$DOTFILES/shell/README.md`）を参照。
 
 | ファイル | 内容 |
 |---|---|
 | `aliases.zsh` | エイリアス定義 |
 | `abbreviations.zsh` | 略語（zsh-abbr）の宣言。zshrc ではなく sheldon が zsh-abbr の後に遅延で読む（gs, gd, dc 等） |
-| `functions.zsh` | 汎用関数 (lazygit, cheat, mdopen, mde, mkcd, port, fh, fb, fkill, fe) |
+| `functions.zsh` | 早見表（`cheat`）、[Yazi の終了場所へ移動](../../config/yazi/README.md)（`y`）、Homebrew の一括更新（`brewup`）、その他の汎用関数（lazygit, mdopen, mde, mkcd, port, fh, fb, fkill, fe） |
 | `tmux.zsh` | tmux 操作 (tss, tk, tp) |
 | `docker.zsh` | Docker 操作 (dex, dcf) |
 | `wt.zsh` | git worktree 操作 (wt) |
-| `repo.zsh` | ghq + fzf リポジトリ移動 (repo) |
+| `repo.zsh` | `repo` で ghq のリポジトリと `.worktrees/` 直下のディレクトリから移動先を fzf で選ぶ |
 | `trust.zsh` | Codex trust 管理 (trust) |
 | `cc-interrupt.zsh` | Claude Code 中断証跡ロガー (cc_interrupt) |
-| `claude.zsh` | Claude Code 会社アカウント切替 (ccw) / profile 起動 (ccp) / CLIProxyAPI 切替 (ccx) |
+| `claude.zsh` | Claude Code の会社アカウント（`ccw`）、プロファイル起動（`ccp`）、CLIProxyAPI 切替（`ccx`）、サブエージェントへの委譲（`ccf`）、[claude-swap の認証更新](../../config/nix/docs/CLAUDE-SWAP.md#認証の更新)（`cswap-relogin`） |
 | `codex.zsh` | Codex CLI 会社アカウント切替 (cxw) |
 | `ccusage.zsh` | Claude Code・Codex の使用量を個人と仕事のアカウント別に表示 (ccu) |
 | `takt.zsh` | takt 会社アカウント切替 (taktw) |
 | `nix.zsh` | nix-darwin 反映コマンド (nxb, nxs, nxg 等) / Homebrew 更新 (bxu) / hermes リモート反映 (hxb, hxs, hxg 等) |
 | `screenpipe.zsh` | screenpipe の一時停止 / 再開 / 状態確認 / 実体の復旧 (spoff, spon, sps, spfix) |
+| `awake.zsh` | macOS のアイドルスリープ防止と解除 (awake) |
 | `herdr.zsh` | herdr-automatic-rename のシェルフック（コマンド実行でタブ名を追従） |
 | `terminal-browser.zsh` | terminal-browser の起動ショートカット (tb) |
 | `prompt-marks.zsh` | OSC 133 の semantic prompt マーク（Ctrl+L でスクロールバックを失わない） |
+| `fzf-preview.sh` | Ctrl+T、fzf-tab、`mdopen`、`mde`、`fe` の候補選択時に、ファイルの内容やディレクトリの一覧を表示 |
 
 ## Codex の会社アカウント (`cxw`)
 
-dotfiles で `task codex-work-init` を実行し、新しいターミナルで `cxw login` から会社アカウントにログインする。
-既存のターミナルでは `source ~/.zsh/codex.zsh` で読み込める。
+個人用は `codex` / `cx`、会社用は `cxw` で起動する。初期設定・ログイン・スキルの同期は [Codex CLI の会社アカウント](../../codex-work/README.md) を参照。
 
-- 個人用は `codex` / `cx`、会社用は `cxw`。会社用の保存先は `~/.codex-work`（`CODEX_WORK_HOME` で変更可能）。
-- 会社用の `config.toml` は dotfiles の `codex-work/config.toml` へリンクする。設定変更はそのまま Git の差分になる。
-- `cxw login status` で認証方式を確認し、起動後の `/status` でアカウントを確認する。
 - `cxw` も `aliases.zsh` の `codex` 関数を使い、Herdr 用の環境変数調整と nice を引き継ぐ。
 - 親シェルの API キー・アクセストークン・workload identity・SQLite 保存先の指定は、会社用の起動時だけ解除する。
-- 共通スキルを追加・削除したら `task codex-work-init` を再実行する。既存の会社用設定・認証・履歴は保持する。
 
 ## アカウント別の使用量 (`ccu`)
 
@@ -111,7 +112,7 @@ wt rm
 
 wt rm task/nvim-lsp --yes
 wt done task/nvim-lsp --yes
-# => どちらも git gtr rm ... --delete-branch（push していないコミットがあればブランチは残す）
+# => どちらも確認を省いて worktree を削除。ブランチには既定の保持判定を適用
 
 wt rm task/nvim-lsp --delete-branch
 # => push していなくてもブランチを消す
@@ -133,8 +134,9 @@ wt <git gtr command...>
 - `topic` を省略した場合だけ `task/worktree-YYYYMMDD-HHMMSS` を使います。
 - 同じブランチ名が既に存在する場合は `-2`, `-3` を末尾に付けて衝突を避けます。
 - `wt new` で `git gtr new` のオプションも渡したい場合は、`--` 以降をそのまま `gtr` に渡します。
-- `wt rm` / `wt done` は常に `--delete-branch` を付けます。ただし、消すと他のどのブランチ・remote からも辿れなくなるコミットがあるブランチは残し、worktree だけ消します（upstream が remote 側で消えたブランチは、push 済みとみなして消します）。
-- push していなくても消したいときは、最初から `--delete-branch` を明示します（明示するとこの確認を飛ばします）。worktree だけ消えた後のブランチは `git branch -D` で消します。
+- `wt rm` と `wt done` は、worktree を削除するときにブランチを残すか判定します。削除対象以外のローカルブランチやリモート追跡ブランチから辿れないコミットがあれば、そのブランチを残します。それ以外はブランチも削除します。
+- 例外として、設定済みの upstream が消えているブランチは、push 済みとみなして削除します。
+- `--delete-branch` を明示すると、この判定を省いてブランチも削除します。すでに worktree を削除してブランチだけ残っている場合は、`git branch -D <branch>` で削除できます。
 - `wt rm` を引数なしで実行すると、現在の repo の worktree 一覧を `fzf` で選択して削除できます。
 - picker では現在いる worktree は候補から除外し、複数選択もできます。
 - それ以外のサブコマンドは `wt list`, `wt cd`, `wt ai` のように `git gtr` へ透過的に委譲します。
