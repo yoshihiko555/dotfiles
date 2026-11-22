@@ -2,26 +2,21 @@
 
 `bin/` 配下のスクリプト一覧。全て `~/.config/tmux/bin/` にインストールされる。
 
-## 現在の使用状況
+## 呼び出し元と用途
 
-| スクリプト | 状態 | 使用箇所 | 概要 |
-|-----------|------|----------|------|
-| tmux-apply-statusbar | 現役 | `statusbar.conf` | Powerline 付き `window-status-format` を適用 |
-| tmux-status-right | 現役 | `statusbar.conf` | baton サマリ + プロジェクト + 日時を右側に描画 |
-| tmux-save-pane-snapshot | 現役 | `keybinds.conf`, `pane-mode.conf` | ペイン内容のスナップショット保存 |
-| tmux-split-layout | 現役 | `keybinds.conf` (`Prefix+2-8`) | 現在ウィンドウを N ペインに分割 |
-| tmux-launch-claude-work | 現役 | Loupedeck (tmux キーバインドなし) | 全ペインで会社用 Claude Code を一斉起動 |
-| tmux-open-pane-snapshot | 現役 | `copy-mode.conf` | 保存済みスナップショットを popup で表示 |
-| ~~tmux-list-claude-panes~~ | 撤去 | - | baton に移行済み |
-| ~~tmux-popup-claude-dashboard~~ | 撤去 | - | baton に移行済み |
-| ~~tmux-open-claude-target~~ | 撤去 | - | baton に移行済み |
-| tmux-init-panes | 現役 | `keybinds.conf` (`Prefix+0`) | ペイン数に応じて nvim / claude / codex を起動 |
-| tmux-cheatsheet-preview | 現役 | `popup.conf` (`Prefix+.`) | チートシート (トピック一覧 + glow プレビュー) |
-| tmux-sessionizer | 現役 | `popup.conf` (`Prefix+f`) | GHQ リポジトリ + worktree の picker |
-| tmux-kill-session | 現役 | `popup.conf` (`Prefix+W`) | fzf でセッションを選んで削除 |
-| tmux-kill-current-session | 現役 | `keybinds.conf` (`Prefix+X`) | 現在のセッションを確認付きで削除 |
-| ~~ai-orchestra 監視系 8 本 / tmux-popup-claude / tmux-switch-session~~ | 撤去 | - | 2026-09-23 撤去（監視データが生成されなくなっていた） |
-| ~~tmux-cheatsheet~~ | 撤去 | - | 2026-09-23 撤去。`tmux-cheatsheet-preview` に一本化 |
+| スクリプト | 使用箇所 | 概要 |
+|-----------|----------|------|
+| [tmux-apply-statusbar](../bin/tmux-apply-statusbar) | `statusbar.conf` | Powerline 付き `window-status-format` を適用 |
+| [tmux-status-right](../bin/tmux-status-right) | `statusbar.conf` | baton サマリ + プロジェクト + 日時を右側に描画 |
+| [tmux-save-pane-snapshot](../bin/tmux-save-pane-snapshot) | `keybinds.conf`, `pane-mode.conf` | ペイン内容のスナップショット保存 |
+| [tmux-split-layout](../bin/tmux-split-layout) | `keybinds.conf` (`Prefix+2-8`) | 現在ウィンドウを N ペインに分割 |
+| [tmux-launch-claude-work](../bin/tmux-launch-claude-work) | Loupedeck (tmux キーバインドなし) | 全ペインで会社用 Claude Code を一斉起動 |
+| [tmux-open-pane-snapshot](../bin/tmux-open-pane-snapshot) | `copy-mode.conf` | 保存済みスナップショットを popup で表示 |
+| [tmux-init-panes](../bin/tmux-init-panes) | `keybinds.conf` (`Prefix+0`) | ペイン数に応じて nvim / claude / codex を起動 |
+| [tmux-cheatsheet-preview](../bin/tmux-cheatsheet-preview) | `popup.conf` (`Prefix+.`) | チートシート (トピック一覧 + glow プレビュー) |
+| [tmux-sessionizer](../bin/tmux-sessionizer) | `popup.conf` (`Prefix+f`) | GHQ リポジトリ + worktree の picker |
+| [tmux-kill-session](../bin/tmux-kill-session) | `popup.conf` (`Prefix+W`) | fzf でセッションを選んで削除 |
+| [tmux-kill-current-session](../bin/tmux-kill-current-session) | `keybinds.conf` (`Prefix+X`) | 現在のセッションを確認付きで削除 |
 
 ---
 
@@ -55,7 +50,6 @@
 ## Claude Code セッション管理 (baton)
 
 `Prefix+B` で `baton --exit` を popup 起動 (90x90%)。`Prefix+b` は常駐の default セッションへ切替。
-旧暫定ダッシュボードスクリプト (`tmux-popup-claude-dashboard`, `tmux-list-claude-panes`, `tmux-open-claude-target`) は撤去済み。
 
 ---
 
@@ -77,15 +71,15 @@
 
 ---
 
-## セッション管理系 (Phase 2)
+## セッション管理
 
 ### tmux-sessionizer
 
 GHQ リポジトリ + git worktree を fzf で選択し、tmux セッション作成/切替する。
 
-- `repo-list.sh` の TYPE でアイコンを分岐: `repo` → `○ 📦`, `worktree` → `● 🔀`
+- `repo-list.sh` の TYPE でアイコンを分岐: `repo` は白丸とリポジトリアイコン、`worktree` は黒丸とブランチアイコン
 - 現在のセッションに `(current)` マーカー付与
-- セッション名: worktree は `repo:branch`, repo は末尾ディレクトリ名 (`.` → `-`)
+- セッション名: 通常のリポジトリは末尾ディレクトリ名を使い、名前の `.` は `-` に置き換える
 - キーバインド: `Prefix + f`
 
 ### tmux-kill-session
@@ -114,12 +108,3 @@ tmux 側のキーバインドは意図的に持たない。
   (tmux 外からは macOS 通知) に出す
 - 検証時は `TMUX_LAUNCH_SOCKET=<name>` で `tmux -L` の別サーバーに向け、
   `TMUX_CLAUDE_WORK_CMD='echo ok'` で実コマンドを差し替える
-
----
-
-## 未実装 (移行計画で追加予定)
-
-| スクリプト | 概要 | Phase |
-|-----------|------|-------|
-| ~~tmux-baton-status~~ | baton TUI に統合済み。不要 | - |
-| tmux-command-menu | コマンドパレット (fzf) | 5 |

@@ -103,7 +103,7 @@ Mac mini は [hermes の構築手順](config/nix/docs/BOOTSTRAP.md)、
 | 分類 | ツール | 設定 |
 |---|---|---|
 | シェル | zsh · sheldon · starship | [`shell/`](shell/zsh/README.md) · [`config/sheldon/`](config/sheldon/) · [`config/starship/`](config/starship/) |
-| ターミナル | **Ghostty + herdr**（常用）/ WezTerm + tmux（サブ） | [`config/ghostty/`](config/ghostty/) · [`config/herdr/`](config/herdr/) · [`config/wezterm/`](config/wezterm/README.md) · [`config/tmux/`](config/tmux/docs/README.md) |
+| ターミナル | **Ghostty + herdr**（常用）/ WezTerm + tmux（サブ） | [`config/ghostty/`](config/ghostty/) · [`config/herdr/`](config/herdr/) · [`config/wezterm/`](config/wezterm/README.md) · [`config/tmux/`](config/tmux/README.md) |
 | エディタ | Neovim · Zed | [`config/nvim/`](config/nvim/docs/README.md) · [`config/zed/`](config/zed/) |
 | Git | git · lazygit · gh | [`config/git/`](config/git/) · [`config/lazygit/`](config/lazygit/CHEATSHEET.md) · [`config/gh/`](config/gh/) |
 | ウィンドウ・入力 | AeroSpace · Karabiner-Elements · BetterTouchTool | [`config/aerospace/`](config/aerospace/docs/CHEATSHEET.md) · [`config/karabiner/`](config/karabiner/) · [`config/btt/`](config/btt/) |
@@ -181,7 +181,7 @@ Claude Code / Codex / Antigravity（Gemini）で共有する資産は `shared/` 
 | [config/nix/docs/](config/nix/docs/) | BOOTSTRAP / CHEATSHEET / GUIDE / ROADMAP / ADR |
 | [config/nix/patches/README.md](config/nix/patches/README.md) | 上流未修正の問題に対する暫定パッチ |
 | [config/nvim/docs/README.md](config/nvim/docs/README.md) | Neovim のプラグイン一覧・キーバインドチートシート・練習問題・ADR |
-| [config/tmux/docs/README.md](config/tmux/docs/README.md) | tmux-first 環境の実装と移行計画 |
+| [config/tmux/README.md](config/tmux/README.md) | tmux の操作・設定の保守・移行記録 |
 | [config/wezterm/README.md](config/wezterm/README.md) | WezTerm（tmux-first）の設定 |
 | [config/aerospace/docs/CHEATSHEET.md](config/aerospace/docs/CHEATSHEET.md) | AeroSpace のチートシート |
 | [Yazi](config/yazi/README.md) | ファイルマネージャーの設定 |

@@ -122,10 +122,3 @@ Prefix: `Ctrl+Q`
 | 対象 | 制限事項 | 備考 |
 |------|---------|------|
 | popup 全般 | マウス操作・コピーモード不可 | `display-popup -E` は tmux 管理外の独立 PTY のため prefix キーが効かない。tmux #4330 で改善予定。コピーが必要な場合は `cmd \| pbcopy` またはscratch ウィンドウ方式を検討 |
-
-## 未実装 / 保留
-
-| キー (予定) | 動作 | 備考 |
-|------------|------|------|
-| `Prefix + Space` | コマンドパレット | Phase 5 で保留中 |
-| `Prefix + u` | URL 選択 (urlscan) | Phase 5 で保留中 |
