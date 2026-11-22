@@ -1,6 +1,7 @@
 # Phase 3-3: WSL2 への home-manager 導入（作業計画）
 
-会社支給 Windows の WSL2 に Nix + home-manager を導入する。
+会社支給 Windows の WSL2 に Nix + home-manager を導入した際の設計と作業計画を残す。
+既存のホスト定義を新しい環境に適用する場合は [WSL2 の初回構築手順](BOOTSTRAP-WSL2.md)を参照。
 [ROADMAP](ROADMAP.md) の Phase 3-3、方針は
 [ADR-20260730-0003](adr/ADR-20260730-0003-purpose-and-order.md)
 （[ADR-20260729-0002](adr/ADR-20260729-0002-multi-host-adoption.md) を改訂）。

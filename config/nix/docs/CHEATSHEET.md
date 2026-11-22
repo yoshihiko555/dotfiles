@@ -134,6 +134,21 @@ nix flake metadata ./config/nix  # lock されている入力の日付・rev
 
 ## 掃除
 
+### hermes の自動 GC を確認する
+
+[hermes の設定](../hosts/hermes/nix-gc.nix)は毎週日曜 3:15 に GC を実行し、30 日より古い世代を削除対象にする。
+移行時には launchd の plist 生成まで確認した。実行結果を調べるには hermes 上で次を実行する。
+
+```sh
+launchctl print system/org.nixos.nix-gc
+nix-env --profile /nix/var/nix/profiles/system --list-generations
+```
+
+launchd の `runs` と `last exit code` で実行の有無と終了状態を確認する。
+古い世代の削除まで確かめる場合は、予定時刻の前後で世代一覧を比較し、削除対象だった世代番号が消えたかを見る。
+
+### 手動で掃除する
+
 ```sh
 nix store gc                           # 参照されていないものを削除
 sudo nix-collect-garbage --delete-older-than 30d  # 30 日より古い世代ごと削除
@@ -145,16 +160,12 @@ nix store optimise                     # 重複ファイルのハードリンク
 
 ## WSL2 / Linux 運用（standalone home-manager）
 
-ここまでは nix-darwin（macOS）向け。**WSL2 は `homeConfigurations.wsl` の
-standalone home-manager**で、初回・2 回目以降ともコマンド体系が異なる。
-darwin 用の `nx*` alias とは混同しないこと。詳細は [PHASE-3-3-WSL2.md](PHASE-3-3-WSL2.md) を参照。
+初回は [WSL2 の構築手順](BOOTSTRAP-WSL2.md)を参照。2 回目以降は Ubuntu の一般ユーザーで、
+リポジトリのルートから既存の `homeConfigurations.wsl` を再適用する。
 
 ```sh
-# 初回
-nix run home-manager/master -- switch -b backup --flake "$DOTFILES/config/nix#wsl"
-
-# 2 回目以降
-home-manager switch -b backup --flake "$DOTFILES/config/nix#wsl"
+cd ~/ghq/github.com/yoshihiko555/dotfiles
+home-manager switch -b backup --flake ./config/nix#wsl
 ```
 
 - **`-b backup` は必須。** darwin 側の `home-manager.backupFileExtension = "backup"`

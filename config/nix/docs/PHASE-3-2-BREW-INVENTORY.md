@@ -1,6 +1,8 @@
 # Phase 3-2 前提調査: MacBook Pro brew 棚卸し
 
-作成: 2026-08-02。Phase 3-2（MacBook Pro の nix-darwin + home-manager 化）に先立ち、
+移行時の調査記録（2026-08-02）。現在の管理方法は [Nix の README](../README.md) を参照。
+
+Phase 3-2（MacBook Pro の nix-darwin + home-manager 化）に先立ち、
 brew 管理下の全アイテムを「役割・宣言状態・今後の行き先」で整理する。
 
 - 実測: formula（leaves）29 / cask 13 / tap 8 / brew 管理外の残骸 1

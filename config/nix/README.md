@@ -3,9 +3,8 @@
 dotfiles 配下の nix-darwin + home-manager エントリポイント。
 `~/.config/nix/` 自体も home-manager でリポジトリへ配線される。
 
-**nix-darwin + home-manager** で 3 台を宣言的に管理する。
-このファイルは「**どう管理しているか**」を書く場所とし、移行の進捗・完了状態は
-[docs/ROADMAP.md](docs/ROADMAP.md) を正とする。
+Mac 2 台は nix-darwin と home-manager、WSL2 は standalone home-manager で管理する。
+初回構築は [Mac](docs/BOOTSTRAP.md)・[WSL2](docs/BOOTSTRAP-WSL2.md)、日常の設定反映は[チートシート](docs/CHEATSHEET.md)を参照。
 
 ## 管理対象ホスト
 
@@ -13,10 +12,9 @@ dotfiles 配下の nix-darwin + home-manager エントリポイント。
 |---|---|---|---|
 | MacBook Pro | `aarch64-darwin` | `darwinConfigurations.macbook` | CLI + dotfiles + cask（宣言管理） |
 | Mac mini (hermes, M4) | `aarch64-darwin` | `darwinConfigurations.hermes` | ほぼ全体。cask も**宣言管理（7 個）** |
-| 会社 Windows (WSL2) | `x86_64-linux` | 未定義（Phase 3-3 で追加予定） | WSL2 内部のみ（Windows 本体は対象外） |
+| 会社 Windows (WSL2) | `x86_64-linux` | `homeConfigurations.wsl` | WSL2 内部のみ（Windows 本体は対象外） |
 
-`flake.nix` の `system` は現在 `aarch64-darwin` 固定。WSL2 対応時に
-`homeConfigurations`（standalone home-manager）の系統を追加する。
+各ホストの出力は [flake.nix](flake.nix) で定義する。
 
 ### 目的
 
@@ -35,7 +33,7 @@ zsh 起動最適化 / launchd の宣言管理（**hermes のみ例外**でスコ
 ```
 config/nix/
 ├── flake.nix               # エントリポイント。inputs（nixpkgs / darwin / home-manager / takt）と
-│                           # darwinConfigurations.{macbook,hermes} を定義
+│                           # darwinConfigurations.{macbook,hermes} と homeConfigurations.wsl を定義
 ├── flake.lock              # 入力のバージョン固定（更新は nix flake update <input>）
 ├── nix.conf                # ユーザーレベルの nix 設定（→ ~/.config/nix/nix.conf）
 │                           # ブートストラップ時と darwin 層を通らないホスト向け
@@ -55,6 +53,7 @@ config/nix/
 │   │   ├── dotfiles.nix    #   MBP 固有の配線 + mutable 設定の activation（後述）
 │   │   ├── homebrew.nix    #   cask（GUI）
 │   │   └── packages.nix    #   MBP 固有 CLI（takt 等）
+│   ├── wsl/                #   standalone home-manager のホスト定義と hostSpec
 │   └── hermes/
 │       ├── default.nix
 │       ├── dotfiles.nix
@@ -73,8 +72,7 @@ config/nix/
 └── docs/                   # ガイド・チートシート・ROADMAP・ADR
 ```
 
-`hosts/wsl/` などを含む目標形は
-[ROADMAP の「目標構成」](docs/ROADMAP.md)を参照。
+WSL2 のユーザー名・ホーム・clone 先は [WSL2 の hostSpec](hosts/wsl/hostSpec.nix) で定義する。
 
 ## 設定の反映方式
 
@@ -202,11 +200,10 @@ sudo darwin-rebuild switch --flake "$DOTFILES/config/nix#hermes"
 
 ## ドキュメント一覧
 
-- [docs/BOOTSTRAP.md](docs/BOOTSTRAP.md) — **まっさらな Mac からの初回構築手順（正典）**
-- [docs/GUIDE.md](docs/GUIDE.md) — **設定ファイルの読み方ガイド（学習用）**。どのファイルが何をしていて、nix-darwin / home-manager とどう繋がるか
-- [docs/CHEATSHEET.md](docs/CHEATSHEET.md) — **日常運用チートシート**。反映・rollback・パッケージ追加・更新・掃除の実用コマンド集
-- [docs/CLAUDE-SWAP.md](docs/CLAUDE-SWAP.md) — claude-swap の Nix 管理と CodexBar 連携
-- [docs/USECASES.md](docs/USECASES.md) — **ユースケースカタログ**。次に何をやるかの判断材料（価値・コスト・向き不向き）
-- [docs/ROADMAP.md](docs/ROADMAP.md) — 段階的な移行計画と**現在地**（進捗はこちらが正）
-- [docs/PHASE-3-3-WSL2.md](docs/PHASE-3-3-WSL2.md) — WSL2 の作業計画・設計（実稼働待ち）
-- [docs/adr/DECISIONS.md](docs/adr/DECISIONS.md) — ADR 一覧
+| 用途 | 文書 |
+|---|---|
+| 初回構築 | [Mac](docs/BOOTSTRAP.md)・[WSL2](docs/BOOTSTRAP-WSL2.md)・[手動導入する Mac アプリ](docs/MANUAL-APPS.md) |
+| 日常運用 | [設定の反映・更新・掃除](docs/CHEATSHEET.md)・[設定ファイルの読み方](docs/GUIDE.md) |
+| 個別の運用 | [claude-swap と CodexBar](docs/CLAUDE-SWAP.md)・[Hermes dashboard](docs/HERMES-DASHBOARD.md)・[パッチの管理](patches/README.md) |
+| 設計判断 | [ADR 索引](docs/adr/DECISIONS.md)・[用途別の候補比較](docs/USECASES.md) |
+| 移行記録 | [3ホストへの導入経緯](docs/ROADMAP.md)・[hermes のデーモン](docs/PHASE-3-1B-HERMES-DAEMONS.md)・[MacBook の brew 棚卸し](docs/PHASE-3-2-BREW-INVENTORY.md)・[CLI 棚卸し](docs/PHASE-3-2-CLI-INVENTORY.md)・[WSL2 の設計と移植](docs/PHASE-3-3-WSL2.md) |

@@ -3,8 +3,7 @@
 [ルート README](../../../README.md) は新しい MacBook で実行する手順をまとめている。
 ここでは Mac mini（hermes）との違い、各工程の背景、手動設定を説明する。
 
-対象は macOS（`aarch64-darwin`）のみ。WSL2 は対象外
-（手順は [PHASE-3-3-WSL2.md](PHASE-3-3-WSL2.md) を参照。2026-08-18 に完了済み）。
+対象は macOS（`aarch64-darwin`）。会社 Windows には [WSL2 の初回構築手順](BOOTSTRAP-WSL2.md)を使う。
 
 日常運用（2 回目以降の `switch`）は [../README.md](../README.md) の「常用コマンド」と
 [CHEATSHEET.md](CHEATSHEET.md) を参照。このドキュメントは初回のみ。

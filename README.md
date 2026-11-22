@@ -39,8 +39,7 @@
 | Mac mini（hermes） | nix-darwin + home-manager（`hermes`） | 常時稼働機。LLM 基盤（llama.cpp / llama-swap）を launchd で宣言管理 |
 | 会社 Windows（WSL2） | standalone home-manager（`homeConfigurations.wsl`） | WSL2 内部の開発環境 |
 
-ホストごとの管理範囲は [config/nix/README.md](config/nix/README.md)、進捗は
-[ROADMAP](config/nix/docs/ROADMAP.md) を正とする。
+ホストごとの管理範囲は [Nix の README](config/nix/README.md)、導入当時の判断と実施結果は[移行記録](config/nix/docs/ROADMAP.md)を参照。
 
 ## 🚀 セットアップ
 
@@ -50,7 +49,7 @@ Apple Silicon の MacBook で、`sudo` が使える状態から始める。
 この構成は設定を配るアカウントとホームを固定している。初回適用の前に、
 `id -un`、ホームディレクトリ、clone 先が [MacBook のホスト定義](config/nix/hosts/macbook/default.nix) と一致することを確認する。
 Mac mini は [hermes の構築手順](config/nix/docs/BOOTSTRAP.md)、
-会社の Windows は [WSL2 の構築手順](config/nix/docs/PHASE-3-3-WSL2.md#作業手順) を参照。
+会社の Windows は [WSL2 の構築手順](config/nix/docs/BOOTSTRAP-WSL2.md) を参照。
 
 1. ターミナルで Command Line Tools を入れ、インストール画面が完了するまで待つ。
 

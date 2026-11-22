@@ -1,6 +1,8 @@
 # Phase 3-2 前提調査: グローバル CLI の管理元棚卸し
 
-作成: 2026-08-02。brew 以外の管理系統（mise / npm -g / go install / uv tool / pipx /
+移行時の調査記録（2026-08-02）。現在の管理方法は [Nix の README](../README.md) を参照。
+
+brew 以外の管理系統（mise / npm -g / go install / uv tool / pipx /
 cargo / 野良バイナリ / bun・deno）を横断調査し、ROADMAP「既存ツールとの共存方針」の
 境界（言語ランタイム = mise、それ以外の CLI = Nix、brew は cask + nixpkgs 未収録専用）
 に対する実態のズレと、Nix 移行対象を確定する。brew 側は
