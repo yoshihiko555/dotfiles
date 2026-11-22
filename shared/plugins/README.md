@@ -1,50 +1,22 @@
 # 個人用プラグインの共通管理
 
-Claude Code / Codex の既存プラグインを論理名でまとめ、クライアント別の配布元・ID・導入方針を
-[`plugins.json`](plugins.json) で管理する。選定理由と対象外一覧は [`INVENTORY.md`](INVENTORY.md) を参照。
-マニフェストやキャッシュをコピー・変換せず、導入は各 CLI の標準コマンドを使う。
-自作プラグインの共通配布は対象外。
+個人用 Claude Code・Codex で使うプラグインと確認日時は [プラグイン台帳](INVENTORY.md) を参照。共通同期の対象・配布元・ID は [plugins.json](plugins.json) で変更する。個別に導入したものやアプリ管理のものも台帳に載せている。
 
-## 初期対象
+## 状態と差分の確認
 
-| 論理名 | Claude Code | Codex |
-|---|---|---|
-| context7 | 公式マーケットプレイスの既存プラグインを同期 | Upstash の Codex プラグインを同期 |
-| notion | 公式マーケットプレイスの既存プラグインを同期 | 公式リモート配布を CLI で同期。直接登録 MCP は廃止 |
-| claude-mem | thedotmack の既存プラグインを同期 | 対応版あり。フック・ワーカーを伴うので初期状態は候補のみ |
+dotfiles のルートで Python 3.11 以上を使う。タスクの既定の対象は個人用の `~/.claude` と `~/.codex`。`CLAUDE_CONFIG_DIR` / `CODEX_HOME` を指定していても、この2か所を使う。
 
-初期定義で新規導入候補になるのは Codex の Context7。基盤追加時には実インストールしていない。
+| 確認したいこと | コマンド |
+|---|---|
+| 共通定義にあるプラグインの状態 | `task plugin-list` |
+| 導入・有効化の候補と実行予定のコマンド | `task plugin-diff` |
+| Codex の Context7 だけの差分 | `task plugin-diff -- context7 --client codex` |
 
-## 操作
+一覧と差分の確認ではプラグインの導入・有効化を行わない。Git 配布はローカル状態を調べ、Codex の公式リモート配布はログイン済みの CLI からアカウントに問い合わせる。ネットワーク接続が必要で、CLI のキャッシュが更新される場合がある。
 
-Python 3.11 以上（標準ライブラリの `tomllib` を使用）が必要。
-`list` / `diff` は導入・設定変更を行わない。Git 配布はローカル状態を確認し、
-Notion などリモート配布は `codex plugin list --json` でアカウント側の状態を確認するため、
-ネットワークと Codex のログインが必要。CLI 自身のキャッシュ更新が発生する場合はある。
+## 差分を反映する
 
-```sh
-task plugin-list
-task plugin-diff
-task plugin-diff -- context7 --client codex
-task plugin-sync -- notion
-task plugin-sync -- context7
-task plugin-sync
-PYTHONDONTWRITEBYTECODE=1 python3 scripts/tests/test-plugin-manage.py
-```
-
-同期対象は個人用の `~/.claude` と `~/.codex`。会社用 `ccw`、プロジェクト単位の導入は対象外。
-`CLAUDE_CONFIG_DIR` / `CODEX_HOME` の環境変数には追従せず、起動する CLI にも対象ディレクトリを明示する。
-一時環境で検証するときは配布用設定も含めて指定する。
-
-```sh
-python3 scripts/plugin-manage.py diff \
-  --claude-home /tmp/example/claude \
-  --codex-home /tmp/example/codex \
-  --claude-source /tmp/example/claude-source.json \
-  --backup-dir /tmp/example/backups
-```
-
-終了コードは成功 `0`（差分ありも含む）、定義・状態の不正や CLI の失敗 `1`。
+Notion だけなら `task plugin-sync -- notion`、全対象なら `task plugin-sync` を実行する。完了後に同じ範囲の `task plugin-diff` で結果を確認する。終了コードは差分の有無にかかわらず成功時が `0`、定義・状態の不正や CLI の失敗時が `1`。
 
 ## 定義
 
@@ -105,6 +77,18 @@ Claude の Nix 配布済み比較用ファイル `.settings.json.nix-managed` �
 **キャッシュ・アカウント状態はバックアップしないため、完全な導入のロールバックではない。**
 同期同士はロックするが、アプリの設定変更までは排他できない。同期中は設定を同時編集しない。
 
-Notion の `[mcp_servers.notion]` は移行時に削除済み。プラグイン内部の MCP は引き続き利用する。
-同期処理自体は直接登録 MCP を削除しない。Figma / Pencil / drawio は既存の共通 MCP 管理を維持する。
-接続定義の管理は [`../mcp/README.md`](../mcp/README.md) を参照。
+プラグイン内部の MCP は各プラグインが提供する。直接登録した MCP はこの同期で削除されない。Figma・Pencil・drawio の接続定義は [共通 MCP の手順](../mcp/README.md) を参照。
+
+## 保守・検証
+
+一時環境で検証するときは配布用設定も含めて指定する。
+
+```sh
+python3 scripts/plugin-manage.py diff \
+  --claude-home /tmp/example/claude \
+  --codex-home /tmp/example/codex \
+  --claude-source /tmp/example/claude-source.json \
+  --backup-dir /tmp/example/backups
+```
+
+テストは dotfiles のルートで `PYTHONDONTWRITEBYTECODE=1 python3 scripts/tests/test-plugin-manage.py` を実行する。
