@@ -104,7 +104,7 @@ Mac mini は [hermes の構築手順](config/nix/docs/BOOTSTRAP.md)、
 | シェル | zsh · sheldon · starship | [`shell/`](shell/README.md) · [`config/sheldon/`](config/sheldon/) · [`config/starship/`](config/starship/) |
 | ターミナル | **Ghostty + herdr**（常用）/ WezTerm + tmux（サブ） | [`config/ghostty/`](config/ghostty/) · [`config/herdr/`](config/herdr/) · [`config/wezterm/`](config/wezterm/README.md) · [`config/tmux/`](config/tmux/README.md) |
 | エディタ | Neovim · Zed | [`config/nvim/`](config/nvim/README.md) · [`config/zed/`](config/zed/) |
-| Git | git · lazygit · gh | [`config/git/`](config/git/) · [`config/lazygit/`](config/lazygit/CHEATSHEET.md) · [`config/gh/`](config/gh/) |
+| Git | git · lazygit · gh | [`config/git/`](config/git/) · [`config/lazygit/`](config/lazygit/README.md) · [`config/gh/`](config/gh/) |
 | ウィンドウ・入力 | AeroSpace · Karabiner-Elements · BetterTouchTool | [`config/aerospace/`](config/aerospace/README.md) · [`config/karabiner/`](config/karabiner/) · [`config/btt/`](config/btt/) |
 | ランタイム | mise | [`config/mise/`](config/mise/) |
 | AI エージェント | Claude Code · Codex CLI · Antigravity CLI · pi · takt · opencode | [`claude/`](claude/) · [`codex/`](codex/) · [`gemini/`](gemini/README.md) · [`pi/`](pi/) · [`takt/`](takt/README.md) · [`config/opencode/`](config/opencode/) |
