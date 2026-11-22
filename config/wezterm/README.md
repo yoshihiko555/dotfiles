@@ -1,77 +1,39 @@
-# WezTerm Configuration (tmux-first)
+# WezTerm の設定
 
-[WezTerm](https://wezfurlong.org/wezterm/) を GUI レンダラーとして使用。
-タブ/ペイン/セッション管理は tmux に統一。
+[WezTerm](https://wezfurlong.org/wezterm/) は tmux と組み合わせて使うサブ端末。常用端末は Ghostty + herdr。
+ウィンドウの配置は AeroSpace、ターミナル内のセッション・ウィンドウ・ペインは tmux が管理する。
+Cmd キーの操作は [WezTerm のチートシート](CHEATSHEET.md)、tmux の設定と操作は [tmux の README](../tmux/README.md) を参照。
 
-## ファイル構成
+## 起動
 
-```
-wezterm/
-├── wezterm.lua            # メインエントリーポイント
-├── CHEATSHEET.md          # キーバインド一覧
-├── background.jpg         # 背景画像
-└── config/
-    ├── general.lua           # 基本設定（カラースキーム, マウス, タブバー無効化）
-    ├── font.lua              # フォント設定
-    ├── window-appearance.lua # ウィンドウの見た目（背景, 透過, 装飾）
-    ├── window.lua            # ウィンドウ設定（tmux 自動起動）
-    ├── keybinds.lua          # キーバインド（Cmd→tmux 変換 + GUI 操作）
-    └── notification.lua      # 通知設定（ベル音カスタマイズ）
-```
+通常の GUI 起動では、tmux の `default` セッションがあれば接続し、初回はセッションを作って `baton` を起動する。
+外部から起動コマンドを指定した場合は、そのコマンドを実行する。起動時の作業ディレクトリは指定があればその値、既定はホームディレクトリ。[起動処理](config/window.lua)
 
-## 主な特徴
+## 表示と設定ファイル
 
-### WezTerm の役割（GUI レンダラーに限定）
+[wezterm.lua](wezterm.lua) が各ファイルの設定を読み込む。変更したい項目に応じて次のファイルを編集する。
 
-- **カラースキーム**: Tokyo Night Moon
-- **背景**: 半透明ウィンドウ（70%透過）+ ぼかし効果 + 背景画像
-- **フォント**: UDEV Gothic 35NFLG (Bold), 15pt, 行の高さ 1.2
-- **起動時**: tmux default セッション（baton 常駐）に自動接続。ウィンドウ配置は AeroSpace に任せる
-- **タブバー**: 無効化（tmux がウィンドウを管理）
-- **tmux 専用**: 新規ウィンドウ（`Cmd+N`）・WezTerm 側のスクロール/検索/コピーモード・マウス設定は持たない
-  （tmux 接続中は届かないため。tmux のコピーモード・tmux-fingers・tmux-open を使う）
+| 項目 | 設定ファイル | 現在の設定 |
+|---|---|---|
+| 配色・タブバー | [general.lua](config/general.lua) | Tokyo Night Moon。tmux がウィンドウを管理するため、タブバーは非表示 |
+| 背景 | [window-appearance.lua](config/window-appearance.lua) | ウィンドウの不透明度は 70%。macOS のぼかしと背景画像（`~/.config/wezterm/background.jpg`）を設定 |
+| フォント | [font.lua](config/font.lua) | [UDEV Gothic](https://github.com/yuru7/udev-gothic) 35NFLG Bold、15pt、行の高さ 1.2 |
+| キー割り当て | [keybinds.lua](config/keybinds.lua) | クリップボードやフォント操作は WezTerm が処理し、ペイン分割などは tmux のキー列に変換 |
+| 通知音 | [notification.lua](config/notification.lua) | ベルを受けると macOS の効果音 Purr を再生 |
 
-### キーバインド方針
+### タブバーを非表示にしてもタイトルを設定する理由
 
-| レイヤー | 修飾キー | 用途 |
-|---------|---------|------|
-| WezTerm (GUI) | `Cmd` | コピペ, フォントサイズ, アプリ管理 |
-| tmux 操作 | `Alt` | ウィンドウ切替, ペイン移動/リサイズ |
-| tmux Prefix | `Ctrl+Q` | 分割, ポップアップ, セッション管理 |
+タブバーが非表示でも、WezTerm は内部でタブの状態を更新する。再描画時のちらつきを抑えるため、
+`wezterm.lua` の `format-tab-title` はタブ番号を使った安定したタイトルを返す。`update-status` は左右のステータスを空にする。
 
-Cmd キーは tmux に直接届かないため、WezTerm が Alt や Prefix に変換して送信する。
+## tmux 移行前の設定
 
-### 注意事項
-
-#### format-tab-title ハンドラ
-
-`enable_tab_bar = false` でも WezTerm 内部で `TabBarState` が毎サイクル再計算される。
-`format-tab-title` ハンドラが未登録だとデフォルト処理の結果が毎回変わり、
-`window.invalidate()` が発火して画面がちらつく。
-`wezterm.lua` で安定した値を返す空ハンドラを登録して回避している。
-
-## 位置づけ
-
-サブ端末。常に tmux + baton で起動する（常用は Ghostty + herdr）。
-
-## キーバインド
-
-**[CHEATSHEET.md](CHEATSHEET.md)** を参照。
-
-## 依存関係
-
-- [UDEV Gothic](https://github.com/yuru7/udev-gothic) フォント（Nerd Fonts 版）
-- 背景画像: `~/.config/wezterm/background.jpg`
-- tmux (起動時に自動接続)
-
-## バックアップ
-
-tmux 移行前の完全な WezTerm 設定は git 履歴に残っている（`config/.config/wezterm.bak/` として保存していたが、
-tmux 構成が安定したため 2026-07-30 に削除）。
+切り替えの経緯と当時の検証結果は [tmux 移行記録](../tmux/docs/MIGRATION.md) にある。
+旧設定のバックアップは 2026-07-30 に削除した。削除前の内容は Git 履歴から確認できる。
 
 ```bash
-# 一覧
+# 旧設定のファイル一覧
 git ls-tree -r --name-only fbf993a -- config/.config/wezterm.bak
-# 個別ファイルの内容
+# 当時のエントリーポイントの内容
 git show fbf993a:config/.config/wezterm.bak/wezterm.lua
 ```
