@@ -29,7 +29,7 @@
 - **編集が即時反映される** — 通常の設定は `mkOutOfStoreSymlink` でリポジトリを直接指すため、編集に `switch` は要らない
 - **アプリが書き換える設定も repo で持つ** — Claude Code / Antigravity の JSON と Loupedeck Live は drift を検知し、BetterTouchTool も含めて `task` で repo へ回収する
 - **AI エージェント資産を一元管理する** — Claude Code / Codex / Antigravity のコンテキスト・スキル・MCP・プラグインを `shared/` から配る
-- **整形を CI で守る** — treefmt で nix / shell / yaml / toml を整形し、pre-commit フックと GitHub Actions で検査する
+- **整形を CI で守る** — treefmt で nix / shell / yaml / toml を整形し、[pre-commit フック](.githooks/pre-commit)と [GitHub Actions](.github/workflows/nix-check.yml) で検査する
 
 ## 💻 管理対象ホスト
 
@@ -101,15 +101,15 @@ Mac mini は [hermes の構築手順](config/nix/docs/BOOTSTRAP.md)、
 
 | 分類 | ツール | 設定 |
 |---|---|---|
-| シェル | zsh · sheldon · starship | [`shell/`](shell/README.md) · [`config/sheldon/`](config/sheldon/) · [`config/starship/`](config/starship/) |
+| シェル | zsh · sheldon · starship | [zsh の起動設定](shell/README.md) · [プラグインの読み込み順](config/sheldon/plugins.toml) · [プロンプトの表示設定](config/starship/starship.toml) |
 | ターミナル | **Ghostty + herdr**（常用）/ WezTerm + tmux（サブ） | [`config/ghostty/`](config/ghostty/README.md) · [`config/herdr/`](config/herdr/README.md) · [`config/wezterm/`](config/wezterm/README.md) · [`config/tmux/`](config/tmux/README.md) |
 | エディタ | Neovim · Zed | [`config/nvim/`](config/nvim/README.md) · [`config/zed/`](config/zed/README.md) |
-| Git | git · lazygit · gh | [`config/git/`](config/git/README.md) · [`config/lazygit/`](config/lazygit/README.md) · [`config/gh/`](config/gh/) |
-| ウィンドウ・入力 | AeroSpace · Karabiner-Elements · BetterTouchTool | [`config/aerospace/`](config/aerospace/README.md) · [`config/karabiner/`](config/karabiner/) · [`config/btt/`](config/btt/) |
-| ランタイム | mise | [`config/mise/`](config/mise/) |
-| AI エージェント | Claude Code · Codex CLI · Antigravity CLI · pi · takt · opencode | [`claude/`](claude/) · [`codex/`](codex/README.md) · [`gemini/`](gemini/README.md) · [`pi/`](pi/README.md) · [`takt/`](takt/README.md) · [`config/opencode/`](config/opencode/README.md) |
+| Git | git · lazygit · gh | [`config/git/`](config/git/README.md) · [`config/lazygit/`](config/lazygit/README.md) · [`config/gh/config.yml`](config/gh/config.yml) |
+| ウィンドウ・入力 | AeroSpace · Karabiner-Elements · BetterTouchTool | [ウィンドウ配置](config/aerospace/README.md) · [キー割り当て](config/karabiner/karabiner.json) · [トリガーの回収・復元](config/nix/docs/BOOTSTRAP.md#bettertouchtool-の設定) |
+| ランタイム | mise | [言語ランタイムと CLI のバージョン設定](config/mise/config.toml) |
+| AI エージェント | Claude Code · Codex CLI · Antigravity CLI · pi · takt · opencode | [`claude/`](claude/README.md) · [`codex/`](codex/README.md) · [`gemini/`](gemini/README.md) · [`pi/`](pi/README.md) · [`takt/`](takt/README.md) · [`config/opencode/`](config/opencode/README.md) |
 | ランチャー | Alfred | [`alfred/`](alfred/README.md) |
-| デバイス | Loupedeck Live | `config/loupedeck/`（git 管理外） |
+| デバイス | Loupedeck Live | [プロファイルの回収・反映](taskfiles/dotfiles.yml)（`task loupedeck-export` / `task loupedeck-apply`）。保存先の `config/loupedeck/` は Git 管理外 |
 
 ## 📁 ディレクトリ構成
 
@@ -124,7 +124,7 @@ dotfiles/
 │   ├── loupedeck/  # Loupedeck Live のプロファイル（git 管理外）
 │   └── ...         # ghostty, wezterm, tmux, starship, mise, sheldon, karabiner,
 │                   # aerospace, lazygit, opencode, zed, gh, git
-├── ssh/            # ~/.ssh/config（IP・ホスト名のみ。秘匿情報は含めない）
+├── ssh/            # ~/.ssh/config に配る SSH クライアント設定
 ├── home/           # $HOME 直下に置く単体ファイル（editorconfig）
 ├── claude/         # Claude Code 個人用（→ ~/.claude）
 ├── claude-work/    # Claude Code 会社用（→ ~/.claude-work）
@@ -143,11 +143,12 @@ dotfiles/
 └── .sops.yaml      # sops-nix の暗号化ルール（仕組みのみ。管理対象の秘匿値は無い）
 ```
 
+SSH の接続先は [ssh/config](ssh/config)、エディタ共通の書式は [home/editorconfig](home/editorconfig) で変更する。
 各 CLI に配るルールとスキルの編集先・反映手順は [共通ルール・スキルの管理](shared/README.md) を参照。
 
 ## 📋 Taskfile コマンド
 
-各タスクの説明はリポジトリのルートで `task --list` を実行するか、[タスク定義](taskfiles/)を参照。
+リポジトリのルートで `task --list` を実行すると、タスク名と説明を確認できる。処理を変更するときは、[タスク定義](taskfiles/)から、そこで呼び出す[スクリプト](scripts/)をたどる。
 
 ## 🔗 home-manager の配線
 
@@ -168,6 +169,7 @@ Claude Code / Codex / Antigravity（Gemini）/ pi に配るルールとスキル
 
 - [共通ルール・スキルの管理](shared/README.md)
 - [個人用 MCP の登録・同期](shared/mcp/README.md) と [プラグイン管理](shared/plugins/README.md)
+- [CLIProxyAPI の初回設定と ccx の使い方](shared/cliproxyapi/README.md)
 - [Claude Code の会社アカウントとプロファイル](claude/README.md)
 - [Codex CLI の会社アカウント](codex-work/README.md)
 
@@ -192,5 +194,5 @@ Claude Code / Codex / Antigravity（Gemini）/ pi に配るルールとスキル
 | [gemini/README.md](gemini/README.md) | Antigravity CLI の起動、設定の反映・回収、権限設計の ADR |
 | [alfred/README.md](alfred/README.md) | Alfred ワークフロー詳細 |
 | [Codex のブラウザ自動操作](docs/agent-browser-docker.md) | macOS の制限付き環境で agent-browser を使うときの Docker の準備と操作 |
-| [docs/adr/DECISIONS.md](docs/adr/DECISIONS.md) | 領域をまたぐ決定の ADR 索引（領域内の ADR は `config/<領域>/docs/adr/`） |
+| [docs/adr/DECISIONS.md](docs/adr/DECISIONS.md) | 領域をまたぐ決定の一覧と、各領域の ADR 索引へのリンク |
 | [claude/docs/adr/DECISIONS.md](claude/docs/adr/DECISIONS.md) | Claude Code 設定の ADR 索引 |
