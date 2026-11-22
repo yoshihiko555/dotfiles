@@ -2,7 +2,7 @@
 
 dotfiles リポジトリ全体の意思決定のうち、**設定領域をまたぐもの**の一覧。詳細は各 ADR ファイルを参照。
 
-領域内で完結する決定は各領域の `docs/adr/` に置く。領域別の索引は [Nix](../../config/nix/docs/adr/DECISIONS.md) · [Neovim](../../config/nvim/docs/adr/DECISIONS.md) · [tmux](../../config/tmux/docs/adr/DECISIONS.md) · [Claude Code](../../claude/docs/adr/DECISIONS.md) · [Antigravity CLI](../../gemini/docs/adr/DECISIONS.md)。
+領域内で完結する決定は各領域の `docs/adr/` に置く。領域別の索引は [Nix](../../config/nix/docs/adr/DECISIONS.md) · [Neovim](../../config/nvim/docs/adr/DECISIONS.md) · [tmux](../../config/tmux/docs/adr/DECISIONS.md) · [Claude Code](../../claude/docs/adr/DECISIONS.md) · [Antigravity CLI](../../gemini/docs/adr/DECISIONS.md) · [takt](../../takt/docs/adr/DECISIONS.md)。
 
 | ID | タイトル | ステータス | 決定日 | 主な理由 | タグ |
 |---|---|---|---|---|---|

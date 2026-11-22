@@ -27,4 +27,4 @@ cxw                    # 起動後の /status でもアカウントを確認
   `forced_chatgpt_workspace_id = "会社ワークスペースの ID"` を追加する
   （[認証の公式仕様](https://learn.chatgpt.com/docs/auth#enforce-a-login-method-or-workspace)）。
 - ブラウザが使えない場合は `cxw login --device-auth` を使う。組織側で許可されている必要がある。
-- この切り替えは CLI 用。デスクトップアプリや `taktw` の Codex 認証は切り替えない。
+- この切り替えは CLI 用。デスクトップアプリの認証は切り替えない。takt の Codex を会社用にするときは `takts` で選ぶ（[takt の README](../takt/README.md#起動とアカウント切替)）。

@@ -20,7 +20,7 @@
 | `claude.zsh` | Claude Code の会社アカウント（`ccw`）、プロファイル起動（`ccp`）、[CLIProxyAPI 経由の起動](../../shared/cliproxyapi/README.md)（`ccx` / `ccx -f`）、サブエージェントへの委譲（`ccf`）、[claude-swap の認証更新](../../config/nix/docs/CLAUDE-SWAP.md#認証の更新)（`cswap-relogin`） |
 | `codex.zsh` | Codex CLI 会社アカウント切替 (cxw) |
 | `ccusage.zsh` | Claude Code・Codex の使用量を個人と仕事のアカウント別に表示 (ccu) |
-| `takt.zsh` | takt 会社アカウント切替 (taktw) |
+| `takt.zsh` | takt のアカウントを選んで起動 (takts) |
 | `nix.zsh` | nix-darwin 反映コマンド (nxb, nxs, nxg 等) / Homebrew 更新 (bxu) / hermes リモート反映 (hxb, hxs, hxg 等) |
 | `screenpipe.zsh` | screenpipe の一時停止 / 再開 / 状態確認 / 実体の復旧 (spoff, spon, sps, spfix) |
 | `awake.zsh` | macOS のアイドルスリープ防止と解除 (awake) |

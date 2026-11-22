@@ -3,27 +3,47 @@
 ## 起動とアカウント切替
 
 ```bash
-# 個人アカウント
+# Claude・Codex とも個人アカウント
 takt
 
-# 会社アカウント（Claude 側のステップのみ ~/.claude-work を使う）
-taktw
+# Claude・Codex それぞれのアカウントを fzf で選んでから起動する（引数は takt にそのまま渡る）
+takts
+takts manager
 ```
 
-- `taktw` は `CLAUDE_CONFIG_DIR` を渡すだけなので、Codex / OpenCode のステップは影響を受けません。
-  `claude-sdk` も環境変数をそのまま子プロセスへ引き継ぐため、0.75.0 でも切り替わります。
-- 環境変数はプロセス単位で効くため、同一実行内で Claude アカウントを混在させることはできません。
-- **`takt manager` では、アカウントは daemon を起動した側の環境で決まります。**
-  manager の Claude ステップは daemon が起動する子プロセスで動き、daemon の環境変数を引き継ぎます。
-  daemon は `~/.takt` につき 1 つで、`taktw` も同じ daemon を使います。
-  そのため、daemon が動いている間に `taktw manager` を実行しても、既存の daemon につながるだけで
-  先に起動した側のアカウントのままになります（逆も同じ）。
-  - 切り替えるときは `takt daemon stop` で止めてから `takt manager` / `taktw manager` を実行します。
+| 起動 | Claude | Codex |
+|---|---|---|
+| `takt` | 個人（`~/.claude`） | 個人（`~/.codex`） |
+| `takts` | 個人 / 会社（`~/.claude-work`、`ccw` と同じ）から選ぶ | 個人 / 会社（`~/.codex-work`、`cxw` と同じ）から選ぶ |
+
+- この方式を選んだ理由は [ADR-20261123-0001](docs/adr/ADR-20261123-0001-takt-account-select.md) を参照。
+- `takts` は選んだ内容に応じて `CLAUDE_CONFIG_DIR` / `CODEX_HOME` を付け外しして takt を起動します。
+  takt は provider の子プロセスへ環境変数をそのまま渡すため、`claude-sdk` も `codex` もこれで切り替わります。
+  - 2 つは別の変数なので、「Claude は会社、Codex は個人」のような組み合わせも選べます。
+  - 個人を選んだときも変数を外します。`ccw` などから継承した値で会社側に寄らないようにするためです。
+  - 会社 Codex は `cxw` と同じ確認（`~/.codex` を指していないか、`config.toml` があるか）と、
+    `OPENAI_API_KEY` などの認証用の環境変数の除去を行います。
+  - 選択には端末が必要です。端末が無いとエラーで止まります。
+- 環境変数はプロセス単位で効くため、同一実行内で同じ provider のアカウントを混在させることはできません。
+- 会社 Codex を選ぶと、Codex のステップは `codex-work/config.toml` の設定で動きます。
+  - レートリミット時に Codex へ退避したステップの reasoning effort は、そちらの `model_reasoning_effort` に従います。
+  - MCP のマージ元とユーザースキルも `~/.codex-work` 側になります。
+  - 作業クローンの trust は `codex-work/config.toml` に書き戻され、Git の差分になります（個人側の `codex/config.toml` と同じ）。
+  - `runtime.yaml` で coding 系から外している Notion は、個人 Codex のプラグインで補っている前提です。
+    会社側にはプラグインのログインをコピーしていないため、会社側で Notion を設定していなければ使えません。
+- OpenCode のステップは `takts` の選択に関係なく、同じ認証のままです。
+- **`takt manager` / `takt director` では、アカウントは daemon を起動した側の環境で決まります。**
+  これらのステップは daemon が起動する子プロセスで動き、daemon の環境変数を引き継ぎます。
+  daemon は `~/.takt` につき 1 つで、動いている間は環境が違っても既存の daemon が再利用されます。
+  - `takts manager` / `takts director` は、動いている daemon の環境が選択と違うとき、
+    または環境を読めないときに中断して知らせます。実行中のタスクがありうるので daemon は自動で止めません。
+  - 切り替えるときは、実行中のタスクが無いことを確かめて `takt daemon stop` で止めてから起動し直します。
+  - 素の `takt manager` はこの確認をしません。
   - daemon は manager を閉じて仕事がなくなると自動で止まり、次の起動時の環境で立ち上がり直します。
-  - 動いている daemon のアカウントは、`ps eww -p <daemon の pid>` の出力に `CLAUDE_CONFIG_DIR` があるかで確認できます
-    （pid は `pgrep -f takt/dist/app/daemon/index.js`）。
+  - 動いている daemon のアカウントは、`ps -wwE -o command= -p <daemon の pid>` の出力に
+    `CLAUDE_CONFIG_DIR` / `CODEX_HOME` があるかで確認できます（pid は `pgrep -f takt/dist/app/daemon/index.js`）。
 - takt は Claude SDK を `settingSources: ['project']` で起動します。そのため `~/.claude`
-  （`taktw` では `~/.claude-work`）のユーザー設定と CLAUDE.md は、Claude のステップには読まれません。
+  （会社 Claude では `~/.claude-work`）のユーザー設定と CLAUDE.md は、Claude のステップには読まれません。
   組織の管理設定（managed settings）は、SDK の仕様上この指定にかかわらず読まれます。
 - API キー（`anthropic_api_key` など）は config.yaml / runtime.yaml に書かず、`TAKT_ANTHROPIC_API_KEY` 等の環境変数を使います。
 

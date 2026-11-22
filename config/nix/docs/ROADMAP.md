@@ -722,7 +722,7 @@ hermes が pull 型で設定に自動追従する。
 ### 4-6: `specialisation` — `[ ]` 優先度: 低
 
 同一ホストで設定バリアントを切り替える。
-`ccw` / `taktw`（会社アカウント切替、`~/.claude-work`）の宣言化に使える。
+`ccw` / `cxw` / `takts`（会社アカウント切替、`~/.claude-work` / `~/.codex-work`）の宣言化に使える。
 
 **注意**: home-manager 版は**実験的機能**。採用するなら nix-darwin 側で。
 現状の zsh 関数で動いているため急がない。
