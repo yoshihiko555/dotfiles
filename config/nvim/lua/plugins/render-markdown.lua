@@ -28,5 +28,9 @@ return {
     bullet = {
       enabled = true,
     },
+    -- 既定では HTML コメントを隠し、カーソル行でしか読めない
+    html = {
+      comment = { conceal = false },
+    },
   },
 }
