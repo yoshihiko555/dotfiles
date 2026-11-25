@@ -8,7 +8,6 @@
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1"
   },
   "permissions": {
-    "defaultMode": "auto",
     "allow": [
       "Read",
       "Search",
@@ -27,11 +26,13 @@
       "WebFetch(domain:api.github.com)",
       "mcp__pencil"
     ],
+    "defaultMode": "auto",
     "additionalDirectories": [
       "/tmp/claude-501",
       "/private/tmp/claude-501"
     ]
   },
+  "model": "opus",
   "hooks": {
     "Stop": [
       {
@@ -50,7 +51,8 @@
     "command": "$HOME/.claude-work/statusline.py"
   },
   "enabledPlugins": {
-    "typescript-lsp@claude-plugins-official": true
+    "typescript-lsp@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true
   },
   "language": "日本語",
   "effortLevel": "high",
@@ -58,6 +60,5 @@
   "autoDreamEnabled": true,
   "skipWorkflowUsageWarning": true,
   "theme": "custom:tokyonight-moon",
-  "autoContinueAtUsageLimit": true,
-  "model": "opus"
+  "autoContinueAtUsageLimit": true
 }
