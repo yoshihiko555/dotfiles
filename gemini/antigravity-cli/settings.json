@@ -1,6 +1,6 @@
 {
   "colorScheme": "tokyo night",
-  "model": "Gemini 4 Argon (Medium)",
+  "model": "Gemini 4 Neon (Medium)",
   "permissions": {
     "allow": [
       "read_url(antigravity.google)",
