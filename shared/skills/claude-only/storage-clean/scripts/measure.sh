@@ -24,6 +24,21 @@ row() {
   printf '%-45s %s\n' "$1" "$2"
 }
 
+mise_prunable_size() {
+  # mise prune --dry-run が消す予定のインストール先を合計する
+  command -v mise >/dev/null 2>&1 || {
+    echo "-"
+    return
+  }
+  local dirs
+  dirs="$(mise prune --dry-run 2>&1 | sed -n "s|.*remove ~/\(\.local/share/mise/installs/[^ ]*\).*|$HOME/\1|p")"
+  if [ -z "$dirs" ]; then
+    echo "0B"
+    return
+  fi
+  printf '%s\n' "$dirs" | tr '\n' '\0' | xargs -0 du -sck 2>/dev/null | tail -1 | awk '{printf "%.1fG\n", $1 / 1024 / 1024}'
+}
+
 echo "# storage-clean 計測レポート"
 echo "実行日時: $(date '+%Y-%m-%d %H:%M:%S')"
 
@@ -34,10 +49,13 @@ df -h /System/Volumes/Data 2>/dev/null | tail -1 | awk '{printf "使用中: %s /
 section "safe カテゴリ（承認なしで prune 対象）"
 row "~/.cache/uv (uv cache dir)" "$(size_of "$HOME/.cache/uv")"
 row "~/.npm" "$(size_of "$HOME/.npm")"
+row "  うち ~/.npm/_npx (npm cache npx rm)" "$(size_of "$HOME/.npm/_npx")"
 row "~/Library/pnpm (pnpm store)" "$(size_of "$HOME/Library/pnpm")"
+row "bun install cache (bun pm cache rm)" "$(size_of "${BUN_INSTALL_CACHE_DIR:-$HOME/.bun/install/cache}")"
 row "go build cache (GOCACHE, go clean -cache)" "$(size_of "$(go env GOCACHE 2>/dev/null)")"
 row "~/Library/Caches/Homebrew" "$(size_of "$HOME/Library/Caches/Homebrew")"
 row "~/.cache/pre-commit" "$(size_of "$HOME/.cache/pre-commit")"
+row "mise 未参照ランタイム (mise prune)" "$(mise_prunable_size)"
 
 section "gray カテゴリ（毎回サイズを見せて承認を取る）"
 row "OrbStack 実データ (Group Containers)" "$(size_of "$HOME/Library/Group Containers/HUAQ24HBR6.dev.orbstack")"

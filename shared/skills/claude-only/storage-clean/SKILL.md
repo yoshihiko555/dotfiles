@@ -1,6 +1,6 @@
 ---
 name: storage-clean
-description: MacBook Pro のストレージを定期的に整理するスキル。uv/npm/pnpm/go/Homebrew/pre-commit の再生成可能なキャッシュを安全に prune し、OrbStack・takt worktree・古い ghq リポジトリの node_modules/.venv など判断が必要な領域は毎回サイズを見せて承認を取ってから削除する。ディスクの空きが少なくなってきた、容量を空けたい、キャッシュを掃除したい、ストレージ整理をしたい、`uv cache` や `node_modules` が溜まってきた、といった相談ではこのスキルを積極的に使う。BuhoCleaner（システムキャッシュ用アプリ）の案内も含めた一連の整理フローを一つのスキルで完結させる。
+description: MacBook Pro のストレージを定期的に整理するスキル。uv/npm/npx/pnpm/bun/go/Homebrew/pre-commit の再生成可能なキャッシュと mise の未参照ランタイムを安全に prune し、OrbStack・takt worktree・古い ghq リポジトリの node_modules/.venv など判断が必要な領域は毎回サイズを見せて承認を取ってから削除する。ディスクの空きが少なくなってきた、容量を空けたい、キャッシュを掃除したい、ストレージ整理をしたい、`uv cache` や `node_modules` が溜まってきた、といった相談ではこのスキルを積極的に使う。BuhoCleaner（システムキャッシュ用アプリ）の案内も含めた一連の整理フローを一つのスキルで完結させる。
 allowed-tools: Bash, Read, AskUserQuestion
 ---
 
@@ -11,7 +11,7 @@ allowed-tools: Bash, Read, AskUserQuestion
 Mac のストレージ整理には2種類の作業が混ざっている。
 
 1. **システムキャッシュ・アプリ残骸の掃除** → BuhoCleaner（GUIアプリ）の仕事。このスキルはここに手を出さない。
-2. **開発ツールのキャッシュ・成果物の掃除** → uv / npm / pnpm / go / Homebrew / pre-commit のキャッシュ、OrbStack のイメージ、ghq 配下の古い `node_modules` / `.venv`、takt の完了済みワークツリー。これがこのスキルの守備範囲。
+2. **開発ツールのキャッシュ・成果物の掃除** → uv / npm / npx / pnpm / bun / go / Homebrew / pre-commit のキャッシュ、mise の未参照ランタイム、OrbStack のイメージ、ghq 配下の古い `node_modules` / `.venv`、takt の完了済みワークツリー。これがこのスキルの守備範囲。
 
 このスキルは対話的に実行するものであり、無人の定期実行は行わない（削除を伴う作業を自動化するとリスクが高いため、まずは実行するたびに人が確認する形で精度を上げる）。
 
@@ -56,10 +56,13 @@ bash <skill-dir>/scripts/measure.sh
 |---|---|
 | `uv cache prune` | uv の未参照パッケージのみ（全消しの `uv cache clean` は gray） |
 | `npm cache clean --force` | npm キャッシュ |
+| `npm cache npx rm` | npx の実行キャッシュ `~/.npm/_npx`（`npm cache clean` では消えない。npx で起動する MCP は次の起動で取り直す） |
 | `pnpm store prune` | pnpm の未参照パッケージのみ |
+| `bun pm cache rm` | bun の install キャッシュ。package.json の無いディレクトリでは失敗するので、`{}` だけの package.json を置いた一時ディレクトリで実行する |
 | `go clean -cache` | go のビルドキャッシュ（`-modcache` は含めない、再取得コストが高いため gray） |
 | `brew cleanup --prune=all` | Homebrew の古いバージョン・ダウンロードキャッシュ |
 | `pre-commit gc` | pre-commit の未使用フック環境 |
+| `mise prune -y` | どの mise 設定からも参照されていない古いランタイム。mise が読んだことのない設定の版も消えるが、使うときに `mise install` で入れ直せる |
 
 実行後は各コマンドの標準出力をそのまま見せる（何をどれだけ消したかがそこに出る）。失敗したものがあっても他のコマンドは続行する。
 
