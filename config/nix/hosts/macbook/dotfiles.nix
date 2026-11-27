@@ -95,7 +95,7 @@ in
         ".codex-work/AGENTS.md".source = mkLink "codex/AGENTS.md";
 
         ".gemini/AGENTS.md".source = mkLink "gemini/AGENTS.md";
-        ".gemini/antigravity/mcp_config.json".source = mkLink "gemini/antigravity/mcp_config.json";
+        ".gemini/config/mcp_config.json".source = mkLink "gemini/config/mcp_config.json";
         ".gemini/config/skills".source = mkLink "gemini/config/skills";
 
         # ~/.pi/agent には pi が書く認証情報・セッション・settings.json が同居するため、

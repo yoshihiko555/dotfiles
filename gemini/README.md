@@ -14,7 +14,7 @@ agy -p "git status --short で作業ツリーの状態を確認してくださ�
 |---|---|---|
 | モデル・ツール権限 | [settings.json](antigravity-cli/settings.json) | 下表の `antigravity-settings` |
 | キー割り当て | [keybindings.json](antigravity-cli/keybindings.json) | 下表の `antigravity-keybindings` |
-| MCP サーバー | [mcp_config.json](antigravity/mcp_config.json) | Home Manager のリンク経由で参照 |
+| MCP サーバー | [mcp_config.json](config/mcp_config.json) | Home Manager のリンク経由で参照 |
 | エージェントへの指示 | [共通・開発用の指示と CLI 別の差分](../shared/agents/)（`core.md`、`dev.md`、`diff-gemini.md`） | `task sync-agents` で [AGENTS.md](AGENTS.md) を生成 |
 | スキル | [共通スキル](../shared/skills/common/)・[Antigravity 専用スキル](../shared/skills/antigravity-only/) | `task sync-skills` で [config/skills/](config/skills/) のリンクを同期 |
 
