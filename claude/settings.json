@@ -66,6 +66,18 @@
         ]
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "Artifact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/export-artifact.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "matcher": "",
